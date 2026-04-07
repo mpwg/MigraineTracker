@@ -9,6 +9,7 @@ Die App soll helfen,
 - Episoden konsistent zu erfassen,
 - mögliche Auslöser und Muster sichtbar zu machen,
 - die Wirkung von Medikamenten besser nachzuvollziehen,
+- zyklusbezogene oder hormonelle Zusammenhänge zu erkennen,
 - Arzttermine mit belastbaren Verlaufsdaten vorzubereiten.
 
 ## Kernfunktionen
@@ -16,7 +17,9 @@ Die App soll helfen,
 - Erfassung von Kopfschmerz- und Migräneepisoden
 - Intensitätsskala von `1` bis `10`
 - Dokumentation von Medikamenten, Dosis und Wirkung
+- Erfassung weiterer Kontextdaten wie Menstruationsstatus, mögliche Trigger und Schmerzlokalisation
 - automatisches Anhängen von Wetterdaten zum Zeitpunkt des Eintrags
+- optionale Apple-Health-Integration für Import und Export relevanter Gesundheitsdaten
 - Kalender- und Verlaufsansicht
 - Erinnerungen und Verwaltung von Arztterminen
 - Export einer Übersicht für Ärztinnen und Ärzte
@@ -26,7 +29,7 @@ Die App soll helfen,
 Jeder Eintrag soll so schnell wie möglich erstellt werden können. Statt langer Formulare setzt die App auf einen kompakten Ablauf:
 
 1. Intensität wählen
-2. Symptome und Medikament ergänzen
+2. Symptome, Kontext und Medikamente ergänzen
 3. Wetter automatisch anhängen
 4. Verlauf später in Kalender und Statistiken auswerten
 
@@ -38,7 +41,9 @@ Enthalten sind:
 
 - Episoden erfassen
 - Medikamente dokumentieren
+- zusätzliche Kontextfaktoren wie Zyklusstatus, Trigger und andere Schmerzmittel dokumentieren
 - Wetterdaten speichern
+- optionale Apple-Health-Anbindung für sinnvolle Kontextdaten und dokumentierte Symptome
 - Arzttermine verwalten
 - Kalender und einfache Statistiken anzeigen
 - Export für Arztbesuche vorbereiten
@@ -62,3 +67,36 @@ Für einen ersten Prototyp ist `Open-Meteo` meist die pragmatischere Wahl. Spät
 2. Datenmodell konkretisieren
 3. iOS-Screens für MVP entwerfen
 4. lokale Datenspeicherung und Export festlegen
+
+## Zusätzliche sinnvolle Datenpunkte
+
+Für eine medizinisch nützlichere, aber weiterhin schlanke Dokumentation sind insbesondere diese Felder sinnvoll:
+
+- Menstruationsstatus oder Zyklusbezug, um hormonelle Muster sichtbar zu machen
+- Art der Episode, z. B. Migräne, Spannungskopfschmerz oder unklar
+- Schmerzlokalisation und Schmerzcharakter, z. B. einseitig, pulsierend, drückend
+- mögliche Trigger wie Schlafmangel, Stress, Alkohol, bestimmte Lebensmittel oder Bildschirmzeit
+- funktionelle Einschränkung im Alltag, z. B. arbeitsfähig, eingeschränkt, bettlägerig
+- andere Schmerzmittel oder Begleitmedikation zusätzlich zu klassischen Migränemitteln
+- Wiederholungseinnahmen und Zeitpunkt der Wirkung, um Übergebrauch und Nutzen besser einordnen zu können
+
+## Apple Health Integration
+
+Eine Apple-Health-Integration kann den dokumentierten Verlauf deutlich verbessern, wenn sie strikt optional bleibt und nur mit klarer Einwilligung arbeitet.
+
+Sinnvolle Daten, die Migraine Tracker in Apple Health schreiben könnte:
+
+- Kopfschmerz- oder Migräneeinträge, soweit über passende Health-Kategorien abbildbar
+- Symptom- oder Episodenereignisse mit Start- und Endzeit
+- Medikamenteneinnahmen, sofern im gewünschten Integrationsumfang vorgesehen
+
+Sinnvolle Daten, die aus Apple Health gelesen werden könnten:
+
+- Schlafdauer und Schlafregelmäßigkeit
+- Zyklus- und Menstruationsdaten
+- Schrittzahl und Aktivitätsniveau
+- Trainings und körperliche Belastung
+- Herzfrequenz, Ruheherzfrequenz und Herzfrequenzvariabilität
+- optional weitere Vitaldaten, wenn sie therapeutisch relevant erscheinen
+
+Der Mehrwert liegt vor allem darin, Trigger und Muster besser zu erkennen, ohne die manuelle Eingabe unnötig zu vergrößern.
