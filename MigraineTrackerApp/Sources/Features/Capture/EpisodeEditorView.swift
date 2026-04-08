@@ -28,6 +28,7 @@ struct EpisodeEditorView: View {
     @State private var selectedTriggers: Set<String>
     @State private var medications: [MedicationDraft]
     @State private var saveMessageVisible = false
+    @State private var validationMessage: String?
 
     private let symptomOptions = ["Übelkeit", "Lichtempfindlichkeit", "Geräuschempfindlichkeit", "Aura"]
     private let triggerOptions = ["Stress", "Schlafmangel", "Alkohol", "Menstruation", "Bildschirmzeit"]
@@ -49,60 +50,84 @@ struct EpisodeEditorView: View {
         _menstruationStatus = State(initialValue: episode?.menstruationStatus ?? .unknown)
         _selectedSymptoms = State(initialValue: Set(episode?.symptoms ?? []))
         _selectedTriggers = State(initialValue: Set(episode?.triggers ?? []))
-        _medications = State(initialValue: episode?.medications.map(MedicationDraft.init) ?? [MedicationDraft()])
+        _medications = State(initialValue: episode?.medications.map(MedicationDraft.init) ?? [])
     }
 
     var body: some View {
         Form {
-            Section("Episode") {
+            if let validationMessage {
+                Section {
+                    Label(validationMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
+                }
+            }
+
+            Section {
                 Picker("Typ", selection: $type) {
-                    ForEach(EpisodeType.allCases) { type in
-                        Text(type.rawValue).tag(type)
+                    ForEach(EpisodeType.allCases) { episodeType in
+                        Text(episodeType.rawValue).tag(episodeType)
                     }
                 }
+                .pickerStyle(.segmented)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Intensität")
-                    Slider(value: $intensity, in: 1 ... 10, step: 1)
-                    Text("\(Int(intensity)) / 10")
-                        .font(.headline)
-                }
-
-                DatePicker("Beginn", selection: $startedAt)
-                Toggle("Ende angeben", isOn: $endedAtEnabled.animation())
-                if endedAtEnabled {
-                    DatePicker("Ende", selection: $endedAt, in: startedAt...)
-                }
-            }
-
-            Section("Kontext") {
-                TextField("Schmerzlokalisation", text: $painLocation)
-                TextField("Schmerzcharakter", text: $painCharacter)
-                TextField("Funktionelle Einschränkung", text: $functionalImpact)
-
-                Picker("Menstruationsstatus", selection: $menstruationStatus) {
-                    ForEach(MenstruationStatus.allCases) { status in
-                        Text(status.rawValue).tag(status)
+                    HStack {
+                        Text("Intensität")
+                        Spacer()
+                        Text("\(Int(intensity))/10")
+                            .font(.headline)
+                            .monospacedDigit()
                     }
+
+                    IntensityPicker(value: $intensity)
                 }
+
+                DatePicker("Beginn", selection: $startedAt, displayedComponents: [.date, .hourAndMinute])
+            } header: {
+                Text("Schneller Eintrag")
+            } footer: {
+                Text("Nur Typ, Intensität und Zeitpunkt sind direkt sichtbar. Alles Weitere ist optional.")
             }
 
-            selectionSection(title: "Symptome", options: symptomOptions, selection: $selectedSymptoms)
-            selectionSection(title: "Trigger", options: triggerOptions, selection: $selectedTriggers)
+            tagSection(title: "Symptome", options: symptomOptions, selection: $selectedSymptoms)
+            tagSection(title: "Trigger", options: triggerOptions, selection: $selectedTriggers)
 
             Section("Notiz") {
-                TextField("Optionale Notiz", text: $notes, axis: .vertical)
-                    .lineLimit(3 ... 6)
+                TextField("Kurz notieren, was auffällt", text: $notes, axis: .vertical)
+                    .lineLimit(2 ... 5)
+            }
+
+            Section("Optionale Details") {
+                DisclosureGroup("Weitere Angaben") {
+                    TextField("Schmerzlokalisation", text: $painLocation)
+                    TextField("Schmerzcharakter", text: $painCharacter)
+                    TextField("Funktionelle Einschränkung", text: $functionalImpact)
+
+                    Picker("Menstruationsstatus", selection: $menstruationStatus) {
+                        ForEach(MenstruationStatus.allCases) { status in
+                            Text(status.rawValue).tag(status)
+                        }
+                    }
+
+                    Toggle("Ende angeben", isOn: $endedAtEnabled.animation())
+                    if endedAtEnabled {
+                        DatePicker("Ende", selection: $endedAt, in: startedAt..., displayedComponents: [.date, .hourAndMinute])
+                    }
+                }
             }
 
             Section("Medikamente") {
-                ForEach($medications) { $medication in
-                    MedicationDraftForm(draft: $medication)
-                }
-                .onDelete { offsets in
-                    medications.remove(atOffsets: offsets)
-                    if medications.isEmpty {
-                        medications = [MedicationDraft()]
+                if medications.isEmpty {
+                    Text("Nur ergänzen, wenn du heute etwas genommen hast.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach($medications) { $medication in
+                        MedicationDraftForm(draft: $medication)
+                    }
+                    .onDelete { offsets in
+                        medications.remove(atOffsets: offsets)
                     }
                 }
 
@@ -112,15 +137,16 @@ struct EpisodeEditorView: View {
                     Label("Medikament hinzufügen", systemImage: "plus.circle")
                 }
             }
-        }
-        .navigationTitle(mode == .create ? "Erfassen" : "Episode bearbeiten")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(mode == .create ? "Speichern" : "Aktualisieren") {
+
+            Section {
+                Button(mode == .create ? "Episode speichern" : "Änderungen speichern") {
                     saveEpisode()
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
+        .navigationTitle(mode == .create ? "Erfassen" : "Episode bearbeiten")
+        .scrollDismissesKeyboard(.interactively)
         .alert("Episode gespeichert", isPresented: $saveMessageVisible) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -129,27 +155,58 @@ struct EpisodeEditorView: View {
     }
 
     @ViewBuilder
-    private func selectionSection(title: String, options: [String], selection: Binding<Set<String>>) -> some View {
+    private func tagSection(title: String, options: [String], selection: Binding<Set<String>>) -> some View {
         Section(title) {
-            ForEach(options, id: \.self) { option in
-                Toggle(
-                    option,
-                    isOn: Binding(
-                        get: { selection.wrappedValue.contains(option) },
-                        set: { isSelected in
-                            if isSelected {
-                                selection.wrappedValue.insert(option)
-                            } else {
-                                selection.wrappedValue.remove(option)
-                            }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 10)], spacing: 10) {
+                ForEach(options, id: \.self) { option in
+                    let isSelected = selection.wrappedValue.contains(option)
+
+                    Button {
+                        if isSelected {
+                            selection.wrappedValue.remove(option)
+                        } else {
+                            selection.wrappedValue.insert(option)
                         }
-                    )
-                )
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .imageScale(.medium)
+                            Text(option)
+                                .font(.subheadline.weight(.medium))
+                                .multilineTextAlignment(.leading)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .background(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
+                        .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
             }
         }
     }
 
     private func saveEpisode() {
+        validationMessage = nil
+
+        if endedAtEnabled, endedAt < startedAt {
+            validationMessage = "Das Ende darf nicht vor dem Beginn liegen."
+            return
+        }
+
+        let validDrafts: [MedicationDraft]
+
+        do {
+            validDrafts = try validatedMedicationDrafts()
+        } catch {
+            validationMessage = error.localizedDescription
+            return
+        }
+
         let target = episode ?? Episode(startedAt: startedAt, intensity: Int(intensity))
 
         target.type = type
@@ -173,7 +230,6 @@ struct EpisodeEditorView: View {
             modelContext.insert(target)
         }
 
-        let validDrafts = medications.filter { !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         for draft in validDrafts {
             let entry = MedicationEntry(
                 name: draft.name.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -190,6 +246,7 @@ struct EpisodeEditorView: View {
 
         do {
             try modelContext.save()
+            validationMessage = nil
 
             if mode == .create {
                 resetForm()
@@ -199,7 +256,7 @@ struct EpisodeEditorView: View {
                 dismiss()
             }
         } catch {
-            assertionFailure("Speichern fehlgeschlagen: \(error)")
+            validationMessage = "Speichern fehlgeschlagen. Bitte versuche es erneut."
         }
     }
 
@@ -216,7 +273,70 @@ struct EpisodeEditorView: View {
         menstruationStatus = .unknown
         selectedSymptoms = []
         selectedTriggers = []
-        medications = [MedicationDraft()]
+        medications = []
+        validationMessage = nil
+    }
+
+    private func validatedMedicationDrafts() throws -> [MedicationDraft] {
+        try medications.compactMap { draft in
+            let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedDosage = draft.dosage.trimmingCharacters(in: .whitespacesAndNewlines)
+            let hasAnyInput = !trimmedName.isEmpty
+                || !trimmedDosage.isEmpty
+                || draft.category != .other
+                || draft.effectiveness != .partial
+                || draft.isRepeatDose
+                || draft.reliefStartedAtEnabled
+
+            guard hasAnyInput else {
+                return nil
+            }
+
+            guard !trimmedName.isEmpty else {
+                throw EpisodeValidationError.medicationNameMissing
+            }
+
+            return draft
+        }
+    }
+}
+
+private enum EpisodeValidationError: LocalizedError {
+    case medicationNameMissing
+
+    var errorDescription: String? {
+        switch self {
+        case .medicationNameMissing:
+            "Bitte gib für jedes Medikament zumindest einen Namen an."
+        }
+    }
+}
+
+private struct IntensityPicker: View {
+    @Binding var value: Double
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(1 ... 10, id: \.self) { level in
+                let isSelected = Int(value) == level
+
+                Button {
+                    value = Double(level)
+                } label: {
+                    Text("\(level)")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+                        .foregroundStyle(isSelected ? .white : .primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Intensität \(level)")
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
     }
 }
 
