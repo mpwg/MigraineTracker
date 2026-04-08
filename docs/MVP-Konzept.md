@@ -12,6 +12,25 @@ Für die erste App-Store-Submission gilt ein bewusst enger Scope:
 - kein Account, kein Backend, keine Synchronisation
 - Fokus auf `Episode anlegen`, `Medikamente erfassen`, `Verlauf ansehen`, `PDF exportieren`
 
+## Verbindliche Architekturentscheidungen
+
+Diese Entscheidungen gelten für die erste App-Store-Submission als fest:
+
+- UI-Framework: `SwiftUI`
+- Persistenz: `SwiftData`
+- Plattform: `iPhone only`
+- Architekturprinzip: `lokal-first`
+- Wetterquelle: `Open-Meteo`
+- Export: PDF lokal auf dem Gerät erzeugen
+
+Nicht Teil dieser Architekturversion sind:
+
+- eigenes Backend
+- Benutzerkonten
+- Cloud-Sync
+- Apple-Health-Integration
+- iPad-spezifische UI-Strukturen
+
 ## Nicht-Ziele im MVP
 
 Diese Punkte sind zunächst bewusst ausgeschlossen:
@@ -165,6 +184,69 @@ Diese Flows müssen ohne Produktentscheidungen umsetzbar und testbar sein:
 - automatische Vorbelegung von Datum, Uhrzeit und Wetter
 - sensible Zusatzfelder wie Zyklusstatus nur optional und zurückhaltend abfragen
 - sensible Gesundheitsdaten standardmäßig lokal und zurückhaltend behandeln
+
+## Architekturskizze für Version 1
+
+Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten aufgebaut.
+
+### Schichten
+
+1. Präsentation
+   - `SwiftUI`-Screens für Erfassung, Verlauf, Detailansicht und Export
+   - zuständig für Navigation, Formzustand und Darstellung
+
+2. Anwendungslogik
+   - koordiniert Speichern, Bearbeiten, Löschen, Wetterabruf und Export
+   - kapselt Geschäftsregeln wie Validierung, Standardwerte und Zuordnung von Medikamenten zu Episoden
+
+3. Datenzugriff
+   - `SwiftData`-Modelle und einfache Repository- oder Store-Abstraktionen
+   - zuständig für Laden, Schreiben, Filtern und Sortieren lokaler Daten
+
+4. Integrationen
+   - Wetterdienst über `Open-Meteo`
+   - PDF-Erzeugung und systemweites Teilen
+   - keine weitere externe Abhängigkeit in v1
+
+### Zentrale Module und Verantwortlichkeiten
+
+- `Episode`-Modul
+  - Erfassung, Bearbeitung, Löschung und Anzeige von Episoden
+- `Medication`-Modul
+  - Medikamente pro Episode erfassen und wiederverwenden
+- `Weather`-Modul
+  - Wetterdaten zum Episodenzeitpunkt abrufen und als Snapshot speichern
+- `Export`-Modul
+  - Zeitraum auswählen und PDF-Bericht aus vorhandenen lokalen Daten erzeugen
+- `History`-Modul
+  - Listen-, Kalender- und Detailansichten aus persistierten Episoden ableiten
+
+### Geplanter Datenfluss
+
+1. Nutzer legt eine Episode in der `SwiftUI`-Erfassungsansicht an.
+2. Die Anwendungslogik validiert Eingaben und erzeugt lokale Datenobjekte.
+3. `SwiftData` speichert Episode, Medikamente und später den Wetter-Snapshot.
+4. Der Wetterdienst ergänzt, wenn verfügbar, Kontextdaten ohne den Speichervorgang zu blockieren.
+5. Verlauf und Export lesen ausschließlich aus der lokalen Persistenz.
+
+### Integrationsansatz
+
+- Wetterabruf
+  - über `Open-Meteo`
+  - bei fehlender Verbindung bleibt die Episode trotzdem speicherbar
+  - Wetter wird als Snapshot zur Episode abgelegt, nicht live nachgeladen
+
+- Export
+  - PDF wird lokal generiert
+  - kein externer Dienst für Berichtserstellung
+  - Teilen erfolgt über die systemweite iOS-Share-Schnittstelle
+
+### Technische Leitlinien
+
+- Views bleiben schlank und enthalten keine Persistenz- oder Netzwerklogik
+- externe Integrationen werden über klar getrennte Services angebunden
+- alle Kernfunktionen müssen offline benutzbar bleiben, abgesehen vom optionalen Wetterabruf
+- Persistenzmodelle und UI-Darstellung werden logisch getrennt gehalten, damit Export und Verlauf dieselbe Datenbasis nutzen
 
 ## Vorschlag für Datenmodell
 

@@ -75,6 +75,19 @@ Die erste einreichbare Version für den App Store ist bewusst eng geschnitten:
 - kein Account, kein Backend, keine Synchronisation
 - Fokus auf `Episode anlegen`, `Medikamente erfassen`, `Verlauf ansehen`, `PDF exportieren`
 
+## Technischer Stack für die erste MVP
+
+Die erste Version basiert auf diesen verbindlichen Entscheidungen:
+
+- UI mit `SwiftUI`
+- lokale Persistenz mit `SwiftData`
+- Zielplattform nur `iPhone`
+- Architektur `lokal-first` ohne Serverabhängigkeit
+- Wetterdaten über `Open-Meteo`
+- PDF-Erzeugung lokal auf dem Gerät
+
+Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Store-Submission technisch überschaubar.
+
 ## Definition of Done für die erste Submission
 
 Die erste MVP gilt als fertig, wenn diese Punkte erfüllt sind:
