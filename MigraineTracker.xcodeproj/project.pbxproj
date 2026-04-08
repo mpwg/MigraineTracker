@@ -1,0 +1,408 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6934243EE1A75935021C43A4 /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D839E97441CF64B3460CF9A4 /* AppShellView.swift */; };
+		6C7F194CE1675FEF89050E7C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C99AFA838A6BA0DF619E4EFE /* HomeView.swift */; };
+		8085AC93E469E61A4354FA8E /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C8949DD27E1984B8E78A0A /* ExportView.swift */; };
+		B8E1C2C4AB3E6C3752F9A1B1 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B7DAEFC1788926A789BFBB /* AppTab.swift */; };
+		C2CAEBF45F6A018FA99B8DF9 /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC2168AD7637327A7700D7D /* CaptureView.swift */; };
+		CDFF199FAB2C4067DDF22815 /* MigraineTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460EED7FC7B2C0B247848187 /* MigraineTrackerApp.swift */; };
+		D956CE1316884595C77C8233 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65161BF0C7B966F53D55388C /* HistoryView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		22C8949DD27E1984B8E78A0A /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportView.swift; sourceTree = "<group>"; };
+		34B7DAEFC1788926A789BFBB /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
+		460EED7FC7B2C0B247848187 /* MigraineTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigraineTrackerApp.swift; sourceTree = "<group>"; };
+		65161BF0C7B966F53D55388C /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		8AC2168AD7637327A7700D7D /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
+		C99AFA838A6BA0DF619E4EFE /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		D657942850A17EFED6B7ABD6 /* MigraineTrackerApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MigraineTrackerApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D839E97441CF64B3460CF9A4 /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
+		F35F7BA5AE4D008106AC9754 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		F5C29F8DC542D297934E2D51 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		04E5B098CE17C12040D4E67A /* History */ = {
+			isa = PBXGroup;
+			children = (
+				65161BF0C7B966F53D55388C /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		2A7DA545FE40AB5393385C0E /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				78D03191E5A4ACB2BC5BC73A /* Capture */,
+				8DF67807A151E100F653D6BC /* Export */,
+				04E5B098CE17C12040D4E67A /* History */,
+				D7E49860858FFDFFB60F34B5 /* Home */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		57F829A13410D0FCEA5AB9D0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D657942850A17EFED6B7ABD6 /* MigraineTrackerApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6688C05D7BE7C6142947AA34 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				CE267BCE177D67DADAE04F73 /* App */,
+				2A7DA545FE40AB5393385C0E /* Features */,
+			);
+			name = Sources;
+			path = MigraineTrackerApp/Sources;
+			sourceTree = "<group>";
+		};
+		77D3E97C5F1094F161CAAECE /* Configs */ = {
+			isa = PBXGroup;
+			children = (
+				F35F7BA5AE4D008106AC9754 /* Debug.xcconfig */,
+				F5C29F8DC542D297934E2D51 /* Release.xcconfig */,
+			);
+			path = Configs;
+			sourceTree = "<group>";
+		};
+		78D03191E5A4ACB2BC5BC73A /* Capture */ = {
+			isa = PBXGroup;
+			children = (
+				8AC2168AD7637327A7700D7D /* CaptureView.swift */,
+			);
+			path = Capture;
+			sourceTree = "<group>";
+		};
+		8DF67807A151E100F653D6BC /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				22C8949DD27E1984B8E78A0A /* ExportView.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
+		CE267BCE177D67DADAE04F73 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D839E97441CF64B3460CF9A4 /* AppShellView.swift */,
+				34B7DAEFC1788926A789BFBB /* AppTab.swift */,
+				460EED7FC7B2C0B247848187 /* MigraineTrackerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D7E49860858FFDFFB60F34B5 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				C99AFA838A6BA0DF619E4EFE /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		EE6931D5C8DF7471A79E312D = {
+			isa = PBXGroup;
+			children = (
+				77D3E97C5F1094F161CAAECE /* Configs */,
+				6688C05D7BE7C6142947AA34 /* Sources */,
+				57F829A13410D0FCEA5AB9D0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0EAAA37F0F7FFC36756A20FE /* MigraineTrackerApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F67B45FA2C1724CF246885EA /* Build configuration list for PBXNativeTarget "MigraineTrackerApp" */;
+			buildPhases = (
+				A5F1E657471D1352C1A08388 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MigraineTrackerApp;
+			packageProductDependencies = (
+			);
+			productName = MigraineTrackerApp;
+			productReference = D657942850A17EFED6B7ABD6 /* MigraineTrackerApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B1080F67805A9726786CED43 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0EAAA37F0F7FFC36756A20FE = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D24A4B72A997E781CF5F7DBE /* Build configuration list for PBXProject "MigraineTracker" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = EE6931D5C8DF7471A79E312D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 57F829A13410D0FCEA5AB9D0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0EAAA37F0F7FFC36756A20FE /* MigraineTrackerApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A5F1E657471D1352C1A08388 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6934243EE1A75935021C43A4 /* AppShellView.swift in Sources */,
+				B8E1C2C4AB3E6C3752F9A1B1 /* AppTab.swift in Sources */,
+				C2CAEBF45F6A018FA99B8DF9 /* CaptureView.swift in Sources */,
+				8085AC93E469E61A4354FA8E /* ExportView.swift in Sources */,
+				D956CE1316884595C77C8233 /* HistoryView.swift in Sources */,
+				6C7F194CE1675FEF89050E7C /* HomeView.swift in Sources */,
+				CDFF199FAB2C4067DDF22815 /* MigraineTrackerApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		09D6E51C4D352FA6C092AE51 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F5C29F8DC542D297934E2D51 /* Release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Migraine Tracker nutzt deinen Standort nur, um beim Erfassen einer Episode passende Wetterdaten zu ergänzen.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = (
+					UIInterfaceOrientationPortrait,
+					UIInterfaceOrientationLandscapeLeft,
+					UIInterfaceOrientationLandscapeRight,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mpwg.MigraineTracker;
+				PRODUCT_NAME = MigraineTracker;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4C9E2291BB88BDB4DE854A72 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F35F7BA5AE4D008106AC9754 /* Debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Migraine Tracker nutzt deinen Standort nur, um beim Erfassen einer Episode passende Wetterdaten zu ergänzen.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = (
+					UIInterfaceOrientationPortrait,
+					UIInterfaceOrientationLandscapeLeft,
+					UIInterfaceOrientationLandscapeRight,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mpwg.MigraineTracker;
+				PRODUCT_NAME = MigraineTracker;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EEDF4B6F27874E75B1C6D61E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_LANGUAGE = de;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Migraine Tracker";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F8CE24D9D6AB39686B01C824 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_LANGUAGE = de;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Migraine Tracker";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D24A4B72A997E781CF5F7DBE /* Build configuration list for PBXProject "MigraineTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EEDF4B6F27874E75B1C6D61E /* Debug */,
+				F8CE24D9D6AB39686B01C824 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F67B45FA2C1724CF246885EA /* Build configuration list for PBXNativeTarget "MigraineTrackerApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C9E2291BB88BDB4DE854A72 /* Debug */,
+				09D6E51C4D352FA6C092AE51 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B1080F67805A9726786CED43 /* Project object */;
+}
