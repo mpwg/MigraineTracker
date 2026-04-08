@@ -1,6 +1,6 @@
 # Migraine Tracker
 
-Migraine Tracker ist eine App-Idee für das schnelle Erfassen von Kopfschmerzen und Migräneepisoden. Der Fokus liegt auf wenigen, klaren Eingaben, damit Betroffene Symptome, Medikamente, Wetterkontext und Arzttermine ohne großen Aufwand dokumentieren können.
+Migraine Tracker ist eine App-Idee für das schnelle Erfassen von Kopfschmerzen und Migräneepisoden. Der Fokus liegt auf wenigen, klaren Eingaben, damit Betroffene Symptome, Medikamente, Wetterkontext und Verlauf ohne großen Aufwand dokumentieren können.
 
 ## Ziel
 
@@ -10,7 +10,7 @@ Die App soll helfen,
 - mögliche Auslöser und Muster sichtbar zu machen,
 - die Wirkung von Medikamenten besser nachzuvollziehen,
 - zyklusbezogene oder hormonelle Zusammenhänge zu erkennen,
-- Arzttermine mit belastbaren Verlaufsdaten vorzubereiten.
+- Arztgespräche mit belastbaren Verlaufsdaten vorzubereiten.
 
 ## Kernfunktionen
 
@@ -19,9 +19,7 @@ Die App soll helfen,
 - Dokumentation von Medikamenten, Dosis und Wirkung
 - Erfassung weiterer Kontextdaten wie Menstruationsstatus, mögliche Trigger und Schmerzlokalisation
 - automatisches Anhängen von Wetterdaten zum Zeitpunkt des Eintrags
-- optionale Apple-Health-Integration für Import und Export relevanter Gesundheitsdaten
 - Kalender- und Verlaufsansicht
-- Erinnerungen und Verwaltung von Arztterminen
 - Export einer Übersicht für Ärztinnen und Ärzte
 
 ## Produktidee
@@ -43,10 +41,16 @@ Enthalten sind:
 - Medikamente dokumentieren
 - zusätzliche Kontextfaktoren wie Zyklusstatus, Trigger und andere Schmerzmittel dokumentieren
 - Wetterdaten speichern
-- optionale Apple-Health-Anbindung für sinnvolle Kontextdaten und dokumentierte Symptome
-- Arzttermine verwalten
-- Kalender und einfache Statistiken anzeigen
+- Verlauf in Liste und Kalender anzeigen
 - Export für Arztbesuche vorbereiten
+
+Nicht Teil der ersten App-Store-MVP sind:
+
+- `Apple Health`
+- `iPad`
+- `Englisch` oder weitere Lokalisierungen
+- `Cloud-Sync` oder eigenes Backend
+- `Arzttermine`
 
 ## Mögliche Datenquellen für Wetter
 
@@ -61,12 +65,27 @@ Für einen ersten Prototyp ist `Open-Meteo` meist die pragmatischere Wahl. Spät
 - Menschen mit diagnostizierter Migräne
 - Patientinnen und Patienten, die ihren Verlauf für Arzttermine besser dokumentieren möchten
 
-## Nächste sinnvolle Schritte
+## Verbindlicher MVP-Scope
 
-1. UX-Flow für die Erfassung definieren
-2. Datenmodell konkretisieren
-3. iOS-Screens für MVP entwerfen
-4. lokale Datenspeicherung und Export festlegen
+Die erste einreichbare Version für den App Store ist bewusst eng geschnitten:
+
+- nur `iPhone`
+- nur `Deutsch`
+- nur lokale Datenspeicherung auf dem Gerät
+- kein Account, kein Backend, keine Synchronisation
+- Fokus auf `Episode anlegen`, `Medikamente erfassen`, `Verlauf ansehen`, `PDF exportieren`
+
+## Definition of Done für die erste Submission
+
+Die erste MVP gilt als fertig, wenn diese Punkte erfüllt sind:
+
+- eine Episode kann auf dem iPhone vollständig angelegt, bearbeitet und gelöscht werden
+- Medikamente können pro Episode dokumentiert und im Verlauf wieder eingesehen werden
+- Wetterdaten werden, wenn verfügbar, automatisch als Kontext gespeichert
+- vergangene Episoden sind in einer verständlichen Verlaufsansicht sichtbar
+- für einen frei wählbaren Zeitraum kann ein verständlicher PDF-Bericht erzeugt und geteilt werden
+- die App ist auf Deutsch nutzbar und ohne Account vollständig funktionsfähig
+- es gibt keine Health-, Sync- oder Arzttermin-Abhängigkeit für die Kernnutzung
 
 ## Zusätzliche sinnvolle Datenpunkte
 

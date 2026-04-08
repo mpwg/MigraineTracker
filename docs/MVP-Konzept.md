@@ -4,17 +4,28 @@
 
 Das MVP von Migraine Tracker soll ein verlässliches, schnelles Migräne-Tagebuch sein. Nutzerinnen und Nutzer sollen eine Episode in wenigen Sekunden erfassen und später nachvollziehen können, wie häufig Beschwerden auftreten, welche Medikamente helfen und ob Wetter oder andere Faktoren eine Rolle spielen.
 
+Für die erste App-Store-Submission gilt ein bewusst enger Scope:
+
+- nur `iPhone`
+- nur `Deutsch`
+- nur lokale Datenspeicherung auf dem Gerät
+- kein Account, kein Backend, keine Synchronisation
+- Fokus auf `Episode anlegen`, `Medikamente erfassen`, `Verlauf ansehen`, `PDF exportieren`
+
 ## Nicht-Ziele im MVP
 
 Diese Punkte sind zunächst bewusst ausgeschlossen:
 
+- `Apple Health`
+- `iPad`
+- `Englisch` oder weitere Lokalisierungen
+- `Cloud-Sync` oder eigenes Backend
+- `Arzttermine`
 - komplexe Diagnose- oder Therapieempfehlungen
 - Community- oder Social-Features
 - umfangreiche KI-Auswertung
 - Anbindung an Kliniken oder Praxissysteme
 - plattformübergreifende Synchronisation als Pflichtbestandteil der ersten Version
-
-Apple Health ist dagegen eine sinnvolle optionale Integration, weil sie vorhandene iPhone- und Apple-Watch-Daten nutzbar machen kann, ohne das Grundprodukt davon abhängig zu machen.
 
 ## Zielgruppe
 
@@ -79,39 +90,7 @@ Quelle im MVP:
 - bevorzugt `Open-Meteo` oder vergleichbare freie Quelle
 - `WeatherKit` später als Ausbauoption
 
-### 4. Arzttermine verwalten
-
-- Termin mit Datum, Uhrzeit, Ort und Notiz
-- Erinnerung vor dem Termin
-- schnelle Ansicht relevanter letzter Episoden vor dem Termin
-
-### 5. Apple Health integrieren
-
-Optional und nur nach expliziter Freigabe:
-
-Schreiben nach Apple Health:
-
-- Kopfschmerz- oder symptombezogene Einträge, soweit über passende Health-Datentypen abbildbar
-- Start- und Endzeit dokumentierter Episoden
-- optional Medikamenteneinnahmen, falls fachlich und technisch im Zielumfang erwünscht
-
-Lesen aus Apple Health:
-
-- Schlafdauer und Schlafverteilung
-- Menstruations- und Zyklusdaten
-- Schrittzahl und allgemeines Aktivitätsniveau
-- Trainings und körperliche Belastung
-- Herzfrequenz, Ruheherzfrequenz und Herzfrequenzvariabilität
-- optional weitere vorhandene Vitaldaten als Therapiekontext
-
-Nutzen für die Therapievorbereitung:
-
-- Zusammenhang zwischen Attacken und Schlafmangel besser sichtbar machen
-- zyklusbezogene Häufungen erkennen
-- mögliche Korrelationen mit Belastung, Stressreaktion oder Erholung prüfen
-- ärztliche Gespräche mit mehr objektivem Kontext vorbereiten
-
-### 6. Verlauf und Auswertung
+### 4. Verlauf und Auswertung
 
 - Kalenderansicht mit Tagen und Episoden
 - Listenansicht der letzten Einträge
@@ -121,17 +100,41 @@ Nutzen für die Therapievorbereitung:
   - häufig verwendete Medikamente
   - häufige Trigger oder zyklusbezogene Häufungen
 
-### 7. Export
+### 5. Export
 
 - kompakter Bericht für einen definierten Zeitraum
 - zunächst als PDF oder strukturierte Textansicht
+
+## Kernflows der ersten Submission
+
+Diese Flows müssen ohne Produktentscheidungen umsetzbar und testbar sein:
+
+1. Episode anlegen
+   - Intensität wählen
+   - Zeit prüfen oder anpassen
+   - Symptome, Trigger und optionale Notiz ergänzen
+   - Episode speichern
+
+2. Medikamente erfassen
+   - Medikament zu einer Episode hinzufügen
+   - Name, Kategorie, Dosis, Zeitpunkt und Wirkung festhalten
+   - bestehende Medikamente schnell erneut auswählen
+
+3. Verlauf ansehen
+   - letzte Episoden in einer Liste oder Kalenderansicht sehen
+   - eine Episode im Detail mit Medikamenten und Wetterkontext öffnen
+
+4. PDF exportieren
+   - Zeitraum auswählen
+   - Bericht erzeugen
+   - Bericht systemweit teilen
 
 ## Empfohlene Screens
 
 1. Startseite
    - heutige Übersicht
    - Button `Episode erfassen`
-   - nächster Arzttermin
+   - letzter Verlaufseintrag oder Schnellzugriff auf den Verlauf
 
 2. Neue Episode
    - Intensität
@@ -150,18 +153,9 @@ Nutzen für die Therapievorbereitung:
    - Tages- und Monatsansicht
    - Detailansicht pro Episode
 
-5. Apple Health
-   - Berechtigungen verständlich erklären
-   - auswählbare Daten zum Lesen und Schreiben
-   - klare Darstellung, welche Daten importiert wurden
-
-6. Arzttermine
-   - Liste kommender Termine
-   - Termin anlegen und bearbeiten
-
-7. Statistiken
+5. Statistiken
    - Wochen- und Monatsübersicht
-   - einfache Mustererkennung auf Basis vorhandener Daten und optionaler Apple-Health-Kontexte
+   - einfache Mustererkennung auf Basis vorhandener Daten
 
 ## UX-Prinzipien
 
@@ -171,8 +165,6 @@ Nutzen für die Therapievorbereitung:
 - automatische Vorbelegung von Datum, Uhrzeit und Wetter
 - sensible Zusatzfelder wie Zyklusstatus nur optional und zurückhaltend abfragen
 - sensible Gesundheitsdaten standardmäßig lokal und zurückhaltend behandeln
-- Health-Berechtigungen granular, verständlich und widerrufbar gestalten
-- importierte Gesundheitsdaten klar von manuell eingegebenen Daten unterscheiden
 
 ## Vorschlag für Datenmodell
 
@@ -191,7 +183,6 @@ Nutzen für die Therapievorbereitung:
 - `functionalImpact`
 - `menstruationStatus`
 - `weatherSnapshotId`
-- `healthContextSnapshotId`
 
 ### MedicationEntry
 
@@ -215,39 +206,13 @@ Nutzen für die Therapievorbereitung:
 - `pressure`
 - `source`
 
-### HealthContextSnapshot
-
-- `id`
-- `recordedAt`
-- `sleepDuration`
-- `sleepConsistency`
-- `menstruationStatus`
-- `stepCount`
-- `workoutLoad`
-- `heartRateAverage`
-- `restingHeartRate`
-- `heartRateVariability`
-- `dataSources[]`
-
-### DoctorAppointment
-
-- `id`
-- `title`
-- `scheduledAt`
-- `location`
-- `notes`
-- `reminderAt`
-
 ## Technische Leitplanken für Version 1
 
 - primär iPhone-App
 - lokale Speicherung zuerst, z. B. `SwiftData` oder `Core Data`
 - Wetterabruf beim Eintrag, mit Fallback bei fehlender Verbindung
-- Apple Health nur optional, mit feingranularen Berechtigungen pro Datentyp
-- importierte Health-Daten als Snapshot am Episodenzeitpunkt speichern, damit spätere Auswertungen stabil bleiben
 - Export lokal generieren
 - Datenschutz und klare Einwilligung für Standortzugriff
-- Health-Zugriffe transparent erklären und jederzeit deaktivierbar machen
 
 ## Erfolgskriterien für das MVP
 
@@ -256,9 +221,21 @@ Nutzen für die Therapievorbereitung:
 - Medikamente sind pro Episode sichtbar
 - zusätzliche Kontextdaten liefern erkennbaren Mehrwert, ohne den Erfassungsflow unnötig zu verlangsamen
 - Wetterdaten werden zuverlässig gespeichert, wenn verfügbar
-- Apple-Health-Daten können optional eingebunden werden und verbessern die Auswertbarkeit für Therapiegespräche
-- Arzttermine können angelegt und erinnert werden
 - ein nutzbarer Bericht für Arzttermine kann erzeugt werden
+
+## Definition of Done für die erste Submission
+
+Die erste MVP ist fertig, wenn alle Punkte erfüllt sind:
+
+- die App läuft als `iPhone`-App stabil in einer Release-Konfiguration
+- die App ist vollständig auf `Deutsch` nutzbar
+- eine Episode kann angelegt, bearbeitet und gelöscht werden
+- Medikamente können pro Episode erfasst und angezeigt werden
+- Wetterkontext wird, wenn verfügbar, automatisch gespeichert
+- der Verlauf ist in einer verständlichen Listen- oder Kalenderansicht sichtbar
+- ein PDF-Bericht für einen wählbaren Zeitraum kann lokal erzeugt und geteilt werden
+- die App funktioniert vollständig ohne Account, Backend oder Synchronisation
+- weder `Apple Health` noch `Arzttermine` sind Voraussetzung für die Kernnutzung
 
 ## Nächste Umsetzungsschritte
 
@@ -266,5 +243,4 @@ Nutzen für die Therapievorbereitung:
 2. Design für Erfassung und Kalender ausarbeiten
 3. Datenmodell in App-Strukturen übersetzen
 4. Wetterquelle auswählen
-5. Apple-Health-Datentypen und Berechtigungsfluss definieren
-6. lokalen Prototyp für iOS aufsetzen
+5. lokalen Prototyp für iOS aufsetzen
