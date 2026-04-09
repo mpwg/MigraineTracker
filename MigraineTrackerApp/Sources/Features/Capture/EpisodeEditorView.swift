@@ -34,6 +34,7 @@ struct EpisodeEditorView: View {
     @State private var weatherHumidity: String
     @State private var weatherPressure: String
     @State private var weatherSource: String
+    @State private var medicationSearchText = ""
     @State private var saveMessageVisible = false
     @State private var validationMessage: String?
 
@@ -162,21 +163,40 @@ struct EpisodeEditorView: View {
             }
 
             Section("Medikamente") {
-                DisclosureGroup("Gängige Medikamente in Österreich") {
+                TextField("Medikament nach Namen filtern", text: $medicationSearchText)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+
+                if filteredMedicationGroups.isEmpty {
+                    ContentUnavailableView(
+                        "Kein Medikament gefunden",
+                        systemImage: "magnifyingglass",
+                        description: Text("Passe den Suchbegriff an oder füge ein eigenes Medikament hinzu.")
+                    )
+                } else {
                     VStack(alignment: .leading, spacing: 16) {
-                        ForEach(MedicationCatalog.austrianCommonGroups) { group in
+                        ForEach(filteredMedicationGroups) { group in
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(group.title)
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(.headline)
 
-                                ForEach(group.entries) { entry in
-                                    Button {
-                                        addMedication(from: entry)
-                                    } label: {
-                                        MedicationCatalogEntryRow(entry: entry)
+                                LazyVGrid(
+                                    columns: [GridItem(.adaptive(minimum: 220), spacing: 12, alignment: .top)],
+                                    alignment: .leading,
+                                    spacing: 12
+                                ) {
+                                    ForEach(group.entries) { entry in
+                                        Button {
+                                            addMedication(from: entry)
+                                        } label: {
+                                            MedicationCatalogEntryRow(entry: entry)
+                                        }
+                                        .buttonStyle(.plain)
                                     }
-                                    .buttonStyle(.plain)
                                 }
+                                .padding(12)
+                                .background(Color(.systemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                                 if let footer = group.footer {
                                     Text(footer)
@@ -483,6 +503,31 @@ struct EpisodeEditorView: View {
         return templates
     }
 
+    private var filteredMedicationGroups: [MedicationCatalogGroup] {
+        let query = medicationSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !query.isEmpty else {
+            return MedicationCatalog.austrianCommonGroups
+        }
+
+        return MedicationCatalog.austrianCommonGroups.compactMap { group in
+            let entries = group.entries.filter { entry in
+                entry.name.localizedCaseInsensitiveContains(query)
+            }
+
+            guard !entries.isEmpty else {
+                return nil
+            }
+
+            return MedicationCatalogGroup(
+                id: group.id,
+                title: group.title,
+                footer: group.footer,
+                entries: entries
+            )
+        }
+    }
+
     private func addMedication(from template: MedicationTemplate) {
         medications.append(
             MedicationDraft(
@@ -738,38 +783,33 @@ private struct MedicationCatalogEntryRow: View {
     let entry: MedicationCatalogEntry
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: "circle")
+                .imageScale(.large)
+                .foregroundStyle(.primary)
+                .frame(width: 28, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 3) {
                 Text(entry.name)
-                    .font(.headline)
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(.primary)
+                    .lineLimit(2)
 
-                Text(summary)
+                Text(entry.suggestedDosage)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Text(entry.note)
-                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
-            Spacer()
-
-            Image(systemName: "plus.circle.fill")
-                .imageScale(.large)
-                .foregroundStyle(Color.accentColor)
+            Spacer(minLength: 0)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(entry.name), \(summary), \(entry.note)")
+        .accessibilityLabel("\(entry.name), \(entry.suggestedDosage)")
         .accessibilityHint("Übernimmt dieses Medikament in den aktuellen Eintrag.")
-    }
-
-    private var summary: String {
-        "\(entry.category.rawValue) · \(entry.suggestedDosage)"
     }
 }
 
