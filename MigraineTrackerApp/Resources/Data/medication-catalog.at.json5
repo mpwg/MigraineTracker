@@ -1,0 +1,126 @@
+[
+  // Gängige Schmerzmittel
+  {
+    "id": "pain-relief",
+    "title": "Gängige Schmerzmittel",
+    "footer": "Diese Auswahl ist als Startpunkt gedacht. Dosis und Name bleiben frei bearbeitbar.",
+    "entries": [
+      {
+        "id": "ibuprofen",
+        "name": "Ibuprofen",
+        "category": "NSAR",
+        "suggestedDosage": "400 mg",
+        "note": "Häufig bei leichten bis mittelstarken Attacken",
+      },
+      {
+        "id": "dexibuprofen",
+        "name": "Dexibuprofen",
+        "category": "NSAR",
+        "suggestedDosage": "200 mg",
+        "note": "In Österreich verbreitete NSAR-Option",
+      },
+      {
+        "id": "paracetamol",
+        "name": "Paracetamol",
+        "category": "Paracetamol",
+        "suggestedDosage": "500–1.000 mg",
+        "note": "Klassisches Schmerzmittel, oft gut verträglich",
+      },
+      {
+        "id": "acetylsalicylsaeure",
+        "name": "Acetylsalicylsäure",
+        "category": "NSAR",
+        "suggestedDosage": "500–1.000 mg",
+        "note": "Klassisches Akutmittel bei Kopfschmerzen",
+      },
+      {
+        "id": "diclofenac",
+        "name": "Diclofenac",
+        "category": "NSAR",
+        "suggestedDosage": "50 mg",
+        "note": "Wird auch bei Migräneattacken verwendet",
+      },
+      {
+        "id": "naproxen",
+        "name": "Naproxen",
+        "category": "NSAR",
+        "suggestedDosage": "250–500 mg",
+        "note": "Länger wirksam, oft bei wiederkehrenden Schmerzen",
+      },
+      {
+        "id": "metamizol",
+        "name": "Metamizol",
+        "category": "Sonstiges",
+        "suggestedDosage": "500–1.000 mg",
+        "note": "Stärkeres Schmerzmittel, meist ärztlich begleitet",
+      },
+    ],
+  },
+
+  // Migräne-spezifische Medikamente
+  {
+    "id": "migraine-specific",
+    "title": "Migräne-spezifische Medikamente",
+    "footer": "Triptane sind in Österreich in der Regel verschreibungspflichtig.",
+    "entries": [
+      {
+        "id": "sumatriptan",
+        "name": "Sumatriptan",
+        "category": "Triptan",
+        "suggestedDosage": "50 mg",
+        "note": "Häufiger Standardwirkstoff für Akutattacken",
+      },
+      {
+        "id": "zolmitriptan",
+        "name": "Zolmitriptan",
+        "category": "Triptan",
+        "suggestedDosage": "2,5 mg",
+        "note": "Typische Option bei frühem Einnahmezeitpunkt",
+      },
+      {
+        "id": "naratriptan",
+        "name": "Naratriptan",
+        "category": "Triptan",
+        "suggestedDosage": "2,5 mg",
+        "note": "Wird oft als länger wirksame Option genutzt",
+      },
+      {
+        "id": "almotriptan",
+        "name": "Almotriptan",
+        "category": "Triptan",
+        "suggestedDosage": "12,5 mg",
+        "note": "Weitere gängige Triptan-Option",
+      },
+      {
+        "id": "rizatriptan",
+        "name": "Rizatriptan",
+        "category": "Triptan",
+        "suggestedDosage": "10 mg",
+        "note": "Wird häufig bei stärkeren Attacken eingesetzt",
+      },
+    ],
+  },
+
+  /* Begleitmedikation bei Übelkeit */
+  {
+    "id": "antiemetics",
+    "title": "Begleitmedikation bei Übelkeit",
+    "footer": "Kann die Einnahme und Wirksamkeit anderer Akutmedikamente unterstützen.",
+    "entries": [
+      {
+        "id": "metoclopramid",
+        "name": "Metoclopramid",
+        "category": "Antiemetikum",
+        "suggestedDosage": "10 mg",
+        "note": "Typische Begleitmedikation bei Übelkeit",
+      },
+      {
+        "id": "domperidon",
+        "name": "Domperidon",
+        "category": "Antiemetikum",
+        "suggestedDosage": "10 mg",
+        "note": "Alternative bei migränebedingter Übelkeit",
+      },
+    ],
+  },
+]
