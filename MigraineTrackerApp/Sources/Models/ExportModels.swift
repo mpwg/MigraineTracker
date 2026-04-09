@@ -66,11 +66,10 @@ struct ExportPeriodSummary {
 
     var episodeCount: Int { records.count }
     var averageIntensity: Double {
-        guard !records.isEmpty else { return 0 }
-        return Double(records.map(\.intensity).reduce(0, +)) / Double(records.count)
+        ExportSummaryMetrics.averageIntensity(for: records.map(\.intensity))
     }
 
     var medicationNames: [String] {
-        Array(Set(records.flatMap { $0.medications.map(\.name) })).sorted()
+        ExportSummaryMetrics.uniqueMedicationNames(from: records.map { $0.medications.map(\.name) })
     }
 }

@@ -254,7 +254,7 @@ struct EpisodeEditorView: View {
             return
         }
 
-        let parsedWeather: ParsedWeatherSnapshot?
+        let parsedWeather: ValidatedWeatherSnapshot?
 
         do {
             parsedWeather = try validatedWeatherSnapshot()
@@ -425,73 +425,19 @@ struct EpisodeEditorView: View {
         )
     }
 
-    private func validatedWeatherSnapshot() throws -> ParsedWeatherSnapshot? {
+    private func validatedWeatherSnapshot() throws -> ValidatedWeatherSnapshot? {
         guard weatherEnabled else {
             return nil
         }
 
-        let trimmedCondition = weatherCondition.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedSource = weatherSource.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedTemperature = weatherTemperature.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedHumidity = weatherHumidity.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPressure = weatherPressure.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let hasAnyInput = !trimmedCondition.isEmpty
-            || !trimmedSource.isEmpty
-            || !trimmedTemperature.isEmpty
-            || !trimmedHumidity.isEmpty
-            || !trimmedPressure.isEmpty
-
-        guard hasAnyInput else {
-            return nil
-        }
-
-        let temperature = try parseOptionalNumber(from: trimmedTemperature, fieldName: "Temperatur")
-        let humidity = try parseOptionalNumber(from: trimmedHumidity, fieldName: "Luftfeuchte")
-        let pressure = try parseOptionalNumber(from: trimmedPressure, fieldName: "Luftdruck")
-
-        if let temperature, !(-50 ... 60).contains(temperature) {
-            throw EpisodeValidationError.weatherValueOutOfRange(
-                fieldName: "Temperatur",
-                expectedRange: "-50 bis 60 °C"
-            )
-        }
-
-        if let humidity, !(0 ... 100).contains(humidity) {
-            throw EpisodeValidationError.weatherValueOutOfRange(
-                fieldName: "Luftfeuchte",
-                expectedRange: "0 bis 100 %"
-            )
-        }
-
-        if let pressure, !(870 ... 1085).contains(pressure) {
-            throw EpisodeValidationError.weatherValueOutOfRange(
-                fieldName: "Luftdruck",
-                expectedRange: "870 bis 1085 hPa"
-            )
-        }
-
-        return ParsedWeatherSnapshot(
-            condition: trimmedCondition,
-            temperature: temperature,
-            humidity: humidity,
-            pressure: pressure,
-            source: trimmedSource.isEmpty ? "Manuell" : trimmedSource
+        return try WeatherInputValidator.validate(
+            isEnabled: weatherEnabled,
+            condition: weatherCondition,
+            temperatureText: weatherTemperature,
+            humidityText: weatherHumidity,
+            pressureText: weatherPressure,
+            source: weatherSource
         )
-    }
-
-    private func parseOptionalNumber(from text: String, fieldName: String) throws -> Double? {
-        guard !text.isEmpty else {
-            return nil
-        }
-
-        let normalized = text.replacingOccurrences(of: ",", with: ".")
-
-        guard let value = Double(normalized) else {
-            throw EpisodeValidationError.invalidWeatherValue(fieldName)
-        }
-
-        return value
     }
 
     private static func stringValue(for value: Double?, fractionDigits: Int) -> String {
@@ -505,27 +451,13 @@ struct EpisodeEditorView: View {
 
 private enum EpisodeValidationError: LocalizedError {
     case medicationNameMissing
-    case invalidWeatherValue(String)
-    case weatherValueOutOfRange(fieldName: String, expectedRange: String)
 
     var errorDescription: String? {
         switch self {
         case .medicationNameMissing:
             "Bitte gib für jedes Medikament zumindest einen Namen an."
-        case let .invalidWeatherValue(fieldName):
-            "\(fieldName) muss eine gültige Zahl sein."
-        case let .weatherValueOutOfRange(fieldName, expectedRange):
-            "\(fieldName) muss im Bereich \(expectedRange) liegen."
         }
     }
-}
-
-private struct ParsedWeatherSnapshot {
-    let condition: String
-    let temperature: Double?
-    let humidity: Double?
-    let pressure: Double?
-    let source: String
 }
 
 private struct IntensityPicker: View {
