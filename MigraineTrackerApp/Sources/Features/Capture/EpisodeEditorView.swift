@@ -35,8 +35,8 @@ struct EpisodeEditorView: View {
     @State private var weatherPressure: String
     @State private var weatherSource: String
     @State private var medicationSearchText = ""
-    @State private var isAddingCustomMedication = false
-    @State private var customMedicationName = ""
+    @State private var customMedicationEditor: CustomMedicationEditorState?
+    @State private var pendingMedicationDeletion: MedicationDefinition?
     @State private var saveMessageVisible = false
     @State private var validationMessage: String?
 
@@ -171,28 +171,6 @@ struct EpisodeEditorView: View {
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
 
-                if isAddingCustomMedication {
-                    VStack(alignment: .leading, spacing: 12) {
-                        TextField("Name des eigenen Medikaments", text: $customMedicationName)
-                            .textInputAutocapitalization(.words)
-                            .autocorrectionDisabled()
-
-                        HStack {
-                            Button("Abbrechen") {
-                                customMedicationName = ""
-                                isAddingCustomMedication = false
-                            }
-
-                            Spacer()
-
-                            Button("Hinzufügen") {
-                                addCustomMedication()
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
-                    }
-                }
-
                 if filteredMedicationGroups.isEmpty {
                     ContentUnavailableView(
                         "Kein Medikament gefunden",
@@ -218,7 +196,9 @@ struct EpisodeEditorView: View {
                                             quantity: quantity(for: definition),
                                             onToggle: { toggleMedicationSelection(for: definition) },
                                             onDecrease: { decrementMedicationQuantity(for: definition) },
-                                            onIncrease: { incrementMedicationQuantity(for: definition) }
+                                            onIncrease: { incrementMedicationQuantity(for: definition) },
+                                            onEdit: definition.isCustom ? { presentEditor(for: definition) } : nil,
+                                            onDelete: definition.isCustom ? { pendingMedicationDeletion = definition } : nil
                                         )
                                     }
                                 }
@@ -256,7 +236,7 @@ struct EpisodeEditorView: View {
                 }
 
                 Button {
-                    isAddingCustomMedication = true
+                    presentEditor(for: nil)
                 } label: {
                     Label("Eigenes Medikament hinzufügen", systemImage: "plus.circle")
                 }
@@ -275,6 +255,39 @@ struct EpisodeEditorView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Die Episode wurde lokal in SwiftData gespeichert.")
+        }
+        .sheet(item: $customMedicationEditor) { editorState in
+            NavigationStack {
+                CustomMedicationEditorSheet(
+                    state: editorState,
+                    onCancel: { customMedicationEditor = nil },
+                    onSave: { draft in
+                        saveCustomMedication(from: draft)
+                    }
+                )
+            }
+            .presentationDetents([.medium])
+        }
+        .alert(
+            "Eigenes Medikament löschen?",
+            isPresented: Binding(
+                get: { pendingMedicationDeletion != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        pendingMedicationDeletion = nil
+                    }
+                }
+            ),
+            presenting: pendingMedicationDeletion
+        ) { definition in
+            Button("Löschen", role: .destructive) {
+                deleteCustomMedication(definition)
+            }
+            Button("Abbrechen", role: .cancel) {
+                pendingMedicationDeletion = nil
+            }
+        } message: { definition in
+            Text("\(definition.name) wird aus SwiftData entfernt.")
         }
     }
 
@@ -460,8 +473,8 @@ struct EpisodeEditorView: View {
         weatherPressure = ""
         weatherSource = ""
         medicationSearchText = ""
-        customMedicationName = ""
-        isAddingCustomMedication = false
+        customMedicationEditor = nil
+        pendingMedicationDeletion = nil
         validationMessage = nil
     }
 
@@ -597,8 +610,13 @@ struct EpisodeEditorView: View {
         medications[index].quantity = 1
     }
 
-    private func addCustomMedication() {
-        let trimmedName = customMedicationName.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func presentEditor(for definition: MedicationDefinition?) {
+        customMedicationEditor = CustomMedicationEditorState(definition: definition)
+    }
+
+    private func saveCustomMedication(from draft: CustomMedicationDraft) {
+        let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDosage = draft.dosage.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedName.isEmpty else {
             validationMessage = "Bitte gib einen Namen für das eigene Medikament ein."
@@ -606,38 +624,79 @@ struct EpisodeEditorView: View {
         }
 
         if let existing = medicationDefinitions.first(where: {
+            $0.catalogKey != draft.id &&
             $0.name.compare(trimmedName, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
         }) {
             toggleMedicationSelection(for: existing)
-            customMedicationName = ""
-            isAddingCustomMedication = false
+            customMedicationEditor = nil
             validationMessage = nil
             return
         }
 
-        let nextSortOrder = (medicationDefinitions.map(\.sortOrder).max() ?? 0) + 1
-        let definition = MedicationDefinition(
-            catalogKey: "custom:\(UUID().uuidString)",
-            groupID: customGroupID,
-            groupTitle: customGroupTitle,
-            groupFooter: customGroupFooter,
-            name: trimmedName,
-            category: .other,
-            suggestedDosage: "",
-            sortOrder: nextSortOrder,
-            isCustom: true
-        )
+        let existingSelectionKey = draft.originalSelectionKey
+        let definition: MedicationDefinition
 
-        modelContext.insert(definition)
+        if let existingDefinition = medicationDefinitions.first(where: { $0.catalogKey == draft.id }) {
+            definition = existingDefinition
+            definition.name = trimmedName
+            definition.category = draft.category
+            definition.suggestedDosage = trimmedDosage
+        } else {
+            let nextSortOrder = (medicationDefinitions.map(\.sortOrder).max() ?? 0) + 1
+            definition = MedicationDefinition(
+                catalogKey: "custom:\(UUID().uuidString)",
+                groupID: customGroupID,
+                groupTitle: customGroupTitle,
+                groupFooter: customGroupFooter,
+                name: trimmedName,
+                category: draft.category,
+                suggestedDosage: trimmedDosage,
+                sortOrder: nextSortOrder,
+                isCustom: true
+            )
+            modelContext.insert(definition)
+        }
 
         do {
             try modelContext.save()
-            toggleMedicationSelection(for: definition)
-            customMedicationName = ""
-            isAddingCustomMedication = false
+            customMedicationEditor = nil
             validationMessage = nil
+
+            if let existingSelectionKey {
+                updateMedicationSelection(
+                    from: existingSelectionKey,
+                    to: definition
+                )
+            } else {
+                toggleMedicationSelection(for: definition)
+            }
         } catch {
             validationMessage = "Eigenes Medikament konnte nicht gespeichert werden."
+        }
+    }
+
+    private func updateMedicationSelection(from oldSelectionKey: String, to definition: MedicationDefinition) {
+        guard let index = medications.firstIndex(where: { $0.selectionKey == oldSelectionKey }) else {
+            return
+        }
+
+        medications[index].selectionKey = definition.selectionKey
+        medications[index].name = definition.name
+        medications[index].category = definition.category
+        medications[index].dosage = definition.suggestedDosage
+        medications[index].isSelected = true
+    }
+
+    private func deleteCustomMedication(_ definition: MedicationDefinition) {
+        medications.removeAll { $0.selectionKey == definition.selectionKey }
+        modelContext.delete(definition)
+
+        do {
+            try modelContext.save()
+            pendingMedicationDeletion = nil
+            validationMessage = nil
+        } catch {
+            validationMessage = "Eigenes Medikament konnte nicht gelöscht werden."
         }
     }
 
@@ -703,7 +762,7 @@ private struct MedicationDefinitionGroup: Identifiable {
 
 private struct MedicationSelection: Identifiable {
     let id: UUID
-    let selectionKey: String
+    var selectionKey: String
     var name: String
     var category: MedicationCategory
     var dosage: String
@@ -750,6 +809,8 @@ private struct MedicationDefinitionRow: View {
     let onToggle: () -> Void
     let onDecrease: () -> Void
     let onIncrease: () -> Void
+    let onEdit: (() -> Void)?
+    let onDelete: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -812,6 +873,15 @@ private struct MedicationDefinitionRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(isSelected ? "Medikament ausgewählt. Passe die Anzahl an." : "Wählt dieses Medikament aus.")
+        .contextMenu {
+            if let onEdit {
+                Button("Bearbeiten", systemImage: "pencil", action: onEdit)
+            }
+
+            if let onDelete {
+                Button("Löschen", systemImage: "trash", role: .destructive, action: onDelete)
+            }
+        }
     }
 
     private var accessibilityLabel: String {
@@ -824,6 +894,98 @@ private struct MedicationDefinitionRow: View {
         }
 
         return "\(definition.name), \(definition.suggestedDosage)"
+    }
+}
+
+private struct CustomMedicationEditorState: Identifiable {
+    let id: String
+    let originalSelectionKey: String?
+    let initialName: String
+    let initialCategory: MedicationCategory
+    let initialDosage: String
+
+    init(definition: MedicationDefinition?) {
+        id = definition?.catalogKey ?? UUID().uuidString
+        originalSelectionKey = definition?.selectionKey
+        initialName = definition?.name ?? ""
+        initialCategory = definition?.category ?? .other
+        initialDosage = definition?.suggestedDosage ?? ""
+    }
+
+    var isEditing: Bool {
+        originalSelectionKey != nil
+    }
+}
+
+private struct CustomMedicationDraft {
+    let id: String
+    let originalSelectionKey: String?
+    let name: String
+    let category: MedicationCategory
+    let dosage: String
+}
+
+private struct CustomMedicationEditorSheet: View {
+    let state: CustomMedicationEditorState
+    let onCancel: () -> Void
+    let onSave: (CustomMedicationDraft) -> Void
+
+    @State private var name: String
+    @State private var category: MedicationCategory
+    @State private var dosage: String
+
+    init(
+        state: CustomMedicationEditorState,
+        onCancel: @escaping () -> Void,
+        onSave: @escaping (CustomMedicationDraft) -> Void
+    ) {
+        self.state = state
+        self.onCancel = onCancel
+        self.onSave = onSave
+        _name = State(initialValue: state.initialName)
+        _category = State(initialValue: state.initialCategory)
+        _dosage = State(initialValue: state.initialDosage)
+    }
+
+    var body: some View {
+        Form {
+            Section("Medikament") {
+                TextField("Name", text: $name)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+
+                Picker("Kategorie", selection: $category) {
+                    ForEach(MedicationCategory.allCases) { item in
+                        Text(item.rawValue).tag(item)
+                    }
+                }
+
+                TextField("Dosierung", text: $dosage)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
+        }
+        .navigationTitle(state.isEditing ? "Medikament bearbeiten" : "Eigenes Medikament")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Abbrechen", action: onCancel)
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button(state.isEditing ? "Speichern" : "Hinzufügen") {
+                    onSave(
+                        CustomMedicationDraft(
+                            id: state.id,
+                            originalSelectionKey: state.originalSelectionKey,
+                            name: name,
+                            category: category,
+                            dosage: dosage
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 
