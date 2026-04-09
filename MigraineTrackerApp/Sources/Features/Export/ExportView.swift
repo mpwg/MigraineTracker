@@ -33,21 +33,32 @@ struct ExportView: View {
                     createPDF()
                 }
                 .disabled(!canExport)
+                .accessibilityHint(canExport ? "Erstellt einen lokalen PDF-Bericht für den gewählten Zeitraum." : "Wähle zuerst einen gültigen Zeitraum mit mindestens einer Episode.")
 
                 if let exportURL {
                     ShareLink(item: exportURL) {
                         Label("PDF teilen", systemImage: "square.and.arrow.up")
                     }
+                    .accessibilityHint("Öffnet das Teilen-Menü für den bereits erzeugten PDF-Bericht.")
                 }
 
                 if let exportErrorMessage {
                     Text(exportErrorMessage)
                         .font(.subheadline)
                         .foregroundStyle(.red)
+                        .accessibilityLabel("Fehler: \(exportErrorMessage)")
                 }
             }
 
-            if !summary.records.isEmpty {
+            if summary.records.isEmpty {
+                Section {
+                    ContentUnavailableView(
+                        "Keine Episoden im Zeitraum",
+                        systemImage: "square.and.arrow.up",
+                        description: Text("Passe den Zeitraum an, damit ein PDF-Bericht erstellt werden kann.")
+                    )
+                }
+            } else {
                 Section("Vorschau") {
                     ForEach(summary.records.prefix(5)) { record in
                         VStack(alignment: .leading, spacing: 4) {
@@ -67,6 +78,8 @@ struct ExportView: View {
                             }
                         }
                         .padding(.vertical, 2)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(previewAccessibilityLabel(for: record))
                     }
                 }
             }
@@ -106,6 +119,24 @@ struct ExportView: View {
         } catch {
             exportErrorMessage = "Der PDF-Export konnte nicht erstellt werden."
         }
+    }
+
+    private func previewAccessibilityLabel(for record: EpisodeExportRecord) -> String {
+        var parts = [
+            record.startedAt.formatted(date: .complete, time: .shortened),
+            record.type,
+            "Intensität \(record.intensity) von 10"
+        ]
+
+        if !record.medications.isEmpty {
+            parts.append("Medikamente: \(record.medications.map(\.name).joined(separator: ", "))")
+        }
+
+        if let weather = record.weather, !weather.condition.isEmpty {
+            parts.append("Wetter: \(weather.condition)")
+        }
+
+        return parts.joined(separator: ", ")
     }
 }
 

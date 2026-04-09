@@ -123,13 +123,14 @@ struct EpisodeDetailView: View {
     }
 
     private func detailRow(_ title: String, _ value: String) -> some View {
-        HStack {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
-            Spacer()
             Text(value)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 
     private func medicationHeadline(for medication: MedicationEntry) -> String {

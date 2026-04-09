@@ -27,18 +27,21 @@ struct HomeView: View {
                 } label: {
                     Label("Episode erfassen", systemImage: "plus.circle.fill")
                 }
+                .accessibilityHint("Wechselt direkt zum schnellen Erfassungsformular.")
 
                 Button {
                     selectedTab = .history
                 } label: {
                     Label("Verlauf öffnen", systemImage: "calendar")
                 }
+                .accessibilityHint("Zeigt die gespeicherten Episoden in Liste oder Kalender.")
 
                 Button {
                     selectedTab = .export
                 } label: {
                     Label("PDF exportieren", systemImage: "square.and.arrow.up")
                 }
+                .accessibilityHint("Öffnet den Exportbereich für Arztberichte als PDF.")
 
                 NavigationLink {
                     ProductInformationView(mode: .standard)
@@ -81,6 +84,7 @@ private struct MetricRow: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 }
 

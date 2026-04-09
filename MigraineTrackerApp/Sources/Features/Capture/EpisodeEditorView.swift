@@ -74,6 +74,7 @@ struct EpisodeEditorView: View {
                     Label(validationMessage, systemImage: "exclamationmark.triangle.fill")
                         .font(.subheadline)
                         .foregroundStyle(.red)
+                        .accessibilityLabel("Fehler: \(validationMessage)")
                 }
             }
 
@@ -237,6 +238,8 @@ struct EpisodeEditorView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("\(title): \(option)")
+                    .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
                     .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
@@ -547,6 +550,7 @@ private struct IntensityPicker: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Intensität \(level)")
+                .accessibilityHint(isSelected ? "Aktuell ausgewählt." : "Setzt die Intensität auf \(level) von 10.")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
@@ -684,6 +688,9 @@ private struct MedicationTemplateRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(template.name), \(template.summary)")
+        .accessibilityHint("Übernimmt dieses Medikament in den aktuellen Eintrag.")
     }
 }
 

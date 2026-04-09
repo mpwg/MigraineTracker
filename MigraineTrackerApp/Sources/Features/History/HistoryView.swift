@@ -18,10 +18,12 @@ struct HistoryView: View {
     var body: some View {
         List {
             if episodes.isEmpty {
-                Section("Verlauf") {
-                    Text("Noch keine Episoden gespeichert.")
-                    Text("Lege zuerst eine Episode an, um den Verlauf aufzubauen.")
-                        .foregroundStyle(.secondary)
+                Section {
+                    ContentUnavailableView(
+                        "Noch keine Episoden",
+                        systemImage: "calendar.badge.plus",
+                        description: Text("Lege zuerst eine Episode an, um den Verlauf aufzubauen.")
+                    )
                 }
             } else {
                 Section {
@@ -61,8 +63,11 @@ struct HistoryView: View {
 
                     Section("Ausgewählter Tag") {
                         if episodesForSelectedDay.isEmpty {
-                            Text("Für \(selectedDay.formatted(date: .complete, time: .omitted)) sind keine Episoden gespeichert.")
-                                .foregroundStyle(.secondary)
+                            ContentUnavailableView(
+                                "Keine Episoden an diesem Tag",
+                                systemImage: "calendar",
+                                description: Text("Für \(selectedDay.formatted(date: .complete, time: .omitted)) sind keine Episoden gespeichert.")
+                            )
                         } else {
                             ForEach(episodesForSelectedDay) { episode in
                                 episodeLink(for: episode)
@@ -126,14 +131,12 @@ private struct EpisodeRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(episode.startedAt.formatted(date: .abbreviated, time: .omitted))
-                    .font(.headline)
-                Spacer()
-                Text(episode.startedAt.formatted(date: .omitted, time: .shortened))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            Text(episode.startedAt.formatted(date: .abbreviated, time: .omitted))
+                .font(.headline)
+
+            Text(episode.startedAt.formatted(date: .omitted, time: .shortened))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
 
             Text("\(episode.type.rawValue) · Intensität \(episode.intensity)/10")
                 .foregroundStyle(.secondary)
@@ -145,6 +148,9 @@ private struct EpisodeRow: View {
             }
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
+        .accessibilityHint("Öffnet die Detailansicht der Episode.")
     }
 
     private var episodeMetaLine: String {
@@ -160,6 +166,20 @@ private struct EpisodeRow: View {
 
         return parts.joined(separator: " · ")
     }
+
+    private var accessibilitySummary: String {
+        var parts = [
+            episode.startedAt.formatted(date: .complete, time: .shortened),
+            episode.type.rawValue,
+            "Intensität \(episode.intensity) von 10"
+        ]
+
+        if !episodeMetaLine.isEmpty {
+            parts.append(episodeMetaLine)
+        }
+
+        return parts.joined(separator: ", ")
+    }
 }
 
 private struct MonthHeader: View {
@@ -172,17 +192,20 @@ private struct MonthHeader: View {
             Button(action: onPrevious) {
                 Image(systemName: "chevron.left")
             }
+            .accessibilityLabel("Vorheriger Monat")
 
             Spacer()
 
             Text(month.formatted(.dateTime.month(.wide).year()))
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             Spacer()
 
             Button(action: onNext) {
                 Image(systemName: "chevron.right")
             }
+            .accessibilityLabel("Nächster Monat")
         }
         .buttonStyle(.plain)
         .padding(.vertical, 4)
@@ -207,15 +230,17 @@ private struct MonthGrid: View {
 
                 ForEach(dayCells) { cell in
                     if let date = cell.date {
-                        DayCell(
-                            date: date,
-                            isSelected: Calendar.current.isDate(date, inSameDayAs: selectedDay),
-                            episodeCount: episodesByDay[Calendar.current.startOfDay(for: date)]?.count ?? 0,
-                            peakIntensity: episodesByDay[Calendar.current.startOfDay(for: date)]?.map(\.intensity).max() ?? 0
-                        )
-                        .onTapGesture {
+                        Button {
                             selectedDay = date
+                        } label: {
+                            DayCell(
+                                date: date,
+                                isSelected: Calendar.current.isDate(date, inSameDayAs: selectedDay),
+                                episodeCount: episodesByDay[Calendar.current.startOfDay(for: date)]?.count ?? 0,
+                                peakIntensity: episodesByDay[Calendar.current.startOfDay(for: date)]?.map(\.intensity).max() ?? 0
+                            )
                         }
+                        .buttonStyle(.plain)
                     } else {
                         Color.clear
                             .frame(height: 44)
@@ -283,6 +308,10 @@ private struct DayCell: View {
         .padding(.vertical, 6)
         .background(isSelected ? Color.accentColor.opacity(0.18) : Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "")
+        .accessibilityHint("Zeigt die Episoden dieses Tages darunter an.")
     }
 
     private var intensityColor: Color {
@@ -291,6 +320,14 @@ private struct DayCell: View {
         case 5...7: .orange
         default: .yellow
         }
+    }
+
+    private var accessibilityLabel: String {
+        if episodeCount == 0 {
+            return "\(date.formatted(date: .complete, time: .omitted)), keine Episoden"
+        }
+
+        return "\(date.formatted(date: .complete, time: .omitted)), \(episodeCount) Episode\(episodeCount == 1 ? "" : "n"), höchste Intensität \(peakIntensity) von 10"
     }
 }
 
