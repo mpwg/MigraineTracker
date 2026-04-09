@@ -22,6 +22,12 @@
 			path = Configs;
 			sourceTree = "<group>";
 		};
+		A1F0B2A42A8C4C7100A10001 /* Resources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			name = Resources;
+			path = MigraineTrackerApp/Resources;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXGroup section */
@@ -38,6 +44,7 @@
 			children = (
 				40C4F9502F878DCB00BE904C /* Configs */,
 				40C4F9422F878DC400BE904C /* Sources */,
+				A1F0B2A42A8C4C7100A10001 /* Resources */,
 				57F829A13410D0FCEA5AB9D0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -50,11 +57,13 @@
 			buildConfigurationList = F67B45FA2C1724CF246885EA /* Build configuration list for PBXNativeTarget "MigraineTrackerApp" */;
 			buildPhases = (
 				A5F1E657471D1352C1A08388 /* Sources */,
+				A1F0B2A52A8C4C7100A10001 /* Resources */,
 			);
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
 				40C4F9422F878DC400BE904C /* Sources */,
+				A1F0B2A42A8C4C7100A10001 /* Resources */,
 			);
 			name = MigraineTrackerApp;
 			productName = MigraineTrackerApp;
@@ -94,6 +103,14 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		A1F0B2A52A8C4C7100A10001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A5F1E657471D1352C1A08388 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -112,11 +129,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = PZV43D6HWT;
-				INFOPLIST_KEY_CFBundleDisplayName = "Migraine Tracker";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_FILE = MigraineTrackerApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -142,11 +155,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = PZV43D6HWT;
-				INFOPLIST_KEY_CFBundleDisplayName = "Migraine Tracker";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_FILE = MigraineTrackerApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -187,10 +196,8 @@
 					"$(inherited)",
 					"DEBUG=1",
 				);
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Migraine Tracker";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MigraineTrackerApp/Info.plist;
 				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -223,10 +230,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Migraine Tracker";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MigraineTrackerApp/Info.plist;
 				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
