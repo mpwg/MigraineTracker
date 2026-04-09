@@ -122,7 +122,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.mpwg.MigraineTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTracker;
 				PRODUCT_NAME = MigraineTracker;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -152,7 +152,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.mpwg.MigraineTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTracker;
 				PRODUCT_NAME = MigraineTracker;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
