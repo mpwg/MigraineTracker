@@ -19,6 +19,12 @@ struct EpisodeDetailView: View {
                 if !episode.painCharacter.isEmpty {
                     detailRow("Charakter", episode.painCharacter)
                 }
+                if !episode.functionalImpact.isEmpty {
+                    detailRow("Einschränkung", episode.functionalImpact)
+                }
+                if episode.menstruationStatus != .unknown {
+                    detailRow("Menstruationsstatus", episode.menstruationStatus.rawValue)
+                }
             }
 
             if !episode.symptoms.isEmpty {
@@ -71,6 +77,27 @@ struct EpisodeDetailView: View {
                         }
                         .padding(.vertical, 2)
                     }
+                }
+            }
+
+            if let weatherSnapshot = episode.weatherSnapshot {
+                Section("Wetter") {
+                    if !weatherSnapshot.condition.isEmpty {
+                        detailRow("Bedingung", weatherSnapshot.condition)
+                    }
+                    if let temperature = weatherSnapshot.temperature {
+                        detailRow("Temperatur", temperature.formatted(.number.precision(.fractionLength(1))) + " °C")
+                    }
+                    if let humidity = weatherSnapshot.humidity {
+                        detailRow("Luftfeuchte", humidity.formatted(.number.precision(.fractionLength(0))) + " %")
+                    }
+                    if let pressure = weatherSnapshot.pressure {
+                        detailRow("Luftdruck", pressure.formatted(.number.precision(.fractionLength(0))) + " hPa")
+                    }
+                    if !weatherSnapshot.source.isEmpty {
+                        detailRow("Quelle", weatherSnapshot.source)
+                    }
+                    detailRow("Erfasst", weatherSnapshot.recordedAt.formatted(date: .abbreviated, time: .shortened))
                 }
             }
 
