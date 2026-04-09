@@ -44,7 +44,7 @@ struct HomeView: View {
             Section("MVP-Fokus") {
                 MetricRow(title: "Gespeicherte Episoden", detail: "\(episodes.count)")
                 MetricRow(title: "Lokale Speicherung", detail: "Keine Anmeldung, kein Backend, keine Synchronisation.")
-                MetricRow(title: "Wetterkontext", detail: "Wird später automatisch am Episodenzeitpunkt ergänzt.")
+                MetricRow(title: "Wetterkontext", detail: "Kann optional manuell pro Episode ergänzt und lokal gespeichert werden.")
             }
         }
         .navigationTitle("Migraine Tracker")
