@@ -9,6 +9,7 @@ struct EpisodeEditorView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: [SortDescriptor(\MedicationEntry.takenAt, order: .reverse)]) private var previousMedicationEntries: [MedicationEntry]
 
     private let mode: EditorMode
     private let episode: Episode?
@@ -32,6 +33,7 @@ struct EpisodeEditorView: View {
 
     private let symptomOptions = ["Übelkeit", "Lichtempfindlichkeit", "Geräuschempfindlichkeit", "Aura"]
     private let triggerOptions = ["Stress", "Schlafmangel", "Alkohol", "Menstruation", "Bildschirmzeit"]
+    private let maxRecentMedications = 6
 
     init(episode: Episode? = nil, onSaved: (() -> Void)? = nil) {
         self.episode = episode
@@ -118,6 +120,26 @@ struct EpisodeEditorView: View {
             }
 
             Section("Medikamente") {
+                let recentMedications = recentMedicationTemplates
+
+                if !recentMedications.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Zuletzt verwendet")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+
+                        ForEach(recentMedications) { template in
+                            Button {
+                                addMedication(from: template)
+                            } label: {
+                                MedicationTemplateRow(template: template)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 if medications.isEmpty {
                     Text("Nur ergänzen, wenn du heute etwas genommen hast.")
                         .font(.subheadline)
@@ -299,6 +321,42 @@ struct EpisodeEditorView: View {
             return draft
         }
     }
+
+    private var recentMedicationTemplates: [MedicationTemplate] {
+        var seenKeys = Set<String>()
+        var templates: [MedicationTemplate] = []
+
+        for entry in previousMedicationEntries {
+            let template = MedicationTemplate(entry: entry)
+
+            guard seenKeys.insert(template.deduplicationKey).inserted else {
+                continue
+            }
+
+            templates.append(template)
+
+            if templates.count == maxRecentMedications {
+                break
+            }
+        }
+
+        return templates
+    }
+
+    private func addMedication(from template: MedicationTemplate) {
+        medications.append(
+            MedicationDraft(
+                name: template.name,
+                category: template.category,
+                dosage: template.dosage,
+                takenAt: startedAt,
+                effectiveness: template.effectiveness,
+                reliefStartedAtEnabled: false,
+                reliefStartedAt: startedAt,
+                isRepeatDose: false
+            )
+        )
+    }
 }
 
 private enum EpisodeValidationError: LocalizedError {
@@ -414,6 +472,63 @@ private struct MedicationDraft: Identifiable {
         self.reliefStartedAtEnabled = entry.reliefStartedAt != nil
         self.reliefStartedAt = entry.reliefStartedAt ?? entry.takenAt
         self.isRepeatDose = entry.isRepeatDose
+    }
+}
+
+private struct MedicationTemplate: Identifiable {
+    let id: String
+    let name: String
+    let category: MedicationCategory
+    let dosage: String
+    let effectiveness: MedicationEffectiveness
+
+    init(entry: MedicationEntry) {
+        let trimmedName = entry.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDosage = entry.dosage.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        self.name = trimmedName
+        self.category = entry.category
+        self.dosage = trimmedDosage
+        self.effectiveness = entry.effectiveness
+        self.id = [trimmedName.lowercased(), entry.category.rawValue, trimmedDosage.lowercased()].joined(separator: "|")
+    }
+
+    var deduplicationKey: String { id }
+
+    var summary: String {
+        if dosage.isEmpty {
+            return "\(category.rawValue) · letzte Wirkung \(effectiveness.rawValue.lowercased())"
+        }
+
+        return "\(category.rawValue) · \(dosage) · letzte Wirkung \(effectiveness.rawValue.lowercased())"
+    }
+}
+
+private struct MedicationTemplateRow: View {
+    let template: MedicationTemplate
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(template.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(template.summary)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "plus.circle.fill")
+                .imageScale(.large)
+                .foregroundStyle(Color.accentColor)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 

@@ -39,15 +39,35 @@ struct EpisodeDetailView: View {
 
             if !episode.medications.isEmpty {
                 Section("Medikamente") {
-                    ForEach(episode.medications) { medication in
+                    ForEach(episode.medications.sorted(by: { $0.takenAt < $1.takenAt })) { medication in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(medication.name)
-                                .font(.headline)
-                            Text("\(medication.category.rawValue) · \(medication.dosage)")
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(medication.name)
+                                    .font(.headline)
+                                Spacer()
+                                Text(medication.takenAt.formatted(date: .omitted, time: .shortened))
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Text(medicationHeadline(for: medication))
                                 .foregroundStyle(.secondary)
+
                             Text("Wirkung: \(medication.effectiveness.rawValue)")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
+
+                            if medication.isRepeatDose {
+                                Text("Als Wiederholungseinnahme dokumentiert")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            if let reliefStartedAt = medication.reliefStartedAt {
+                                Text("Wirkungseintritt: \(reliefStartedAt.formatted(date: .omitted, time: .shortened))")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         .padding(.vertical, 2)
                     }
@@ -83,5 +103,13 @@ struct EpisodeDetailView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
         }
+    }
+
+    private func medicationHeadline(for medication: MedicationEntry) -> String {
+        if medication.dosage.isEmpty {
+            return medication.category.rawValue
+        }
+
+        return "\(medication.category.rawValue) · \(medication.dosage)"
     }
 }
