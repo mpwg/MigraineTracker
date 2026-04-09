@@ -162,6 +162,33 @@ struct EpisodeEditorView: View {
             }
 
             Section("Medikamente") {
+                DisclosureGroup("Gängige Medikamente in Österreich") {
+                    VStack(alignment: .leading, spacing: 16) {
+                        ForEach(MedicationCatalog.austrianCommonGroups) { group in
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(group.title)
+                                    .font(.subheadline.weight(.semibold))
+
+                                ForEach(group.entries) { entry in
+                                    Button {
+                                        addMedication(from: entry)
+                                    } label: {
+                                        MedicationCatalogEntryRow(entry: entry)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+
+                                if let footer = group.footer {
+                                    Text(footer)
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 let recentMedications = recentMedicationTemplates
 
                 if !recentMedications.isEmpty {
@@ -187,18 +214,17 @@ struct EpisodeEditorView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach($medications) { $medication in
-                        MedicationDraftForm(draft: $medication)
-                    }
-                    .onDelete { offsets in
-                        medications.remove(atOffsets: offsets)
+                    ForEach(medications.indices, id: \.self) { index in
+                        MedicationDraftForm(draft: $medications[index]) {
+                            medications.remove(at: index)
+                        }
                     }
                 }
 
                 Button {
-                    medications.append(MedicationDraft())
+                    medications.append(MedicationDraft(takenAt: startedAt, reliefStartedAt: startedAt))
                 } label: {
-                    Label("Medikament hinzufügen", systemImage: "plus.circle")
+                    Label("Eigenes Medikament hinzufügen", systemImage: "plus.circle")
                 }
             }
 
@@ -472,6 +498,20 @@ struct EpisodeEditorView: View {
         )
     }
 
+    private func addMedication(from entry: MedicationCatalogEntry) {
+        medications.append(
+            MedicationDraft(
+                name: entry.name,
+                category: entry.category,
+                dosage: entry.suggestedDosage,
+                takenAt: startedAt,
+                effectiveness: .partial,
+                reliefStartedAtEnabled: false,
+                reliefStartedAt: startedAt,
+                isRepeatDose: false
+            )
+        )
+    }
     private func validatedWeatherSnapshot() throws -> ValidatedWeatherSnapshot? {
         guard weatherEnabled else {
             return nil
@@ -538,15 +578,30 @@ private struct IntensityPicker: View {
 
 private struct MedicationDraftForm: View {
     @Binding var draft: MedicationDraft
+    let onRemove: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Neues Medikament" : draft.name)
+                    .font(.headline)
+
+                Spacer()
+
+                Button(role: .destructive, action: onRemove) {
+                    Label("Entfernen", systemImage: "trash")
+                        .labelStyle(.iconOnly)
+                }
+                .accessibilityLabel("Medikament entfernen")
+            }
+
             TextField("Name", text: $draft.name)
             Picker("Kategorie", selection: $draft.category) {
                 ForEach(MedicationCategory.allCases) { category in
                     Text(category.rawValue).tag(category)
                 }
             }
+            .pickerStyle(.menu)
 
             TextField("Dosis", text: $draft.dosage)
             DatePicker("Einnahme", selection: $draft.takenAt)
@@ -562,8 +617,14 @@ private struct MedicationDraftForm: View {
             if draft.reliefStartedAtEnabled {
                 DatePicker("Wirkungseintritt", selection: $draft.reliefStartedAt)
             }
+
+            Text("Katalogeinträge und eigene Medikamente lassen sich hier jederzeit umbenennen oder anpassen.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -670,6 +731,45 @@ private struct MedicationTemplateRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(template.name), \(template.summary)")
         .accessibilityHint("Übernimmt dieses Medikament in den aktuellen Eintrag.")
+    }
+}
+
+private struct MedicationCatalogEntryRow: View {
+    let entry: MedicationCatalogEntry
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(entry.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(summary)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Text(entry.note)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "plus.circle.fill")
+                .imageScale(.large)
+                .foregroundStyle(Color.accentColor)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(entry.name), \(summary), \(entry.note)")
+        .accessibilityHint("Übernimmt dieses Medikament in den aktuellen Eintrag.")
+    }
+
+    private var summary: String {
+        "\(entry.category.rawValue) · \(entry.suggestedDosage)"
     }
 }
 
