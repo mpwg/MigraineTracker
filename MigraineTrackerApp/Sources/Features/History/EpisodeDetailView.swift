@@ -149,7 +149,7 @@ struct EpisodeDetailView: View {
 
             Button("Abbrechen", role: .cancel) {}
         } message: {
-            Text("Diese Episode wird dauerhaft gelöscht.")
+            Text("Diese Episode wird in den Papierkorb verschoben.")
         }
     }
 
@@ -173,7 +173,7 @@ struct EpisodeDetailView: View {
     }
 
     private func deleteEpisode() {
-        modelContext.delete(episode)
+        episode.markDeleted()
 
         do {
             try modelContext.save()

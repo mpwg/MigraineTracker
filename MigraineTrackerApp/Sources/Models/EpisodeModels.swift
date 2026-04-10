@@ -41,6 +41,8 @@ final class Episode {
     @Attribute(.unique) var id: UUID
     var startedAt: Date
     var endedAt: Date?
+    var updatedAt: Date
+    var deletedAt: Date?
     var typeRaw: String
     var intensity: Int
     var painLocation: String
@@ -61,6 +63,8 @@ final class Episode {
         id: UUID = UUID(),
         startedAt: Date,
         endedAt: Date? = nil,
+        updatedAt: Date = .now,
+        deletedAt: Date? = nil,
         type: EpisodeType = .unclear,
         intensity: Int,
         painLocation: String = "",
@@ -75,6 +79,8 @@ final class Episode {
         self.id = id
         self.startedAt = startedAt
         self.endedAt = endedAt
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
         self.typeRaw = type.rawValue
         self.intensity = intensity
         self.painLocation = painLocation
@@ -109,6 +115,25 @@ final class Episode {
 
     var hasWeatherSnapshot: Bool {
         weatherSnapshot != nil
+    }
+
+    var isDeleted: Bool {
+        deletedAt != nil
+    }
+
+    func markUpdated(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
+    }
+
+    func markDeleted(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = date
+    }
+
+    func restore(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
     }
 
     private static func decodeList(_ storage: String) -> [String] {
@@ -180,6 +205,8 @@ final class MedicationDefinition {
     var sortOrder: Int
     var isCustom: Bool
     var createdAt: Date
+    var updatedAt: Date
+    var deletedAt: Date?
 
     init(
         catalogKey: String,
@@ -191,7 +218,9 @@ final class MedicationDefinition {
         suggestedDosage: String,
         sortOrder: Int,
         isCustom: Bool,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        updatedAt: Date = .now,
+        deletedAt: Date? = nil
     ) {
         self.catalogKey = catalogKey
         self.groupID = groupID
@@ -203,6 +232,8 @@ final class MedicationDefinition {
         self.sortOrder = sortOrder
         self.isCustom = isCustom
         self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
     }
 
     var category: MedicationCategory {
@@ -216,6 +247,25 @@ final class MedicationDefinition {
             category.rawValue,
             suggestedDosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         ].joined(separator: "|")
+    }
+
+    var isDeleted: Bool {
+        deletedAt != nil
+    }
+
+    func markUpdated(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
+    }
+
+    func markDeleted(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = date
+    }
+
+    func restore(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
     }
 }
 

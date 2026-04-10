@@ -120,6 +120,8 @@ struct EpisodePayload: Codable {
     let id: UUID
     let startedAt: Date
     let endedAt: Date?
+    let updatedAt: Date
+    let deletedAt: Date?
     let type: EpisodeType
     let intensity: Int
     let painLocation: String
@@ -136,6 +138,8 @@ struct EpisodePayload: Codable {
         self.id = episode.id
         self.startedAt = episode.startedAt
         self.endedAt = episode.endedAt
+        self.updatedAt = episode.updatedAt
+        self.deletedAt = episode.deletedAt
         self.type = episode.type
         self.intensity = episode.intensity
         self.painLocation = episode.painLocation
@@ -154,6 +158,8 @@ struct EpisodePayload: Codable {
             id: id,
             startedAt: startedAt,
             endedAt: endedAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
             type: type,
             intensity: intensity,
             painLocation: painLocation,
@@ -173,6 +179,8 @@ struct EpisodePayload: Codable {
     func apply(to episode: Episode, in context: ModelContext) {
         episode.startedAt = startedAt
         episode.endedAt = endedAt
+        episode.updatedAt = updatedAt
+        episode.deletedAt = deletedAt
         episode.type = type
         episode.intensity = intensity
         episode.painLocation = painLocation
@@ -317,6 +325,8 @@ struct MedicationDefinitionPayload: Codable {
     let sortOrder: Int
     let isCustom: Bool
     let createdAt: Date
+    let updatedAt: Date
+    let deletedAt: Date?
 
     init(definition: MedicationDefinition) {
         self.catalogKey = definition.catalogKey
@@ -329,6 +339,8 @@ struct MedicationDefinitionPayload: Codable {
         self.sortOrder = definition.sortOrder
         self.isCustom = definition.isCustom
         self.createdAt = definition.createdAt
+        self.updatedAt = definition.updatedAt
+        self.deletedAt = definition.deletedAt
     }
 
     func makeModel() -> MedicationDefinition {
@@ -342,7 +354,9 @@ struct MedicationDefinitionPayload: Codable {
             suggestedDosage: suggestedDosage,
             sortOrder: sortOrder,
             isCustom: isCustom,
-            createdAt: createdAt
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt
         )
     }
 
@@ -356,5 +370,7 @@ struct MedicationDefinitionPayload: Codable {
         definition.sortOrder = sortOrder
         definition.isCustom = isCustom
         definition.createdAt = createdAt
+        definition.updatedAt = updatedAt
+        definition.deletedAt = deletedAt
     }
 }

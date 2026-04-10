@@ -10,7 +10,7 @@ struct HistoryView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var episodes: [Episode]
+    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
     @State private var mode: HistoryMode = .list
     @State private var selectedDay: Date = .now
     @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: .now)
@@ -111,12 +111,16 @@ struct HistoryView: View {
                 pendingDeletion = nil
             }
         } message: { episode in
-            Text("\(episode.startedAt.formatted(date: .abbreviated, time: .shortened)) wird dauerhaft gelöscht.")
+            Text("\(episode.startedAt.formatted(date: .abbreviated, time: .shortened)) wird in den Papierkorb verschoben.")
         }
     }
 
     private var episodesByDay: [Date: [Episode]] {
         Dictionary(grouping: episodes) { Calendar.current.startOfDay(for: $0.startedAt) }
+    }
+
+    private var episodes: [Episode] {
+        storedEpisodes.filter { !$0.isDeleted }
     }
 
     private var episodesForSelectedDay: [Episode] {
@@ -154,7 +158,7 @@ struct HistoryView: View {
 
     private func deleteEpisodes(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(episodes[index])
+            episodes[index].markDeleted()
         }
 
         do {
@@ -168,7 +172,7 @@ struct HistoryView: View {
         let dayEpisodes = episodesForSelectedDay
 
         for index in offsets {
-            modelContext.delete(dayEpisodes[index])
+            dayEpisodes[index].markDeleted()
         }
 
         do {
@@ -179,7 +183,7 @@ struct HistoryView: View {
     }
 
     private func deleteEpisode(_ episode: Episode) {
-        modelContext.delete(episode)
+        episode.markDeleted()
 
         do {
             try modelContext.save()

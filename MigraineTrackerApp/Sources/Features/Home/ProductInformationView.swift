@@ -26,11 +26,11 @@ struct ProductInformationView: View {
             Section("Datenschutz") {
                 infoRow(
                     title: "Lokale Gesundheitsdaten",
-                    detail: "Episoden, Medikamente, Notizen, Trigger, Symptome und optionale Wetterangaben bleiben auf dem Gerät."
+                    detail: "Episoden, Medikamente, Notizen, Trigger, Symptome und optionale Wetterangaben werden lokal auf dem Gerät gespeichert."
                 )
                 infoRow(
-                    title: "Kein Account, kein Backend",
-                    detail: "Es gibt keine Anmeldung, keine Cloud-Synchronisation und keine Server-Speicherung."
+                    title: "Optionale iCloud-Synchronisation",
+                    detail: "Cloud-Sync ist freiwillig. Ohne Aktivierung bleiben die Daten ausschließlich lokal auf diesem Gerät."
                 )
                 infoRow(
                     title: "PDF-Export nur auf deinen Befehl",

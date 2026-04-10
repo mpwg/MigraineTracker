@@ -128,6 +128,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_ENTITLEMENTS = MigraineTrackerApp/MigraineTrackerApp.entitlements;
 				DEVELOPMENT_TEAM = PZV43D6HWT;
 				INFOPLIST_FILE = MigraineTrackerApp/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -156,6 +157,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_ENTITLEMENTS = MigraineTrackerApp/MigraineTrackerApp.entitlements;
 				DEVELOPMENT_TEAM = PZV43D6HWT;
 				INFOPLIST_FILE = MigraineTrackerApp/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;

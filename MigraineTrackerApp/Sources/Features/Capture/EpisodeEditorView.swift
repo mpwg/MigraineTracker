@@ -9,7 +9,7 @@ struct EpisodeEditorView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: [SortDescriptor(\MedicationDefinition.sortOrder), SortDescriptor(\MedicationDefinition.name)]) private var medicationDefinitions: [MedicationDefinition]
+    @Query(sort: [SortDescriptor(\MedicationDefinition.sortOrder), SortDescriptor(\MedicationDefinition.name)]) private var storedMedicationDefinitions: [MedicationDefinition]
 
     private let mode: EditorMode
     private let episode: Episode?
@@ -385,6 +385,7 @@ struct EpisodeEditorView: View {
 
         let target = episode ?? Episode(startedAt: startedAt, intensity: Int(intensity))
 
+        target.markUpdated()
         target.type = type
         target.startedAt = startedAt
         target.endedAt = endedAtEnabled ? endedAt : nil
@@ -638,6 +639,7 @@ struct EpisodeEditorView: View {
 
         if let existingDefinition = medicationDefinitions.first(where: { $0.catalogKey == draft.id }) {
             definition = existingDefinition
+            definition.markUpdated()
             definition.name = trimmedName
             definition.category = draft.category
             definition.suggestedDosage = trimmedDosage
@@ -689,7 +691,7 @@ struct EpisodeEditorView: View {
 
     private func deleteCustomMedication(_ definition: MedicationDefinition) {
         medications.removeAll { $0.selectionKey == definition.selectionKey }
-        modelContext.delete(definition)
+        definition.markDeleted()
 
         do {
             try modelContext.save()
@@ -721,6 +723,10 @@ struct EpisodeEditorView: View {
         }
 
         return value.formatted(.number.precision(.fractionLength(fractionDigits)))
+    }
+
+    private var medicationDefinitions: [MedicationDefinition] {
+        storedMedicationDefinitions.filter { !$0.isDeleted }
     }
 }
 
