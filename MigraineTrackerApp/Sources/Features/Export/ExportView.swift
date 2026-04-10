@@ -2,11 +2,16 @@ import SwiftData
 import SwiftUI
 
 struct ExportView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var startDate = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
     @State private var endDate = Date()
     @State private var exportURL: URL?
     @State private var exportErrorMessage: String?
+    @State private var dataExportURL: URL?
+    @State private var dataTransferMessage: String?
+    @State private var isImportingData = false
     @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var episodes: [Episode]
+    @Query(filter: #Predicate<MedicationDefinition> { $0.isCustom }, sort: [SortDescriptor(\MedicationDefinition.sortOrder)]) private var customMedicationDefinitions: [MedicationDefinition]
 
     var body: some View {
         let summary = exportSummary
@@ -26,6 +31,36 @@ struct ExportView: View {
                 }
                 Text("Der PDF-Export wird lokal erzeugt und über das iOS-Share-Sheet geteilt.")
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Daten sichern") {
+                Text("JSON5-Export enthält alle Episoden sowie eigene Medikamentenvorlagen.")
+                    .foregroundStyle(.secondary)
+
+                Button("JSON5 erstellen") {
+                    createDataExport()
+                }
+                .disabled(!hasTransferData)
+                .accessibilityHint(hasTransferData ? "Erstellt eine lokale JSON5-Sicherungsdatei mit allen Episoden." : "Lege zuerst Episoden oder eigene Medikamentenvorlagen an, damit ein JSON5-Export erstellt werden kann.")
+
+                Button("JSON5 importieren") {
+                    isImportingData = true
+                }
+                .accessibilityHint("Importiert eine zuvor exportierte JSON5-Datei und ergänzt oder aktualisiert vorhandene Daten.")
+
+                if let dataExportURL {
+                    ShareLink(item: dataExportURL) {
+                        Label("JSON5 teilen", systemImage: "square.and.arrow.up")
+                    }
+                    .accessibilityHint("Öffnet das Teilen-Menü für die bereits erzeugte JSON5-Datei.")
+                }
+
+                if let dataTransferMessage {
+                    Text(dataTransferMessage)
+                        .font(.subheadline)
+                        .foregroundStyle(dataTransferMessage.contains("Fehler") ? .red : .secondary)
+                        .accessibilityLabel(dataTransferMessage)
+                }
             }
 
             Section("Aktionen") {
@@ -85,10 +120,20 @@ struct ExportView: View {
             }
         }
         .navigationTitle("Export")
+        .fileImporter(
+            isPresented: $isImportingData,
+            allowedContentTypes: [.migraineTrackerJSON5, .json, .plainText]
+        ) { result in
+            importData(from: result)
+        }
     }
 
     private var canExport: Bool {
         !exportSummary.records.isEmpty && startDate <= endDate
+    }
+
+    private var hasTransferData: Bool {
+        !episodes.isEmpty || !customMedicationDefinitions.isEmpty
     }
 
     private var exportSummary: ExportPeriodSummary {
@@ -118,6 +163,42 @@ struct ExportView: View {
             exportURL = try PDFExportWriter.write(summary: exportSummary)
         } catch {
             exportErrorMessage = "Der PDF-Export konnte nicht erstellt werden."
+        }
+    }
+
+    private func createDataExport() {
+        dataTransferMessage = nil
+        dataExportURL = nil
+
+        guard hasTransferData else {
+            dataTransferMessage = "Es sind noch keine Daten für einen JSON5-Export vorhanden."
+            return
+        }
+
+        do {
+            let snapshot = DataTransferSnapshot(
+                episodes: episodes,
+                customMedicationDefinitions: customMedicationDefinitions
+            )
+            dataExportURL = try snapshot.writeToTemporaryFile()
+            dataTransferMessage = "JSON5-Datei wurde lokal erstellt."
+        } catch {
+            dataTransferMessage = "Fehler beim Erstellen der JSON5-Datei."
+        }
+    }
+
+    private func importData(from result: Result<URL, Error>) {
+        dataTransferMessage = nil
+
+        do {
+            let url = try result.get()
+            let snapshot = try DataTransferSnapshot.load(from: url)
+            try snapshot.merge(into: modelContext)
+            dataTransferMessage = "JSON5-Daten wurden importiert."
+        } catch CocoaError.userCancelled {
+            return
+        } catch {
+            dataTransferMessage = "Fehler beim Import der JSON5-Datei."
         }
     }
 
