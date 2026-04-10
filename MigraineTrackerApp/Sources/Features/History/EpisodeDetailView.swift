@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct EpisodeDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+
     let episode: Episode
     @State private var isEditing = false
+    @State private var isShowingDeleteConfirmation = false
 
     var body: some View {
         List {
@@ -122,11 +126,30 @@ struct EpisodeDetailView: View {
                     isEditing = true
                 }
             }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Löschen", role: .destructive) {
+                    isShowingDeleteConfirmation = true
+                }
+            }
         }
         .sheet(isPresented: $isEditing) {
             NavigationStack {
                 EpisodeEditorView(episode: episode)
             }
+        }
+        .confirmationDialog(
+            "Episode löschen?",
+            isPresented: $isShowingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Löschen", role: .destructive) {
+                deleteEpisode()
+            }
+
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Diese Episode wird dauerhaft gelöscht.")
         }
     }
 
@@ -147,5 +170,16 @@ struct EpisodeDetailView: View {
         }
 
         return "\(medication.category.rawValue) · \(medication.dosage)"
+    }
+
+    private func deleteEpisode() {
+        modelContext.delete(episode)
+
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            assertionFailure("Löschen fehlgeschlagen: \(error)")
+        }
     }
 }

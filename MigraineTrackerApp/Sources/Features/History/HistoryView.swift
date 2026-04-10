@@ -14,6 +14,8 @@ struct HistoryView: View {
     @State private var mode: HistoryMode = .list
     @State private var selectedDay: Date = .now
     @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: .now)
+    @State private var editingEpisode: Episode?
+    @State private var pendingDeletion: Episode?
 
     var body: some View {
         List {
@@ -79,6 +81,38 @@ struct HistoryView: View {
             }
         }
         .navigationTitle("Verlauf")
+        .sheet(item: $editingEpisode) { episode in
+            NavigationStack {
+                EpisodeEditorView(episode: episode)
+            }
+        }
+        .confirmationDialog(
+            "Episode löschen?",
+            isPresented: Binding(
+                get: { pendingDeletion != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        pendingDeletion = nil
+                    }
+                }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingDeletion
+        ) { episode in
+            Button("Bearbeiten") {
+                editingEpisode = episode
+            }
+
+            Button("Löschen", role: .destructive) {
+                deleteEpisode(episode)
+            }
+
+            Button("Abbrechen", role: .cancel) {
+                pendingDeletion = nil
+            }
+        } message: { episode in
+            Text("\(episode.startedAt.formatted(date: .abbreviated, time: .shortened)) wird dauerhaft gelöscht.")
+        }
     }
 
     private var episodesByDay: [Date: [Episode]] {
@@ -96,6 +130,25 @@ struct HistoryView: View {
             EpisodeDetailView(episode: episode)
         } label: {
             EpisodeRow(episode: episode)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button("Löschen", role: .destructive) {
+                pendingDeletion = episode
+            }
+
+            Button("Bearbeiten") {
+                editingEpisode = episode
+            }
+            .tint(.accentColor)
+        }
+        .contextMenu {
+            Button("Bearbeiten", systemImage: "pencil") {
+                editingEpisode = episode
+            }
+
+            Button("Löschen", systemImage: "trash", role: .destructive) {
+                pendingDeletion = episode
+            }
         }
     }
 
@@ -120,6 +173,17 @@ struct HistoryView: View {
 
         do {
             try modelContext.save()
+        } catch {
+            assertionFailure("Löschen fehlgeschlagen: \(error)")
+        }
+    }
+
+    private func deleteEpisode(_ episode: Episode) {
+        modelContext.delete(episode)
+
+        do {
+            try modelContext.save()
+            pendingDeletion = nil
         } catch {
             assertionFailure("Löschen fehlgeschlagen: \(error)")
         }

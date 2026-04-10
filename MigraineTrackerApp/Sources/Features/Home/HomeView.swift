@@ -61,10 +61,10 @@ struct HomeView: View {
                     title: "Tracking statt Diagnose",
                     detail: "Die App dokumentiert Episoden und Medikamente, gibt aber keine Diagnose und keine Therapieempfehlung."
                 )
-                MetricRow(
-                    title: "Aktuell keine Systemberechtigung nötig",
-                    detail: "Standort- und Health-Daten werden in Version 1 nicht abgefragt."
-                )
+//                MetricRow(
+//                    title: "Aktuell keine Systemberechtigung nötig",
+ //                   detail: "Standort- und Health-Daten werden in Version 1 nicht abgefragt."
+//                )
             }
         }
         .navigationTitle("Migraine Tracker")
