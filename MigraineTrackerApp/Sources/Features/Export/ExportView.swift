@@ -12,15 +12,24 @@ struct ExportView: View {
                 NavigationLink {
                     SyncStatusView()
                 } label: {
-                    HStack {
-                        Text("Status")
-                        Spacer()
-                        Circle()
-                            .fill(statusColor)
-                            .frame(width: 10, height: 10)
-                        Text(syncCoordinator.status.state.displayTitle)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("Status")
+                            Spacer()
+                            statusBadge
+                        }
+
+                        Text(statusSubtitle)
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
+
+                        HStack(spacing: 16) {
+                            statValue(title: "Ausstehend", value: "\(syncCoordinator.status.queuedUpdates)")
+                            statValue(title: "Ungesynct", value: "\(syncCoordinator.status.unsyncedRecords)")
+                            statValue(title: "Konflikte", value: "\(syncCoordinator.conflicts.count)")
+                        }
                     }
+                    .padding(.vertical, 6)
                 }
 
                 Toggle("Sync aktivieren", isOn: Binding(
@@ -38,10 +47,10 @@ struct ExportView: View {
                 Text("Synchronisation")
             }
             footer: {
-                Text("Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional und kann jederzeit wieder deaktiviert werden.")
+                Text("Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden.")
             }
 
-            Section("Export") {
+            Section("Daten sichern") {
                 NavigationLink {
                     DataExportView()
                 } label: {
@@ -78,6 +87,49 @@ struct ExportView: View {
             .gray
         }
     }
+
+    private var statusSubtitle: String {
+        if let lastError = syncCoordinator.status.lastError, !lastError.isEmpty {
+            return lastError
+        }
+
+        if let lastUploadedAt = syncCoordinator.status.lastUploadedAt {
+            return "Letzter Upload: \(formatted(lastUploadedAt))"
+        }
+
+        if let lastDownloadedAt = syncCoordinator.status.lastDownloadedAt {
+            return "Letzter Download: \(formatted(lastDownloadedAt))"
+        }
+
+        return syncCoordinator.isEnabled
+            ? "Synchronisation ist bereit. Lokale Änderungen bleiben bis zum nächsten Lauf sicher auf dem Gerät."
+            : "Synchronisation ist deaktiviert. Alle Daten bleiben lokal auf diesem Gerät erhalten."
+    }
+
+    private var statusBadge: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(statusColor)
+                .frame(width: 10, height: 10)
+            Text(syncCoordinator.status.state.displayTitle)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func statValue(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func formatted(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .shortened)
+    }
 }
 
 private struct SyncStatusView: View {
@@ -85,13 +137,13 @@ private struct SyncStatusView: View {
 
     var body: some View {
         List {
-            Section("Status") {
+            Section {
                 statusRow("Status", syncCoordinator.status.state.displayTitle)
-                statusRow("Service", syncCoordinator.status.service)
-                statusRow("Queued Updates", "\(syncCoordinator.status.queuedUpdates)")
-                statusRow("Unsynced Records", "\(syncCoordinator.status.unsyncedRecords)")
-                statusRow("Last Downloaded", formatted(syncCoordinator.status.lastDownloadedAt))
-                statusRow("Last Uploaded", formatted(syncCoordinator.status.lastUploadedAt))
+                statusRow("Dienst", syncCoordinator.status.service)
+                statusRow("Ausstehende Uploads", "\(syncCoordinator.status.queuedUpdates)")
+                statusRow("Ungesyncte Einträge", "\(syncCoordinator.status.unsyncedRecords)")
+                statusRow("Letzter Download", formatted(syncCoordinator.status.lastDownloadedAt))
+                statusRow("Letzter Upload", formatted(syncCoordinator.status.lastUploadedAt))
 
                 if let lastError = syncCoordinator.status.lastError {
                     VStack(alignment: .leading, spacing: 6) {
@@ -102,6 +154,11 @@ private struct SyncStatusView: View {
                     }
                     .padding(.vertical, 4)
                 }
+            } header: {
+                Text("Status")
+            }
+            footer: {
+                Text(statusFooter)
             }
         }
         .navigationTitle("Status")
@@ -126,6 +183,25 @@ private struct SyncStatusView: View {
 
         return date.formatted(date: .numeric, time: .shortened)
     }
+
+    private var statusFooter: String {
+        switch syncCoordinator.status.state {
+        case .disabled:
+            "Der Cloud-Sync ist ausgeschaltet. Lokale Daten bleiben unverändert verfügbar."
+        case .ready:
+            "Der Sync-Dienst ist bereit. Änderungen werden beim nächsten Lauf in die private iCloud-Datenbank übertragen."
+        case .syncing:
+            "Es läuft gerade ein Abgleich zwischen lokalem Speicher und iCloud."
+        case .needsAttention:
+            "Der Sync braucht Aufmerksamkeit. Prüfe die Fehlermeldung und versuche den Abgleich erneut."
+        case .conflict:
+            "Mindestens ein Eintrag wurde auf mehreren Geräten unterschiedlich verändert. Erst nach einer Entscheidung gilt der Datensatz wieder als sauber synchronisiert."
+        case .noICloudAccount:
+            "Für iCloud-Sync muss auf dem Gerät ein iCloud-Account angemeldet sein."
+        case .offline:
+            "Ohne Netzwerk bleiben alle Daten lokal erhalten und werden später erneut versucht."
+        }
+    }
 }
 
 private struct ManageCloudDataView: View {
@@ -136,6 +212,17 @@ private struct ManageCloudDataView: View {
 
     var body: some View {
         List {
+            Section {
+                statusRow("Sync", syncCoordinator.isEnabled ? "Aktiviert" : "Deaktiviert")
+                statusRow("Offene Konflikte", "\(syncCoordinator.conflicts.count)")
+                statusRow("Papierkorb", "\(deletedEpisodes.count + deletedDefinitions.count)")
+            } header: {
+                Text("Übersicht")
+            }
+            footer: {
+                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst.")
+            }
+
             Section {
                 Button("Jetzt synchronisieren") {
                     Task {
@@ -162,6 +249,8 @@ private struct ManageCloudDataView: View {
             footer: {
                 if !syncCoordinator.isEnabled {
                     Text("Aktiviere den Sync, um iCloud-Synchronisation und Konfliktbehandlung zu verwenden.")
+                } else {
+                    Text("Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht.")
                 }
             }
 
@@ -172,9 +261,9 @@ private struct ManageCloudDataView: View {
                 } else {
                     ForEach(syncCoordinator.conflicts) { conflict in
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(conflict.documentID)
+                            Text(conflictTitle(for: conflict))
                                 .font(.headline)
-                            Text(conflict.conflictingFields.joined(separator: ", "))
+                            Text("Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
@@ -252,6 +341,24 @@ private struct ManageCloudDataView: View {
         definition.restore()
         try? modelContext.save()
         syncCoordinator.refreshStatus()
+    }
+
+    private func conflictTitle(for conflict: SyncConflict) -> String {
+        switch conflict.entityType {
+        case .episode:
+            "Episode"
+        case .medicationDefinition:
+            "Medikamentenvorlage"
+        }
+    }
+
+    private func statusRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value)
+                .foregroundStyle(.secondary)
+        }
     }
 }
 

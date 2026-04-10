@@ -16,7 +16,7 @@ public enum SyncServiceState: String, Codable, CaseIterable, Sendable {
         case .ready:
             "Bereit"
         case .syncing:
-            "Synchronisiert"
+            "Synchronisiert gerade"
         case .needsAttention:
             "Aktion nötig"
         case .conflict:
