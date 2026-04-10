@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ProductInformationView: View {
     private let privacyURL = URL(string: "https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVlcjdhQGljbG91ZC5jb20iLCJjb21wYW55IjoiTWF0dGhpYXMgV2FsbG5lci1H6WhyaSIsImdlbl9hdCI6IjIwMjYtMDQtMDlUMTE6MjI6MjUuOTYzWiJ9")!
+    private let repositoryURL = URL(string: "https://github.com/mpwg/MigraineTracker")!
+    private let issuesURL = URL(string: "https://github.com/mpwg/MigraineTracker/issues")!
 
     enum Mode {
         case standard
@@ -28,7 +30,7 @@ struct ProductInformationView: View {
                 )
                 infoRow(
                     title: "Kein Account, kein Backend",
-                    detail: "Im MVP gibt es keine Anmeldung, keine Cloud-Synchronisation und keine Server-Speicherung."
+                    detail: "Es gibt keine Anmeldung, keine Cloud-Synchronisation und keine Server-Speicherung."
                 )
                 infoRow(
                     title: "PDF-Export nur auf deinen Befehl",
@@ -47,7 +49,7 @@ struct ProductInformationView: View {
                 )
                 infoRow(
                     title: "Keine Health- oder Kalender-Anbindung",
-                    detail: "Apple Health, Arzttermine und andere Systemdaten sind im MVP nicht integriert."
+                    detail: "Apple Health, Arzttermine und andere Systemdaten sind in Version 1 nicht integriert."
                 )
             }
 
@@ -66,15 +68,42 @@ struct ProductInformationView: View {
                 )
             }
 
-            Section("MVP-Umfang") {
+            Section("Version 1") {
                 infoRow(
-                    title: "Fokus der ersten Version",
+                    title: "Aktueller Umfang",
                     detail: "Episode anlegen, Medikamente erfassen, Verlauf ansehen und PDF exportieren."
                 )
                 infoRow(
                     title: "Plattform und Sprache",
-                    detail: "Das MVP ist auf iPhone und Deutsch ausgelegt."
+                    detail: "Version 1 ist auf iPhone und Deutsch ausgelegt."
                 )
+                infoRow(
+                    title: "Weiterentwicklung",
+                    detail: "Dies ist Version 1. Weitere Punkte können später folgen."
+                )
+            }
+
+            Section("Open Source") {
+                infoRow(
+                    title: "Lizenz",
+                    detail: "Das Projekt steht unter der GNU GPL v3."
+                )
+                infoRow(
+                    title: "Feedback und Ideen",
+                    detail: "Weitere Punkte können gerne als GitHub-Issue eingemeldet werden."
+                )
+                infoRow(
+                    title: "Beiträge",
+                    detail: "Pull Requests sind willkommen."
+                )
+
+                Link(destination: repositoryURL) {
+                    Label("Projekt auf GitHub öffnen", systemImage: "link")
+                }
+
+                Link(destination: issuesURL) {
+                    Label("GitHub-Issues öffnen", systemImage: "exclamationmark.bubble")
+                }
             }
 
             if mode == .onboarding {

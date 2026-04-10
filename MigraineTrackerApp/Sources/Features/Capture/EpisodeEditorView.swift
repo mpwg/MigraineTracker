@@ -52,7 +52,7 @@ struct EpisodeEditorView: View {
     private let weatherConditionOptions = ["Wetterumschwung/Wind"]
     private let customGroupID = "custom-medications"
     private let customGroupTitle = "Eigene Medikamente"
-    private let customGroupFooter = "Eigene Medikamente werden lokal in SwiftData gespeichert und stehen später wieder zur Auswahl."
+    private let customGroupFooter = "Eigene Medikamente werden lokal in SwiftData gespeichert und bleiben in deiner persönlichen Auswahlliste verfügbar."
 
     init(episode: Episode? = nil, onSaved: (() -> Void)? = nil) {
         self.episode = episode

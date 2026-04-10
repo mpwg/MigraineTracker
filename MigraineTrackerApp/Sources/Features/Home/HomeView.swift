@@ -50,7 +50,7 @@ struct HomeView: View {
                 }
             }
 
-            Section("MVP-Fokus") {
+            Section("Version 1") {
                 MetricRow(title: "Gespeicherte Episoden", detail: "\(episodes.count)")
                 MetricRow(title: "Lokale Speicherung", detail: "Keine Anmeldung, kein Backend, keine Synchronisation.")
                 MetricRow(title: "Wetterkontext", detail: "Kann optional manuell pro Episode ergänzt und lokal gespeichert werden.")
@@ -63,7 +63,7 @@ struct HomeView: View {
                 )
                 MetricRow(
                     title: "Aktuell keine Systemberechtigung nötig",
-                    detail: "Standort oder Health-Daten werden im aktuellen MVP nicht abgefragt."
+                    detail: "Standort- und Health-Daten werden in Version 1 nicht abgefragt."
                 )
             }
         }
