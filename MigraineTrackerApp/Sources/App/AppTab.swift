@@ -18,7 +18,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .history:
             "Verlauf"
         case .export:
-            "Export"
+            "Sync"
         }
     }
 
@@ -31,7 +31,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .history:
             "calendar"
         case .export:
-            "square.and.arrow.up"
+            "arrow.trianglehead.2.clockwise.icloud"
         }
     }
 }

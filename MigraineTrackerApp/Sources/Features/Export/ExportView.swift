@@ -2,222 +2,363 @@ import SwiftData
 import SwiftUI
 
 struct ExportView: View {
-    @Environment(\.modelContext) private var modelContext
-    @State private var startDate = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
-    @State private var endDate = Date()
-    @State private var exportURL: URL?
-    @State private var exportErrorMessage: String?
-    @State private var dataExportURL: URL?
-    @State private var dataTransferMessage: String?
-    @State private var isImportingData = false
-    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var episodes: [Episode]
-    @Query(filter: #Predicate<MedicationDefinition> { $0.isCustom }, sort: [SortDescriptor(\MedicationDefinition.sortOrder)]) private var customMedicationDefinitions: [MedicationDefinition]
+    @EnvironmentObject private var syncCoordinator: SyncCoordinator
+    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
+    @Query(sort: [SortDescriptor(\MedicationDefinition.name)]) private var storedDefinitions: [MedicationDefinition]
 
     var body: some View {
-        let summary = exportSummary
+        List {
+            Section {
+                NavigationLink {
+                    SyncStatusView()
+                } label: {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("Status")
+                            Spacer()
+                            statusBadge
+                        }
 
-        Form {
-            Section("Zeitraum") {
-                DatePicker("Von", selection: $startDate, displayedComponents: .date)
-                DatePicker("Bis", selection: $endDate, displayedComponents: .date)
-            }
+                        Text(statusSubtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-            Section("Bericht") {
-                Text("Episoden im Zeitraum: \(summary.episodeCount)")
-                    .font(.headline)
-                if summary.episodeCount > 0 {
-                    Text("Durchschnittliche Intensität: \(summary.averageIntensity.formatted(.number.precision(.fractionLength(1))))/10")
-                        .foregroundStyle(.secondary)
+                        HStack(spacing: 16) {
+                            statValue(title: "Ausstehend", value: "\(syncCoordinator.status.queuedUpdates)")
+                            statValue(title: "Ungesynct", value: "\(syncCoordinator.status.unsyncedRecords)")
+                            statValue(title: "Konflikte", value: "\(syncCoordinator.conflicts.count)")
+                        }
+                    }
+                    .padding(.vertical, 6)
                 }
-                Text("Der PDF-Export wird lokal erzeugt und über das iOS-Share-Sheet geteilt.")
-                    .foregroundStyle(.secondary)
+
+                Toggle("Sync aktivieren", isOn: Binding(
+                    get: { syncCoordinator.isEnabled },
+                    set: { syncCoordinator.setSyncEnabled($0) }
+                ))
+                .tint(.green)
+
+                NavigationLink {
+                    ManageCloudDataView()
+                } label: {
+                    Label("Cloud-Daten verwalten", systemImage: "icloud")
+                }
+            } header: {
+                Text("Synchronisation")
+            }
+            footer: {
+                Text("Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden.")
             }
 
             Section("Daten sichern") {
-                Text("JSON5-Export enthält alle Episoden sowie eigene Medikamentenvorlagen.")
-                    .foregroundStyle(.secondary)
-
-                Button("JSON5 erstellen") {
-                    createDataExport()
-                }
-                .disabled(!hasTransferData)
-                .accessibilityHint(hasTransferData ? "Erstellt eine lokale JSON5-Sicherungsdatei mit allen Episoden." : "Lege zuerst Episoden oder eigene Medikamentenvorlagen an, damit ein JSON5-Export erstellt werden kann.")
-
-                Button("JSON5 importieren") {
-                    isImportingData = true
-                }
-                .accessibilityHint("Importiert eine zuvor exportierte JSON5-Datei und ergänzt oder aktualisiert vorhandene Daten.")
-
-                if let dataExportURL {
-                    ShareLink(item: dataExportURL) {
-                        Label("JSON5 teilen", systemImage: "square.and.arrow.up")
-                    }
-                    .accessibilityHint("Öffnet das Teilen-Menü für die bereits erzeugte JSON5-Datei.")
-                }
-
-                if let dataTransferMessage {
-                    Text(dataTransferMessage)
-                        .font(.subheadline)
-                        .foregroundStyle(dataTransferMessage.contains("Fehler") ? .red : .secondary)
-                        .accessibilityLabel(dataTransferMessage)
+                NavigationLink {
+                    DataExportView()
+                } label: {
+                    Label("Datenexport", systemImage: "square.and.arrow.up")
                 }
             }
 
-            Section("Aktionen") {
-                Button("PDF erstellen") {
-                    createPDF()
-                }
-                .disabled(!canExport)
-                .accessibilityHint(canExport ? "Erstellt einen lokalen PDF-Bericht für den gewählten Zeitraum." : "Wähle zuerst einen gültigen Zeitraum mit mindestens einer Episode.")
+            Section("Übersicht") {
+                LabeledContent("Aktive Episoden", value: "\(storedEpisodes.filter { !$0.isDeleted }.count)")
+                LabeledContent("Papierkorb", value: "\(storedEpisodes.filter(\.isDeleted).count + storedDefinitions.filter(\.isDeleted).count)")
+                LabeledContent("Konflikte", value: "\(syncCoordinator.conflicts.count)")
+            }
+        }
+        .navigationTitle("Sync & Datenexport")
+        .task {
+            syncCoordinator.refreshStatus()
+        }
+        .refreshable {
+            syncCoordinator.refreshStatus()
+        }
+    }
 
-                if let exportURL {
-                    ShareLink(item: exportURL) {
-                        Label("PDF teilen", systemImage: "square.and.arrow.up")
+    private var statusColor: Color {
+        switch syncCoordinator.status.state {
+        case .ready:
+            .green
+        case .syncing:
+            .blue
+        case .conflict, .needsAttention:
+            .orange
+        case .noICloudAccount, .offline:
+            .red
+        case .disabled:
+            .gray
+        }
+    }
+
+    private var statusSubtitle: String {
+        if let lastError = syncCoordinator.status.lastError, !lastError.isEmpty {
+            return lastError
+        }
+
+        if let lastUploadedAt = syncCoordinator.status.lastUploadedAt {
+            return "Letzter Upload: \(formatted(lastUploadedAt))"
+        }
+
+        if let lastDownloadedAt = syncCoordinator.status.lastDownloadedAt {
+            return "Letzter Download: \(formatted(lastDownloadedAt))"
+        }
+
+        return syncCoordinator.isEnabled
+            ? "Synchronisation ist bereit. Lokale Änderungen bleiben bis zum nächsten Lauf sicher auf dem Gerät."
+            : "Synchronisation ist deaktiviert. Alle Daten bleiben lokal auf diesem Gerät erhalten."
+    }
+
+    private var statusBadge: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(statusColor)
+                .frame(width: 10, height: 10)
+            Text(syncCoordinator.status.state.displayTitle)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func statValue(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func formatted(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .shortened)
+    }
+}
+
+private struct SyncStatusView: View {
+    @EnvironmentObject private var syncCoordinator: SyncCoordinator
+
+    var body: some View {
+        List {
+            Section {
+                statusRow("Status", syncCoordinator.status.state.displayTitle)
+                statusRow("Dienst", syncCoordinator.status.service)
+                statusRow("Ausstehende Uploads", "\(syncCoordinator.status.queuedUpdates)")
+                statusRow("Ungesyncte Einträge", "\(syncCoordinator.status.unsyncedRecords)")
+                statusRow("Letzter Download", formatted(syncCoordinator.status.lastDownloadedAt))
+                statusRow("Letzter Upload", formatted(syncCoordinator.status.lastUploadedAt))
+
+                if let lastError = syncCoordinator.status.lastError {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Letzter Fehler")
+                        Text(lastError)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
-                    .accessibilityHint("Öffnet das Teilen-Menü für den bereits erzeugten PDF-Bericht.")
+                    .padding(.vertical, 4)
                 }
+            } header: {
+                Text("Status")
+            }
+            footer: {
+                Text(statusFooter)
+            }
+        }
+        .navigationTitle("Status")
+        .refreshable {
+            syncCoordinator.refreshStatus()
+        }
+    }
 
-                if let exportErrorMessage {
-                    Text(exportErrorMessage)
-                        .font(.subheadline)
-                        .foregroundStyle(.red)
-                        .accessibilityLabel("Fehler: \(exportErrorMessage)")
+    private func statusRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func formatted(_ date: Date?) -> String {
+        guard let date else {
+            return "Noch nie"
+        }
+
+        return date.formatted(date: .numeric, time: .shortened)
+    }
+
+    private var statusFooter: String {
+        switch syncCoordinator.status.state {
+        case .disabled:
+            "Der Cloud-Sync ist ausgeschaltet. Lokale Daten bleiben unverändert verfügbar."
+        case .ready:
+            "Der Sync-Dienst ist bereit. Änderungen werden beim nächsten Lauf in die private iCloud-Datenbank übertragen."
+        case .syncing:
+            "Es läuft gerade ein Abgleich zwischen lokalem Speicher und iCloud."
+        case .needsAttention:
+            "Der Sync braucht Aufmerksamkeit. Prüfe die Fehlermeldung und versuche den Abgleich erneut."
+        case .conflict:
+            "Mindestens ein Eintrag wurde auf mehreren Geräten unterschiedlich verändert. Erst nach einer Entscheidung gilt der Datensatz wieder als sauber synchronisiert."
+        case .noICloudAccount:
+            "Für iCloud-Sync muss auf dem Gerät ein iCloud-Account angemeldet sein."
+        case .offline:
+            "Ohne Netzwerk bleiben alle Daten lokal erhalten und werden später erneut versucht."
+        }
+    }
+}
+
+private struct ManageCloudDataView: View {
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var syncCoordinator: SyncCoordinator
+    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
+    @Query(sort: [SortDescriptor(\MedicationDefinition.updatedAt, order: .reverse)]) private var storedDefinitions: [MedicationDefinition]
+
+    var body: some View {
+        List {
+            Section {
+                statusRow("Sync", syncCoordinator.isEnabled ? "Aktiviert" : "Deaktiviert")
+                statusRow("Offene Konflikte", "\(syncCoordinator.conflicts.count)")
+                statusRow("Papierkorb", "\(deletedEpisodes.count + deletedDefinitions.count)")
+            } header: {
+                Text("Übersicht")
+            }
+            footer: {
+                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst.")
+            }
+
+            Section {
+                Button("Jetzt synchronisieren") {
+                    Task {
+                        await syncCoordinator.syncNow()
+                    }
+                }
+                .disabled(!syncCoordinator.isEnabled)
+
+                Button("Fehler erneut versuchen") {
+                    Task {
+                        await syncCoordinator.retryLastError()
+                    }
+                }
+                .disabled(!syncCoordinator.isEnabled || syncCoordinator.status.lastError == nil)
+
+                NavigationLink {
+                    DataExportView()
+                } label: {
+                    Text("Lokales JSON5-Backup erstellen")
+                }
+            } header: {
+                Text("Aktionen")
+            }
+            footer: {
+                if !syncCoordinator.isEnabled {
+                    Text("Aktiviere den Sync, um iCloud-Synchronisation und Konfliktbehandlung zu verwenden.")
+                } else {
+                    Text("Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht.")
                 }
             }
 
-            if summary.records.isEmpty {
-                Section {
-                    ContentUnavailableView(
-                        "Keine Episoden im Zeitraum",
-                        systemImage: "square.and.arrow.up",
-                        description: Text("Passe den Zeitraum an, damit ein PDF-Bericht erstellt werden kann.")
-                    )
-                }
-            } else {
-                Section("Vorschau") {
-                    ForEach(summary.records.prefix(5)) { record in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(record.startedAt, style: .date)
+            Section("Konflikte") {
+                if syncCoordinator.conflicts.isEmpty {
+                    Text("Keine offenen Konflikte.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(syncCoordinator.conflicts) { conflict in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(conflictTitle(for: conflict))
                                 .font(.headline)
-                            Text("\(record.type) · Intensität \(record.intensity)/10")
+                            Text("Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))")
+                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                            if !record.medications.isEmpty {
-                                Text(record.medications.map(\.name).joined(separator: ", "))
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+
+                            Button("Lokale Version behalten") {
+                                syncCoordinator.resolveConflictKeepingLocal(conflict)
                             }
-                            if let weather = record.weather, !weather.condition.isEmpty {
-                                Text("Wetter: \(weather.condition)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+
+                            Button("Cloud-Version übernehmen") {
+                                syncCoordinator.resolveConflictUsingRemote(conflict)
                             }
                         }
-                        .padding(.vertical, 2)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(previewAccessibilityLabel(for: record))
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+
+            Section("Papierkorb") {
+                if deletedEpisodes.isEmpty && deletedDefinitions.isEmpty {
+                    Text("Keine gelöschten Einträge.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(deletedEpisodes, id: \.id) { episode in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(episode.startedAt.formatted(date: .abbreviated, time: .shortened))
+                                Text(episode.type.rawValue)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Wiederherstellen") {
+                                restore(episode)
+                            }
+                        }
+                    }
+
+                    ForEach(deletedDefinitions, id: \.catalogKey) { definition in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(definition.name)
+                                Text(definition.category.rawValue)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Wiederherstellen") {
+                                restore(definition)
+                            }
+                        }
                     }
                 }
             }
         }
-        .navigationTitle("Export")
-        .fileImporter(
-            isPresented: $isImportingData,
-            allowedContentTypes: [.migraineTrackerJSON5, .json, .plainText]
-        ) { result in
-            importData(from: result)
+        .navigationTitle("Cloud-Daten")
+        .refreshable {
+            syncCoordinator.refreshStatus()
         }
     }
 
-    private var canExport: Bool {
-        !exportSummary.records.isEmpty && startDate <= endDate
+    private var deletedEpisodes: [Episode] {
+        storedEpisodes.filter(\.isDeleted)
     }
 
-    private var hasTransferData: Bool {
-        !episodes.isEmpty || !customMedicationDefinitions.isEmpty
+    private var deletedDefinitions: [MedicationDefinition] {
+        storedDefinitions.filter(\.isDeleted)
     }
 
-    private var exportSummary: ExportPeriodSummary {
-        let endOfDay = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: endDate) ?? endDate
-        let filtered = episodes
-            .filter { $0.startedAt >= startDate && $0.startedAt <= endOfDay }
-            .map(EpisodeExportRecord.init)
-
-        return ExportPeriodSummary(startDate: startDate, endDate: endDate, records: filtered)
+    private func restore(_ episode: Episode) {
+        episode.restore()
+        try? modelContext.save()
+        syncCoordinator.refreshStatus()
     }
 
-    private func createPDF() {
-        exportErrorMessage = nil
-        exportURL = nil
+    private func restore(_ definition: MedicationDefinition) {
+        definition.restore()
+        try? modelContext.save()
+        syncCoordinator.refreshStatus()
+    }
 
-        guard startDate <= endDate else {
-            exportErrorMessage = "Der Zeitraum ist ungültig."
-            return
-        }
-
-        guard !exportSummary.records.isEmpty else {
-            exportErrorMessage = "Für den gewählten Zeitraum gibt es keine Episoden."
-            return
-        }
-
-        do {
-            exportURL = try PDFExportWriter.write(summary: exportSummary)
-        } catch {
-            exportErrorMessage = "Der PDF-Export konnte nicht erstellt werden."
+    private func conflictTitle(for conflict: SyncConflict) -> String {
+        switch conflict.entityType {
+        case .episode:
+            "Episode"
+        case .medicationDefinition:
+            "Medikamentenvorlage"
         }
     }
 
-    private func createDataExport() {
-        dataTransferMessage = nil
-        dataExportURL = nil
-
-        guard hasTransferData else {
-            dataTransferMessage = "Es sind noch keine Daten für einen JSON5-Export vorhanden."
-            return
+    private func statusRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value)
+                .foregroundStyle(.secondary)
         }
-
-        do {
-            let snapshot = DataTransferSnapshot(
-                episodes: episodes,
-                customMedicationDefinitions: customMedicationDefinitions
-            )
-            dataExportURL = try snapshot.writeToTemporaryFile()
-            dataTransferMessage = "JSON5-Datei wurde lokal erstellt."
-        } catch {
-            dataTransferMessage = "Fehler beim Erstellen der JSON5-Datei."
-        }
-    }
-
-    private func importData(from result: Result<URL, Error>) {
-        dataTransferMessage = nil
-
-        do {
-            let url = try result.get()
-            let snapshot = try DataTransferSnapshot.load(from: url)
-            try snapshot.merge(into: modelContext)
-            dataTransferMessage = "JSON5-Daten wurden importiert."
-        } catch CocoaError.userCancelled {
-            return
-        } catch {
-            dataTransferMessage = "Fehler beim Import der JSON5-Datei."
-        }
-    }
-
-    private func previewAccessibilityLabel(for record: EpisodeExportRecord) -> String {
-        var parts = [
-            record.startedAt.formatted(date: .complete, time: .shortened),
-            record.type,
-            "Intensität \(record.intensity) von 10"
-        ]
-
-        if !record.medications.isEmpty {
-            parts.append("Medikamente: \(record.medications.map(\.name).joined(separator: ", "))")
-        }
-
-        if let weather = record.weather, !weather.condition.isEmpty {
-            parts.append("Wetter: \(weather.condition)")
-        }
-
-        return parts.joined(separator: ", ")
     }
 }
 

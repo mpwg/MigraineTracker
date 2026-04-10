@@ -3,7 +3,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Binding var selectedTab: AppTab
-    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var episodes: [Episode]
+    @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
 
     var body: some View {
         List {
@@ -39,9 +39,9 @@ struct HomeView: View {
                 Button {
                     selectedTab = .export
                 } label: {
-                    Label("PDF exportieren", systemImage: "square.and.arrow.up")
+                    Label("Sync & Datenexport", systemImage: "arrow.trianglehead.2.clockwise.icloud")
                 }
-                .accessibilityHint("Öffnet den Exportbereich für Arztberichte als PDF.")
+                .accessibilityHint("Öffnet den Bereich für Sync-Status, Cloud-Daten und Exporte.")
 
                 NavigationLink {
                     ProductInformationView(mode: .standard)
@@ -52,7 +52,7 @@ struct HomeView: View {
 
             Section("Version 1") {
                 MetricRow(title: "Gespeicherte Episoden", detail: "\(episodes.count)")
-                MetricRow(title: "Lokale Speicherung", detail: "Keine Anmeldung, kein Backend, keine Synchronisation.")
+                MetricRow(title: "Lokale Speicherung", detail: "Lokale Primärdaten mit optionaler iCloud-Synchronisation.")
                 MetricRow(title: "Wetterkontext", detail: "Kann optional manuell pro Episode ergänzt und lokal gespeichert werden.")
             }
 
@@ -68,6 +68,10 @@ struct HomeView: View {
             }
         }
         .navigationTitle("Migraine Tracker")
+    }
+
+    private var episodes: [Episode] {
+        storedEpisodes.filter { !$0.isDeleted }
     }
 }
 

@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 enum EpisodeType: String, CaseIterable, Codable, Identifiable {
     case migraine = "Migräne"
@@ -36,31 +35,13 @@ enum MedicationEffectiveness: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 }
 
-@Model
-final class Episode {
-    @Attribute(.unique) var id: UUID
-    var startedAt: Date
-    var endedAt: Date?
-    var typeRaw: String
-    var intensity: Int
-    var painLocation: String
-    var painCharacter: String
-    var notes: String
-    var symptomsStorage: String
-    var triggersStorage: String
-    var functionalImpact: String
-    var menstruationStatusRaw: String
-
-    @Relationship(deleteRule: .cascade, inverse: \MedicationEntry.episode)
-    var medications: [MedicationEntry]
-
-    @Relationship(deleteRule: .cascade, inverse: \WeatherSnapshot.episode)
-    var weatherSnapshot: WeatherSnapshot?
-
-    init(
+extension Episode {
+    convenience init(
         id: UUID = UUID(),
         startedAt: Date,
         endedAt: Date? = nil,
+        updatedAt: Date = .now,
+        deletedAt: Date? = nil,
         type: EpisodeType = .unclear,
         intensity: Int,
         painLocation: String = "",
@@ -72,19 +53,23 @@ final class Episode {
         menstruationStatus: MenstruationStatus = .unknown,
         medications: [MedicationEntry] = []
     ) {
-        self.id = id
-        self.startedAt = startedAt
-        self.endedAt = endedAt
-        self.typeRaw = type.rawValue
-        self.intensity = intensity
-        self.painLocation = painLocation
-        self.painCharacter = painCharacter
-        self.notes = notes
-        self.symptomsStorage = symptoms.joined(separator: "|")
-        self.triggersStorage = triggers.joined(separator: "|")
-        self.functionalImpact = functionalImpact
-        self.menstruationStatusRaw = menstruationStatus.rawValue
-        self.medications = medications
+        self.init(
+            id: id,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            typeRaw: type.rawValue,
+            intensity: intensity,
+            painLocation: painLocation,
+            painCharacter: painCharacter,
+            notes: notes,
+            symptomsStorage: symptoms.joined(separator: "|"),
+            triggersStorage: triggers.joined(separator: "|"),
+            functionalImpact: functionalImpact,
+            menstruationStatusRaw: menstruationStatus.rawValue,
+            medications: medications
+        )
     }
 
     var type: EpisodeType {
@@ -111,6 +96,25 @@ final class Episode {
         weatherSnapshot != nil
     }
 
+    var isDeleted: Bool {
+        deletedAt != nil
+    }
+
+    func markUpdated(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
+    }
+
+    func markDeleted(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = date
+    }
+
+    func restore(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
+    }
+
     private static func decodeList(_ storage: String) -> [String] {
         storage
             .split(separator: "|")
@@ -119,21 +123,8 @@ final class Episode {
     }
 }
 
-@Model
-final class MedicationEntry {
-    @Attribute(.unique) var id: UUID
-    var name: String
-    var categoryRaw: String
-    var dosage: String
-    var quantity: Int
-    var takenAt: Date
-    var effectivenessRaw: String
-    var reliefStartedAt: Date?
-    var isRepeatDose: Bool
-
-    var episode: Episode?
-
-    init(
+extension MedicationEntry {
+    convenience init(
         id: UUID = UUID(),
         name: String,
         category: MedicationCategory,
@@ -145,16 +136,18 @@ final class MedicationEntry {
         isRepeatDose: Bool = false,
         episode: Episode? = nil
     ) {
-        self.id = id
-        self.name = name
-        self.categoryRaw = category.rawValue
-        self.dosage = dosage
-        self.quantity = quantity
-        self.takenAt = takenAt
-        self.effectivenessRaw = effectiveness.rawValue
-        self.reliefStartedAt = reliefStartedAt
-        self.isRepeatDose = isRepeatDose
-        self.episode = episode
+        self.init(
+            id: id,
+            name: name,
+            categoryRaw: category.rawValue,
+            dosage: dosage,
+            quantity: quantity,
+            takenAt: takenAt,
+            effectivenessRaw: effectiveness.rawValue,
+            reliefStartedAt: reliefStartedAt,
+            isRepeatDose: isRepeatDose,
+            episode: episode
+        )
     }
 
     var category: MedicationCategory {
@@ -168,20 +161,8 @@ final class MedicationEntry {
     }
 }
 
-@Model
-final class MedicationDefinition {
-    @Attribute(.unique) var catalogKey: String
-    var groupID: String
-    var groupTitle: String
-    var groupFooter: String?
-    var name: String
-    var categoryRaw: String
-    var suggestedDosage: String
-    var sortOrder: Int
-    var isCustom: Bool
-    var createdAt: Date
-
-    init(
+extension MedicationDefinition {
+    convenience init(
         catalogKey: String,
         groupID: String,
         groupTitle: String,
@@ -191,18 +172,24 @@ final class MedicationDefinition {
         suggestedDosage: String,
         sortOrder: Int,
         isCustom: Bool,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        updatedAt: Date = .now,
+        deletedAt: Date? = nil
     ) {
-        self.catalogKey = catalogKey
-        self.groupID = groupID
-        self.groupTitle = groupTitle
-        self.groupFooter = groupFooter
-        self.name = name
-        self.categoryRaw = category.rawValue
-        self.suggestedDosage = suggestedDosage
-        self.sortOrder = sortOrder
-        self.isCustom = isCustom
-        self.createdAt = createdAt
+        self.init(
+            catalogKey: catalogKey,
+            groupID: groupID,
+            groupTitle: groupTitle,
+            groupFooter: groupFooter,
+            name: name,
+            categoryRaw: category.rawValue,
+            suggestedDosage: suggestedDosage,
+            sortOrder: sortOrder,
+            isCustom: isCustom,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt
+        )
     }
 
     var category: MedicationCategory {
@@ -217,37 +204,23 @@ final class MedicationDefinition {
             suggestedDosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         ].joined(separator: "|")
     }
-}
 
-@Model
-final class WeatherSnapshot {
-    @Attribute(.unique) var id: UUID
-    var recordedAt: Date
-    var temperature: Double?
-    var condition: String
-    var humidity: Double?
-    var pressure: Double?
-    var source: String
+    var isDeleted: Bool {
+        deletedAt != nil
+    }
 
-    var episode: Episode?
+    func markUpdated(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
+    }
 
-    init(
-        id: UUID = UUID(),
-        recordedAt: Date,
-        temperature: Double? = nil,
-        condition: String = "",
-        humidity: Double? = nil,
-        pressure: Double? = nil,
-        source: String = "",
-        episode: Episode? = nil
-    ) {
-        self.id = id
-        self.recordedAt = recordedAt
-        self.temperature = temperature
-        self.condition = condition
-        self.humidity = humidity
-        self.pressure = pressure
-        self.source = source
-        self.episode = episode
+    func markDeleted(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = date
+    }
+
+    func restore(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
     }
 }
