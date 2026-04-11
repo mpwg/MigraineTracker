@@ -2,6 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(SyncCoordinator.self) private var syncCoordinator
     @Environment(AppLogViewModel.self) private var appLogViewModel
     @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
@@ -83,6 +84,13 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Einstellungen")
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Schließen") {
+                    dismiss()
+                }
+            }
+        }
         .task {
             syncCoordinator.refreshStatus()
             appLogViewModel.refresh(limit: 1)
