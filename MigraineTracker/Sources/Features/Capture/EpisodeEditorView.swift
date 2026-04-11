@@ -54,16 +54,16 @@ struct EpisodeEditorView: View {
     private let customGroupTitle = "Eigene Medikamente"
     private let customGroupFooter = "Eigene Medikamente werden lokal in SwiftData gespeichert und bleiben in deiner persönlichen Auswahlliste verfügbar."
 
-    init(episode: Episode? = nil, onSaved: (() -> Void)? = nil) {
+    init(episode: Episode? = nil, initialStartedAt: Date? = nil, onSaved: (() -> Void)? = nil) {
         self.episode = episode
         self.onSaved = onSaved
         self.mode = episode == nil ? .create : .edit
 
         _type = State(initialValue: episode?.type ?? .unclear)
         _intensity = State(initialValue: Double(episode?.intensity ?? 5))
-        _startedAt = State(initialValue: episode?.startedAt ?? .now)
+        _startedAt = State(initialValue: episode?.startedAt ?? initialStartedAt ?? .now)
         _endedAtEnabled = State(initialValue: episode?.endedAt != nil)
-        _endedAt = State(initialValue: episode?.endedAt ?? .now)
+        _endedAt = State(initialValue: episode?.endedAt ?? initialStartedAt ?? .now)
         _painLocation = State(initialValue: episode?.painLocation ?? "")
         _painCharacter = State(initialValue: episode?.painCharacter ?? "")
         _notes = State(initialValue: episode?.notes ?? "")
@@ -441,7 +441,7 @@ struct EpisodeEditorView: View {
             try modelContext.save()
             validationMessage = nil
 
-            if mode == .create {
+            if mode == .create, onSaved == nil {
                 resetForm()
                 saveMessageVisible = true
             } else {

@@ -2,54 +2,32 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
-    private enum HistoryMode: String, CaseIterable, Identifiable {
-        case list = "Liste"
-        case calendar = "Kalender"
-
-        var id: String { rawValue }
-    }
-
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
-    @State private var mode: HistoryMode = .list
+
     @State private var selectedDay: Date = .now
     @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: .now)
     @State private var editingEpisode: Episode?
     @State private var pendingDeletion: Episode?
+    @State private var isPresentingNewEpisode = false
+    @State private var isPresentingSettings = false
 
     var body: some View {
-        List {
-            if episodes.isEmpty {
-                Section {
-                    ContentUnavailableView(
-                        "Noch keine Episoden",
-                        systemImage: "calendar.badge.plus",
-                        description: Text("Lege zuerst eine Episode an, um den Verlauf aufzubauen.")
-                    )
-                }
-            } else {
-                Section {
-                    Picker("Ansicht", selection: $mode) {
-                        ForEach(HistoryMode.allCases) { mode in
-                            Text(mode.rawValue).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                if mode == .list {
-                    Section("Letzte Episoden") {
-                        ForEach(episodes) { episode in
-                            episodeLink(for: episode)
-                        }
-                        .onDelete(perform: deleteEpisodes)
-                    }
-                } else {
-                    Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                contentSection(
+                    title: "Kalender",
+                    footer: "Wähle einen Tag aus und füge direkt einen Migräneanfall hinzu oder öffne vorhandene Einträge."
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
                         MonthHeader(
                             month: displayedMonth,
-                            onPrevious: { displayedMonth = Calendar.current.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth },
-                            onNext: { displayedMonth = Calendar.current.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth }
+                            onPrevious: {
+                                displayedMonth = Calendar.current.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
+                            },
+                            onNext: {
+                                displayedMonth = Calendar.current.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
+                            }
                         )
 
                         MonthGrid(
@@ -57,13 +35,23 @@ struct HistoryView: View {
                             selectedDay: $selectedDay,
                             episodesByDay: episodesByDay
                         )
-                    } header: {
-                        Text("Kalender")
-                    } footer: {
-                        Text("Wähle einen Tag, um die dokumentierten Episoden direkt darunter zu sehen.")
                     }
+                }
 
-                    Section("Ausgewählter Tag") {
+                Button {
+                    isPresentingNewEpisode = true
+                } label: {
+                    Label("Migräneanfall hinzufügen", systemImage: "plus.circle.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .accessibilityHint("Öffnet die Erfassung mit dem aktuell ausgewählten Kalendertag.")
+
+                contentSection(title: "Ausgewählter Tag") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        daySummary
+
                         if episodesForSelectedDay.isEmpty {
                             ContentUnavailableView(
                                 "Keine Episoden an diesem Tag",
@@ -74,13 +62,62 @@ struct HistoryView: View {
                             ForEach(episodesForSelectedDay) { episode in
                                 episodeLink(for: episode)
                             }
-                            .onDelete(perform: deleteEpisodesForSelectedDay)
                         }
                     }
                 }
+
+                contentSection(title: "Export") {
+                    NavigationLink {
+                        DataExportView()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("Daten exportieren", systemImage: "square.and.arrow.up")
+                            Text("Erstelle einen PDF-Bericht oder ein JSON5-Backup für einen frei wählbaren Zeitraum.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
         }
         .navigationTitle("Verlauf")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isPresentingSettings = true
+                } label: {
+                    Label("Einstellungen", systemImage: "gearshape")
+                }
+            }
+        }
+        .onAppear {
+            displayedMonth = Calendar.current.startOfMonth(for: selectedDay)
+        }
+        .onChange(of: selectedDay) { _, newDay in
+            let month = Calendar.current.startOfMonth(for: newDay)
+            if !Calendar.current.isDate(month, equalTo: displayedMonth, toGranularity: .month) {
+                displayedMonth = month
+            }
+        }
+        .sheet(isPresented: $isPresentingNewEpisode) {
+            NavigationStack {
+                EpisodeEditorView(
+                    initialStartedAt: defaultStartDate(for: selectedDay),
+                    onSaved: {
+                        isPresentingNewEpisode = false
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $isPresentingSettings) {
+            NavigationStack {
+                SettingsView()
+            }
+        }
         .sheet(item: $editingEpisode) { episode in
             NavigationStack {
                 EpisodeEditorView(episode: episode)
@@ -113,6 +150,47 @@ struct HistoryView: View {
         } message: { episode in
             Text("\(episode.startedAt.formatted(date: .abbreviated, time: .shortened)) wird in den Papierkorb verschoben.")
         }
+    }
+
+    @ViewBuilder
+    private func contentSection<Content: View>(title: String, footer: String? = nil, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 12) {
+                content()
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            if let footer {
+                Text(footer)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var daySummary: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(selectedDay.formatted(date: .complete, time: .omitted))
+                .font(.headline)
+
+            if episodesForSelectedDay.isEmpty {
+                Text("Noch kein Eintrag für diesen Tag.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("\(episodesForSelectedDay.count) Eintrag\(episodesForSelectedDay.count == 1 ? "" : "e") · Höchste Intensität \(episodesForSelectedDay.map(\.intensity).max() ?? 0)/10")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 
     private var episodesByDay: [Date: [Episode]] {
@@ -156,32 +234,6 @@ struct HistoryView: View {
         }
     }
 
-    private func deleteEpisodes(at offsets: IndexSet) {
-        for index in offsets {
-            episodes[index].markDeleted()
-        }
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure("Löschen fehlgeschlagen: \(error)")
-        }
-    }
-
-    private func deleteEpisodesForSelectedDay(at offsets: IndexSet) {
-        let dayEpisodes = episodesForSelectedDay
-
-        for index in offsets {
-            dayEpisodes[index].markDeleted()
-        }
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure("Löschen fehlgeschlagen: \(error)")
-        }
-    }
-
     private func deleteEpisode(_ episode: Episode) {
         episode.markDeleted()
 
@@ -191,6 +243,18 @@ struct HistoryView: View {
         } catch {
             assertionFailure("Löschen fehlgeschlagen: \(error)")
         }
+    }
+
+    private func defaultStartDate(for selectedDay: Date) -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let day = calendar.startOfDay(for: selectedDay)
+
+        if day == today {
+            return .now
+        }
+
+        return calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
     }
 }
 

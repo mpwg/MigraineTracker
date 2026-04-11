@@ -1,7 +1,7 @@
 import SwiftData
 import SwiftUI
 
-struct ExportView: View {
+struct SettingsView: View {
     @Environment(SyncCoordinator.self) private var syncCoordinator
     @Environment(AppLogViewModel.self) private var appLogViewModel
     @Query(sort: [SortDescriptor(\Episode.startedAt, order: .reverse)]) private var storedEpisodes: [Episode]
@@ -62,11 +62,17 @@ struct ExportView: View {
                 Text("Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden.")
             }
 
-            Section("Daten sichern") {
+            Section("Allgemein") {
                 NavigationLink {
                     DataExportView()
                 } label: {
                     Label("Datenexport", systemImage: "square.and.arrow.up")
+                }
+
+                NavigationLink {
+                    ProductInformationView(mode: .standard)
+                } label: {
+                    Label("Datenschutz und Hinweise", systemImage: "hand.raised")
                 }
             }
 
@@ -76,7 +82,7 @@ struct ExportView: View {
                 LabeledContent("Konflikte", value: "\(syncCoordinator.conflicts.count)")
             }
         }
-        .navigationTitle("Sync & Datenexport")
+        .navigationTitle("Einstellungen")
         .task {
             syncCoordinator.refreshStatus()
             appLogViewModel.refresh(limit: 1)
@@ -386,6 +392,6 @@ private struct ManageCloudDataView: View {
 
 #Preview {
     NavigationStack {
-        ExportView()
+        SettingsView()
     }
 }
