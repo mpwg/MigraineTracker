@@ -85,7 +85,7 @@ struct SettingsView: View {
         }
         .navigationTitle("Einstellungen")
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
+            ToolbarItem(placement: closeButtonPlacement) {
                 Button("Schließen") {
                     dismiss()
                 }
@@ -165,6 +165,14 @@ struct SettingsView: View {
         }
 
         return "Ansehen, teilen und bei Bedarf löschen."
+    }
+
+    private var closeButtonPlacement: ToolbarItemPlacement {
+        #if targetEnvironment(macCatalyst)
+        .topBarTrailing
+        #else
+        .topBarLeading
+        #endif
     }
 }
 
