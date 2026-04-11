@@ -21,4 +21,9 @@ platform :ios do
     capture_screenshots(scheme: "MigraineTrackerUITests")
     upload_to_app_store(skip_binary_upload: true, skip_metadata: true)
   end
+  lane :beta do
+    sync_code_signing(type: "appstore")    # see code signing guide for more information
+    build_app(scheme: "MigraineTracker")
+    upload_to_testflight
+  end
 end
