@@ -250,6 +250,15 @@ struct EpisodeEditorView: View {
             }
         }
         .navigationTitle(mode == .create ? "Erfassen" : "Episode bearbeiten")
+        .toolbar {
+            if showsDismissButton {
+                ToolbarItem(placement: dismissButtonPlacement) {
+                    Button("Abbrechen") {
+                        dismiss()
+                    }
+                }
+            }
+        }
         .scrollDismissesKeyboard(.interactively)
         .alert("Episode gespeichert", isPresented: $saveMessageVisible) {
             Button("OK", role: .cancel) {}
@@ -364,6 +373,18 @@ struct EpisodeEditorView: View {
                 }
             }
         }
+    }
+
+    private var showsDismissButton: Bool {
+        onSaved != nil || episode != nil
+    }
+
+    private var dismissButtonPlacement: ToolbarItemPlacement {
+        #if targetEnvironment(macCatalyst)
+        .topBarTrailing
+        #else
+        .topBarLeading
+        #endif
     }
 
     private func saveEpisode() {
