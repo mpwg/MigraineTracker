@@ -360,7 +360,7 @@ private struct MonthGrid: View {
                         .foregroundStyle(.secondary)
                 }
 
-                ForEach(dayCells) { cell in
+                ForEach(Array(dayCells.enumerated()), id: \.offset) { _, cell in
                     if let date = cell.date {
                         Button {
                             selectedDay = date
