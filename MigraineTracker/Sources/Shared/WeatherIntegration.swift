@@ -103,10 +103,14 @@ final class SystemLocationService: NSObject, LocationService, CLLocationManagerD
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyReduced
+        manager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
     }
 
     func requestApproximateLocation() async throws -> CLLocation {
+        guard CLLocationManager.locationServicesEnabled() else {
+            throw LocationServiceError.servicesDisabled
+        }
+
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
 

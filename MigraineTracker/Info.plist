@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSLocationDefaultAccuracyReduced</key>
-	<true/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Open-Meteo auf Basis von DWD ICON abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
-</dict>
+	<dict>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<key>NSLocationDefaultAccuracyReduced</key>
+		<true/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Open-Meteo auf Basis von DWD ICON abzurufen. Die Koordinaten werden nicht gespeichert.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
+	</dict>
 </plist>
