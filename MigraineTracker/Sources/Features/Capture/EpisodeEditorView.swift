@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct EpisodeEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -301,6 +302,8 @@ struct EpisodeEditorView: View {
 }
 
 private struct WeatherStatusContent: View {
+    @Environment(\.openURL) private var openURL
+
     let state: WeatherLoadState
 
     var body: some View {
@@ -342,10 +345,26 @@ private struct WeatherStatusContent: View {
             }
             .padding(.vertical, 4)
         case .unavailable(let message):
-            Label(message, systemImage: "location.slash")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .padding(.vertical, 8)
+            VStack(alignment: .leading, spacing: 12) {
+                Label(message, systemImage: "location.slash")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if showsLocationSettingsHint(for: message) {
+                    Text("Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+
+                    Button("Einstellungen öffnen") {
+                        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+                            return
+                        }
+                        openURL(settingsURL)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding(.vertical, 8)
         }
     }
 
@@ -356,6 +375,11 @@ private struct WeatherStatusContent: View {
             Text(value)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private func showsLocationSettingsHint(for message: String) -> Bool {
+        message.localizedCaseInsensitiveContains("standort")
+            || message.localizedCaseInsensitiveContains("freigabe")
     }
 }
 

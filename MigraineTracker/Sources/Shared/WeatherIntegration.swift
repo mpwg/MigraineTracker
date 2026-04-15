@@ -103,14 +103,10 @@ final class SystemLocationService: NSObject, LocationService, CLLocationManagerD
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+        manager.desiredAccuracy = kCLLocationAccuracyReduced
     }
 
     func requestApproximateLocation() async throws -> CLLocation {
-        guard CLLocationManager.locationServicesEnabled() else {
-            throw LocationServiceError.servicesDisabled
-        }
-
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
 
@@ -163,7 +159,16 @@ final class SystemLocationService: NSObject, LocationService, CLLocationManagerD
             return
         }
 
-        continuation.resume(throwing: error)
+        if let error = error as? CLError, error.code == .denied {
+            let authorizationStatus = manager.authorizationStatus
+            let mappedError: LocationServiceError =
+                authorizationStatus == .denied || authorizationStatus == .restricted
+                ? .authorizationDenied
+                : .servicesDisabled
+            continuation.resume(throwing: mappedError)
+        } else {
+            continuation.resume(throwing: error)
+        }
         self.continuation = nil
     }
 }
