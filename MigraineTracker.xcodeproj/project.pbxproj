@@ -18,19 +18,11 @@
 			remoteGlobalIDString = 402B8A5D2F896C00008B4D70;
 			remoteInfo = MigraineTracker;
 		};
-		40FEEDAB2F8ABC4F00972E17 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 402B8A562F896C00008B4D70 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 402B8A5D2F896C00008B4D70;
-			remoteInfo = MigraineTracker;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		402B8A5E2F896C00008B4D70 /* MigraineTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MigraineTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MigraineTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		40FEEDA52F8ABC4F00972E17 /* MigraineTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MigraineTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -57,11 +49,6 @@
 			path = MigraineTrackerTests;
 			sourceTree = "<group>";
 		};
-		40FEEDA62F8ABC4F00972E17 /* MigraineTrackerUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MigraineTrackerUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,11 +63,6 @@
 			files = (
 			);
 		};
-		40FEEDA22F8ABC4F00972E17 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -89,7 +71,6 @@
 			children = (
 				402B8A602F896C00008B4D70 /* MigraineTracker */,
 				402B8A702F896C00008B4D70 /* MigraineTrackerTests */,
-				40FEEDA62F8ABC4F00972E17 /* MigraineTrackerUITests */,
 				402B8A5F2F896C00008B4D70 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -99,7 +80,6 @@
 			children = (
 				402B8A5E2F896C00008B4D70 /* MigraineTracker.app */,
 				402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */,
-				40FEEDA52F8ABC4F00972E17 /* MigraineTrackerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -149,27 +129,6 @@
 			productReference = 402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		40FEEDA42F8ABC4F00972E17 /* MigraineTrackerUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 40FEEDAD2F8ABC4F00972E17 /* Build configuration list for PBXNativeTarget "MigraineTrackerUITests" */;
-			buildPhases = (
-				40FEEDA12F8ABC4F00972E17 /* Sources */,
-				40FEEDA22F8ABC4F00972E17 /* Frameworks */,
-				40FEEDA32F8ABC4F00972E17 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				40FEEDAC2F8ABC4F00972E17 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				40FEEDA62F8ABC4F00972E17 /* MigraineTrackerUITests */,
-			);
-			name = MigraineTrackerUITests;
-			productName = MigraineTrackerUITests;
-			productReference = 40FEEDA52F8ABC4F00972E17 /* MigraineTrackerUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -186,10 +145,6 @@
 					402B8A6C2F896C00008B4D70 = {
 						CreatedOnToolsVersion = 26.4;
 						LastSwiftMigration = 2640;
-						TestTargetID = 402B8A5D2F896C00008B4D70;
-					};
-					40FEEDA42F8ABC4F00972E17 = {
-						CreatedOnToolsVersion = 26.4;
 						TestTargetID = 402B8A5D2F896C00008B4D70;
 					};
 				};
@@ -212,7 +167,6 @@
 			targets = (
 				402B8A5D2F896C00008B4D70 /* MigraineTracker */,
 				402B8A6C2F896C00008B4D70 /* MigraineTrackerTests */,
-				40FEEDA42F8ABC4F00972E17 /* MigraineTrackerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -224,11 +178,6 @@
 			);
 		};
 		402B8A6B2F896C00008B4D70 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			files = (
-			);
-		};
-		40FEEDA32F8ABC4F00972E17 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -246,11 +195,6 @@
 			files = (
 			);
 		};
-		40FEEDA12F8ABC4F00972E17 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			files = (
-			);
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -258,11 +202,6 @@
 			isa = PBXTargetDependency;
 			target = 402B8A5D2F896C00008B4D70 /* MigraineTracker */;
 			targetProxy = 402B8A6E2F896C00008B4D70 /* PBXContainerItemProxy */;
-		};
-		40FEEDAC2F8ABC4F00972E17 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 402B8A5D2F896C00008B4D70 /* MigraineTracker */;
-			targetProxy = 40FEEDAB2F8ABC4F00972E17 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -302,7 +241,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -364,7 +303,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -391,7 +330,7 @@
 				CODE_SIGN_ENTITLEMENTS = MigraineTracker/MigraineTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
@@ -455,7 +394,7 @@
 				CODE_SIGN_ENTITLEMENTS = MigraineTracker/MigraineTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
@@ -518,7 +457,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
@@ -547,7 +486,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
@@ -564,58 +503,6 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MigraineTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MigraineTracker";
-				XROS_DEPLOYMENT_TARGET = 26.4;
-			};
-			name = Release;
-		};
-		40FEEDAE2F8ABC4F00972E17 /* Debug configuration for PBXNativeTarget "MigraineTrackerUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTrackerUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MigraineTracker;
-				XROS_DEPLOYMENT_TARGET = 26.4;
-			};
-			name = Debug;
-		};
-		40FEEDAF2F8ABC4F00972E17 /* Release configuration for PBXNativeTarget "MigraineTrackerUITests" */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = PZV43D6HWT;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTrackerUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MigraineTracker;
 				XROS_DEPLOYMENT_TARGET = 26.4;
 			};
 			name = Release;
@@ -644,14 +531,6 @@
 			buildConfigurations = (
 				402B8A852F896C00008B4D70 /* Debug configuration for PBXNativeTarget "MigraineTrackerTests" */,
 				402B8A862F896C00008B4D70 /* Release configuration for PBXNativeTarget "MigraineTrackerTests" */,
-			);
-			defaultConfigurationName = Release;
-		};
-		40FEEDAD2F8ABC4F00972E17 /* Build configuration list for PBXNativeTarget "MigraineTrackerUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				40FEEDAE2F8ABC4F00972E17 /* Debug configuration for PBXNativeTarget "MigraineTrackerUITests" */,
-				40FEEDAF2F8ABC4F00972E17 /* Release configuration for PBXNativeTarget "MigraineTrackerUITests" */,
 			);
 			defaultConfigurationName = Release;
 		};

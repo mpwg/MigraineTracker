@@ -41,17 +41,6 @@
                ReferencedContainer = "container:MigraineTracker.xcodeproj">
             </BuildableReference>
          </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "40FEEDA42F8ABC4F00972E17"
-               BuildableName = "MigraineTrackerUITests.xctest"
-               BlueprintName = "MigraineTrackerUITests"
-               ReferencedContainer = "container:MigraineTracker.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

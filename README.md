@@ -88,6 +88,19 @@ Die erste Version basiert auf diesen verbindlichen Entscheidungen:
 
 Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Store-Submission technisch überschaubar.
 
+## Build und Release
+
+Der offizielle CI/CD-Weg für dieses Projekt ist `Xcode Cloud`.
+
+- Push auf `main` startet den Workflow `CI + TestFlight`
+- der Workflow baut das Shared Scheme `MigraineTracker`, führt die Unit-Tests aus und verteilt erfolgreiche Archive an `TestFlight`
+- App-Store-Releases werden getrennt über Git-Tags im Format `vX.Y.Z` ausgelöst
+- der Workflow `App Store Release` verarbeitet ausschließlich diese Versions-Tags und veröffentlicht daraus eine App-Store-Submission
+
+Lokale `fastlane`-Deployments sind kein unterstützter Release-Pfad mehr. Die projektspezifische Einrichtung für Xcode Cloud ist in [docs/Xcode-Cloud.md](docs/Xcode-Cloud.md) dokumentiert.
+
+Die Apple-Team-ID ist nicht im Repository hinterlegt. Signierung und Cloud-Builds erwarten die Umgebungsvariable `APPLE_DEVELOPER_TEAM_ID`.
+
 ## Definition of Done für die erste Submission
 
 Die erste MVP gilt als fertig, wenn diese Punkte erfüllt sind:

@@ -6,11 +6,20 @@ Vor einer Submission muss der MVP reproduzierbar prüfbar sein. Die Qualitätssi
 
 ## Automatisierte Qualitätsgates
 
-Vor jedem Release-Kandidaten ausführen:
+Der offizielle CI/CD-Pfad läuft über `Xcode Cloud`.
 
-1. `swift test`
-2. `xcodebuild -scheme MigraineTrackerApp -project MigraineTracker.xcodeproj -destination 'generic/platform=iOS Simulator' build`
-3. Optional gesammelt: `./scripts/qa/run-mvp-quality-gates.sh`
+Automatisierte Gates im Projekt:
+
+1. Workflow `CI + TestFlight` bei jedem Push auf `main`
+2. Build des Shared Scheme `MigraineTracker`
+3. Ausführung von `MigraineTrackerTests`
+4. Archivierung und Verteilung nach `TestFlight`
+
+Lokale Vorab-Prüfung vor einem Tag-Release:
+
+1. App im `Release`-Build in Xcode archivieren oder per `xcodebuild archive` bauen
+2. Tests lokal gegen das Scheme `MigraineTracker` ausführen
+3. offene Fehler in `Xcode Cloud` oder `TestFlight` vor dem Tagging beseitigen
 
 ## Automatisierte Testabdeckung
 
@@ -61,6 +70,16 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 
 Ein Release-Kandidat ist freigabefähig, wenn:
 
-- alle automatisierten Gates erfolgreich laufen
+- der Workflow `CI + TestFlight` auf `main` erfolgreich läuft
+- die automatisierten Tests in Xcode Cloud erfolgreich laufen
 - die manuelle Checkliste ohne Blocker abgeschlossen ist
 - keine irreführenden medizinischen Aussagen oder Berechtigungstexte sichtbar sind
+
+## Release-Auslösung
+
+Die Projektregeln für Releases sind:
+
+- `main` ist der einzige automatische Integrationspfad
+- `TestFlight` wird über den Workflow `CI + TestFlight` auf `main` verteilt
+- der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
+- `fastlane` ist kein unterstützter Release-Pfad mehr
