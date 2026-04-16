@@ -144,14 +144,14 @@ struct EpisodeDetailView: View {
         }
         .navigationTitle("Episodendetail")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: actionToolbarPlacement) {
                 Button("Bearbeiten") {
                     isEditing = true
                 }
                 .disabled(episode == nil)
             }
 
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: actionToolbarPlacement) {
                 Button("Löschen", role: .destructive) {
                     isShowingDeleteConfirmation = true
                 }
@@ -212,5 +212,13 @@ struct EpisodeDetailView: View {
 
     private func reload() {
         episode = try? loadEpisodeDetailUseCase.execute(id: episodeID)
+    }
+
+    private var actionToolbarPlacement: ToolbarItemPlacement {
+        #if os(macOS)
+        .automatic
+        #else
+        .topBarTrailing
+        #endif
     }
 }

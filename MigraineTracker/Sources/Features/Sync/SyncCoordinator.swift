@@ -3,7 +3,6 @@ import Foundation
 import Observation
 import SwiftData
 import SwiftUI
-import UIKit
 
 @MainActor
 @Observable
@@ -17,15 +16,21 @@ final class SyncCoordinator {
     private let appLogStore: AppLogStore
     private let repository: LocalSyncRepository
     private let deviceID: String
+    private let deviceIdentityProvider: DeviceIdentityProviding
     private var provider: (any SyncProvider)?
     private let zoneID = SyncConfiguration.zoneID
 
-    init(modelContainer: ModelContainer, appLogStore: AppLogStore) {
+    init(
+        modelContainer: ModelContainer,
+        appLogStore: AppLogStore,
+        deviceIdentityProvider: DeviceIdentityProviding
+    ) {
         self.modelContainer = modelContainer
         self.stateStore = SyncStateStore()
         self.appLogStore = appLogStore
         self.repository = LocalSyncRepository(modelContainer: modelContainer)
-        self.deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        self.deviceIdentityProvider = deviceIdentityProvider
+        self.deviceID = deviceIdentityProvider.currentDeviceID()
 
         Task {
             await loadPersistedState()

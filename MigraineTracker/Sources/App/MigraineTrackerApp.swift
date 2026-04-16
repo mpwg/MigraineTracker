@@ -28,7 +28,11 @@ struct MigraineTrackerApp: App {
             self.modelContainer = container
             let appLogStore = AppLogStore()
             self.appLogStore = appLogStore
-            let syncCoordinator = SyncCoordinator(modelContainer: container, appLogStore: appLogStore)
+            let syncCoordinator = SyncCoordinator(
+                modelContainer: container,
+                appLogStore: appLogStore,
+                deviceIdentityProvider: SystemDeviceIdentityProvider()
+            )
             _syncCoordinator = State(initialValue: syncCoordinator)
             self.appContainer = AppContainer(
                 modelContainer: container,

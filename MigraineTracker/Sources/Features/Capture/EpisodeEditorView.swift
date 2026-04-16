@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct EpisodeEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -85,8 +84,8 @@ struct EpisodeEditorView: View {
                     TextField("Funktionelle Einschränkung", text: $controller.draft.functionalImpact)
 
                     Picker("Menstruationsstatus", selection: $controller.draft.menstruationStatus) {
-                        ForEach(MenstruationStatus.allCases) { status in
-                            Text(status.rawValue).tag(status)
+                        ForEach(MenstruationStatus.allCases, id: \.self) { status in
+                            Text(verbatim: status.rawValue).tag(status)
                         }
                     }
 
@@ -112,8 +111,10 @@ struct EpisodeEditorView: View {
 
             Section("Medikamente") {
                 TextField("Medikament nach Namen filtern", text: $controller.medicationSearchText)
+                    #if os(iOS)
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
+                    #endif
 
                 if controller.filteredMedicationGroups.isEmpty {
                     ContentUnavailableView(
@@ -147,7 +148,7 @@ struct EpisodeEditorView: View {
                                     }
                                 }
                                 .padding(12)
-                                .background(Color(.systemBackground))
+                                .background(Color.appPrimaryBackground)
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                                 if let footer = group.footer {
@@ -206,7 +207,9 @@ struct EpisodeEditorView: View {
                 }
             }
         }
+        #if os(iOS)
         .scrollDismissesKeyboard(.interactively)
+        #endif
         .alert("Episode gespeichert", isPresented: $controller.saveMessageVisible) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -275,7 +278,7 @@ struct EpisodeEditorView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .background(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
+        .background(isSelected ? Color.accentColor.opacity(0.16) : Color.appGroupedBackground)
                         .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
@@ -293,8 +296,8 @@ struct EpisodeEditorView: View {
     }
 
     private var dismissButtonPlacement: ToolbarItemPlacement {
-        #if targetEnvironment(macCatalyst)
-        .topBarTrailing
+        #if os(macOS)
+        .automatic
         #else
         .topBarLeading
         #endif
@@ -355,13 +358,12 @@ private struct WeatherStatusContent: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
-                    Button("Einstellungen öffnen") {
-                        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
-                            return
+                    if let settingsURL = PlatformSettingsLink.appSettingsURL {
+                        Button("Einstellungen öffnen") {
+                            openURL(settingsURL)
                         }
-                        openURL(settingsURL)
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
             }
             .padding(.vertical, 8)
@@ -399,7 +401,7 @@ private struct IntensityPicker: View {
                     Text("\(level)")
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 40)
-                        .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+                        .background(isSelected ? Color.accentColor : Color.appGroupedBackground)
                         .foregroundStyle(isSelected ? .white : .primary)
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
@@ -478,7 +480,7 @@ private struct MedicationDefinitionRow: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, minHeight: isSelected ? 108 : 72, alignment: .leading)
-        .background(isSelected ? Color.accentColor.opacity(0.14) : Color(.secondarySystemGroupedBackground))
+        .background(isSelected ? Color.accentColor.opacity(0.14) : Color.appGroupedBackground)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
@@ -533,8 +535,10 @@ private struct CustomMedicationEditorSheet: View {
         Form {
             Section("Medikament") {
                 TextField("Name", text: $name)
+                    #if os(iOS)
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
+                    #endif
 
                 Picker("Kategorie", selection: $category) {
                     ForEach(MedicationCategory.allCases) { item in
@@ -543,12 +547,16 @@ private struct CustomMedicationEditorSheet: View {
                 }
 
                 TextField("Dosierung", text: $dosage)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    #endif
             }
         }
         .navigationTitle(state.isEditing ? "Medikament bearbeiten" : "Eigenes Medikament")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Abbrechen", action: onCancel)
@@ -597,7 +605,7 @@ private struct SelectedMedicationSummaryRow: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.appGroupedBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 

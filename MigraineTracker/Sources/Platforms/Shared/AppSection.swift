@@ -1,7 +1,19 @@
 import Foundation
 import SwiftUI
 
-enum AppTab: String, CaseIterable, Identifiable {
+struct SectionAvailability: Equatable {
+    let iOS: Bool
+    let macOS: Bool
+    let unavailableReason: String?
+
+    init(iOS: Bool = true, macOS: Bool = true, unavailableReason: String? = nil) {
+        self.iOS = iOS
+        self.macOS = macOS
+        self.unavailableReason = unavailableReason
+    }
+}
+
+enum AppSection: String, CaseIterable, Identifiable {
     case home
     case capture
     case history
@@ -40,35 +52,10 @@ enum AppTab: String, CaseIterable, Identifiable {
         }
     }
 
-    var section: AppSection {
-        switch self {
-        case .home:
-            .home
-        case .capture:
-            .capture
-        case .history:
-            .history
-        case .syncAndExport:
-            .syncAndExport
-        case .settings:
-            .settings
-        }
+    var availability: SectionAvailability {
+        SectionAvailability()
     }
-}
 
-extension AppSection {
-    var tab: AppTab {
-        switch self {
-        case .home:
-            .home
-        case .capture:
-            .capture
-        case .history:
-            .history
-        case .syncAndExport:
-            .syncAndExport
-        case .settings:
-            .settings
-        }
-    }
+    static let macOSDefaultSection: AppSection = .history
+    static let iOSDefaultTab: AppTab = .history
 }

@@ -105,7 +105,9 @@ struct DataExportView: View {
             }
         }
         .navigationTitle("Datenexport")
+        #if os(iOS)
         .scrollDismissesKeyboard(.interactively)
+        #endif
         .onAppear {
             controller.reloadSummary()
         }

@@ -4,12 +4,11 @@ struct AppShellView: View {
     let appContainer: AppContainer
 
     var body: some View {
-        NavigationStack {
-            HistoryView(appContainer: appContainer)
-        }
-        .task {
-            await appContainer.weatherBackfillService.runIfNeeded()
-        }
+        #if os(macOS)
+        MacAppShellView(appContainer: appContainer)
+        #else
+        IOSAppShellView(appContainer: appContainer)
+        #endif
     }
 }
 

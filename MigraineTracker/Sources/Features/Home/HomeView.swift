@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     let appContainer: AppContainer
-    @Binding var selectedTab: AppTab
+    let navigateToSection: (AppSection) -> Void
     @State private var overview: HomeOverviewData = .init(latestEpisode: nil, episodeCount: 0)
 
     var body: some View {
@@ -23,21 +23,21 @@ struct HomeView: View {
 
             Section("Schnellzugriffe") {
                 Button {
-                    selectedTab = .capture
+                    navigateToSection(.capture)
                 } label: {
                     Label("Episode erfassen", systemImage: "plus.circle.fill")
                 }
                 .accessibilityHint("Wechselt direkt zum schnellen Erfassungsformular.")
 
                 Button {
-                    selectedTab = .history
+                    navigateToSection(.history)
                 } label: {
                     Label("Verlauf öffnen", systemImage: "calendar")
                 }
                 .accessibilityHint("Zeigt die gespeicherten Episoden in Liste oder Kalender.")
 
                 Button {
-                    selectedTab = .export
+                    navigateToSection(.syncAndExport)
                 } label: {
                     Label("Sync & Datenexport", systemImage: "arrow.trianglehead.2.clockwise.icloud")
                 }

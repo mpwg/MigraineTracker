@@ -2,10 +2,12 @@ import SwiftUI
 
 struct HistoryView: View {
     let appContainer: AppContainer
+    let showsSettingsShortcut: Bool
     @State private var controller: HistoryController
 
-    init(appContainer: AppContainer) {
+    init(appContainer: AppContainer, showsSettingsShortcut: Bool = true) {
         self.appContainer = appContainer
+        self.showsSettingsShortcut = showsSettingsShortcut
         _controller = State(initialValue: appContainer.makeHistoryController())
     }
 
@@ -82,11 +84,13 @@ struct HistoryView: View {
         }
         .navigationTitle("Verlauf")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    controller.isPresentingSettings = true
-                } label: {
-                    Label("Einstellungen", systemImage: "gearshape")
+            if showsSettingsShortcut {
+                ToolbarItem(placement: settingsToolbarPlacement) {
+                    Button {
+                        controller.isPresentingSettings = true
+                    } label: {
+                        Label("Einstellungen", systemImage: "gearshape")
+                    }
                 }
             }
         }
@@ -102,9 +106,9 @@ struct HistoryView: View {
                 )
             }
         }
-        .sheet(isPresented: $controller.isPresentingSettings) {
+        .sheet(isPresented: settingsPresentationBinding) {
             NavigationStack {
-                SettingsView(appContainer: appContainer)
+                SettingsView(appContainer: appContainer, showsCloseButton: true)
             }
         }
         .sheet(item: editingEpisodeBinding) { episodeID in
@@ -163,6 +167,21 @@ struct HistoryView: View {
         return controller.selectedDayEpisodes.first(where: { $0.id == id })
     }
 
+    private var settingsPresentationBinding: Binding<Bool> {
+        Binding(
+            get: { showsSettingsShortcut && controller.isPresentingSettings },
+            set: { controller.isPresentingSettings = $0 }
+        )
+    }
+
+    private var settingsToolbarPlacement: ToolbarItemPlacement {
+        #if os(macOS)
+        .automatic
+        #else
+        .topBarTrailing
+        #endif
+    }
+
     @ViewBuilder
     private func contentSection<Content: View>(title: String, footer: String? = nil, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -174,7 +193,7 @@ struct HistoryView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.secondarySystemBackground))
+            .background(Color.appSecondaryBackground)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
             if let footer {
@@ -413,7 +432,7 @@ private struct DayCell: View {
         }
         .frame(maxWidth: .infinity, minHeight: 52)
         .padding(.vertical, 6)
-        .background(isSelected ? Color.accentColor.opacity(0.18) : Color(.secondarySystemGroupedBackground))
+        .background(isSelected ? Color.accentColor.opacity(0.18) : Color.appGroupedBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)

@@ -1,12 +1,89 @@
 import SwiftUI
 
-struct SettingsView: View {
-    @Environment(\.dismiss) private var dismiss
+struct SyncAndExportView: View {
     let appContainer: AppContainer
     @State private var controller: SettingsController
 
     init(appContainer: AppContainer) {
         self.appContainer = appContainer
+        _controller = State(initialValue: appContainer.makeSettingsController())
+    }
+
+    var body: some View {
+        List {
+            Section("Synchronisation") {
+                NavigationLink {
+                    ManageCloudDataView(appContainer: appContainer, controller: controller)
+                } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Cloud-Daten verwalten", systemImage: "icloud")
+                        Text(statusSubtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                NavigationLink {
+                    SyncLogView(controller: controller)
+                } label: {
+                    Label("Sync-Protokoll", systemImage: "text.document")
+                }
+            }
+
+            Section("Export") {
+                NavigationLink {
+                    DataExportView(appContainer: appContainer)
+                } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("PDF und JSON5 exportieren", systemImage: "square.and.arrow.up")
+                        Text("Erstelle Berichte und Backups lokal auf dem Gerät.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Section("Übersicht") {
+                LabeledContent("Aktive Episoden", value: "\(controller.summary.activeEpisodeCount)")
+                LabeledContent("Papierkorb", value: "\(controller.summary.trashCount)")
+                LabeledContent("Konflikte", value: "\(controller.summary.conflictCount)")
+            }
+        }
+        .navigationTitle("Sync & Export")
+        .task {
+            controller.load()
+            controller.refreshLog(limit: 1)
+        }
+        .refreshable {
+            controller.load()
+            controller.refreshLog(limit: 1)
+        }
+    }
+
+    private var statusSubtitle: String {
+        if let lastError = controller.syncStatus.lastError, !lastError.isEmpty {
+            return lastError
+        }
+
+        if let lastUploadedAt = controller.syncStatus.lastUploadedAt {
+            return "Letzter Upload: \(lastUploadedAt.formatted(date: .abbreviated, time: .shortened))"
+        }
+
+        return controller.isSyncEnabled
+            ? "iCloud-Sync ist aktiv und Konflikte bleiben sichtbar."
+            : "Alle Daten bleiben lokal, bis du den Sync aktivierst."
+    }
+}
+
+struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    let appContainer: AppContainer
+    let showsCloseButton: Bool
+    @State private var controller: SettingsController
+
+    init(appContainer: AppContainer, showsCloseButton: Bool = true) {
+        self.appContainer = appContainer
+        self.showsCloseButton = showsCloseButton
         _controller = State(initialValue: appContainer.makeSettingsController())
     }
 
@@ -86,9 +163,11 @@ struct SettingsView: View {
         }
         .navigationTitle("Einstellungen")
         .toolbar {
-            ToolbarItem(placement: closeButtonPlacement) {
-                Button("Schließen") {
-                    dismiss()
+            if showsCloseButton {
+                ToolbarItem(placement: closeButtonPlacement) {
+                    Button("Schließen") {
+                        dismiss()
+                    }
                 }
             }
         }
@@ -169,15 +248,15 @@ struct SettingsView: View {
     }
 
     private var closeButtonPlacement: ToolbarItemPlacement {
-        #if targetEnvironment(macCatalyst)
-        .topBarTrailing
+        #if os(macOS)
+        .automatic
         #else
         .topBarLeading
         #endif
     }
 }
 
-private struct SyncStatusView: View {
+struct SyncStatusView: View {
     @Bindable var controller: SettingsController
 
     var body: some View {
@@ -248,7 +327,7 @@ private struct SyncStatusView: View {
     }
 }
 
-private struct ManageCloudDataView: View {
+struct ManageCloudDataView: View {
     let appContainer: AppContainer
     @Bindable var controller: SettingsController
 
