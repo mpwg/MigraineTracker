@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import MigraineTracker
 
+@MainActor
 struct CoreArchitectureTests {
     @Test
     func saveEpisodeUseCaseRejectsInvalidDateRange() {
@@ -13,34 +14,42 @@ struct CoreArchitectureTests {
         draft.endedAt = Date(timeIntervalSince1970: 1_000)
 
         #expect(throws: EpisodeSaveError.invalidDateRange) {
-            try useCase.execute(draft)
+            try useCase.execute(draft, weatherSnapshot: nil)
         }
     }
 
     @Test
-    func saveEpisodeUseCasePassesValidatedWeatherToRepository() throws {
+    func saveEpisodeUseCasePassesWeatherSnapshotToRepository() throws {
         let repository = EpisodeRepositoryMock()
         let useCase = SaveEpisodeUseCase(repository: repository)
-        var draft = EpisodeDraft.makeNew()
-        draft.weather = WeatherInputDraft(
-            isEnabled: true,
-            condition: "Regen",
-            temperatureText: "18,5",
-            humidityText: "72",
-            pressureText: "1004",
-            source: ""
-        )
-
-        let savedID = try useCase.execute(draft)
-
-        #expect(savedID == repository.savedDraftID)
-        #expect(repository.lastValidatedWeather == ValidatedWeatherSnapshot(
+        let draft = EpisodeDraft.makeNew()
+        let snapshot = WeatherSnapshotData(
+            recordedAt: Date(timeIntervalSince1970: 1_000),
             condition: "Regen",
             temperature: 18.5,
             humidity: 72,
             pressure: 1004,
-            source: "Manuell"
-        ))
+            precipitation: 1.4,
+            weatherCode: 63,
+            source: "Open-Meteo DWD ICON"
+        )
+
+        let savedID = try useCase.execute(draft, weatherSnapshot: snapshot)
+
+        #expect(savedID == repository.savedDraftID)
+        #expect(repository.lastWeatherSnapshot == snapshot)
+    }
+
+    @Test
+    func saveEpisodeUseCaseRejectsFutureDate() {
+        let repository = EpisodeRepositoryMock()
+        let useCase = SaveEpisodeUseCase(repository: repository)
+        var draft = EpisodeDraft.makeNew()
+        draft.startedAt = .now.addingTimeInterval(3_600)
+
+        #expect(throws: EpisodeSaveError.futureDate) {
+            try useCase.execute(draft, weatherSnapshot: nil)
+        }
     }
 
     @Test
@@ -92,6 +101,7 @@ struct CoreArchitectureTests {
             SyncConflict(
                 documentID: "episode-1",
                 entityType: .episode,
+                base: nil,
                 local: sampleEnvelope(),
                 remote: sampleEnvelope(),
                 conflictingFields: ["notes"]
@@ -118,16 +128,16 @@ private final class EpisodeRepositoryMock: EpisodeRepository {
     var loadedRecord: EpisodeRecord?
     var deletedRecords: [EpisodeRecord] = []
     var lastSavedDraft: EpisodeDraft?
-    var lastValidatedWeather: ValidatedWeatherSnapshot?
+    var lastWeatherSnapshot: WeatherSnapshotData?
     let savedDraftID = UUID()
 
     func fetchRecent() throws -> [EpisodeRecord] { recentRecords }
     func fetchByDay(_ day: Date) throws -> [EpisodeRecord] { dayRecords }
     func fetchByMonth(_ month: Date) throws -> [EpisodeRecord] { monthRecords }
     func load(id: UUID) throws -> EpisodeRecord? { loadedRecord }
-    func save(draft: EpisodeDraft, validatedWeather: ValidatedWeatherSnapshot?) throws -> UUID {
+    func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?) throws -> UUID {
         lastSavedDraft = draft
-        lastValidatedWeather = validatedWeather
+        lastWeatherSnapshot = weatherSnapshot
         return savedDraftID
     }
     func softDelete(id: UUID) throws {}

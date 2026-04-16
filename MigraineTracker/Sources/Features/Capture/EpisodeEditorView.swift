@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct EpisodeEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -57,7 +58,12 @@ struct EpisodeEditorView: View {
                     ))
                 }
 
-                DatePicker("Beginn", selection: $controller.draft.startedAt, displayedComponents: [.date, .hourAndMinute])
+                DatePicker(
+                    "Beginn",
+                    selection: $controller.draft.startedAt,
+                    in: ...Date.now,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
             } header: {
                 Text("Schneller Eintrag")
             } footer: {
@@ -97,24 +103,11 @@ struct EpisodeEditorView: View {
             }
 
             Section {
-                Toggle("Wetterdaten manuell ergänzen", isOn: $controller.draft.weather.isEnabled.animation())
-
-                if controller.draft.weather.isEnabled {
-                    weatherConditionSection
-
-                    TextField("Wetterlage, z. B. sonnig oder Regen", text: $controller.draft.weather.condition)
-                    TextField("Temperatur in °C", text: $controller.draft.weather.temperatureText)
-                        .keyboardType(.decimalPad)
-                    TextField("Luftfeuchte in %", text: $controller.draft.weather.humidityText)
-                        .keyboardType(.decimalPad)
-                    TextField("Luftdruck in hPa", text: $controller.draft.weather.pressureText)
-                        .keyboardType(.decimalPad)
-                    TextField("Quelle, z. B. manuell", text: $controller.draft.weather.source)
-                }
+                WeatherStatusContent(state: controller.weatherLoadState)
             } header: {
                 Text("Wetter")
             } footer: {
-                Text("Optional. Es wird keine Wetter-Schnittstelle verwendet, nur deine manuelle Eingabe lokal gespeichert.")
+                Text("Das Wetter wird mit deinem ungefähren Standort über Open-Meteo auf Basis von DWD ICON geladen. Die Episode wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
             }
 
             Section("Medikamente") {
@@ -199,6 +192,7 @@ struct EpisodeEditorView: View {
                         dismiss()
                     }
                 }
+                .disabled(controller.isSaving)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
         }
@@ -251,6 +245,9 @@ struct EpisodeEditorView: View {
         } message: { definition in
             Text("\(definition.name) wird aus SwiftData entfernt.")
         }
+        .task(id: controller.draft.startedAt) {
+            await controller.refreshWeather()
+        }
     }
 
     @ViewBuilder
@@ -291,42 +288,6 @@ struct EpisodeEditorView: View {
         }
     }
 
-    private var weatherConditionSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Schnellauswahl")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 10)], spacing: 10) {
-                ForEach(controller.weatherConditionOptions, id: \.self) { option in
-                    let isSelected = controller.draft.weather.condition == option
-
-                    Button {
-                        controller.draft.weather.condition = isSelected ? "" : option
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                .imageScale(.medium)
-                            Text(option)
-                                .font(.subheadline.weight(.medium))
-                                .multilineTextAlignment(.leading)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .background(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
-                        .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Wetter: \(option)")
-                    .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Wetterlage aus.")
-                    .accessibilityAddTraits(isSelected ? .isSelected : [])
-                }
-            }
-        }
-    }
     private var showsDismissButton: Bool {
         onSaved != nil || controller.mode == .edit
     }
@@ -337,6 +298,88 @@ struct EpisodeEditorView: View {
         #else
         .topBarLeading
         #endif
+    }
+}
+
+private struct WeatherStatusContent: View {
+    @Environment(\.openURL) private var openURL
+
+    let state: WeatherLoadState
+
+    var body: some View {
+        switch state {
+        case .idle:
+            ContentUnavailableView(
+                "Wetter wird vorbereitet",
+                systemImage: "cloud.sun",
+                description: Text("Beim Laden wird dein ungefährer Standort verwendet, um Wetterdaten für den Episodenzeitpunkt abzurufen.")
+            )
+        case .loading:
+            HStack(spacing: 12) {
+                ProgressView()
+                Text("Wetter wird ermittelt …")
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 8)
+        case .loaded(let weather):
+            VStack(alignment: .leading, spacing: 8) {
+                detailRow("Zustand", weather.condition)
+                if let temperature = weather.temperature {
+                    detailRow("Temperatur", temperature.formatted(.number.precision(.fractionLength(1))) + " °C")
+                }
+                if let humidity = weather.humidity {
+                    detailRow("Luftfeuchte", humidity.formatted(.number.precision(.fractionLength(0))) + " %")
+                }
+                if let pressure = weather.pressure {
+                    detailRow("Luftdruck", pressure.formatted(.number.precision(.fractionLength(0))) + " hPa")
+                }
+                if let precipitation = weather.precipitation {
+                    detailRow("Niederschlag", precipitation.formatted(.number.precision(.fractionLength(1))) + " mm")
+                }
+                if !weather.source.isEmpty {
+                    detailRow("Quelle", weather.source)
+                }
+                Text(WeatherAttribution.sourceDescription)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+        case .unavailable(let message):
+            VStack(alignment: .leading, spacing: 12) {
+                Label(message, systemImage: "location.slash")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if showsLocationSettingsHint(for: message) {
+                    Text("Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+
+                    Button("Einstellungen öffnen") {
+                        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+                            return
+                        }
+                        openURL(settingsURL)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func detailRow(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+            Text(value)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func showsLocationSettingsHint(for message: String) -> Bool {
+        message.localizedCaseInsensitiveContains("standort")
+            || message.localizedCaseInsensitiveContains("freigabe")
     }
 }
 

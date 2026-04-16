@@ -54,7 +54,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
     }
 
     @discardableResult
-    func save(draft: EpisodeDraft, validatedWeather: ValidatedWeatherSnapshot?) throws -> UUID {
+    func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?) throws -> UUID {
         let target: Episode
 
         if
@@ -103,16 +103,8 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
                 )
             }
 
-        if let validatedWeather {
-            target.weatherSnapshot = WeatherSnapshot(
-                recordedAt: draft.startedAt,
-                temperature: validatedWeather.temperature,
-                condition: validatedWeather.condition,
-                humidity: validatedWeather.humidity,
-                pressure: validatedWeather.pressure,
-                source: validatedWeather.source,
-                episode: target
-            )
+        if let weatherSnapshot {
+            target.weatherSnapshot = WeatherSnapshot(snapshot: weatherSnapshot, episode: target)
         }
 
         try context.save()
@@ -331,6 +323,8 @@ private extension WeatherRecord {
             temperature: snapshot.temperature,
             humidity: snapshot.humidity,
             pressure: snapshot.pressure,
+            precipitation: snapshot.precipitation,
+            weatherCode: snapshot.weatherCode,
             source: snapshot.source
         )
     }

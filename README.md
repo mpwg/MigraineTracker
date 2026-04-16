@@ -55,9 +55,9 @@ Nicht Teil der ersten App-Store-MVP sind:
 ## Mögliche Datenquellen für Wetter
 
 - `WeatherKit` von Apple für tiefe iOS-Integration
-- `Open-Meteo` als freie, einfache API für ein frühes MVP
+- `Open-Meteo` mit DWD ICON für freie, einfache Wetter-Snapshots
 
-Für einen ersten Prototyp ist `Open-Meteo` meist die pragmatischere Wahl. Später kann bei Bedarf auf `WeatherKit` erweitert werden.
+Für den aktuellen Stand wird `Open-Meteo` auf Basis von `DWD ICON` verwendet. Später kann bei Bedarf auf `WeatherKit` erweitert werden.
 
 ## Zielgruppe
 
@@ -83,7 +83,7 @@ Die erste Version basiert auf diesen verbindlichen Entscheidungen:
 - lokale Persistenz mit `SwiftData`
 - Zielplattform nur `iPhone`
 - Architektur `lokal-first` ohne Serverabhängigkeit
-- Wetterdaten über `Open-Meteo`
+- Wetterdaten über `Open-Meteo` auf Basis von `DWD ICON`
 - PDF-Erzeugung lokal auf dem Gerät
 
 Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Store-Submission technisch überschaubar.

@@ -53,7 +53,7 @@ struct HomeView: View {
             Section("Version 1") {
                 MetricRow(title: "Gespeicherte Episoden", detail: "\(overview.episodeCount)")
                 MetricRow(title: "Lokale Speicherung", detail: "Lokale Primärdaten mit optionaler iCloud-Synchronisation.")
-                MetricRow(title: "Wetterkontext", detail: "Kann optional manuell pro Episode ergänzt und lokal gespeichert werden.")
+                MetricRow(title: "Wetterkontext", detail: "Wird automatisch über Open-Meteo auf Basis von DWD ICON ergänzt, wenn Standortfreigabe vorliegt.")
             }
 
             Section("Medizinischer Hinweis") {

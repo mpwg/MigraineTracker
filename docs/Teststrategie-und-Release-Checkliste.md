@@ -16,7 +16,7 @@ Vor jedem Release-Kandidaten ausführen:
 
 Die automatisierten Tests decken aktuell folgende Kernlogik ab:
 
-- Wettervalidierung für manuelle Offline-Eingaben
+- Wetter-Snapshots für echte API-Daten und Zukunftsvalidierung
 - Export-Metriken für Durchschnittsintensität und Medikamentenliste
 
 Damit sind die fehleranfälligen, nicht-visuellen Regeln des MVP reproduzierbar abgesichert, ohne das iPhone-UI unnötig kompliziert zu machen.
@@ -28,9 +28,9 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 ### Erfassen
 
 - Neue Episode anlegen und speichern
-- Wetterdaten leer lassen und erfolgreich speichern
-- Wetterdaten manuell mit gültigen Werten eintragen und speichern
-- Wetterdaten mit ungültigen Werten eingeben und Fehlermeldung prüfen
+- Standortfreigabe erlauben und Wetter automatisch laden
+- Standortfreigabe ablehnen und Episode trotzdem erfolgreich speichern
+- Zukunftsdatum wählen und Validierungsfehler prüfen
 - Medikament aus „Zuletzt verwendet“ übernehmen und speichern
 
 ### Verlauf

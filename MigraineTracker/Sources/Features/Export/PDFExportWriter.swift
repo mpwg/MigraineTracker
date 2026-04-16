@@ -117,6 +117,9 @@ enum PDFExportWriter {
             if let pressure = weather.pressure {
                 parts.append("\(pressure.formatted(.number.precision(.fractionLength(0)))) hPa")
             }
+            if let precipitation = weather.precipitation {
+                parts.append("\(precipitation.formatted(.number.precision(.fractionLength(1)))) mm Niederschlag")
+            }
             if !weather.source.isEmpty {
                 parts.append("Quelle: \(weather.source)")
             }

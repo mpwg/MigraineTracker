@@ -278,6 +278,8 @@ struct WeatherSnapshotPayload: Codable {
     let condition: String
     let humidity: Double?
     let pressure: Double?
+    let precipitation: Double?
+    let weatherCode: Int?
     let source: String
 
     init(snapshot: WeatherSnapshot) {
@@ -287,6 +289,8 @@ struct WeatherSnapshotPayload: Codable {
         self.condition = snapshot.condition
         self.humidity = snapshot.humidity
         self.pressure = snapshot.pressure
+        self.precipitation = snapshot.precipitation
+        self.weatherCode = snapshot.weatherCode
         self.source = snapshot.source
     }
 
@@ -298,6 +302,8 @@ struct WeatherSnapshotPayload: Codable {
             condition: condition,
             humidity: humidity,
             pressure: pressure,
+            precipitation: precipitation,
+            weatherCode: weatherCode,
             source: source,
             episode: episode
         )
@@ -309,6 +315,8 @@ struct WeatherSnapshotPayload: Codable {
         snapshot.condition = condition
         snapshot.humidity = humidity
         snapshot.pressure = pressure
+        snapshot.precipitation = precipitation
+        snapshot.weatherCode = weatherCode
         snapshot.source = source
         snapshot.episode = episode
     }

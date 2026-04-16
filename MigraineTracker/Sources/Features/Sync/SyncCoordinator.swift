@@ -583,6 +583,8 @@ struct LocalSyncRepository {
                     condition: weather.condition,
                     humidity: weather.humidity,
                     pressure: weather.pressure,
+                    precipitation: weather.precipitation,
+                    weatherCode: weather.weatherCode,
                     source: weather.source,
                     episode: target
                 )
@@ -672,6 +674,8 @@ extension Episode {
                             condition: $0.condition,
                             humidity: $0.humidity,
                             pressure: $0.pressure,
+                            precipitation: $0.precipitation,
+                            weatherCode: $0.weatherCode,
                             source: $0.source
                         )
                     }

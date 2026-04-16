@@ -224,3 +224,24 @@ extension MedicationDefinition {
         deletedAt = nil
     }
 }
+
+extension WeatherSnapshot {
+    convenience init(
+        id: UUID = UUID(),
+        snapshot: WeatherSnapshotData,
+        episode: Episode? = nil
+    ) {
+        self.init(
+            id: id,
+            recordedAt: snapshot.recordedAt,
+            temperature: snapshot.temperature,
+            condition: snapshot.condition,
+            humidity: snapshot.humidity,
+            pressure: snapshot.pressure,
+            precipitation: snapshot.precipitation,
+            weatherCode: snapshot.weatherCode,
+            source: snapshot.source,
+            episode: episode
+        )
+    }
+}

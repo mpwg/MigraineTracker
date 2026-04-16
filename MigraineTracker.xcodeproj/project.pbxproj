@@ -6,6 +6,10 @@
 	objectVersion = 100;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 4A1000023A00000100000001 /* OpenMeteoSdk */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		402B8A6E2F896C00008B4D70 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -64,6 +68,7 @@
 		402B8A5B2F896C00008B4D70 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */,
 			);
 		};
 		402B8A6A2F896C00008B4D70 /* Frameworks */ = {
@@ -116,6 +121,9 @@
 				402B8A602F896C00008B4D70 /* MigraineTracker */,
 			);
 			name = MigraineTracker;
+			packageProductDependencies = (
+				4A1000023A00000100000001 /* OpenMeteoSdk */,
+			);
 			productName = MigraineTracker;
 			productReference = 402B8A5E2F896C00008B4D70 /* MigraineTracker.app */;
 			productType = "com.apple.product-type.application";
@@ -194,6 +202,9 @@
 			);
 			mainGroup = 402B8A552F896C00008B4D70;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */,
+			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 402B8A5F2F896C00008B4D70 /* Products */;
 			projectDirPath = "";
@@ -383,13 +394,24 @@
 				DEVELOPMENT_TEAM = PZV43D6HWT;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Development;
 				INFOPLIST_FILE = MigraineTracker/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -436,13 +458,24 @@
 				DEVELOPMENT_TEAM = PZV43D6HWT;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Production;
 				INFOPLIST_FILE = MigraineTracker/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -623,6 +656,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/open-meteo/sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4A1000023A00000100000001 /* OpenMeteoSdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */;
+			productName = OpenMeteoSdk;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 402B8A562F896C00008B4D70 /* Project object */;
 }

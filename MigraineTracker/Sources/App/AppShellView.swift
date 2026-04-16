@@ -7,6 +7,9 @@ struct AppShellView: View {
         NavigationStack {
             HistoryView(appContainer: appContainer)
         }
+        .task {
+            await appContainer.weatherBackfillService.runIfNeeded()
+        }
     }
 }
 

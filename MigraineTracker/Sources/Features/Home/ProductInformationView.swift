@@ -4,6 +4,8 @@ struct ProductInformationView: View {
     private let privacyURL = URL(string: "https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVlcjdhQGljbG91ZC5jb20iLCJjb21wYW55IjoiTWF0dGhpYXMgV2FsbG5lci1H6WhyaSIsImdlbl9hdCI6IjIwMjYtMDQtMDlUMTE6MjI6MjUuOTYzWiJ9")!
     private let repositoryURL = URL(string: "https://github.com/mpwg/MigraineTracker")!
     private let issuesURL = URL(string: "https://github.com/mpwg/MigraineTracker/issues")!
+    private let weatherProviderURL = WeatherAttribution.providerURL
+    private let weatherLicenceURL = WeatherAttribution.licenceURL
 
     enum Mode {
         case standard
@@ -26,7 +28,7 @@ struct ProductInformationView: View {
             Section("Datenschutz") {
                 infoRow(
                     title: "Lokale Gesundheitsdaten",
-                    detail: "Episoden, Medikamente, Notizen, Trigger, Symptome und optionale Wetterangaben werden lokal auf dem Gerät gespeichert."
+                    detail: "Episoden, Medikamente, Notizen, Trigger, Symptome und Wetter-Snapshots werden lokal auf dem Gerät gespeichert."
                 )
                 infoRow(
                     title: "Optionale iCloud-Synchronisation",
@@ -44,13 +46,32 @@ struct ProductInformationView: View {
 
             Section("Berechtigungen") {
                 infoRow(
-                    title: "Derzeit keine Standortfreigabe",
-                    detail: "Wetterdaten werden im aktuellen Stand nur manuell eingegeben. Deshalb fragt die App keine Standortberechtigung an."
+                    title: "Standort nur für Wetter",
+                    detail: "Die App fragt beim Wetterabruf nach dem ungefähren Standort. Die Koordinaten werden nicht gespeichert."
                 )
                 infoRow(
                     title: "Keine Health- oder Kalender-Anbindung",
                     detail: "Apple Health, Arzttermine und andere Systemdaten sind in Version 1 nicht integriert."
                 )
+            }
+
+            Section("Wetterdaten") {
+                infoRow(
+                    title: "Quelle",
+                    detail: "Wetterdaten von Open-Meteo, basierend auf DWD ICON."
+                )
+                infoRow(
+                    title: "Lizenz",
+                    detail: "Open-Meteo stellt diese Daten unter CC BY 4.0 bereit. Eine sichtbare Attribution ist erforderlich."
+                )
+
+                Link(destination: weatherProviderURL) {
+                    Label("Open-Meteo öffnen", systemImage: "link")
+                }
+
+                Link(destination: weatherLicenceURL) {
+                    Label("CC BY 4.0 anzeigen", systemImage: "doc.text")
+                }
             }
 
             Section("Medizinische Einordnung") {

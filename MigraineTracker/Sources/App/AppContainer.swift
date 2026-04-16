@@ -6,6 +6,9 @@ final class AppContainer {
     let modelContainer: ModelContainer
     let syncCoordinator: SyncCoordinator
     let appLogStore: AppLogStore
+    let weatherService: WeatherService
+    let locationService: LocationService
+    let weatherBackfillService: WeatherBackfillService
 
     let episodeRepository: EpisodeRepository
     let medicationCatalogRepository: MedicationCatalogRepository
@@ -17,6 +20,15 @@ final class AppContainer {
         self.modelContainer = modelContainer
         self.syncCoordinator = syncCoordinator
         self.appLogStore = appLogStore
+        let weatherService = OpenMeteoDwdWeatherService()
+        let locationService = SystemLocationService()
+        self.weatherService = weatherService
+        self.locationService = locationService
+        self.weatherBackfillService = WeatherBackfillService(
+            modelContainer: modelContainer,
+            weatherService: weatherService,
+            locationService: locationService
+        )
         self.episodeRepository = SwiftDataEpisodeRepository(modelContainer: modelContainer)
         self.medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
         self.exportRepository = SwiftDataExportRepository(modelContainer: modelContainer)
@@ -29,7 +41,9 @@ final class AppContainer {
             episodeID: episodeID,
             initialStartedAt: initialStartedAt,
             episodeRepository: episodeRepository,
-            medicationRepository: medicationCatalogRepository
+            medicationRepository: medicationCatalogRepository,
+            weatherService: weatherService,
+            locationService: locationService
         )
     }
 

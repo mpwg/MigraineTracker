@@ -12,7 +12,7 @@ struct MigraineTrackerApp: App {
     @State private var syncCoordinator: SyncCoordinator
 
     init() {
-        let schema = Schema(versionedSchema: MigraineTrackerSchemaV2.self)
+        let schema = Schema(versionedSchema: MigraineTrackerSchemaV3.self)
         let storeURL = Self.defaultStoreURL()
 
         let configuration = ModelConfiguration(

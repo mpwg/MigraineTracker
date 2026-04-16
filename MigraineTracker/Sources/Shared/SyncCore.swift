@@ -232,6 +232,8 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
     public nonisolated var condition: String
     public nonisolated var humidity: Double?
     public nonisolated var pressure: Double?
+    public nonisolated var precipitation: Double?
+    public nonisolated var weatherCode: Int?
     public nonisolated var source: String
 
     public nonisolated init(
@@ -241,6 +243,8 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
         condition: String,
         humidity: Double?,
         pressure: Double?,
+        precipitation: Double?,
+        weatherCode: Int?,
         source: String
     ) {
         self.id = id
@@ -249,6 +253,8 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
         self.condition = condition
         self.humidity = humidity
         self.pressure = pressure
+        self.precipitation = precipitation
+        self.weatherCode = weatherCode
         self.source = source
     }
 
@@ -259,6 +265,8 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
             lhs.condition == rhs.condition &&
             lhs.humidity == rhs.humidity &&
             lhs.pressure == rhs.pressure &&
+            lhs.precipitation == rhs.precipitation &&
+            lhs.weatherCode == rhs.weatherCode &&
             lhs.source == rhs.source
     }
 }
@@ -536,6 +544,8 @@ public enum SyncMergeEngine {
                 condition: mergedValue(field: "weather.condition", base: base.condition, local: local.condition, remote: remote.condition, conflicts: &conflicts).value,
                 humidity: mergedValue(field: "weather.humidity", base: base.humidity, local: local.humidity, remote: remote.humidity, conflicts: &conflicts).value,
                 pressure: mergedValue(field: "weather.pressure", base: base.pressure, local: local.pressure, remote: remote.pressure, conflicts: &conflicts).value,
+                precipitation: mergedValue(field: "weather.precipitation", base: base.precipitation, local: local.precipitation, remote: remote.precipitation, conflicts: &conflicts).value,
+                weatherCode: mergedValue(field: "weather.weatherCode", base: base.weatherCode, local: local.weatherCode, remote: remote.weatherCode, conflicts: &conflicts).value,
                 source: mergedValue(field: "weather.source", base: base.source, local: local.source, remote: remote.source, conflicts: &conflicts).value
             )
         case let (nil, local?, nil):

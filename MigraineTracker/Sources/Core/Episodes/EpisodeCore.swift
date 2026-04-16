@@ -7,7 +7,13 @@ struct WeatherRecord: Equatable, Sendable {
     let temperature: Double?
     let humidity: Double?
     let pressure: Double?
+    let precipitation: Double?
+    let weatherCode: Int?
     let source: String
+
+    var isLegacySnapshot: Bool {
+        source.localizedCaseInsensitiveContains("legacy") || source.localizedCaseInsensitiveContains("manuell")
+    }
 }
 
 struct MedicationRecord: Identifiable, Equatable, Sendable {
@@ -152,15 +158,6 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
     }
 }
 
-struct WeatherInputDraft: Equatable, Sendable {
-    var isEnabled: Bool
-    var condition: String
-    var temperatureText: String
-    var humidityText: String
-    var pressureText: String
-    var source: String
-}
-
 struct EpisodeDraft: Equatable, Sendable {
     var id: UUID?
     var type: EpisodeType
@@ -176,7 +173,6 @@ struct EpisodeDraft: Equatable, Sendable {
     var selectedSymptoms: Set<String>
     var selectedTriggers: Set<String>
     var medications: [MedicationSelectionDraft]
-    var weather: WeatherInputDraft
 
     static func makeNew(initialStartedAt: Date? = nil) -> EpisodeDraft {
         let startedAt = initialStartedAt ?? .now
@@ -194,15 +190,7 @@ struct EpisodeDraft: Equatable, Sendable {
             menstruationStatus: .unknown,
             selectedSymptoms: [],
             selectedTriggers: [],
-            medications: [],
-            weather: WeatherInputDraft(
-                isEnabled: false,
-                condition: "",
-                temperatureText: "",
-                humidityText: "",
-                pressureText: "",
-                source: ""
-            )
+            medications: []
         )
     }
 
@@ -221,24 +209,8 @@ struct EpisodeDraft: Equatable, Sendable {
             menstruationStatus: record.menstruationStatus,
             selectedSymptoms: Set(record.symptoms),
             selectedTriggers: Set(record.triggers),
-            medications: record.medications.map(MedicationSelectionDraft.init(record:)),
-            weather: WeatherInputDraft(
-                isEnabled: record.weather != nil,
-                condition: record.weather?.condition ?? "",
-                temperatureText: Self.stringValue(for: record.weather?.temperature, fractionDigits: 1),
-                humidityText: Self.stringValue(for: record.weather?.humidity, fractionDigits: 0),
-                pressureText: Self.stringValue(for: record.weather?.pressure, fractionDigits: 0),
-                source: record.weather?.source ?? ""
-            )
+            medications: record.medications.map(MedicationSelectionDraft.init(record:))
         )
-    }
-
-    private static func stringValue(for value: Double?, fractionDigits: Int) -> String {
-        guard let value else {
-            return ""
-        }
-
-        return value.formatted(.number.precision(.fractionLength(fractionDigits)))
     }
 }
 
@@ -263,7 +235,7 @@ protocol EpisodeRepository {
     func fetchByMonth(_ month: Date) throws -> [EpisodeRecord]
     func load(id: UUID) throws -> EpisodeRecord?
     @discardableResult
-    func save(draft: EpisodeDraft, validatedWeather: ValidatedWeatherSnapshot?) throws -> UUID
+    func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?) throws -> UUID
     func softDelete(id: UUID) throws
     func restore(id: UUID) throws
     func fetchDeleted() throws -> [EpisodeRecord]
@@ -280,21 +252,16 @@ struct SaveEpisodeUseCase {
     let repository: EpisodeRepository
 
     @discardableResult
-    func execute(_ draft: EpisodeDraft) throws -> UUID {
+    func execute(_ draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?) throws -> UUID {
         if draft.endedAtEnabled, draft.endedAt < draft.startedAt {
             throw EpisodeSaveError.invalidDateRange
         }
 
-        let validatedWeather = try WeatherInputValidator.validate(
-            isEnabled: draft.weather.isEnabled,
-            condition: draft.weather.condition,
-            temperatureText: draft.weather.temperatureText,
-            humidityText: draft.weather.humidityText,
-            pressureText: draft.weather.pressureText,
-            source: draft.weather.source
-        )
+        if draft.startedAt > .now {
+            throw EpisodeSaveError.futureDate
+        }
 
-        return try repository.save(draft: draft, validatedWeather: validatedWeather)
+        return try repository.save(draft: draft, weatherSnapshot: weatherSnapshot)
     }
 }
 
@@ -317,13 +284,23 @@ struct LoadHomeOverviewUseCase {
 
 enum EpisodeSaveError: LocalizedError {
     case invalidDateRange
+    case futureDate
 
     var errorDescription: String? {
         switch self {
         case .invalidDateRange:
             "Das Ende darf nicht vor dem Beginn liegen."
+        case .futureDate:
+            "Eine Episode kann nicht in der Zukunft erfasst werden."
         }
     }
+}
+
+enum WeatherLoadState: Equatable {
+    case idle
+    case loading
+    case loaded(WeatherSnapshotData)
+    case unavailable(String)
 }
 
 @MainActor
@@ -339,12 +316,13 @@ final class EpisodeEditorController {
         "Pochen, Pulsieren"
     ]
     let triggerOptions = ["Stress", "Schlafmangel", "Alkohol", "Menstruation", "Bildschirmzeit"]
-    let weatherConditionOptions = ["Wetterumschwung/Wind"]
 
     var draft: EpisodeDraft
     var medicationSearchText = ""
     var saveMessageVisible = false
+    var isSaving = false
     var validationMessage: String?
+    var weatherLoadState: WeatherLoadState = .idle
     var customMedicationEditor: CustomMedicationEditorSheetState?
     var pendingMedicationDeletion: MedicationDefinitionRecord?
     private(set) var medicationDefinitions: [MedicationDefinitionRecord] = []
@@ -352,15 +330,23 @@ final class EpisodeEditorController {
     private let saveEpisodeUseCase: SaveEpisodeUseCase
     private let episodeRepository: EpisodeRepository
     private let medicationRepository: MedicationCatalogRepository
+    private let weatherService: WeatherService
+    private let locationService: LocationService
+    private let originalStartedAt: Date?
+    private let originalWeatherSnapshot: WeatherSnapshotData?
 
     init(
         episodeID: UUID?,
         initialStartedAt: Date?,
         episodeRepository: EpisodeRepository,
-        medicationRepository: MedicationCatalogRepository
+        medicationRepository: MedicationCatalogRepository,
+        weatherService: WeatherService,
+        locationService: LocationService
     ) {
         self.episodeRepository = episodeRepository
         self.medicationRepository = medicationRepository
+        self.weatherService = weatherService
+        self.locationService = locationService
         self.saveEpisodeUseCase = SaveEpisodeUseCase(repository: episodeRepository)
 
         if
@@ -369,9 +355,14 @@ final class EpisodeEditorController {
         {
             self.mode = .edit
             self.draft = EpisodeDraft.from(record: record)
+            self.originalStartedAt = record.startedAt
+            self.originalWeatherSnapshot = record.weather.map(WeatherSnapshotData.init)
+            self.weatherLoadState = record.weather.map { .loaded(WeatherSnapshotData(record: $0)) } ?? .idle
         } else {
             self.mode = .create
             self.draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
+            self.originalStartedAt = nil
+            self.originalWeatherSnapshot = nil
         }
 
         reloadMedicationDefinitions()
@@ -410,26 +401,66 @@ final class EpisodeEditorController {
         medicationDefinitions = (try? medicationRepository.fetchDefinitions(searchText: nil)) ?? []
     }
 
-    func save(onSaved: (() -> Void)?, onDismiss: () -> Void) {
+    func save(onSaved: (() -> Void)?, onDismiss: @escaping () -> Void) {
+        guard !isSaving else {
+            return
+        }
+
         validationMessage = nil
+        isSaving = true
+
+        Task {
+            defer { isSaving = false }
+
+            do {
+                let weatherSnapshot = try await weatherSnapshotForSave()
+                try saveEpisodeUseCase.execute(draft, weatherSnapshot: weatherSnapshot)
+                reloadMedicationDefinitions()
+                validationMessage = nil
+
+                if mode == .create, onSaved == nil {
+                    draft = EpisodeDraft.makeNew()
+                    medicationSearchText = ""
+                    customMedicationEditor = nil
+                    pendingMedicationDeletion = nil
+                    weatherLoadState = .idle
+                    saveMessageVisible = true
+                } else {
+                    onSaved?()
+                    onDismiss()
+                }
+            } catch {
+                validationMessage = error.localizedDescription
+            }
+        }
+    }
+
+    func refreshWeather() async {
+        if draft.startedAt > .now {
+            weatherLoadState = .unavailable("Für zukünftige Zeitpunkte wird kein Wetter geladen.")
+            return
+        }
+
+        if isStartedAtUnchanged, let originalWeatherSnapshot {
+            weatherLoadState = .loaded(originalWeatherSnapshot)
+            return
+        }
+
+        weatherLoadState = .loading
 
         do {
-            try saveEpisodeUseCase.execute(draft)
-            reloadMedicationDefinitions()
-            validationMessage = nil
-
-            if mode == .create, onSaved == nil {
-                draft = EpisodeDraft.makeNew()
-                medicationSearchText = ""
-                customMedicationEditor = nil
-                pendingMedicationDeletion = nil
-                saveMessageVisible = true
-            } else {
-                onSaved?()
-                onDismiss()
+            let location = try await locationService.requestApproximateLocation()
+            guard let snapshot = try await weatherService.fetchWeather(for: draft.startedAt, location: location) else {
+                weatherLoadState = .unavailable("Für diesen Zeitpunkt konnten keine Wetterdaten geladen werden.")
+                return
             }
+            weatherLoadState = .loaded(snapshot)
+        } catch let error as EpisodeSaveError {
+            weatherLoadState = .unavailable(error.localizedDescription)
+        } catch let error as any LocalizedError {
+            weatherLoadState = .unavailable(error.errorDescription ?? "Wetterdaten konnten nicht geladen werden.")
         } catch {
-            validationMessage = error.localizedDescription
+            weatherLoadState = .unavailable("Wetterdaten konnten nicht geladen werden.")
         }
     }
 
@@ -597,6 +628,35 @@ final class EpisodeEditorController {
         draft.medications[index].category = definition.category
         draft.medications[index].dosage = definition.suggestedDosage
         draft.medications[index].isSelected = true
+    }
+
+    private var isStartedAtUnchanged: Bool {
+        guard let originalStartedAt else {
+            return false
+        }
+
+        return originalStartedAt == draft.startedAt
+    }
+
+    private func weatherSnapshotForSave() async throws -> WeatherSnapshotData? {
+        if draft.startedAt > .now {
+            throw EpisodeSaveError.futureDate
+        }
+
+        if isStartedAtUnchanged {
+            return originalWeatherSnapshot
+        }
+
+        switch weatherLoadState {
+        case .loaded(let snapshot):
+            return snapshot
+        case .idle, .loading, .unavailable:
+            await refreshWeather()
+            if case .loaded(let snapshot) = weatherLoadState {
+                return snapshot
+            }
+            return nil
+        }
     }
 }
 

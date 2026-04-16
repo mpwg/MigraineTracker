@@ -38,6 +38,8 @@ struct EpisodeExportRecord: Identifiable {
                 temperature: $0.temperature,
                 humidity: $0.humidity,
                 pressure: $0.pressure,
+                precipitation: $0.precipitation,
+                weatherCode: $0.weatherCode,
                 source: $0.source
             )
         }
@@ -57,6 +59,8 @@ struct EpisodeExportRecord: Identifiable {
         let temperature: Double?
         let humidity: Double?
         let pressure: Double?
+        let precipitation: Double?
+        let weatherCode: Int?
         let source: String
     }
 }

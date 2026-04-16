@@ -120,6 +120,12 @@ struct EpisodeDetailView: View {
                         if let pressure = weatherSnapshot.pressure {
                             detailRow("Luftdruck", pressure.formatted(.number.precision(.fractionLength(0))) + " hPa")
                         }
+                        if let precipitation = weatherSnapshot.precipitation {
+                            detailRow("Niederschlag", precipitation.formatted(.number.precision(.fractionLength(1))) + " mm")
+                        }
+                        if let weatherCode = weatherSnapshot.weatherCode {
+                            detailRow("Wettercode", String(weatherCode))
+                        }
                         if !weatherSnapshot.source.isEmpty {
                             detailRow("Quelle", weatherSnapshot.source)
                         }
