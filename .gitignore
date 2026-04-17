@@ -113,3 +113,6 @@ Temporary Items
 .apdisk
 *.app.dSYM.zip
 *.ipa
+
+.sentryclirc
+MigraineTracker/Configs/LocalSecrets.xcconfig

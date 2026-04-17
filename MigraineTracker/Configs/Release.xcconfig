@@ -1,3 +1,5 @@
 SWIFT_COMPILATION_MODE = wholemodule
 SWIFT_OPTIMIZATION_LEVEL = -O
 ENABLE_TESTABILITY = NO
+SENTRY_DSN =
+#include? "LocalSecrets.xcconfig"

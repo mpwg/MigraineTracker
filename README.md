@@ -99,7 +99,13 @@ Der offizielle CI/CD-Weg für dieses Projekt ist `Xcode Cloud`.
 
 Lokale `fastlane`-Deployments sind kein unterstützter Release-Pfad mehr. Die projektspezifische Einrichtung für Xcode Cloud ist in [docs/Xcode-Cloud.md](docs/Xcode-Cloud.md) dokumentiert.
 
-Die Apple-Team-ID ist nicht im Repository hinterlegt. Signierung und Cloud-Builds erwarten die Umgebungsvariable `APPLE_DEVELOPER_TEAM_ID`.
+Die Apple-Team-ID und die Sentry-DSN sind nicht im Repository hinterlegt. Signierung und Cloud-Builds erwarten `APPLE_DEVELOPER_TEAM_ID`; die Sentry-DSN wird lokal und in CI über eine nicht versionierte `xcconfig` eingebunden.
+
+Für lokale Builds:
+
+- [LocalSecrets.example.xcconfig](/Users/mat/code/MigraineTracker/MigraineTracker/Configs/LocalSecrets.example.xcconfig) nach `MigraineTracker/Configs/LocalSecrets.xcconfig` kopieren
+- darin `SENTRY_DSN` mit dem echten Wert setzen
+- die Datei bleibt wegen `.gitignore` untracked
 
 ## Definition of Done für die erste Submission
 
