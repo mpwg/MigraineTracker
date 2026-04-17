@@ -16,6 +16,16 @@ if [ -z "${APPLE_DEVELOPER_TEAM_ID:-}" ]; then
   exit 1
 fi
 
+if [ -z "${SENTRY_DSN:-}" ]; then
+  echo "Fehlende Umgebungsvariable SENTRY_DSN."
+  echo "Setze SENTRY_DSN als Secret in Xcode Cloud, damit Sentry-Ereignisse gesendet werden können."
+  exit 1
+fi
+
+secrets_file="MigraineTracker/Configs/LocalSecrets.xcconfig"
+printf 'SENTRY_DSN = %s\n' "${SENTRY_DSN}" > "${secrets_file}"
+echo "Lokale Build-Konfiguration ${secrets_file} für Xcode Cloud erzeugt."
+
 echo "Prüfe Workflow-Regeln für '${workflow}' mit Aktion '${action}'."
 
 case "${workflow}" in

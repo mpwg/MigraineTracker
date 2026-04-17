@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2EFF94F7A2D745EF888B0D8A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = D4D545BA725D43399E1538D3 /* Sentry */; };
+		40D264B02F929DBC0017627F /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 4A1000023A00000100000001 /* OpenMeteoSdk */; };
 /* End PBXBuildFile section */
 
@@ -21,6 +23,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0E6AAE1222B54DC3B3E3E95B /* MigraineTracker/Configs/Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MigraineTracker/Configs/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		116485AA985446BE94991524 /* MigraineTracker/Configs/Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MigraineTracker/Configs/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		402B8A5E2F896C00008B4D70 /* MigraineTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MigraineTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MigraineTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -56,11 +60,13 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */,
+				2EFF94F7A2D745EF888B0D8A /* Sentry in Frameworks */,
 			);
 		};
 		402B8A6A2F896C00008B4D70 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				40D264B02F929DBC0017627F /* (null) in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -72,6 +78,7 @@
 				402B8A602F896C00008B4D70 /* MigraineTracker */,
 				402B8A702F896C00008B4D70 /* MigraineTrackerTests */,
 				402B8A5F2F896C00008B4D70 /* Products */,
+				40440D492F92A4E900B59D90 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -84,6 +91,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		40440D492F92A4E900B59D90 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				0E6AAE1222B54DC3B3E3E95B /* MigraineTracker/Configs/Debug.xcconfig */,
+				116485AA985446BE94991524 /* MigraineTracker/Configs/Release.xcconfig */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -94,6 +110,7 @@
 				402B8A5A2F896C00008B4D70 /* Sources */,
 				402B8A5B2F896C00008B4D70 /* Frameworks */,
 				402B8A5C2F896C00008B4D70 /* Resources */,
+				43BD41DFCD3C427EB991C9E8 /* Upload Debug Symbols to Sentry */,
 			);
 			buildRules = (
 			);
@@ -103,6 +120,7 @@
 			name = MigraineTracker;
 			packageProductDependencies = (
 				4A1000023A00000100000001 /* OpenMeteoSdk */,
+				D4D545BA725D43399E1538D3 /* Sentry */,
 			);
 			productName = MigraineTracker;
 			productReference = 402B8A5E2F896C00008B4D70 /* MigraineTracker.app */;
@@ -159,6 +177,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */,
+				42059BA48DA44B529C1A1851 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 402B8A5F2F896C00008B4D70 /* Products */;
@@ -183,6 +202,31 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		43BD41DFCD3C427EB991C9E8 /* Upload Debug Symbols to Sentry */ = {
+			isa = PBXShellScriptBuildPhase;
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+			);
+			name = "Upload Debug Symbols to Sentry";
+			shellPath = /bin/sh;
+			shellScript = (
+				"# This script is responsible for uploading debug symbols and source context for Sentry.",
+				"if which sentry-cli >/dev/null; then",
+				"  export SENTRY_ORG=mpwg",
+				"  export SENTRY_PROJECT=apple-ios",
+				"  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)",
+				"  if [ ! $? -eq 0 ]; then",
+				"    echo \"warning: sentry-cli - $ERROR\"",
+				"  fi",
+				"else",
+				"  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"",
+				"fi",
+				"",
+			);
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		402B8A5A2F896C00008B4D70 /* Sources */ = {
@@ -324,13 +368,15 @@
 		};
 		402B8A822F896C00008B4D70 /* Debug configuration for PBXNativeTarget "MigraineTracker" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0E6AAE1222B54DC3B3E3E95B /* MigraineTracker/Configs/Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = MigraineTracker/MigraineTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = PZV43D6HWT;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
@@ -344,6 +390,7 @@
 				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Development;
@@ -371,7 +418,7 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -388,13 +435,15 @@
 		};
 		402B8A832F896C00008B4D70 /* Release configuration for PBXNativeTarget "MigraineTracker" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 116485AA985446BE94991524 /* MigraineTracker/Configs/Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = MigraineTracker/MigraineTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = PZV43D6HWT;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
@@ -408,6 +457,7 @@
 				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Production;
@@ -435,7 +485,7 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -537,6 +587,16 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		42059BA48DA44B529C1A1851 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+			traits = (
+			);
+		};
 		4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-meteo/sdk.git";
@@ -552,6 +612,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */;
 			productName = OpenMeteoSdk;
+		};
+		D4D545BA725D43399E1538D3 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 42059BA48DA44B529C1A1851 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

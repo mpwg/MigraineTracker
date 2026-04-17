@@ -1,4 +1,6 @@
 import SwiftUI
+import Sentry
+
 import SwiftData
 import CoreData
 import OSLog
@@ -12,6 +14,36 @@ struct MigraineTrackerApp: App {
     @State private var syncCoordinator: SyncCoordinator
 
     init() {
+        if let sentryDSN = Self.sentryDSN {
+            SentrySDK.start { options in
+                options.dsn = sentryDSN
+
+                // Adds IP for users.
+                // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
+                options.sendDefaultPii = true
+
+                // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+                // We recommend adjusting this value in production.
+                options.tracesSampleRate = 1.0
+
+                // Configure profiling. Visit https://docs.sentry.io/platforms/apple/profiling/ to learn more.
+                options.configureProfiling = {
+                    $0.sessionSampleRate = 1.0 // We recommend adjusting this value in production.
+                    $0.lifecycle = .trace
+                }
+
+                // Uncomment the following lines to add more data to your events
+                options.attachScreenshot = true // This adds a screenshot to the error events
+                options.attachViewHierarchy = true // This adds the view hierarchy to the error events
+                options.debug = true
+                options.enableLogs = true
+            }
+        } else {
+            Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
+        }
+        // Remove the next line after confirming that your Sentry integration is working.
+        SentrySDK.capture(message: "This app uses Sentry! :)")
+
         let schema = Schema(versionedSchema: MigraineTrackerSchemaV3.self)
         let storeURL = Self.defaultStoreURL()
 
@@ -103,6 +135,23 @@ struct MigraineTrackerApp: App {
     private static func defaultStoreURL() -> URL {
         let applicationSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return applicationSupportURL.appending(path: "default.store")
+    }
+
+    private static var sentryDSN: String? {
+        normalizedDSN(Bundle.main.object(forInfoDictionaryKey: "SENTRY_DSN") as? String)
+    }
+
+    private static func normalizedDSN(_ value: String?) -> String? {
+        guard let value else {
+            return nil
+        }
+
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty || trimmed == "$(SENTRY_DSN)" {
+            return nil
+        }
+
+        return trimmed
     }
 
     private static func resetPersistentStore(at url: URL) throws {
