@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2EFF94F7A2D745EF888B0D8A /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = D4D545BA725D43399E1538D3 /* Sentry */; };
+		4066A4372F92AB4700724B7B /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 4066A4362F92AB4700724B7B /* TelemetryDeck */; };
 		40D264B02F929DBC0017627F /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 4A1000023A00000100000001 /* OpenMeteoSdk */; };
 /* End PBXBuildFile section */
@@ -61,6 +62,7 @@
 			files = (
 				4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */,
 				2EFF94F7A2D745EF888B0D8A /* Sentry in Frameworks */,
+				4066A4372F92AB4700724B7B /* TelemetryDeck in Frameworks */,
 			);
 		};
 		402B8A6A2F896C00008B4D70 /* Frameworks */ = {
@@ -121,6 +123,7 @@
 			packageProductDependencies = (
 				4A1000023A00000100000001 /* OpenMeteoSdk */,
 				D4D545BA725D43399E1538D3 /* Sentry */,
+				4066A4362F92AB4700724B7B /* TelemetryDeck */,
 			);
 			productName = MigraineTracker;
 			productReference = 402B8A5E2F896C00008B4D70 /* MigraineTracker.app */;
@@ -178,6 +181,7 @@
 			packageReferences = (
 				4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */,
 				42059BA48DA44B529C1A1851 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				4066A4352F92AB4700724B7B /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 402B8A5F2F896C00008B4D70 /* Products */;
@@ -587,6 +591,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		4066A4352F92AB4700724B7B /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.12.0;
+			};
+		};
 		42059BA48DA44B529C1A1851 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
@@ -608,6 +620,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4066A4362F92AB4700724B7B /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4066A4352F92AB4700724B7B /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
 		4A1000023A00000100000001 /* OpenMeteoSdk */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */;
