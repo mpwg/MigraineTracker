@@ -1,5 +1,6 @@
 import SwiftUI
 import Sentry
+import TelemetryDeck
 
 import SwiftData
 import CoreData
@@ -41,7 +42,9 @@ struct MigraineTrackerApp: App {
         } else {
             Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
         }
-
+        if let telemetryAppID = Self.telemetryAppID {
+            TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
+        }
         let schema = Schema(versionedSchema: MigraineTrackerSchemaV3.self)
         let storeURL = Self.defaultStoreURL()
 
@@ -136,10 +139,14 @@ struct MigraineTrackerApp: App {
     }
 
     private static var sentryDSN: String? {
-        normalizedDSN(Bundle.main.object(forInfoDictionaryKey: "SENTRY_DSN") as? String)
+        normalize(Bundle.main.object(forInfoDictionaryKey: "SENTRY_DSN") as? String)
     }
 
-    private static func normalizedDSN(_ value: String?) -> String? {
+    private static var telemetryAppID: String? {
+        normalize(Bundle.main.object(forInfoDictionaryKey: "TELEMETRY_APP_ID") as? String)
+    }
+
+    private static func normalize(_ value: String?) -> String? {
         guard let value else {
             return nil
         }
