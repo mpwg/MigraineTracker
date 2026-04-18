@@ -6,20 +6,25 @@ Vor einer Submission muss der MVP reproduzierbar prüfbar sein. Die Qualitätssi
 
 ## Automatisierte Qualitätsgates
 
-Der offizielle CI/CD-Pfad läuft über `Xcode Cloud`.
+Der offizielle Build- und Release-Pfad ist aufgeteilt:
+
+- `GitHub Actions` für CI
+- `Xcode Cloud` für CD
 
 Automatisierte Gates im Projekt:
 
-1. Workflow `CI + TestFlight` bei jedem Push auf `main`
-2. Build des Shared Scheme `MigraineTracker`
-3. Ausführung von `MigraineTrackerTests`
-4. Archivierung und Verteilung nach `TestFlight`
+1. Workflow `iOS CI` bei jedem `pull_request` auf `main`
+2. Workflow `iOS CI` bei jedem `push` auf `main`
+3. Build des Shared Scheme `MigraineTracker`
+4. Ausführung von `MigraineTrackerTests`
+5. Upload des `xcresult` für nachvollziehbare Fehlerdiagnose in GitHub
+6. Workflow `CI + TestFlight` in `Xcode Cloud` für signierte Archive und Verteilung nach `TestFlight`
 
 Lokale Vorab-Prüfung vor einem Tag-Release:
 
 1. App im `Release`-Build in Xcode archivieren oder per `xcodebuild archive` bauen
 2. Tests lokal gegen das Scheme `MigraineTracker` ausführen
-3. offene Fehler in `Xcode Cloud` oder `TestFlight` vor dem Tagging beseitigen
+3. offene Fehler in `GitHub Actions`, `Xcode Cloud` oder `TestFlight` vor dem Tagging beseitigen
 
 ## Automatisierte Testabdeckung
 
@@ -70,8 +75,8 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 
 Ein Release-Kandidat ist freigabefähig, wenn:
 
+- der Workflow `iOS CI` auf `main` erfolgreich läuft
 - der Workflow `CI + TestFlight` auf `main` erfolgreich läuft
-- die automatisierten Tests in Xcode Cloud erfolgreich laufen
 - die manuelle Checkliste ohne Blocker abgeschlossen ist
 - keine irreführenden medizinischen Aussagen oder Berechtigungstexte sichtbar sind
 
@@ -80,6 +85,7 @@ Ein Release-Kandidat ist freigabefähig, wenn:
 Die Projektregeln für Releases sind:
 
 - `main` ist der einzige automatische Integrationspfad
+- Pull Requests und `main` werden über `GitHub Actions` validiert
 - `TestFlight` wird über den Workflow `CI + TestFlight` auf `main` verteilt
 - der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
-- `fastlane` ist kein unterstützter Release-Pfad mehr
+- `fastlane` ist kein primärer Release-Pfad

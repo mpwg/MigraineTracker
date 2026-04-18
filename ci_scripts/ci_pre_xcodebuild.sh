@@ -23,7 +23,11 @@ if [ -z "${SENTRY_DSN:-}" ]; then
 fi
 
 secrets_file="MigraineTracker/Configs/LocalSecrets.xcconfig"
-printf 'SENTRY_DSN = %s\n' "${SENTRY_DSN}" > "${secrets_file}"
+{
+  printf 'APPLE_DEVELOPER_TEAM_ID = %s\n' "${APPLE_DEVELOPER_TEAM_ID}"
+  printf 'SENTRY_DSN = %s\n' "${SENTRY_DSN}"
+  printf 'TELEMETRY_APP_ID = %s\n' "${TELEMETRY_APP_ID:-}"
+} > "${secrets_file}"
 echo "Lokale Build-Konfiguration ${secrets_file} für Xcode Cloud erzeugt."
 
 echo "Prüfe Workflow-Regeln für '${workflow}' mit Aktion '${action}'."

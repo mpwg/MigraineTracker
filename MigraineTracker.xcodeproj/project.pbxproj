@@ -214,9 +214,19 @@
 				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
 			);
 			name = "Upload Debug Symbols to Sentry";
+			outputPaths = (
+				"${DERIVED_FILE_DIR}/sentry-dsym-upload.stamp",
+			);
 			shellPath = /bin/sh;
 			shellScript = (
 				"# This script is responsible for uploading debug symbols and source context for Sentry.",
+				"STAMP_FILE=\"${DERIVED_FILE_DIR}/sentry-dsym-upload.stamp\"",
+				"mkdir -p \"$(dirname \"$STAMP_FILE\")\"",
+				"if [ \"${CONFIGURATION}\" != \"Release\" ] || [ \"${EFFECTIVE_PLATFORM_NAME:-}\" = \"-iphonesimulator\" ]; then",
+				"  echo \"Skipping Sentry dSYM upload for ${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME:-}.\"",
+				"  touch \"$STAMP_FILE\"",
+				"  exit 0",
+				"fi",
 				"if which sentry-cli >/dev/null; then",
 				"  export SENTRY_ORG=mpwg",
 				"  export SENTRY_PROJECT=apple-ios",
@@ -224,8 +234,10 @@
 				"  if [ ! $? -eq 0 ]; then",
 				"    echo \"warning: sentry-cli - $ERROR\"",
 				"  fi",
+				"  touch \"$STAMP_FILE\"",
 				"else",
 				"  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"",
+				"  touch \"$STAMP_FILE\"",
 				"fi",
 				"",
 			);
@@ -382,7 +394,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
@@ -449,7 +461,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = PZV43D6HWT;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;

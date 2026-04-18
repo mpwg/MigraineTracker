@@ -1,0 +1,82 @@
+name: iOS CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
+      RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/MigraineTrackerTests.xcresult
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Secrets prüfen
+        run: |
+          if [ -z "${APPLE_DEVELOPER_TEAM_ID}" ]; then
+            echo "Das GitHub Secret APPLE_DEVELOPER_TEAM_ID fehlt."
+            exit 1
+          fi
+
+      - name: Lokale CI-Konfiguration erzeugen
+        run: |
+          mkdir -p artifacts
+          cat > MigraineTracker/Configs/LocalSecrets.xcconfig <<EOF
+          APPLE_DEVELOPER_TEAM_ID = ${APPLE_DEVELOPER_TEAM_ID}
+          SENTRY_DSN = ${SENTRY_DSN}
+          TELEMETRY_APP_ID = ${TELEMETRY_APP_ID}
+          EOF
+
+      - name: Simulator-Ziel wählen
+        run: |
+          DEVICE_NAME="$(xcrun simctl list devices available | grep -E 'iPhone (16|17)' | head -n 1 | sed -E 's/^[[:space:]]*([^()]+) \(.*/\1/' | xargs)"
+          if [ -z "${DEVICE_NAME}" ]; then
+            echo "Kein passender iPhone-Simulator gefunden."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "IOS_DESTINATION=platform=iOS Simulator,name=${DEVICE_NAME}" >> "$GITHUB_ENV"
+          echo "Verwende Simulator: ${DEVICE_NAME}"
+
+      - name: Swift Packages auflösen
+        run: xcodebuild -resolvePackageDependencies -project MigraineTracker.xcodeproj -scheme MigraineTracker
+
+      - name: App bauen
+        run: |
+          xcodebuild build \
+            -project MigraineTracker.xcodeproj \
+            -scheme MigraineTracker \
+            -destination "${IOS_DESTINATION}" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData"
+
+      - name: Tests ausführen
+        run: |
+          xcodebuild test \
+            -project MigraineTracker.xcodeproj \
+            -scheme MigraineTracker \
+            -destination "${IOS_DESTINATION}" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
+            -resultBundlePath "${RESULT_BUNDLE_PATH}"
+
+      - name: xcresult hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ci-xcresult
+          path: ${{ env.RESULT_BUNDLE_PATH }}
+          if-no-files-found: warn

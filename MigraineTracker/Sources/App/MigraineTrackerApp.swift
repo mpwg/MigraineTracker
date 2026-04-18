@@ -152,7 +152,11 @@ struct MigraineTrackerApp: App {
         }
 
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty || trimmed == "$(SENTRY_DSN)" {
+        if trimmed.isEmpty {
+            return nil
+        }
+
+        if trimmed.hasPrefix("$("), trimmed.hasSuffix(")") {
             return nil
         }
 

@@ -90,21 +90,38 @@ Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Stor
 
 ## Build und Release
 
-Der offizielle CI/CD-Weg für dieses Projekt ist `Xcode Cloud`.
+Dieses Projekt verwendet ein Hybrid-Modell:
+
+- `GitHub Actions` ist der primäre CI-Kanal für `Pull Requests` und `main`
+- `Xcode Cloud` ist der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte `App Store`-Submissions
+
+CI über `GitHub Actions`:
+
+- Workflow `iOS CI` läuft bei `pull_request` und `push` auf `main`
+- der Workflow baut das Shared Scheme `MigraineTracker`, führt `MigraineTrackerTests` auf einem iPhone-Simulator aus und lädt das `xcresult` als Artifact hoch
+- es werden keine Zertifikate oder Provisioning-Profile benötigt, weil nur Simulator-Builds und Tests laufen
+- benötigte GitHub-Secrets:
+  - `APPLE_DEVELOPER_TEAM_ID`
+- optionale GitHub-Secrets:
+  - `SENTRY_DSN`
+  - `TELEMETRY_APP_ID`
+
+CD über `Xcode Cloud`:
 
 - Push auf `main` startet den Workflow `CI + TestFlight`
-- der Workflow baut das Shared Scheme `MigraineTracker`, führt die Unit-Tests aus und verteilt erfolgreiche Archive an `TestFlight`
+- der Workflow archiviert signiert und verteilt erfolgreiche Builds an `TestFlight`
 - App-Store-Releases werden getrennt über Git-Tags im Format `vX.Y.Z` ausgelöst
-- der Workflow `App Store Release` verarbeitet ausschließlich diese Versions-Tags und veröffentlicht daraus eine App-Store-Submission
+- der Workflow `App Store Release` verarbeitet ausschließlich diese Versions-Tags und erstellt daraus eine `App Store`-Submission
 
-Lokale `fastlane`-Deployments sind kein unterstützter Release-Pfad mehr. Die projektspezifische Einrichtung für Xcode Cloud ist in [docs/Xcode-Cloud.md](docs/Xcode-Cloud.md) dokumentiert.
+`fastlane` ist kein primärer Build- oder Release-Pfad. Falls später ein lokaler Notfallpfad für manuelle `TestFlight`-Uploads benötigt wird, sollte dieser schlank über einen `App Store Connect API Key` umgesetzt werden.
 
-Die Apple-Team-ID und die Sentry-DSN sind nicht im Repository hinterlegt. Signierung und Cloud-Builds erwarten `APPLE_DEVELOPER_TEAM_ID`; die Sentry-DSN wird lokal und in CI über eine nicht versionierte `xcconfig` eingebunden.
+Die projektspezifische Einrichtung für Xcode Cloud ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
 
 Für lokale Builds:
 
 - [LocalSecrets.example.xcconfig](/Users/mat/code/MigraineTracker/MigraineTracker/Configs/LocalSecrets.example.xcconfig) nach `MigraineTracker/Configs/LocalSecrets.xcconfig` kopieren
-- darin `SENTRY_DSN` mit dem echten Wert setzen
+- darin mindestens `APPLE_DEVELOPER_TEAM_ID` setzen
+- optional `SENTRY_DSN` mit dem echten Wert setzen
 - die Datei bleibt wegen `.gitignore` untracked
 
 ## Definition of Done für die erste Submission
