@@ -61,8 +61,8 @@ protocol SyncService: AnyObject {
     func refreshStatus()
     func syncNow() async
     func retryLastError() async
-    func resolveConflictKeepingLocal(_ conflict: SyncConflict)
-    func resolveConflictUsingRemote(_ conflict: SyncConflict)
+    func resolveConflictKeepingLocal(_ conflict: SyncConflict) async
+    func resolveConflictUsingRemote(_ conflict: SyncConflict) async
 }
 
 protocol AppLogService {
@@ -152,13 +152,13 @@ final class SettingsController {
         load()
     }
 
-    func resolveConflictKeepingLocal(_ conflict: SyncConflict) {
-        syncService.resolveConflictKeepingLocal(conflict)
+    func resolveConflictKeepingLocal(_ conflict: SyncConflict) async {
+        await syncService.resolveConflictKeepingLocal(conflict)
         load()
     }
 
-    func resolveConflictUsingRemote(_ conflict: SyncConflict) {
-        syncService.resolveConflictUsingRemote(conflict)
+    func resolveConflictUsingRemote(_ conflict: SyncConflict) async {
+        await syncService.resolveConflictUsingRemote(conflict)
         load()
     }
 

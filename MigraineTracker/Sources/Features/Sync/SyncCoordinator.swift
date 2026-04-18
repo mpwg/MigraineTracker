@@ -118,40 +118,36 @@ final class SyncCoordinator {
         await syncNow()
     }
 
-    func resolveConflictKeepingLocal(_ conflict: SyncConflict) {
-        Task {
+    func resolveConflictKeepingLocal(_ conflict: SyncConflict) async {
+        await stateStore.removeConflict(documentID: conflict.documentID)
+        conflicts = await stateStore.conflicts()
+        await log(level: .info, operation: "coordinator.resolveConflictKeepingLocal", message: "Lokale Version eines Konflikts wurde beibehalten.", metadata: [
+            "documentID": conflict.documentID,
+            "entityType": conflict.entityType.rawValue,
+            "fields": conflict.conflictingFields.joined(separator: ",")
+        ])
+        status = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)
+    }
+
+    func resolveConflictUsingRemote(_ conflict: SyncConflict) async {
+        do {
+            try repository.apply(remote: conflict.remote)
+            await stateStore.saveShadow(SyncShadow(envelope: conflict.remote), for: conflict.documentID)
             await stateStore.removeConflict(documentID: conflict.documentID)
             conflicts = await stateStore.conflicts()
-            await log(level: .info, operation: "coordinator.resolveConflictKeepingLocal", message: "Lokale Version eines Konflikts wurde beibehalten.", metadata: [
+            await log(level: .info, operation: "coordinator.resolveConflictUsingRemote", message: "Cloud-Version eines Konflikts wurde übernommen.", metadata: [
                 "documentID": conflict.documentID,
                 "entityType": conflict.entityType.rawValue,
                 "fields": conflict.conflictingFields.joined(separator: ",")
             ])
             status = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)
-        }
-    }
-
-    func resolveConflictUsingRemote(_ conflict: SyncConflict) {
-        Task {
-            do {
-                try repository.apply(remote: conflict.remote)
-                await stateStore.saveShadow(SyncShadow(envelope: conflict.remote), for: conflict.documentID)
-                await stateStore.removeConflict(documentID: conflict.documentID)
-                conflicts = await stateStore.conflicts()
-                await log(level: .info, operation: "coordinator.resolveConflictUsingRemote", message: "Cloud-Version eines Konflikts wurde übernommen.", metadata: [
-                    "documentID": conflict.documentID,
-                    "entityType": conflict.entityType.rawValue,
-                    "fields": conflict.conflictingFields.joined(separator: ",")
-                ])
-                status = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)
-            } catch {
-                await stateStore.setLastError(error.localizedDescription)
-                await log(level: .error, operation: "coordinator.resolveConflictUsingRemote.error", message: "Konflikt konnte nicht mit Cloud-Daten aufgelöst werden.", metadata: [
-                    "documentID": conflict.documentID,
-                    "error": error.localizedDescription
-                ])
-                status = await buildStatusSnapshot(baseState: .needsAttention, isSyncing: false)
-            }
+        } catch {
+            await stateStore.setLastError(error.localizedDescription)
+            await log(level: .error, operation: "coordinator.resolveConflictUsingRemote.error", message: "Konflikt konnte nicht mit Cloud-Daten aufgelöst werden.", metadata: [
+                "documentID": conflict.documentID,
+                "error": error.localizedDescription
+            ])
+            status = await buildStatusSnapshot(baseState: .needsAttention, isSyncing: false)
         }
     }
 

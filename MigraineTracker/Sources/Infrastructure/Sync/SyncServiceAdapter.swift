@@ -28,12 +28,12 @@ final class SyncServiceAdapter: SyncService {
         await coordinator.retryLastError()
     }
 
-    func resolveConflictKeepingLocal(_ conflict: SyncConflict) {
-        coordinator.resolveConflictKeepingLocal(conflict)
+    func resolveConflictKeepingLocal(_ conflict: SyncConflict) async {
+        await coordinator.resolveConflictKeepingLocal(conflict)
     }
 
-    func resolveConflictUsingRemote(_ conflict: SyncConflict) {
-        coordinator.resolveConflictUsingRemote(conflict)
+    func resolveConflictUsingRemote(_ conflict: SyncConflict) async {
+        await coordinator.resolveConflictUsingRemote(conflict)
     }
 }
 

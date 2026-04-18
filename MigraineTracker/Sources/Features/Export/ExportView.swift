@@ -251,6 +251,8 @@ private struct SyncStatusView: View {
 private struct ManageCloudDataView: View {
     let appContainer: AppContainer
     @Bindable var controller: SettingsController
+    @State private var selectedConflict: SyncConflict?
+    @State private var isResolvingConflict = false
 
     var body: some View {
         List {
@@ -303,16 +305,14 @@ private struct ManageCloudDataView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(conflictTitle(for: conflict))
                                 .font(.headline)
+                            Text("Lokaler Stand und Cloud-Stand unterscheiden sich.")
+                                .font(.subheadline)
                             Text("Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
-                            Button("Lokale Version behalten") {
-                                controller.resolveConflictKeepingLocal(conflict)
-                            }
-
-                            Button("Cloud-Version übernehmen") {
-                                controller.resolveConflictUsingRemote(conflict)
+                            Button("Konflikt lösen") {
+                                selectedConflict = conflict
                             }
                         }
                         .padding(.vertical, 4)
@@ -358,6 +358,36 @@ private struct ManageCloudDataView: View {
             }
         }
         .navigationTitle("Cloud-Daten")
+        .disabled(isResolvingConflict)
+        .overlay {
+            if isResolvingConflict {
+                ProgressView("Konflikt wird verarbeitet …")
+                    .padding(20)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+        }
+        .confirmationDialog(
+            selectedConflict.map(dialogTitle(for:)) ?? "Sync-Konflikt",
+            isPresented: selectedConflictPresented,
+            titleVisibility: .visible,
+            presenting: selectedConflict
+        ) { conflict in
+            Button("Lokal hat recht") {
+                resolveConflict(conflict, preferLocal: true)
+            }
+            Button("Cloud hat recht") {
+                resolveConflict(conflict, preferLocal: false)
+            }
+            Button("Abbrechen", role: .cancel) {}
+        } message: { conflict in
+            Text(dialogMessage(for: conflict))
+        }
+        .onAppear {
+            presentNextConflictIfNeeded()
+        }
+        .onChange(of: controller.conflicts.map(\.id)) { _, _ in
+            presentNextConflictIfNeeded()
+        }
         .refreshable {
             controller.load()
         }
@@ -378,6 +408,52 @@ private struct ManageCloudDataView: View {
             Spacer()
             Text(value)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var selectedConflictPresented: Binding<Bool> {
+        Binding(
+            get: { selectedConflict != nil },
+            set: { isPresented in
+                if !isPresented {
+                    selectedConflict = nil
+                }
+            }
+        )
+    }
+
+    private func dialogTitle(for conflict: SyncConflict) -> String {
+        "\(conflictTitle(for: conflict)) in Konflikt"
+    }
+
+    private func dialogMessage(for conflict: SyncConflict) -> String {
+        "Der lokale Stand und die Cloud-Daten unterscheiden sich. Wähle, welche Version gelten soll. Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))."
+    }
+
+    private func presentNextConflictIfNeeded() {
+        guard selectedConflict == nil, !controller.conflicts.isEmpty else {
+            return
+        }
+
+        selectedConflict = controller.conflicts.first
+    }
+
+    private func resolveConflict(_ conflict: SyncConflict, preferLocal: Bool) {
+        selectedConflict = nil
+        isResolvingConflict = true
+
+        Task {
+            if preferLocal {
+                await controller.resolveConflictKeepingLocal(conflict)
+                await controller.syncNow()
+            } else {
+                await controller.resolveConflictUsingRemote(conflict)
+            }
+
+            await MainActor.run {
+                isResolvingConflict = false
+                presentNextConflictIfNeeded()
+            }
         }
     }
 }
