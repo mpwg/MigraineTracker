@@ -10,6 +10,12 @@ workflow="${CI_WORKFLOW:-}"
 action="${CI_XCODEBUILD_ACTION:-}"
 branch="${CI_BRANCH:-}"
 tag="${CI_TAG:-}"
+repo_root="${CI_PRIMARY_REPOSITORY_PATH:-}"
+
+if [ -z "${repo_root}" ]; then
+  script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+  repo_root="$(CDPATH= cd -- "${script_dir}/.." && pwd)"
+fi
 
 if [ -z "${APPLE_DEVELOPER_TEAM_ID:-}" ]; then
   echo "Fehlende Umgebungsvariable APPLE_DEVELOPER_TEAM_ID."
@@ -22,12 +28,24 @@ if [ -z "${SENTRY_DSN:-}" ]; then
   exit 1
 fi
 
-secrets_file="MigraineTracker/Configs/LocalSecrets.xcconfig"
+secrets_file="${repo_root}/MigraineTracker/Configs/LocalSecrets.xcconfig"
+secrets_dir="$(dirname "${secrets_file}")"
+
+if [ ! -d "${secrets_dir}" ]; then
+  mkdir -p "${secrets_dir}"
+fi
+
 {
   printf 'APPLE_DEVELOPER_TEAM_ID = %s\n' "${APPLE_DEVELOPER_TEAM_ID}"
   printf 'SENTRY_DSN = %s\n' "${SENTRY_DSN}"
   printf 'TELEMETRY_APP_ID = %s\n' "${TELEMETRY_APP_ID:-}"
 } > "${secrets_file}"
+
+if [ ! -s "${secrets_file}" ]; then
+  echo "Lokale Build-Konfiguration ${secrets_file} konnte nicht geschrieben werden."
+  exit 1
+fi
+
 echo "Lokale Build-Konfiguration ${secrets_file} für Xcode Cloud erzeugt."
 
 echo "Prüfe Workflow-Regeln für '${workflow}' mit Aktion '${action}'."
