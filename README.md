@@ -90,32 +90,38 @@ Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Stor
 
 ## Build und Release
 
-Dieses Projekt verwendet ein Hybrid-Modell:
+Dieses Projekt verwendet nur `GitHub Actions` für CI und CD:
 
-- `GitHub Actions` ist der primäre CI-Kanal für `Pull Requests` und `main`
-- `Xcode Cloud` ist der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte `App Store`-Submissions
+- Workflow `iOS CI` liefert Build-, Test- und PR-Feedback
+- Workflow `TestFlight Release` erzeugt bei jedem Push auf `main` ein signiertes Archiv und lädt einen neuen Build nach `TestFlight`
+- Workflow `App Store Release` reagiert nur auf Tags im Format `vX.Y.Z`, baut den getaggten Commit erneut und submitted die passende Version direkt an den `App Store`
 
 CI über `GitHub Actions`:
 
 - Workflow `iOS CI` läuft bei `pull_request` und `push` auf `main`
-- der Workflow baut das Shared Scheme `MigraineTracker`, führt `MigraineTrackerTests` auf einem iPhone-Simulator aus und lädt das `xcresult` als Artifact hoch
-- es werden keine Zertifikate oder Provisioning-Profile benötigt, weil nur Simulator-Builds und Tests laufen
-- benötigte GitHub-Secrets:
-  - `APPLE_DEVELOPER_TEAM_ID`
-- optionale GitHub-Secrets:
-  - `SENTRY_DSN`
-  - `TELEMETRY_APP_ID`
+- das Shared Scheme `MigraineTracker` wird auf einem iPhone-Simulator gebaut und getestet
+- das `xcresult` wird als Artifact hochgeladen
 
-CD über `Xcode Cloud`:
+CD über `GitHub Actions`:
 
-- Push auf `main` startet den Workflow `CI + TestFlight`
-- der Workflow archiviert signiert und verteilt erfolgreiche Builds an `TestFlight`
-- App-Store-Releases werden getrennt über Git-Tags im Format `vX.Y.Z` ausgelöst
-- der Workflow `App Store Release` verarbeitet ausschließlich diese Versions-Tags und erstellt daraus eine `App Store`-Submission
+- `main` ist der einzige automatische Pfad für neue `TestFlight`-Builds
+- nur Git-Tags `vX.Y.Z` lösen produktive `App Store`-Releases aus
+- `MARKETING_VERSION` im Projekt ist die führende Release-Version und muss zu `vX.Y.Z` passen
+- `CURRENT_PROJECT_VERSION` wird je Workflow-Lauf aus der GitHub-Buildnummer gesetzt und nicht mehr im Repo gepflegt
 
-`fastlane` ist kein primärer Build- oder Release-Pfad. Falls später ein lokaler Notfallpfad für manuelle `TestFlight`-Uploads benötigt wird, sollte dieser schlank über einen `App Store Connect API Key` umgesetzt werden.
+Benötigte GitHub-Secrets für Release-Läufe:
 
-Die projektspezifische Einrichtung für Xcode Cloud ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
+- `APPLE_DEVELOPER_TEAM_ID`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_KEY_ID`
+- `APP_STORE_CONNECT_PRIVATE_KEY`
+- `SENTRY_DSN`
+
+Optional:
+
+- `TELEMETRY_APP_ID`
+
+`fastlane` ist kein primärer Build- oder Release-Pfad. Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
 
 Für lokale Builds:
 

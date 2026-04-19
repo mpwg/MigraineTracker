@@ -1,0 +1,38 @@
+name: TestFlight Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-to-testflight:
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.4'
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Release-Archiv bauen und nach TestFlight hochladen
+        id: release
+        run: ci_scripts/github_archive_upload.sh testflight
+

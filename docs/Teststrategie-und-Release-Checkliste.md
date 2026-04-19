@@ -9,7 +9,7 @@ Vor einer Submission muss der MVP reproduzierbar prüfbar sein. Die Qualitätssi
 Der offizielle Build- und Release-Pfad ist aufgeteilt:
 
 - `GitHub Actions` für CI
-- `Xcode Cloud` für CD
+- `GitHub Actions` für CD
 
 Automatisierte Gates im Projekt:
 
@@ -18,13 +18,13 @@ Automatisierte Gates im Projekt:
 3. Build des Shared Scheme `MigraineTracker`
 4. Ausführung von `MigraineTrackerTests`
 5. Upload des `xcresult` für nachvollziehbare Fehlerdiagnose in GitHub
-6. Workflow `CI + TestFlight` in `Xcode Cloud` für signierte Archive und Verteilung nach `TestFlight`
+6. Workflow `TestFlight Release` bei jedem `push` auf `main` für signierte Archive und Verteilung nach `TestFlight`
 
 Lokale Vorab-Prüfung vor einem Tag-Release:
 
 1. App im `Release`-Build in Xcode archivieren oder per `xcodebuild archive` bauen
 2. Tests lokal gegen das Scheme `MigraineTracker` ausführen
-3. offene Fehler in `GitHub Actions`, `Xcode Cloud` oder `TestFlight` vor dem Tagging beseitigen
+3. offene Fehler in `GitHub Actions` oder `TestFlight` vor dem Tagging beseitigen
 
 ## Automatisierte Testabdeckung
 
@@ -76,7 +76,7 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 Ein Release-Kandidat ist freigabefähig, wenn:
 
 - der Workflow `iOS CI` auf `main` erfolgreich läuft
-- der Workflow `CI + TestFlight` auf `main` erfolgreich läuft
+- der Workflow `TestFlight Release` auf `main` erfolgreich läuft
 - die manuelle Checkliste ohne Blocker abgeschlossen ist
 - keine irreführenden medizinischen Aussagen oder Berechtigungstexte sichtbar sind
 
@@ -86,6 +86,6 @@ Die Projektregeln für Releases sind:
 
 - `main` ist der einzige automatische Integrationspfad
 - Pull Requests und `main` werden über `GitHub Actions` validiert
-- `TestFlight` wird über den Workflow `CI + TestFlight` auf `main` verteilt
+- `TestFlight` wird über den Workflow `TestFlight Release` auf `main` verteilt
 - der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
 - `fastlane` ist kein primärer Release-Pfad

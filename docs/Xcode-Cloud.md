@@ -1,38 +1,43 @@
-# Xcode Cloud für Migraine Tracker
+# GitHub Actions Releases für Migraine Tracker
 
 ## Zielbild
 
-Dieses Projekt verwendet ein Hybrid-Modell:
+Dieses Projekt verwendet `GitHub Actions` als einzigen CI/CD-Kanal:
 
-- `GitHub Actions` ist der primäre CI-Kanal für Builds, Unit-Tests und PR-Feedback
-- `Xcode Cloud` ist der CD-Kanal für signierte Archive, `TestFlight` und spätere `App Store`-Submissions
+- `GitHub Actions` ist der CI-Kanal für Builds, Unit-Tests und PR-Feedback
+- `GitHub Actions` ist auch der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte `App Store`-Submissions
 
-In `Xcode Cloud` gibt es genau zwei Workflows:
+Es gibt genau drei relevante Workflows:
 
-1. `CI + TestFlight`
-2. `App Store Release`
+1. `iOS CI`
+2. `TestFlight Release`
+3. `App Store Release`
 
 ## Vorbedingungen
 
-Vor der Einrichtung in `App Store Connect` und `Xcode` müssen diese Punkte erfüllt sein:
+Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erfüllt sein:
 
 - das Bundle `eu.mpwg.MigraineTracker` existiert bereits in `App Store Connect`
-- in `Xcode Cloud` ist die Umgebungsvariable `APPLE_DEVELOPER_TEAM_ID` gesetzt
-- in `Xcode Cloud` ist die Umgebungsvariable `SENTRY_DSN` als Secret gesetzt
-- in `GitHub Actions` ist das Secret `APPLE_DEVELOPER_TEAM_ID` gesetzt
-- optionale GitHub-Secrets für konsistente Laufzeitkonfiguration sind `SENTRY_DSN` und `TELEMETRY_APP_ID`
+- in `GitHub Actions` sind diese Secrets gesetzt:
+  - `APPLE_DEVELOPER_TEAM_ID`
+  - `APP_STORE_CONNECT_ISSUER_ID`
+  - `APP_STORE_CONNECT_KEY_ID`
+  - `APP_STORE_CONNECT_PRIVATE_KEY`
+  - `SENTRY_DSN`
+- optional ist `TELEMETRY_APP_ID`
 - das Shared Scheme `MigraineTracker` ist versioniert
 - Code Signing bleibt auf `Automatic`
 - die vorhandenen Entitlements für Push und iCloud bleiben aktiv
+- der verwendete App-Store-Connect-Schlüssel ist ein Team-Key, kein Individual Key
 
 Aus dem Projekt bestätigt:
 
 - `CODE_SIGN_STYLE = Automatic`
-- `DEVELOPMENT_TEAM = $(APPLE_DEVELOPER_TEAM_ID)`
+- `DEVELOPMENT_TEAM = PZV43D6HWT`
 - `Debug` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Development`
 - `Release` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Production`
 
-Damit kann Xcode Cloud die erforderlichen Signing-Assets über Apple-verwaltete Signierung bereitstellen, ohne `fastlane match` oder lokale `.env`-Secrets. Die Team-ID und die Sentry-DSN werden lokal und in CI über `MigraineTracker/Configs/LocalSecrets.xcconfig` bereitgestellt.
+Damit kann `xcodebuild` in GitHub Actions die erforderlichen Signing-Assets über Apple-verwaltete Signierung bereitstellen, ohne `fastlane match` oder lokale Zertifikatsimporte. Team-ID, Sentry-DSN und optionale Telemetrie werden in CI über `MigraineTracker/Configs/LocalSecrets.xcconfig` bereitgestellt.
 
 ## Zuständigkeiten
 
@@ -44,73 +49,70 @@ Damit kann Xcode Cloud die erforderlichen Signing-Assets über Apple-verwaltete 
 - Ausführung von `MigraineTrackerTests`
 - Upload des `xcresult` als Artifact
 
-`Xcode Cloud` ist ausschließlich für Distribution zuständig:
+Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distribution:
 
 - `main` zu `TestFlight`
 - Git-Tags `vX.Y.Z` zum `App Store`
-- Apple-verwaltetes Signing für Archive und Distribution
+- Apple-verwaltetes Signing für Archive und Distribution via App-Store-Connect-Team-Key
 
-## Workflow 1: CI + TestFlight
+## Workflow 1: iOS CI
+
+Dieser Workflow liefert schnelles Entwickler-Feedback.
+
+- Name: `iOS CI`
+- Startbedingung: `pull_request` auf `main` und `push` auf `main`
+- Scheme: `MigraineTracker`
+- Aktionen:
+  - Build
+  - Tests
+  - Upload des `xcresult`
+
+## Workflow 2: TestFlight Release
 
 Dieser Workflow ist für Beta-Verteilung auf Basis eines erfolgreichen `main`-Pushs zuständig.
 
-- Name: `CI + TestFlight`
-- Startbedingung: `Branch Changes`
-- Branch: nur `main`
+- Name: `TestFlight Release`
+- Startbedingung: `push` auf `main`
 - Scheme: `MigraineTracker`
 - Aktionen:
-  - Archive
-  - Distribution nach `TestFlight`
-
-Konfiguration:
-
-- Build- und Testfeedback für PRs und normale `main`-Pushes kommt primär aus `GitHub Actions`
-- Xcode Cloud darf optional weiterhin Build- und Test-Aktionen enthalten, ist aber nicht mehr das primäre Entwickler-Feedback-System
-- Distribution: interne und externe Testergruppen zuweisen
-- Signing: von Xcode Cloud verwaltet
-- erforderliche Umgebungsvariablen:
-  - `APPLE_DEVELOPER_TEAM_ID`
-  - `SENTRY_DSN` (als Secret)
-
-Hinweis zu externer Verteilung:
-
-- Xcode Cloud kann Builds für externe Tester vorbereiten und verteilen, soweit die zugehörigen Review- und Compliance-Voraussetzungen in `App Store Connect` erfüllt sind
-- fachliche Freigaben in `App Store Connect` bleiben davon unberührt
-
-## Workflow 2: App Store Release
+  - `Release`-Archiv bauen
+  - automatische Signierung mit `-allowProvisioningUpdates`
+  - Upload nach `TestFlight`
+  - `CURRENT_PROJECT_VERSION` aus `github.run_number` setzen
+  - `LocalSecrets.xcconfig` aus GitHub-Secrets erzeugen
 
 Dieser Workflow ist ausschließlich für produktive Releases zuständig.
 
 - Name: `App Store Release`
-- Startbedingung: `Tag Changes`
+- Startbedingung: `push` auf Git-Tags
 - Tag-Muster: `v*`
 - Scheme: `MigraineTracker`
 - Aktionen:
-  - Archive
-  - Distribution in den `App Store`
+  - Validierung des Tags `vX.Y.Z`
+  - Abgleich mit `MARKETING_VERSION`
+  - `Release`-Archiv bauen
+  - Upload des getaggten Commits nach `App Store Connect`
+  - Anlegen oder Wiederverwenden der Version `X.Y.Z`
+  - Zuordnung des hochgeladenen Builds zur Version
+  - direkte Submission an den `App Store`
 
 Konfiguration:
 
 - Produktion wird nie durch einen normalen Push auf `main` veröffentlicht
 - ein Release wird nur durch ein Versions-Tag wie `v1.2.0` ausgelöst
-- der Workflow soll die App als `App Store`-Build exportieren und an die bestehende App in `App Store Connect` liefern
-- erforderliche Umgebungsvariablen:
-  - `APPLE_DEVELOPER_TEAM_ID`
-  - `SENTRY_DSN` (als Secret)
+- der Workflow baut den getaggten Commit neu und promotet nicht einen vorhandenen `TestFlight`-Build
+- der App-Store-Submit erfolgt über die `App Store Connect API`
+- die App-Version im Projekt bleibt führend; der Tag ändert sie nicht
 
-## Versionierte Xcode-Cloud-Skripte
+## Versionierte CI-Skripte
 
-Das Repo enthält ein `ci_scripts`-Verzeichnis für Xcode Cloud.
+Das Repo enthält gemeinsame Release-Skripte in `ci_scripts`.
 
-- `ci_post_clone.sh` protokolliert die Build-Kontexte und bestätigt das erwartete Projekt-Setup
-- `ci_pre_xcodebuild.sh` erzwingt die Release-Regeln des Projekts:
-  - erwartet die Variablen `APPLE_DEVELOPER_TEAM_ID` und `SENTRY_DSN`
-  - erzeugt `MigraineTracker/Configs/LocalSecrets.xcconfig` aus `APPLE_DEVELOPER_TEAM_ID` und dem Secret `SENTRY_DSN`
-  - `CI + TestFlight` ist für Branch-Builds auf `main`
-  - `App Store Release` akzeptiert nur Tags im Format `vX.Y.Z`
-- `ci_post_xcodebuild.sh` protokolliert Ergebnis und Exportpfade eines erfolgreichen Archivlaufs
+- `github_common.sh` kapselt Secrets, Build-Einstellungen, Export-Optionen und Archivierung
+- `github_archive_upload.sh` baut und lädt Release-Artefakte für `TestFlight` oder `App Store Connect` hoch
+- `app_store_connect.py` ordnet einen verarbeiteten Build der App-Store-Version zu und stößt die Submission an
 
-Die Skripte ersetzen keine Workflow-Konfiguration in `App Store Connect`, sichern aber die vereinbarten CD-Regeln im Build selbst ab.
+Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und sind kein aktiver Release-Pfad mehr.
 
 ## Release-Ablauf
 
@@ -118,17 +120,17 @@ Die Skripte ersetzen keine Workflow-Konfiguration in `App Store Connect`, sicher
 
 1. Änderungen nach `main` mergen
 2. `GitHub Actions` führt `iOS CI` aus
-3. Xcode Cloud startet `CI + TestFlight`
-4. erfolgreiche Builds erscheinen in `TestFlight`
-5. interne und externe Tester erhalten den Build gemäß Workflow-Konfiguration
+3. `GitHub Actions` startet `TestFlight Release`
+4. ein neuer signierter Build erscheint in `TestFlight`
 
 ### App Store
 
 1. Release-Commit auf `main` auswählen
 2. Git-Tag im Format `vX.Y.Z` erzeugen, zum Beispiel `v1.2.0`
 3. Tag auf `origin` pushen
-4. Xcode Cloud startet `App Store Release`
-5. der Workflow erstellt die produktive App-Store-Submission
+4. `GitHub Actions` startet `App Store Release`
+5. der Workflow validiert `MARKETING_VERSION = X.Y.Z`
+6. der Workflow lädt einen neuen Build hoch und submitted die Version
 
 Beispiel:
 
@@ -139,10 +141,10 @@ git push origin v1.2.0
 
 ## Abnahme nach der Einrichtung
 
-Die Xcode-Cloud-Einrichtung gilt als korrekt, wenn:
+Die GitHub-Actions-Einrichtung gilt als korrekt, wenn:
 
 - `GitHub Actions` bei `pull_request` und `push` auf `main` erfolgreich läuft
-- ein Push auf `main` den Workflow `CI + TestFlight` startet
+- ein Push auf `main` den Workflow `TestFlight Release` startet
 - der erfolgreiche `main`-Lauf einen `TestFlight`-Build erzeugt
 - ein Tag wie `v1.2.0` ausschließlich den Workflow `App Store Release` startet
 - der Tag-Workflow ein veröffentlichbares Archiv und eine App-Store-Submission erzeugt

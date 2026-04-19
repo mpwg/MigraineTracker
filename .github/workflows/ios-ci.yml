@@ -12,6 +12,8 @@ jobs:
   build-and-test:
     runs-on: macos-26
     timeout-minutes: 30
+    permissions:
+      contents: read
     env:
       APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
