@@ -135,31 +135,18 @@ def shellescape_build_setting(value)
   value.to_s.shellescape
 end
 
-def release_signing_xcargs(profile_mapping:, build_number:)
-  profile_name = profile_mapping[APP_IDENTIFIER]
-  UI.user_error!("Kein Match-Profil für #{APP_IDENTIFIER} gefunden.") if profile_name.to_s.empty?
-
+def release_signing_xcargs(build_number:)
   [
     "DEVELOPMENT_TEAM=#{shellescape_build_setting(ENV['APPLE_DEVELOPER_TEAM_ID'])}",
-    "CODE_SIGN_STYLE=Manual",
-    "CODE_SIGN_IDENTITY=#{shellescape_build_setting('Apple Distribution')}",
-    "PROVISIONING_PROFILE_SPECIFIER=#{shellescape_build_setting(profile_name)}",
     "CURRENT_PROJECT_VERSION=#{shellescape_build_setting(build_number)}"
   ].join(" ")
 end
 
-def next_build_number(api_key:, version:)
-  ci_build_number = ENV["GITHUB_RUN_ID"].to_i
-  ci_build_number = 1 if ci_build_number <= 0
+def next_build_number
+  override = ENV["BUILD_NUMBER"].to_s.strip
+  return override.to_i if override.match?(/^\d+$/)
 
-  latest_uploaded = latest_testflight_build_number(
-    api_key: api_key,
-    app_identifier: APP_IDENTIFIER,
-    version: version,
-    initial_build_number: ci_build_number
-  ).to_i
-
-  [latest_uploaded + 1, ci_build_number].max
+  Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
 def build_release_ipa!(build_number:, profile_mapping:)
@@ -181,10 +168,7 @@ def build_release_ipa!(build_number:, profile_mapping:)
       manageAppVersionAndBuildNumber: false,
       teamID: ENV["APPLE_DEVELOPER_TEAM_ID"]
     },
-    xcargs: release_signing_xcargs(
-      profile_mapping: profile_mapping,
-      build_number: build_number
-    )
+    xcargs: release_signing_xcargs(build_number: build_number)
   )
 end
 
@@ -201,7 +185,7 @@ platform :ios do
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
-    build_number = next_build_number(api_key: api_key, version: version)
+    build_number = next_build_number
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
 
     pilot(
@@ -222,7 +206,7 @@ platform :ios do
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
-    build_number = next_build_number(api_key: api_key, version: version)
+    build_number = next_build_number
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
 
     deliver(

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 100;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -63,17 +63,21 @@
 /* Begin PBXFrameworksBuildPhase section */
 		402B8A5B2F896C00008B4D70 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */,
 				4066A4372F92AB4700724B7B /* TelemetryDeck in Frameworks */,
 				40AF28D72F954481004EAEB9 /* Sentry in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		402B8A6A2F896C00008B4D70 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				40D264B02F929DBC0017627F /* (null) in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -120,6 +124,8 @@
 			);
 			buildRules = (
 			);
+			dependencies = (
+			);
 			fileSystemSynchronizedGroups = (
 				402B8A602F896C00008B4D70 /* MigraineTracker */,
 			);
@@ -150,6 +156,8 @@
 				402B8A702F896C00008B4D70 /* MigraineTrackerTests */,
 			);
 			name = MigraineTrackerTests;
+			packageProductDependencies = (
+			);
 			productName = MigraineTrackerTests;
 			productReference = 402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -187,7 +195,7 @@
 				4066A4352F92AB4700724B7B /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 				40AF28D52F954481004EAEB9 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
-			preferredProjectObjectVersion = 100;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = 402B8A5F2F896C00008B4D70 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -201,63 +209,57 @@
 /* Begin PBXResourcesBuildPhase section */
 		402B8A5C2F896C00008B4D70 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		402B8A6B2F896C00008B4D70 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		43BD41DFCD3C427EB991C9E8 /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
 			inputPaths = (
 				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
 			);
 			name = "Upload Debug Symbols to Sentry";
+			outputFileListPaths = (
+			);
 			outputPaths = (
 				"${DERIVED_FILE_DIR}/sentry-dsym-upload.stamp",
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = (
-				"# This script is responsible for uploading debug symbols and source context for Sentry.",
-				"STAMP_FILE=\"${DERIVED_FILE_DIR}/sentry-dsym-upload.stamp\"",
-				"mkdir -p \"$(dirname \"$STAMP_FILE\")\"",
-				"if [ \"${CONFIGURATION}\" != \"Release\" ] || [ \"${EFFECTIVE_PLATFORM_NAME:-}\" = \"-iphonesimulator\" ]; then",
-				"  echo \"Skipping Sentry dSYM upload for ${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME:-}.\"",
-				"  touch \"$STAMP_FILE\"",
-				"  exit 0",
-				"fi",
-				"if which sentry-cli >/dev/null; then",
-				"  export SENTRY_ORG=mpwg",
-				"  export SENTRY_PROJECT=apple-ios",
-				"  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)",
-				"  if [ ! $? -eq 0 ]; then",
-				"    echo \"warning: sentry-cli - $ERROR\"",
-				"  fi",
-				"  touch \"$STAMP_FILE\"",
-				"else",
-				"  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"",
-				"  touch \"$STAMP_FILE\"",
-				"fi",
-				"",
-			);
+			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.\nSTAMP_FILE=\"${DERIVED_FILE_DIR}/sentry-dsym-upload.stamp\"\nmkdir -p \"$(dirname \"$STAMP_FILE\")\"\nif [ \"${CONFIGURATION}\" != \"Release\" ] || [ \"${EFFECTIVE_PLATFORM_NAME:-}\" = \"-iphonesimulator\" ]; then\n  echo \"Skipping Sentry dSYM upload for ${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME:-}.\"\n  touch \"$STAMP_FILE\"\n  exit 0\nfi\nif which sentry-cli >/dev/null; then\n  export SENTRY_ORG=mpwg\n  export SENTRY_PROJECT=apple-ios\n  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)\n  if [ ! $? -eq 0 ]; then\n    echo \"warning: sentry-cli - $ERROR\"\n  fi\n  touch \"$STAMP_FILE\"\nelse\n  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\n  touch \"$STAMP_FILE\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		402B8A5A2F896C00008B4D70 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		402B8A692F896C00008B4D70 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -270,7 +272,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		402B8A7F2F896C00008B4D70 /* Debug configuration for PBXProject "MigraineTracker" */ = {
+		402B8A7F2F896C00008B4D70 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -329,7 +331,7 @@
 			};
 			name = Debug;
 		};
-		402B8A802F896C00008B4D70 /* Release configuration for PBXProject "MigraineTracker" */ = {
+		402B8A802F896C00008B4D70 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -380,7 +382,7 @@
 			};
 			name = Release;
 		};
-		402B8A822F896C00008B4D70 /* Debug configuration for PBXNativeTarget "MigraineTracker" */ = {
+		402B8A822F896C00008B4D70 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0E6AAE1222B54DC3B3E3E95B /* MigraineTracker/Configs/Debug.xcconfig */;
 			buildSettings = {
@@ -389,6 +391,7 @@
 				CODE_SIGN_ENTITLEMENTS = MigraineTracker/MigraineTracker.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_APP_SANDBOX = YES;
@@ -426,7 +429,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -449,7 +452,7 @@
 			};
 			name = Debug;
 		};
-		402B8A832F896C00008B4D70 /* Release configuration for PBXNativeTarget "MigraineTracker" */ = {
+		402B8A832F896C00008B4D70 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 116485AA985446BE94991524 /* MigraineTracker/Configs/Release.xcconfig */;
 			buildSettings = {
@@ -458,6 +461,7 @@
 				CODE_SIGN_ENTITLEMENTS = MigraineTracker/MigraineTracker.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				ENABLE_APP_SANDBOX = YES;
@@ -495,7 +499,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -518,7 +522,7 @@
 			};
 			name = Release;
 		};
-		402B8A852F896C00008B4D70 /* Debug configuration for PBXNativeTarget "MigraineTrackerTests" */ = {
+		402B8A852F896C00008B4D70 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -547,7 +551,7 @@
 			};
 			name = Debug;
 		};
-		402B8A862F896C00008B4D70 /* Release configuration for PBXNativeTarget "MigraineTrackerTests" */ = {
+		402B8A862F896C00008B4D70 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -581,25 +585,28 @@
 		402B8A592F896C00008B4D70 /* Build configuration list for PBXProject "MigraineTracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				402B8A7F2F896C00008B4D70 /* Debug configuration for PBXProject "MigraineTracker" */,
-				402B8A802F896C00008B4D70 /* Release configuration for PBXProject "MigraineTracker" */,
+				402B8A7F2F896C00008B4D70 /* Debug */,
+				402B8A802F896C00008B4D70 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		402B8A812F896C00008B4D70 /* Build configuration list for PBXNativeTarget "MigraineTracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				402B8A822F896C00008B4D70 /* Debug configuration for PBXNativeTarget "MigraineTracker" */,
-				402B8A832F896C00008B4D70 /* Release configuration for PBXNativeTarget "MigraineTracker" */,
+				402B8A822F896C00008B4D70 /* Debug */,
+				402B8A832F896C00008B4D70 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		402B8A842F896C00008B4D70 /* Build configuration list for PBXNativeTarget "MigraineTrackerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				402B8A852F896C00008B4D70 /* Debug configuration for PBXNativeTarget "MigraineTrackerTests" */,
-				402B8A862F896C00008B4D70 /* Release configuration for PBXNativeTarget "MigraineTrackerTests" */,
+				402B8A852F896C00008B4D70 /* Debug */,
+				402B8A862F896C00008B4D70 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
