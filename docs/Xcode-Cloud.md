@@ -79,7 +79,7 @@ Dieser Workflow ist für Beta-Verteilung auf Basis eines erfolgreichen `main`-Pu
   - automatische Signierung mit `-allowProvisioningUpdates`
   - IPA exportieren
   - Upload nach `TestFlight` mit `apple-actions/upload-testflight-build`
-  - `CURRENT_PROJECT_VERSION` aus `github.run_number` setzen
+  - `CURRENT_PROJECT_VERSION` aus `github.run_id` setzen
   - `LocalSecrets.xcconfig` aus GitHub-Secrets erzeugen
 
 Dieser Workflow ist ausschließlich für produktive Releases zuständig.

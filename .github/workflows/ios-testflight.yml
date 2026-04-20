@@ -37,7 +37,7 @@ jobs:
         run: ci_scripts/github_archive_upload.sh testflight
 
       - name: IPA nach TestFlight hochladen
-        uses: apple-actions/upload-testflight-build@v3
+        uses: apple-actions/upload-testflight-build@v4
         with:
           app-path: ${{ steps.release.outputs.ipa_path }}
           issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}

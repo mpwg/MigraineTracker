@@ -36,8 +36,8 @@ release_root() {
 }
 
 build_number() {
-  if [[ -n "${GITHUB_RUN_NUMBER:-}" ]]; then
-    printf '%s\n' "${GITHUB_RUN_NUMBER}"
+  if [[ -n "${GITHUB_RUN_ID:-}" ]]; then
+    printf '%s\n' "${GITHUB_RUN_ID}"
   else
     date -u '+%Y%m%d%H%M%S'
   fi

@@ -107,7 +107,7 @@ CD über `GitHub Actions`:
 - `main` ist der einzige automatische Pfad für neue `TestFlight`-Builds
 - nur Git-Tags `vX.Y.Z` lösen produktive `App Store`-Releases aus
 - `MARKETING_VERSION` im Projekt ist die führende Release-Version und muss zu `vX.Y.Z` passen
-- `CURRENT_PROJECT_VERSION` wird je Workflow-Lauf aus der GitHub-Buildnummer gesetzt und nicht mehr im Repo gepflegt
+- `CURRENT_PROJECT_VERSION` wird je Workflow-Lauf aus der eindeutigen GitHub-Run-ID gesetzt und nicht mehr im Repo gepflegt
 
 Benötigte GitHub-Secrets für Release-Läufe:
 
