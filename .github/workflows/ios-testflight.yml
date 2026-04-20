@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'MigraineTracker/**'
+      - 'MigraineTracker.xcodeproj/**'
+      - 'fastlane/**'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - '.ruby-version'
+      - '.github/workflows/ios-testflight.yml'
 
 jobs:
   upload-to-testflight:

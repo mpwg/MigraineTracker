@@ -6,7 +6,38 @@ on:
       - 'v*'
 
 jobs:
+  detect-release-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.filter.outputs.should_deploy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Relevante Release-Änderungen prüfen
+        id: filter
+        run: |
+          if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            changed_files="$(git diff --name-only HEAD^ HEAD)"
+          else
+            changed_files="$(git ls-tree --name-only -r HEAD)"
+          fi
+
+          printf 'Geänderte Dateien:\n%s\n' "${changed_files}"
+
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(MigraineTracker/|MigraineTracker\.xcodeproj/|fastlane/|Gemfile$|Gemfile\.lock$|\.ruby-version$|\.github/workflows/ios-app-store\.yml$)'; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Keine relevanten Änderungen für ein App-Store-Deployment gefunden."
+          fi
+        shell: bash
+
   submit-to-app-store:
+    needs: detect-release-changes
+    if: needs.detect-release-changes.outputs.should_deploy == 'true'
     runs-on: macos-26
     timeout-minutes: 120
     permissions:
