@@ -1,188 +1,121 @@
-# Migraine Tracker
+# Schmerztagebuch - Migräne & Co.
 
-Migraine Tracker ist eine App-Idee für das schnelle Erfassen von Kopfschmerzen und Migräneepisoden. Der Fokus liegt auf wenigen, klaren Eingaben, damit Betroffene Symptome, Medikamente, Wetterkontext und Verlauf ohne großen Aufwand dokumentieren können.
+Schmerztagebuch - Migräne & Co. ist eine lokal-first iPhone-App für das strukturierte Dokumentieren von Migräne, Kopfschmerzen und ähnlichen Schmerzereignissen. Die App kombiniert einen schnellen neuen Eintrag mit einem persönlichen Tagebuch, Wetterkontext, Medikamentendokumentation, Export und ergänzenden Organisationsfunktionen für Arztkontakte.
 
-## Ziel
+## Produktstand
 
-Die App soll helfen,
+Der aktuelle Stand der App deckt diese Bereiche ab:
 
-- Episoden konsistent zu erfassen,
-- mögliche Auslöser und Muster sichtbar zu machen,
-- die Wirkung von Medikamenten besser nachzuvollziehen,
-- zyklusbezogene oder hormonelle Zusammenhänge zu erkennen,
-- Arztgespräche mit belastbaren Verlaufsdaten vorzubereiten.
-
-## Kernfunktionen
-
-- Erfassung von Kopfschmerz- und Migräneepisoden
-- Intensitätsskala von `1` bis `10`
-- Dokumentation von Medikamenten, Dosis und Wirkung
-- Erfassung weiterer Kontextdaten wie Menstruationsstatus, mögliche Trigger und Schmerzlokalisation
-- automatisches Anhängen von Wetterdaten zum Zeitpunkt des Eintrags
-- Kalender- und Verlaufsansicht
-- Export einer Übersicht für Ärztinnen und Ärzte
+- Tagebuch für Schmerzereignisse mit den Typen `Migräne`, `Kopfschmerz` und `Unklar`
+- schneller neuer Eintrag mit Intensität, Zeitpunkt und optionalen Zusatzangaben
+- Symptome, Trigger, Notizen, Schmerzlokalisation, Schmerzcharakter und funktionelle Einschränkung
+- Medikamentendokumentation inklusive eigener Vorlagen
+- Wetter-Snapshots über `Open-Meteo` auf Basis von `DWD ICON`
+- Tagebuchansicht mit Kalender, Tagesauswahl, Detailansicht, Bearbeiten und Papierkorb
+- PDF-Bericht und JSON5-Backup für frei wählbare Zeiträume
+- Ärztinnen- und Ärzte-Verwaltung inklusive lokaler Termine und Erinnerungen
+- optionale iCloud-Synchronisation mit Konfliktanzeige, Cloud-Datenverwaltung und Sync-Protokoll
 
 ## Produktidee
 
-Jeder Eintrag soll so schnell wie möglich erstellt werden können. Statt langer Formulare setzt die App auf einen kompakten Ablauf:
+Die App bleibt klar migränefokussiert, ist aber bewusst nicht nur für Migräne gedacht. Das Produktversprechen ist ein freundliches, nüchternes und alltagstaugliches Schmerztagebuch:
 
-1. Intensität wählen
-2. Symptome, Kontext und Medikamente ergänzen
-3. Wetter automatisch anhängen
-4. Verlauf später in Kalender und Statistiken auswerten
+- Beschwerden schnell dokumentieren, ohne von langen Formularen ausgebremst zu werden
+- Muster, Trigger und Medikamentenwirkung nachvollziehbarer machen
+- Arztgespräche mit belastbaren, exportierbaren Daten vorbereiten
+- sensible Gesundheitsdaten standardmäßig lokal halten
 
-## MVP
+## Hauptflows
 
-Der erste Produktumfang ist bewusst klein gehalten. Details stehen im Dokument [docs/MVP-Konzept.md](docs/MVP-Konzept.md).
+### 1. Neuer Eintrag
 
-Enthalten sind:
+- Typ wählen
+- Intensität festhalten
+- Zeitpunkt bestätigen oder anpassen
+- optional Symptome, Trigger, Notiz, Wetter und Medikamente ergänzen
+- lokal speichern
 
-- Episoden erfassen
-- Medikamente dokumentieren
-- zusätzliche Kontextfaktoren wie Zyklusstatus, Trigger und andere Schmerzmittel dokumentieren
-- Wetterdaten speichern
-- Verlauf in Liste und Kalender anzeigen
-- Export für Arztbesuche vorbereiten
+### 2. Tagebuch öffnen
 
-Nicht Teil der ersten App-Store-MVP sind:
+- Einträge im Kalender und pro Tag ansehen
+- Details öffnen
+- Einträge bearbeiten oder in den Papierkorb verschieben
 
-- `Apple Health`
-- `iPad`
-- `Englisch` oder weitere Lokalisierungen
-- `Cloud-Sync` oder eigenes Backend
-- `Arzttermine`
+### 3. Export und Sicherung
 
-## Mögliche Datenquellen für Wetter
+- PDF-Bericht für einen Zeitraum erzeugen und teilen
+- JSON5-Backup erzeugen oder importieren
 
-- `WeatherKit` von Apple für tiefe iOS-Integration
-- `Open-Meteo` mit DWD ICON für freie, einfache Wetter-Snapshots
+### 4. Ärztinnen, Ärzte und Termine
 
-Für den aktuellen Stand wird `Open-Meteo` auf Basis von `DWD ICON` verwendet. Später kann bei Bedarf auf `WeatherKit` erweitert werden.
+- Arztkontakte aus der ÖGK-Liste übernehmen oder manuell anlegen
+- lokale Termine mit Erinnerung verwalten
 
-## Zielgruppe
+### 5. Optionale Synchronisation
 
-- Menschen mit wiederkehrenden Kopfschmerzen
-- Menschen mit diagnostizierter Migräne
-- Patientinnen und Patienten, die ihren Verlauf für Arzttermine besser dokumentieren möchten
+- iCloud-Sync aktivieren oder deaktivieren
+- Konflikte einsehen und auflösen
+- Cloud-Daten und Sync-Protokoll prüfen
 
-## Verbindlicher MVP-Scope
-
-Die erste einreichbare Version für den App Store ist bewusst eng geschnitten:
-
-- nur `iPhone`
-- nur `Deutsch`
-- nur lokale Datenspeicherung auf dem Gerät
-- kein Account, kein Backend, keine Synchronisation
-- Fokus auf `Episode anlegen`, `Medikamente erfassen`, `Verlauf ansehen`, `PDF exportieren`
-
-## Technischer Stack für die erste MVP
-
-Die erste Version basiert auf diesen verbindlichen Entscheidungen:
+## Technische Leitplanken
 
 - UI mit `SwiftUI`
 - lokale Persistenz mit `SwiftData`
-- Zielplattform nur `iPhone`
-- Architektur `lokal-first` ohne Serverabhängigkeit
-- Wetterdaten über `Open-Meteo` auf Basis von `DWD ICON`
+- Architektur `lokal-first`
+- Zielplattform primär `iPhone`
+- Wetterdaten über `Open-Meteo`
 - PDF-Erzeugung lokal auf dem Gerät
+- optionale iCloud-Synchronisation getrennt von der lokalen Kernnutzung
 
-Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Store-Submission technisch überschaubar.
+Interne technische Kennungen wie `MigraineTracker`, Bundle-ID, Scheme und iCloud-Container bestehen derzeit aus Migrations- und Release-Gründen weiter, obwohl die sichtbare Produktmarke bereits auf `Schmerztagebuch - Migräne & Co.` umgestellt wird.
+
+## Datenschutz und medizinische Einordnung
+
+- Gesundheitsdaten bleiben ohne aktivierten Sync lokal auf dem Gerät
+- der PDF-Export entsteht nur auf ausdrücklichen Befehl
+- die App ist eine Dokumentationshilfe, keine Diagnose- oder Therapieempfehlung
+- Apple Health ist aktuell nicht integriert
 
 ## Build und Release
 
-Dieses Projekt verwendet nur `GitHub Actions` für CI und CD:
+Dieses Projekt verwendet `GitHub Actions` und `fastlane` für CI/CD.
 
-- Workflow `iOS CI` liefert Build-, Test- und PR-Feedback
-- Workflow `TestFlight Release` ruft `fastlane ios testflight` auf
-- Workflow `App Store Release` reagiert nur auf Tags im Format `vX.Y.Z` und ruft `fastlane ios app_store` auf
+CI:
 
-CI über `GitHub Actions`:
+- Workflow `iOS CI` bei `pull_request` und `push` auf `main`
+- Build und Tests für das Shared Scheme `MigraineTracker`
+- Upload des `xcresult` als Artifact
 
-- Workflow `iOS CI` läuft bei `pull_request` und `push` auf `main`
-- das Shared Scheme `MigraineTracker` wird auf einem iPhone-Simulator gebaut und getestet
-- das `xcresult` wird als Artifact hochgeladen
+CD:
 
-CD über `GitHub Actions`:
-
-- `main` ist der einzige automatische Pfad für neue `TestFlight`-Builds
-- nur Git-Tags `vX.Y.Z` lösen produktive `App Store`-Releases aus
-- `MARKETING_VERSION` im Projekt ist die führende Release-Version und muss zu `vX.Y.Z` passen
-- `CURRENT_PROJECT_VERSION` wird in fastlane je Lauf auf eine eindeutig höhere Buildnummer gesetzt
-- `match` liefert Distribution-Zertifikate und Provisioning Profiles reproduzierbar aus einem separaten Signierungs-Repository
-
-Benötigte GitHub-Secrets für Release-Läufe:
-
-- `APPLE_DEVELOPER_TEAM_ID`
-- `APP_STORE_CONNECT_ISSUER_ID`
-- `APP_STORE_CONNECT_KEY_ID`
-- `APP_STORE_CONNECT_PRIVATE_KEY`
-- `MATCH_GIT_URL`
-- `MATCH_PASSWORD`
-- `SENTRY_DSN`
-
-Optional:
-
-- `MATCH_GIT_BRANCH`
-- `MATCH_GIT_BASIC_AUTHORIZATION`
-- `TELEMETRY_APP_ID`
-
-Für die Distribution nutzt das Projekt fastlane durchgängig:
-
-- `match` für Distribution-Signing
-- `build_app` für Archiv und IPA-Export
-- `pilot` für `TestFlight`
-- `deliver` für den `App Store`
+- Workflow `TestFlight Release` für Builds von `main`
+- Workflow `App Store Release` für Tags im Format `vX.Y.Z`
+- `fastlane match`, `build_app`, `pilot` und `deliver` für Signing und Distribution
 
 Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
 
-Für lokale Builds:
+## Lokale Entwicklung
 
-- [LocalSecrets.example.xcconfig](/Users/mat/code/MigraineTracker/MigraineTracker/Configs/LocalSecrets.example.xcconfig) nach `MigraineTracker/Configs/LocalSecrets.xcconfig` kopieren
-- darin mindestens `APPLE_DEVELOPER_TEAM_ID` setzen
-- optional `SENTRY_DSN` mit dem echten Wert setzen
-- die Datei bleibt wegen `.gitignore` untracked
+Voraussetzungen:
 
-## Definition of Done für die erste Submission
+- Xcode mit iPhone-Simulator
+- lokales Secrets-File auf Basis von [LocalSecrets.example.xcconfig](/Users/mat/code/MigraineTracker/MigraineTracker/Configs/LocalSecrets.example.xcconfig)
 
-Die erste MVP gilt als fertig, wenn diese Punkte erfüllt sind:
+Einrichtung:
 
-- eine Episode kann auf dem iPhone vollständig angelegt, bearbeitet und gelöscht werden
-- Medikamente können pro Episode dokumentiert und im Verlauf wieder eingesehen werden
-- Wetterdaten werden, wenn verfügbar, automatisch als Kontext gespeichert
-- vergangene Episoden sind in einer verständlichen Verlaufsansicht sichtbar
-- für einen frei wählbaren Zeitraum kann ein verständlicher PDF-Bericht erzeugt und geteilt werden
-- die App ist auf Deutsch nutzbar und ohne Account vollständig funktionsfähig
-- es gibt keine Health-, Sync- oder Arzttermin-Abhängigkeit für die Kernnutzung
+1. `MigraineTracker/Configs/LocalSecrets.example.xcconfig` nach `MigraineTracker/Configs/LocalSecrets.xcconfig` kopieren.
+2. Mindestens `APPLE_DEVELOPER_TEAM_ID` setzen.
+3. Optional `SENTRY_DSN` und weitere Release-Secrets ergänzen.
 
-## Zusätzliche sinnvolle Datenpunkte
+Typische lokale Prüfung:
 
-Für eine medizinisch nützlichere, aber weiterhin schlanke Dokumentation sind insbesondere diese Felder sinnvoll:
+```bash
+xcodebuild test -scheme MigraineTracker -destination 'platform=iOS Simulator,name=iPhone 16'
+```
 
-- Menstruationsstatus oder Zyklusbezug, um hormonelle Muster sichtbar zu machen
-- Art der Episode, z. B. Migräne, Spannungskopfschmerz oder unklar
-- Schmerzlokalisation und Schmerzcharakter, z. B. einseitig, pulsierend, drückend
-- mögliche Trigger wie Schlafmangel, Stress, Alkohol, bestimmte Lebensmittel oder Bildschirmzeit
-- funktionelle Einschränkung im Alltag, z. B. arbeitsfähig, eingeschränkt, bettlägerig
-- andere Schmerzmittel oder Begleitmedikation zusätzlich zu klassischen Migränemitteln
-- Wiederholungseinnahmen und Zeitpunkt der Wirkung, um Übergebrauch und Nutzen besser einordnen zu können
+## Weiterführende Dokumente
 
-## Apple Health Integration
-
-Eine Apple-Health-Integration kann den dokumentierten Verlauf deutlich verbessern, wenn sie strikt optional bleibt und nur mit klarer Einwilligung arbeitet.
-
-Sinnvolle Daten, die Migraine Tracker in Apple Health schreiben könnte:
-
-- Kopfschmerz- oder Migräneeinträge, soweit über passende Health-Kategorien abbildbar
-- Symptom- oder Episodenereignisse mit Start- und Endzeit
-- Medikamenteneinnahmen, sofern im gewünschten Integrationsumfang vorgesehen
-
-Sinnvolle Daten, die aus Apple Health gelesen werden könnten:
-
-- Schlafdauer und Schlafregelmäßigkeit
-- Zyklus- und Menstruationsdaten
-- Schrittzahl und Aktivitätsniveau
-- Trainings und körperliche Belastung
-- Herzfrequenz, Ruheherzfrequenz und Herzfrequenzvariabilität
-- optional weitere Vitaldaten, wenn sie therapeutisch relevant erscheinen
-
-Der Mehrwert liegt vor allem darin, Trigger und Muster besser zu erkennen, ohne die manuelle Eingabe unnötig zu vergrößern.
+- [docs/MVP-Konzept.md](/Users/mat/code/MigraineTracker/docs/MVP-Konzept.md)
+- [docs/App-Store-Metadaten.md](/Users/mat/code/MigraineTracker/docs/App-Store-Metadaten.md)
+- [docs/Teststrategie-und-Release-Checkliste.md](/Users/mat/code/MigraineTracker/docs/Teststrategie-und-Release-Checkliste.md)
+- [GitHub-Issues](https://github.com/mpwg/MigraineTracker/issues)

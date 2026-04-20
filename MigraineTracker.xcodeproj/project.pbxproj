@@ -412,6 +412,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Development;
 				INFOPLIST_FILE = MigraineTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Schmerztagebuch;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Open-Meteo auf Basis von DWD ICON abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.";
@@ -482,6 +483,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Production;
 				INFOPLIST_FILE = MigraineTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Schmerztagebuch;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Open-Meteo auf Basis von DWD ICON abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.";

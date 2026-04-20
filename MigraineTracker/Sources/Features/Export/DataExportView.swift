@@ -18,18 +18,18 @@ struct DataExportView: View {
             }
 
             Section("Bericht") {
-                Text("Episoden im Zeitraum: \(controller.summary.episodeCount)")
+                Text("Einträge im Zeitraum: \(controller.summary.episodeCount)")
                     .font(.headline)
                 if controller.summary.episodeCount > 0 {
                     Text("Durchschnittliche Intensität: \(controller.summary.averageIntensity.formatted(.number.precision(.fractionLength(1))))/10")
                         .foregroundStyle(.secondary)
                 }
-                Text("Der PDF-Export wird lokal erzeugt und kann systemweit geteilt werden.")
+                Text("Der PDF-Bericht von \(ProductBranding.displayName) wird lokal erzeugt und kann systemweit geteilt werden.")
                     .foregroundStyle(.secondary)
             }
 
             Section("Daten sichern") {
-                Text("JSON5-Export enthält alle Episoden sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen.")
+                Text("JSON5-Export enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen.")
                     .foregroundStyle(.secondary)
 
                 Button("JSON5 erstellen") {
@@ -75,9 +75,9 @@ struct DataExportView: View {
             if controller.summary.records.isEmpty {
                 Section {
                     ContentUnavailableView(
-                        "Keine Episoden im Zeitraum",
+                        "Keine Einträge im Zeitraum",
                         systemImage: "square.and.arrow.up",
-                        description: Text("Passe den Zeitraum an, damit ein PDF-Bericht erstellt werden kann.")
+                        description: Text("Passe den Zeitraum an, damit ein Bericht aus deinem Tagebuch erstellt werden kann.")
                     )
                 }
             } else {

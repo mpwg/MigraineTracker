@@ -2,8 +2,6 @@ import SwiftUI
 
 struct ProductInformationView: View {
     private let privacyURL = URL(string: "https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVlcjdhQGljbG91ZC5jb20iLCJjb21wYW55IjoiTWF0dGhpYXMgV2FsbG5lci1H6WhyaSIsImdlbl9hdCI6IjIwMjYtMDQtMDlUMTE6MjI6MjUuOTYzWiJ9")!
-    private let repositoryURL = URL(string: "https://github.com/mpwg/MigraineTracker")!
-    private let issuesURL = URL(string: "https://github.com/mpwg/MigraineTracker/issues")!
     private let weatherProviderURL = WeatherAttribution.providerURL
     private let weatherLicenceURL = WeatherAttribution.licenceURL
 
@@ -19,7 +17,7 @@ struct ProductInformationView: View {
         List {
             if mode == .onboarding {
                 Section("Bevor du startest") {
-                    Text("Migraine Tracker speichert deine Angaben ausschließlich lokal auf diesem Gerät. Die App dient der Dokumentation für dich und für Arztgespräche.")
+                    Text("\(ProductBranding.displayName) speichert deine Angaben ausschließlich lokal auf diesem Gerät. Die App hilft dir, Migräne, Kopfschmerzen und andere Schmerzereignisse für dich und für Arztgespräche strukturiert festzuhalten.")
                     Text("Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt.")
                         .foregroundStyle(.secondary)
                 }
@@ -50,8 +48,8 @@ struct ProductInformationView: View {
                     detail: "Die App fragt beim Wetterabruf nach dem ungefähren Standort. Die Koordinaten werden nicht gespeichert."
                 )
                 infoRow(
-                    title: "Keine Health- oder Kalender-Anbindung",
-                    detail: "Apple Health, Arzttermine und andere Systemdaten sind in Version 1 nicht integriert."
+                    title: "Keine Health-Anbindung",
+                    detail: "Apple Health und andere sensible Systemdaten sind in Version 1 nicht integriert. Termine verwaltet die App ausschließlich lokal."
                 )
             }
 
@@ -77,7 +75,7 @@ struct ProductInformationView: View {
             Section("Medizinische Einordnung") {
                 infoRow(
                     title: "Dokumentationshilfe",
-                    detail: "Die App hilft dir, Migräneepisoden, Medikamente und Auslöser strukturiert festzuhalten."
+                    detail: "Die App hilft dir, Migräne, Kopfschmerzen, Medikamente und mögliche Auslöser strukturiert festzuhalten."
                 )
                 infoRow(
                     title: "Keine Diagnose, keine Therapieempfehlung",
@@ -92,7 +90,7 @@ struct ProductInformationView: View {
             Section("Version 1") {
                 infoRow(
                     title: "Aktueller Umfang",
-                    detail: "Episode anlegen, Medikamente erfassen, Verlauf ansehen und PDF exportieren."
+                    detail: "Neuer Eintrag, Tagebuch, Medikamente, Export und hilfreicher Kontext wie Wetter."
                 )
                 infoRow(
                     title: "Plattform und Sprache",
@@ -122,7 +120,7 @@ struct ProductInformationView: View {
                     Label("Projekt auf GitHub öffnen", systemImage: "link")
                 }
 
-                Link(destination: issuesURL) {
+                Link(destination: ProductBranding.supportURL) {
                     Label("GitHub-Issues öffnen", systemImage: "exclamationmark.bubble")
                 }
             }
@@ -138,6 +136,8 @@ struct ProductInformationView: View {
         }
         .navigationTitle("Datenschutz und Hinweise")
     }
+
+    private var repositoryURL: URL { ProductBranding.repositoryURL }
 
     @ViewBuilder
     private func infoRow(title: String, detail: String) -> some View {

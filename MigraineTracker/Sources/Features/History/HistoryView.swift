@@ -14,7 +14,7 @@ struct HistoryView: View {
             VStack(alignment: .leading, spacing: 20) {
                 contentSection(
                     title: "Kalender",
-                    footer: "Wähle einen Tag aus und füge direkt einen Migräneanfall hinzu oder öffne vorhandene Einträge."
+                    footer: "Wähle einen Tag aus und füge direkt einen neuen Eintrag hinzu oder öffne vorhandene Dokumentationen."
                 ) {
                     VStack(alignment: .leading, spacing: 16) {
                         MonthHeader(
@@ -37,12 +37,12 @@ struct HistoryView: View {
                 Button {
                     controller.isPresentingNewEpisode = true
                 } label: {
-                    Label("Migräneanfall hinzufügen", systemImage: "plus.circle.fill")
+                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .accessibilityHint("Öffnet die Erfassung mit dem aktuell ausgewählten Kalendertag.")
+                .accessibilityHint("Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag.")
 
                 contentSection(title: "Ausgewählter Tag") {
                     VStack(alignment: .leading, spacing: 12) {
@@ -50,9 +50,9 @@ struct HistoryView: View {
 
                         if controller.selectedDayEpisodes.isEmpty {
                             ContentUnavailableView(
-                                "Keine Episoden an diesem Tag",
+                                "Noch keine Einträge an diesem Tag",
                                 systemImage: "calendar",
-                                description: Text("Für \(controller.selectedDay.formatted(date: .complete, time: .omitted)) sind keine Episoden gespeichert.")
+                                description: Text("Für \(controller.selectedDay.formatted(date: .complete, time: .omitted)) ist noch nichts dokumentiert.")
                             )
                         } else {
                             ForEach(controller.selectedDayEpisodes) { episode in
@@ -80,7 +80,7 @@ struct HistoryView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 20)
         }
-        .navigationTitle("Verlauf")
+        .navigationTitle("Tagebuch")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -120,7 +120,7 @@ struct HistoryView: View {
             }
         }
         .confirmationDialog(
-            "Episode löschen?",
+            "Eintrag löschen?",
             isPresented: Binding(
                 get: { controller.pendingDeletionID != nil },
                 set: { isPresented in
@@ -257,7 +257,7 @@ private struct EpisodeRow: View {
         .padding(.vertical, 2)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
-        .accessibilityHint("Öffnet die Detailansicht der Episode.")
+        .accessibilityHint("Öffnet die Detailansicht des Eintrags.")
     }
 
     private var episodeMetaLine: String {
