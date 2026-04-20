@@ -1,13 +1,15 @@
 require "fileutils"
+require "shellwords"
 
 default_platform(:ios)
 
-PROJECT_PATH = "MigraineTracker.xcodeproj"
+REPO_ROOT = File.expand_path("..", __dir__)
+PROJECT_PATH = File.join(REPO_ROOT, "MigraineTracker.xcodeproj")
 SCHEME = "MigraineTracker"
 TARGET_NAME = "MigraineTracker"
 CONFIGURATION = "Release"
 APP_IDENTIFIER = "eu.mpwg.MigraineTracker"
-LOCAL_SECRETS_PATH = "MigraineTracker/Configs/LocalSecrets.xcconfig"
+LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "MigraineTracker/Configs/LocalSecrets.xcconfig")
 
 def truthy_env?(name, default: false)
   value = ENV[name]
@@ -25,7 +27,7 @@ end
 
 def release_root
   if ENV["RUNNER_TEMP"].to_s.empty?
-    File.expand_path("artifacts/release", Dir.pwd)
+    File.join(REPO_ROOT, "artifacts/release")
   else
     File.join(ENV["RUNNER_TEMP"], "migraine-tracker-release")
   end
@@ -66,10 +68,7 @@ def write_local_secrets!
 end
 
 def current_marketing_version
-  get_version_number(
-    xcodeproj: PROJECT_PATH,
-    target: TARGET_NAME
-  )
+  release_build_settings.fetch("MARKETING_VERSION")
 end
 
 def current_release_tag
@@ -114,43 +113,43 @@ def sync_release_signing!(api_key:)
   match(params)
 end
 
-def configure_release_signing!(profile_mapping)
-  profile_name = profile_mapping[APP_IDENTIFIER]
-  UI.user_error!("Kein Match-Profil für #{APP_IDENTIFIER} gefunden.") if profile_name.to_s.empty?
+def release_build_settings
+  @release_build_settings ||= begin
+    settings_output = sh(
+      "xcodebuild -project #{PROJECT_PATH.shellescape} -scheme #{SCHEME.shellescape} -configuration #{CONFIGURATION.shellescape} -showBuildSettings -destination 'generic/platform=iOS'",
+      log: false
+    )
 
-  update_code_signing_settings(
-    use_automatic_signing: false,
-    path: PROJECT_PATH,
-    targets: [TARGET_NAME],
-    build_configurations: [CONFIGURATION],
-    team_id: ENV["APPLE_DEVELOPER_TEAM_ID"],
-    code_sign_identity: "Apple Distribution",
-    profile_name: profile_name,
-    sdk: "iphoneos*"
-  )
+    settings = {}
+    settings_output.each_line do |line|
+      next unless line =~ /^\s*([A-Z0-9_]+)\s=\s(.*)$/
+
+      settings[Regexp.last_match(1)] = Regexp.last_match(2).strip
+    end
+
+    settings
+  end
 end
 
-def next_build_number(api_key:, version:)
-  ci_build_number = ENV["GITHUB_RUN_ID"].to_i
-  ci_build_number = 1 if ci_build_number <= 0
+def shellescape_build_setting(value)
+  value.to_s.shellescape
+end
 
-  latest_uploaded = latest_testflight_build_number(
-    api_key: api_key,
-    app_identifier: APP_IDENTIFIER,
-    version: version,
-    initial_build_number: ci_build_number
-  ).to_i
+def release_signing_xcargs(build_number:)
+  [
+    "DEVELOPMENT_TEAM=#{shellescape_build_setting(ENV['APPLE_DEVELOPER_TEAM_ID'])}",
+    "CURRENT_PROJECT_VERSION=#{shellescape_build_setting(build_number)}"
+  ].join(" ")
+end
 
-  [latest_uploaded + 1, ci_build_number].max
+def next_build_number
+  override = ENV["BUILD_NUMBER"].to_s.strip
+  return override.to_i if override.match?(/^\d+$/)
+
+  Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
 def build_release_ipa!(build_number:, profile_mapping:)
-  configure_release_signing!(profile_mapping)
-  increment_build_number(
-    build_number: build_number,
-    xcodeproj: PROJECT_PATH
-  )
-
   output_directory = File.join(release_root, "fastlane")
   FileUtils.rm_rf(output_directory)
   FileUtils.mkdir_p(output_directory)
@@ -169,7 +168,7 @@ def build_release_ipa!(build_number:, profile_mapping:)
       manageAppVersionAndBuildNumber: false,
       teamID: ENV["APPLE_DEVELOPER_TEAM_ID"]
     },
-    xcargs: "DEVELOPMENT_TEAM=#{ENV['APPLE_DEVELOPER_TEAM_ID']}"
+    xcargs: release_signing_xcargs(build_number: build_number)
   )
 end
 
@@ -180,13 +179,13 @@ platform :ios do
   end
 
   desc "Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch"
-  lane :testflight do
+  lane :release_testflight do
     api_key = app_store_api_key
     version = current_marketing_version
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
-    build_number = next_build_number(api_key: api_key, version: version)
+    build_number = next_build_number
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
 
     pilot(
@@ -199,7 +198,7 @@ platform :ios do
   end
 
   desc "Baut eine Distribution-IPA mit match und submitted sie für den App Store"
-  lane :app_store do
+  lane :release_app_store do
     ensure_release_tag_matches_version!
 
     api_key = app_store_api_key
@@ -207,7 +206,7 @@ platform :ios do
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
-    build_number = next_build_number(api_key: api_key, version: version)
+    build_number = next_build_number
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
 
     deliver(
