@@ -366,7 +366,7 @@ final class SwiftDataDoctorDirectoryRepository: DoctorDirectoryRepository {
         )
         let entries = try context.fetch(descriptor)
         guard let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return Array(entries.prefix(30)).map(DoctorDirectoryRecord.init)
+            return entries.map(DoctorDirectoryRecord.init)
         }
 
         return entries
@@ -376,7 +376,6 @@ final class SwiftDataDoctorDirectoryRepository: DoctorDirectoryRepository {
                     || $0.city.localizedCaseInsensitiveContains(searchText)
                     || $0.street.localizedCaseInsensitiveContains(searchText)
             }
-            .prefix(30)
             .map(DoctorDirectoryRecord.init)
     }
 
