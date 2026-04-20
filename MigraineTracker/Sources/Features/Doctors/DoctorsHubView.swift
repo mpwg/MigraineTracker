@@ -78,7 +78,7 @@ struct DoctorsHubView: View {
             }
         }
         .navigationTitle("Ärzte & Termine")
-        .sheet(isPresented: $isPresentingNewDoctor) {
+        .fullScreenCover(isPresented: $isPresentingNewDoctor) {
             NavigationStack {
                 DoctorEditorView(appContainer: appContainer, doctorID: nil) {
                     isPresentingNewDoctor = false
@@ -250,7 +250,7 @@ struct DoctorDetailView: View {
                 .disabled(doctor == nil)
             }
         }
-        .sheet(isPresented: $isEditingDoctor) {
+        .fullScreenCover(isPresented: $isEditingDoctor) {
             NavigationStack {
                 DoctorEditorView(appContainer: appContainer, doctorID: doctorID) {
                     isEditingDoctor = false
@@ -258,7 +258,7 @@ struct DoctorDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $isPresentingNewAppointment) {
+        .fullScreenCover(isPresented: $isPresentingNewAppointment) {
             if let doctor {
                 NavigationStack {
                     AppointmentEditorView(appContainer: appContainer, doctor: doctor, appointmentID: nil) {
@@ -268,7 +268,7 @@ struct DoctorDetailView: View {
                 }
             }
         }
-        .sheet(item: $editingAppointment) { appointment in
+        .fullScreenCover(item: $editingAppointment) { appointment in
             if let doctor {
                 NavigationStack {
                     AppointmentEditorView(appContainer: appContainer, doctor: doctor, appointmentID: appointment.id) {
@@ -359,7 +359,7 @@ struct DoctorEditorView: View {
     var body: some View {
         @Bindable var controller = controller
 
-        Form {
+        List {
             if let validationMessage = controller.validationMessage {
                 Section {
                     Label(validationMessage, systemImage: "exclamationmark.triangle.fill")
@@ -378,26 +378,50 @@ struct DoctorEditorView: View {
                 Text("Quelle: \(controller.sourceAttribution.label)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-
-                if !controller.searchResults.isEmpty {
-                    ForEach(controller.searchResults) { entry in
-                        Button {
-                            controller.applyDirectoryEntry(entry)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(entry.name)
-                                    .foregroundStyle(.primary)
-                                Text("\(entry.specialty) · \(entry.addressLine)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
             } header: {
                 Text("ÖGK-Suchkatalog")
             } footer: {
-                Text("Der Suchkatalog basiert auf der ÖGK-Liste. Telefon, E-Mail und Notizen ergänzt du manuell.")
+                Text("Die Treffer sind nach relevanten Fachgebieten gruppiert und innerhalb der Gruppen nach PLZ und Name sortiert.")
+            }
+
+            if controller.groupedSearchResults.isEmpty {
+                Section {
+                    ContentUnavailableView(
+                        "Keine passenden Ärztinnen oder Ärzte",
+                        systemImage: "magnifyingglass",
+                        description: Text("Passe den Suchbegriff an oder erfasse die Daten manuell.")
+                    )
+                }
+            } else {
+                ForEach(controller.groupedSearchResults) { section in
+                    Section(section.title) {
+                        ForEach(section.entries) { entry in
+                            Button {
+                                controller.applyDirectoryEntry(entry)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        Text(entry.name)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        if let postalCode = entry.postalCode, !postalCode.isEmpty {
+                                            Text(postalCode)
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+
+                                    Text(entry.addressLine)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .padding(.vertical, 2)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
             }
 
             Section("Stammdaten") {
@@ -442,6 +466,7 @@ struct DoctorEditorView: View {
                 }
             }
         }
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

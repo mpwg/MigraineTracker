@@ -62,6 +62,17 @@ struct DoctorDirectoryRecord: Identifiable, Equatable, Sendable {
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: ", ")
     }
+
+    var postalCodeSortKey: String {
+        postalCode?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "9999"
+    }
+}
+
+struct DoctorDirectorySection: Identifiable, Equatable, Sendable {
+    let title: String
+    let entries: [DoctorDirectoryRecord]
+
+    var id: String { title }
 }
 
 struct AppointmentRecord: Identifiable, Equatable, Sendable {
@@ -336,6 +347,26 @@ final class DoctorHubController {
 @MainActor
 @Observable
 final class DoctorEditorController {
+    private static let specialtyPriority: [String] = [
+        "Neurologie",
+        "Innere Medizin",
+        "Psychiatrie",
+        "Psychiatrie und psychotherapeutische Medizin",
+        "Kinder- und Jugendpsychiatrie",
+        "Kinder- und Jugendheilkunde",
+        "Frauenheilkunde und Geburtshilfe",
+        "Hals-, Nasen- und Ohrenheilkunde",
+        "Augenheilkunde und Optometrie",
+        "Haut- und Geschlechtskrankheiten",
+        "Orthopädie und orthopädische Chirurgie",
+        "Unfallchirurgie",
+        "Physikalische Medizin",
+        "Lungenkrankheiten",
+        "Radiologie",
+        "Urologie",
+        "Chirurgie"
+    ]
+
     var draft: DoctorDraft
     var searchText = ""
     private(set) var searchResults: [DoctorDirectoryRecord] = []
@@ -359,6 +390,37 @@ final class DoctorEditorController {
 
     func refreshSearch() {
         searchResults = (try? directoryRepository.fetchEntries(searchText: searchText)) ?? []
+    }
+
+    var groupedSearchResults: [DoctorDirectorySection] {
+        let grouped = Dictionary(grouping: searchResults) { entry in
+            let trimmed = entry.specialty.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? "Sonstige Fachgebiete" : trimmed
+        }
+
+        return grouped
+            .map { specialty, entries in
+                DoctorDirectorySection(
+                    title: specialty,
+                    entries: entries.sorted {
+                        if $0.postalCodeSortKey == $1.postalCodeSortKey {
+                            return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                        }
+
+                        return $0.postalCodeSortKey.localizedStandardCompare($1.postalCodeSortKey) == .orderedAscending
+                    }
+                )
+            }
+            .sorted { lhs, rhs in
+                let lhsIndex = Self.specialtyPriority.firstIndex(of: lhs.title) ?? .max
+                let rhsIndex = Self.specialtyPriority.firstIndex(of: rhs.title) ?? .max
+
+                if lhsIndex == rhsIndex {
+                    return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+                }
+
+                return lhsIndex < rhsIndex
+            }
     }
 
     func applyDirectoryEntry(_ entry: DoctorDirectoryRecord) {
