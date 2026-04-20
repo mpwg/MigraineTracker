@@ -113,7 +113,7 @@ final class HistoryController {
             selectedDayEpisodes = try loadDayEpisodesUseCase.execute(day: selectedDay)
             errorMessage = nil
         } catch {
-            errorMessage = "Verlauf konnte nicht geladen werden."
+            errorMessage = "Tagebuch konnte nicht geladen werden."
         }
     }
 

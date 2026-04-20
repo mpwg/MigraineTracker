@@ -40,7 +40,7 @@ Damit sind die fehleranfälligen, nicht-visuellen Regeln des MVP reproduzierbar 
 
 Vor einem Release-Kandidaten einmal vollständig prüfen:
 
-### Erfassen
+### Neuer Eintrag
 
 - Neue Episode anlegen und speichern
 - Standortfreigabe erlauben und Wetter automatisch laden
@@ -48,11 +48,11 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 - Zukunftsdatum wählen und Validierungsfehler prüfen
 - Medikament aus „Zuletzt verwendet“ übernehmen und speichern
 
-### Verlauf
+### Tagebuch
 
 - Gespeicherte Episode in Liste und Kalender finden
 - Detailansicht öffnen und Wetter- sowie Medikamentendaten prüfen
-- Episode bearbeiten, erneut speichern und Änderung im Verlauf sehen
+- Eintrag bearbeiten, erneut speichern und Änderung im Tagebuch sehen
 
 ### Export
 
@@ -68,7 +68,7 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 
 ### Produktqualität
 
-- Dynamic Type mit großer Schriftgröße in Home, Erfassen, Verlauf und Export prüfen
+- Dynamic Type mit großer Schriftgröße in Home, Neuer Eintrag, Tagebuch und Export prüfen
 - VoiceOver-Basis für Schnellzugriffe, Intensitätsauswahl, Kalender und Fehlermeldungen prüfen
 - Offensichtliche leere Zustände und Fehlertexte auf Verständlichkeit prüfen
 

@@ -67,7 +67,7 @@ struct EpisodeEditorView: View {
             } header: {
                 Text("Schneller Eintrag")
             } footer: {
-                Text("Nur Typ, Intensität und Zeitpunkt sind direkt sichtbar. Alles Weitere ist optional.")
+                Text("So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional.")
             }
 
             tagSection(title: "Symptome", options: controller.symptomOptions, selection: $controller.draft.selectedSymptoms)
@@ -107,7 +107,7 @@ struct EpisodeEditorView: View {
             } header: {
                 Text("Wetter")
             } footer: {
-                Text("Das Wetter wird mit deinem ungefähren Standort über Open-Meteo auf Basis von DWD ICON geladen. Die Episode wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
+                Text("Das Wetter wird mit deinem ungefähren Standort über Open-Meteo auf Basis von DWD ICON geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
             }
 
             Section("Medikamente") {
@@ -187,7 +187,7 @@ struct EpisodeEditorView: View {
             }
 
             Section {
-                Button(controller.mode == .create ? "Episode speichern" : "Änderungen speichern") {
+                Button(controller.mode == .create ? "Eintrag speichern" : "Änderungen speichern") {
                     controller.save(onSaved: onSaved) {
                         dismiss()
                     }
@@ -196,7 +196,7 @@ struct EpisodeEditorView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
             }
         }
-        .navigationTitle(controller.mode == .create ? "Erfassen" : "Episode bearbeiten")
+        .navigationTitle(controller.mode == .create ? "Neuer Eintrag" : "Eintrag bearbeiten")
         .toolbar {
             if showsDismissButton {
                 ToolbarItem(placement: dismissButtonPlacement) {
@@ -207,10 +207,10 @@ struct EpisodeEditorView: View {
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .alert("Episode gespeichert", isPresented: $controller.saveMessageVisible) {
+        .alert("Eintrag gespeichert", isPresented: $controller.saveMessageVisible) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Die Episode wurde lokal gespeichert.")
+            Text("Dein Eintrag wurde lokal gespeichert.")
         }
         .sheet(item: $controller.customMedicationEditor) { editorState in
             NavigationStack {

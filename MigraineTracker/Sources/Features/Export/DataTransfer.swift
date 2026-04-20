@@ -12,7 +12,7 @@ enum DataTransferError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidFormat:
-            return "Die Datei enthält kein unterstütztes MigraineTracker-Datenformat."
+            return "Die Datei enthält kein unterstütztes Datenformat für \(ProductBranding.displayName)."
         }
     }
 }
@@ -47,7 +47,7 @@ struct DataTransferSnapshot: Codable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
 
-        let fileName = "migraine-tracker-export-\(Self.fileDateFormatter.string(from: exportedAt)).json5"
+        let fileName = "schmerztagebuch-export-\(Self.fileDateFormatter.string(from: exportedAt)).json5"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         let data = try encoder.encode(self)
 

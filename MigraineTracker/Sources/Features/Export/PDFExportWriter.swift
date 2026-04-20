@@ -5,7 +5,7 @@ import PDFKit
 
 enum PDFExportWriter {
     static func write(summary: ExportPeriodSummary) throws -> URL {
-        let fileName = "MigraineTracker-\(dateStamp(summary.startDate))-\(dateStamp(summary.endDate)).pdf"
+        let fileName = "Schmerztagebuch-Migraene-Co-\(dateStamp(summary.startDate))-\(dateStamp(summary.endDate)).pdf"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         let pageRect = CGRect(x: 0, y: 0, width: 595, height: 842)
         let layout = PDFLayout(pageRect: pageRect)
@@ -19,9 +19,9 @@ enum PDFExportWriter {
     private static func writeRawPDF(summary: ExportPeriodSummary, to url: URL, layout: PDFLayout) throws {
         var mediaBox = layout.pageRect
         let metadata = [
-            kCGPDFContextCreator: "MigraineTracker",
-            kCGPDFContextAuthor: "MigraineTracker",
-            kCGPDFContextTitle: "Migraine Tracker Bericht"
+            kCGPDFContextCreator: ProductBranding.displayName,
+            kCGPDFContextAuthor: ProductBranding.displayName,
+            kCGPDFContextTitle: "\(ProductBranding.displayName) Bericht"
         ] as CFDictionary
 
         guard let consumer = CGDataConsumer(url: url as CFURL),
@@ -32,9 +32,9 @@ enum PDFExportWriter {
 
         var page = PDFPageContext(context: context, layout: layout)
         page.beginPage()
-        try page.drawTitle("Migraine Tracker Bericht")
+        try page.drawTitle("\(ProductBranding.displayName) Bericht")
         try page.drawBodyLine("Zeitraum: \(summary.startDate.formatted(date: .abbreviated, time: .omitted)) bis \(summary.endDate.formatted(date: .abbreviated, time: .omitted))")
-        try page.drawBodyLine("Episoden: \(summary.episodeCount)")
+        try page.drawBodyLine("Einträge: \(summary.episodeCount)")
 
         if summary.episodeCount > 0 {
             try page.drawBodyLine("Durchschnittliche Intensität: \(summary.averageIntensity.formatted(.number.precision(.fractionLength(1))))/10")
@@ -45,7 +45,7 @@ enum PDFExportWriter {
         }
 
         page.addSpacing(18)
-        try page.drawSectionTitle("Episodenübersicht")
+        try page.drawSectionTitle("Tagebuchübersicht")
 
         for record in summary.records {
             try page.drawBlock(exportLines(for: record))
@@ -61,9 +61,9 @@ enum PDFExportWriter {
         }
 
         document.documentAttributes = [
-            PDFDocumentAttribute.titleAttribute: "Migraine Tracker Bericht",
-            PDFDocumentAttribute.authorAttribute: "MigraineTracker",
-            PDFDocumentAttribute.creatorAttribute: "MigraineTracker"
+            PDFDocumentAttribute.titleAttribute: "\(ProductBranding.displayName) Bericht",
+            PDFDocumentAttribute.authorAttribute: ProductBranding.displayName,
+            PDFDocumentAttribute.creatorAttribute: ProductBranding.displayName
         ]
 
         guard let data = document.dataRepresentation() else {

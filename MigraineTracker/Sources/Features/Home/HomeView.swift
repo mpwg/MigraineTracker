@@ -18,27 +18,29 @@ struct HomeView: View {
     var body: some View {
         List {
             Section {
-                if let latestEpisode = overview.latestEpisode {
-                    MetricRow(
-                        title: "Letzte Episode: \(latestEpisode.type.rawValue)",
-                        detail: "Intensität \(latestEpisode.intensity)/10 · \(latestEpisode.startedAt.formatted(date: .abbreviated, time: .shortened))"
-                    )
-                } else {
-                    MetricRow(
-                        title: "Noch keine Episode erfasst",
-                        detail: "Starte mit einem schnellen Eintrag für Intensität, Symptome und Medikamente."
-                    )
-                }
+                DiaryWelcomeCard(overview: overview)
 
                 Button {
                     isPresentingEpisodeEditor = true
                 } label: {
-                    Label("Episode erfassen", systemImage: "plus.circle.fill")
+                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                NavigationLink {
+                    HistoryView(appContainer: appContainer)
+                } label: {
+                    Label("Tagebuch öffnen", systemImage: "book.closed")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
             } header: {
-                Text("Tracking")
+                Text("Tagebuch")
             } footer: {
-                Text("Gespeicherte Episoden: \(overview.episodeCount)")
+                Text("Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten.")
             }
 
             Section {
@@ -105,12 +107,6 @@ struct HomeView: View {
 
             Section {
                 NavigationLink {
-                    HistoryView(appContainer: appContainer)
-                } label: {
-                    Label("Verlauf öffnen", systemImage: "calendar")
-                }
-
-                NavigationLink {
                     SettingsView(appContainer: appContainer)
                 } label: {
                     Label("Einstellungen", systemImage: "gearshape")
@@ -122,10 +118,11 @@ struct HomeView: View {
                     Label("Datenschutz und Hinweise", systemImage: "hand.raised")
                 }
             } header: {
-                Text("Verlauf & mehr")
+                Text("Mehr")
             }
         }
-        .navigationTitle("Übersicht")
+        .listStyle(.insetGrouped)
+        .navigationTitle("Willkommen")
         .task {
             reload()
         }
@@ -172,20 +169,44 @@ struct HomeView: View {
     }
 }
 
-private struct MetricRow: View {
-    let title: String
-    let detail: String
+private struct DiaryWelcomeCard: View {
+    let overview: HomeOverviewData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
+        VStack(alignment: .leading, spacing: 14) {
+            Text(ProductBranding.displayName)
+                .font(.title3.weight(.semibold))
+
+            Text(summaryTitle)
                 .font(.headline)
-            Text(detail)
+
+            Text(summaryDetail)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+
+            if overview.episodeCount > 0 {
+                LabeledContent("Bisher dokumentiert", value: "\(overview.episodeCount) Eintrag\(overview.episodeCount == 1 ? "" : "e")")
+                    .font(.subheadline)
+            }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
+    }
+
+    private var summaryTitle: String {
+        if let latestEpisode = overview.latestEpisode {
+            return "Dein letzter Eintrag: \(latestEpisode.type.rawValue)"
+        }
+
+        return "Schön, dass du dein Tagebuch startest."
+    }
+
+    private var summaryDetail: String {
+        if let latestEpisode = overview.latestEpisode {
+            return "Intensität \(latestEpisode.intensity)/10 · \(latestEpisode.startedAt.formatted(date: .abbreviated, time: .shortened))"
+        }
+
+        return "Mit einem neuen Eintrag hältst du Beschwerden, Symptome, Medikamente und hilfreichen Kontext in wenigen Schritten fest."
     }
 }
 

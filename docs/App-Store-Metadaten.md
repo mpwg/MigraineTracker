@@ -2,19 +2,19 @@
 
 ## Produktname
 
-Migraine Tracker
+Schmerztagebuch - Migräne & Co.
 
 ## Untertitel
 
-Migräne einfach dokumentieren
+Beschwerden freundlich dokumentieren
 
 ## Kurzbeschreibung
 
-Erfasse Migräneepisoden, Medikamente, Trigger und Wetter lokal auf deinem iPhone. Behalte deinen Verlauf im Blick und exportiere kompakte PDF-Berichte für Arztgespräche.
+Erfasse Migräne, Kopfschmerzen, Medikamente, Trigger und Wetter lokal auf deinem iPhone. Behalte dein Tagebuch im Blick und exportiere kompakte PDF-Berichte für Arztgespräche.
 
 ## Keywords
 
-Migräne,Kopfschmerz,Trigger,Medikamente,Schmerztagebuch,PDF,Verlauf,Wetter
+Migräne,Kopfschmerz,Schmerzen,Tagebuch,Trigger,Medikamente,PDF,Wetter
 
 ## Support-URL
 
@@ -36,10 +36,10 @@ https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVl
 
 Benötigte Screenshots vorbereiten:
 
-1. Home mit Fokus auf lokalem Tracking und Schnellzugriffen
-2. Erfassen mit Typ, Intensität, Symptomen und optionalen Wetterdaten
-3. Verlauf in Listenansicht
-4. Verlauf in Kalenderansicht
+1. Home mit freundlichem Tagebuch-Einstieg und Schnellzugriffen
+2. Neuer Eintrag mit Typ, Intensität, Symptomen und optionalen Wetterdaten
+3. Tagebuch in Listenansicht
+4. Tagebuch in Kalenderansicht
 5. PDF-Export mit Zeitraum und Vorschau
 
 ## Asset-Stand

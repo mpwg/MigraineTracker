@@ -2,7 +2,7 @@
 
 ## Produktziel
 
-Das MVP von Migraine Tracker soll ein verlässliches, schnelles Migräne-Tagebuch sein. Nutzerinnen und Nutzer sollen eine Episode in wenigen Sekunden erfassen und später nachvollziehen können, wie häufig Beschwerden auftreten, welche Medikamente helfen und ob Wetter oder andere Faktoren eine Rolle spielen.
+Das MVP von Schmerztagebuch - Migräne & Co. soll ein verlässliches, schnelles Schmerztagebuch mit klarem Fokus auf Migräne sein. Nutzerinnen und Nutzer sollen einen Eintrag in wenigen Sekunden erfassen und später nachvollziehen können, wie häufig Beschwerden auftreten, welche Medikamente helfen und ob Wetter oder andere Faktoren eine Rolle spielen.
 
 Für die erste App-Store-Submission gilt ein bewusst enger Scope:
 
@@ -10,7 +10,7 @@ Für die erste App-Store-Submission gilt ein bewusst enger Scope:
 - nur `Deutsch`
 - nur lokale Datenspeicherung auf dem Gerät
 - kein Account, kein Backend, keine Synchronisation
-- Fokus auf `Episode anlegen`, `Medikamente erfassen`, `Verlauf ansehen`, `PDF exportieren`
+- Fokus auf `Neuer Eintrag`, `Medikamente erfassen`, `Tagebuch öffnen`, `PDF exportieren`
 
 ## Verbindliche Architekturentscheidungen
 
@@ -50,7 +50,7 @@ Diese Punkte sind zunächst bewusst ausgeschlossen:
 
 - Menschen mit wiederkehrenden Kopfschmerzen
 - Menschen mit Migräne
-- Personen, die Arzttermine mit strukturierten Verlaufsdaten vorbereiten möchten
+- Personen, die Arzttermine mit strukturierten Tagebuchdaten vorbereiten möchten
 
 ## Kernproblem
 
@@ -58,7 +58,7 @@ Viele Betroffene dokumentieren Symptome unregelmäßig oder gar nicht, weil vorh
 
 ## Wertversprechen
 
-Migraine Tracker reduziert Dokumentation auf das Wesentliche und ergänzt automatisch Kontextdaten wie Wetter. Dadurch entsteht ohne großen Aufwand ein verwertbarer Verlauf für den Alltag und für ärztliche Gespräche.
+Schmerztagebuch - Migräne & Co. reduziert Dokumentation auf das Wesentliche und ergänzt automatisch Kontextdaten wie Wetter. Dadurch entsteht ohne großen Aufwand ein verwertbares Tagebuch für den Alltag und für ärztliche Gespräche.
 
 ## MVP-Funktionsumfang
 
@@ -109,7 +109,7 @@ Quelle im MVP:
 - bevorzugt `Open-Meteo` oder vergleichbare freie Quelle
 - `WeatherKit` später als Ausbauoption
 
-### 4. Verlauf und Auswertung
+### 4. Tagebuch und Auswertung
 
 - Kalenderansicht mit Tagen und Episoden
 - Listenansicht der letzten Einträge
@@ -139,7 +139,7 @@ Diese Flows müssen ohne Produktentscheidungen umsetzbar und testbar sein:
    - Name, Kategorie, Dosis, Zeitpunkt und Wirkung festhalten
    - bestehende Medikamente schnell erneut auswählen
 
-3. Verlauf ansehen
+3. Tagebuch öffnen
    - letzte Episoden in einer Liste oder Kalenderansicht sehen
    - eine Episode im Detail mit Medikamenten und Wetterkontext öffnen
 
@@ -151,9 +151,9 @@ Diese Flows müssen ohne Produktentscheidungen umsetzbar und testbar sein:
 ## Empfohlene Screens
 
 1. Startseite
-   - heutige Übersicht
-   - Button `Episode erfassen`
-   - letzter Verlaufseintrag oder Schnellzugriff auf den Verlauf
+   - freundlicher Tagebuch-Einstieg
+   - Button `Neuer Eintrag`
+   - letzter Eintrag oder Schnellzugriff auf das Tagebuch
 
 2. Neue Episode
    - Intensität
@@ -168,7 +168,7 @@ Diese Flows müssen ohne Produktentscheidungen umsetzbar und testbar sein:
    - Typ und Wirkung dokumentieren
    - zuletzt verwendete Medikamente schnell auswählen
 
-4. Kalender / Verlauf
+4. Kalender / Tagebuch
    - Tages- und Monatsansicht
    - Detailansicht pro Episode
 
@@ -192,7 +192,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 ### Schichten
 
 1. Präsentation
-   - `SwiftUI`-Screens für Erfassung, Verlauf, Detailansicht und Export
+   - `SwiftUI`-Screens für Eintragserfassung, Tagebuch, Detailansicht und Export
    - zuständig für Navigation, Formzustand und Darstellung
 
 2. Anwendungslogik
@@ -219,7 +219,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 - `Export`-Modul
   - Zeitraum auswählen und PDF-Bericht aus vorhandenen lokalen Daten erzeugen
 - `History`-Modul
-  - Listen-, Kalender- und Detailansichten aus persistierten Episoden ableiten
+  - Tagebuch-, Kalender- und Detailansichten aus persistierten Episoden ableiten
 
 ### Geplanter Datenfluss
 
@@ -227,7 +227,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 2. Die Anwendungslogik validiert Eingaben und erzeugt lokale Datenobjekte.
 3. `SwiftData` speichert Episode, Medikamente und später den Wetter-Snapshot.
 4. Der Wetterdienst ergänzt, wenn verfügbar, Kontextdaten ohne den Speichervorgang zu blockieren.
-5. Verlauf und Export lesen ausschließlich aus der lokalen Persistenz.
+5. Tagebuch und Export lesen ausschließlich aus der lokalen Persistenz.
 
 ### Integrationsansatz
 
@@ -246,7 +246,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 - Views bleiben schlank und enthalten keine Persistenz- oder Netzwerklogik
 - externe Integrationen werden über klar getrennte Services angebunden
 - alle Kernfunktionen müssen offline benutzbar bleiben, abgesehen vom optionalen Wetterabruf
-- Persistenzmodelle und UI-Darstellung werden logisch getrennt gehalten, damit Export und Verlauf dieselbe Datenbasis nutzen
+- Persistenzmodelle und UI-Darstellung werden logisch getrennt gehalten, damit Export und Tagebuch dieselbe Datenbasis nutzen
 
 ## Vorschlag für Datenmodell
 
@@ -299,7 +299,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 ## Erfolgskriterien für das MVP
 
 - Nutzer können eine Episode in kurzer Zeit erfassen
-- Verlauf ist in Kalender und Liste nachvollziehbar
+- Das Tagebuch ist in Kalender und Liste nachvollziehbar
 - Medikamente sind pro Episode sichtbar
 - zusätzliche Kontextdaten liefern erkennbaren Mehrwert, ohne den Erfassungsflow unnötig zu verlangsamen
 - Wetterdaten werden zuverlässig gespeichert, wenn verfügbar
@@ -314,7 +314,7 @@ Die erste MVP ist fertig, wenn alle Punkte erfüllt sind:
 - eine Episode kann angelegt, bearbeitet und gelöscht werden
 - Medikamente können pro Episode erfasst und angezeigt werden
 - Wetterkontext wird, wenn verfügbar, automatisch gespeichert
-- der Verlauf ist in einer verständlichen Listen- oder Kalenderansicht sichtbar
+- das Tagebuch ist in einer verständlichen Listen- oder Kalenderansicht sichtbar
 - ein PDF-Bericht für einen wählbaren Zeitraum kann lokal erzeugt und geteilt werden
 - die App funktioniert vollständig ohne Account, Backend oder Synchronisation
 - weder `Apple Health` noch `Arzttermine` sind Voraussetzung für die Kernnutzung
