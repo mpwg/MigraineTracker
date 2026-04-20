@@ -44,4 +44,4 @@ jobs:
           bundler-cache: true
 
       - name: Release mit fastlane in den App Store submitten
-        run: bundle exec fastlane ios app_store
+        run: bundle exec fastlane ios release_app_store

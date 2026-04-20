@@ -42,4 +42,4 @@ jobs:
           bundler-cache: true
 
       - name: Release mit fastlane nach TestFlight hochladen
-        run: bundle exec fastlane ios testflight
+        run: bundle exec fastlane ios release_testflight
