@@ -18,6 +18,10 @@ jobs:
       APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,14 +43,5 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Release-Archiv bauen und hochladen
-        id: release
-        run: ci_scripts/github_archive_upload.sh app-store
-
-      - name: Version in App Store Connect submitten
-        run: |
-          bundle exec fastlane ios submit_app_store_review \
-            api_key_path:"${{ steps.release.outputs.app_store_connect_api_key_json_path }}" \
-            app_identifier:"${{ steps.release.outputs.bundle_id }}" \
-            app_version:"${{ steps.release.outputs.marketing_version }}" \
-            ipa:"${{ steps.release.outputs.ipa_path }}"
+      - name: Release mit fastlane in den App Store submitten
+        run: bundle exec fastlane ios app_store

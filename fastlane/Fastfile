@@ -1,22 +1,220 @@
+require "fileutils"
+
 default_platform(:ios)
 
-platform :ios do
-  desc "Lädt eine signierte IPA hoch und submitted sie für den App Store"
-  lane :submit_app_store_review do |options|
-    api_key_path = options[:api_key_path] || ENV["APP_STORE_CONNECT_API_KEY_JSON_PATH"]
-    app_version = options[:app_version] || ENV["APP_STORE_VERSION"]
-    app_identifier = options[:app_identifier] || ENV["APP_IDENTIFIER"]
-    ipa_path = options[:ipa] || ENV["APP_IPA_PATH"]
+PROJECT_PATH = "MigraineTracker.xcodeproj"
+SCHEME = "MigraineTracker"
+TARGET_NAME = "MigraineTracker"
+CONFIGURATION = "Release"
+APP_IDENTIFIER = "eu.mpwg.MigraineTracker"
+LOCAL_SECRETS_PATH = "MigraineTracker/Configs/LocalSecrets.xcconfig"
 
-    UI.user_error!("api_key_path fehlt") if api_key_path.to_s.empty?
-    UI.user_error!("app_version fehlt") if app_version.to_s.empty?
-    UI.user_error!("app_identifier fehlt") if app_identifier.to_s.empty?
-    UI.user_error!("ipa fehlt") if ipa_path.to_s.empty?
+def truthy_env?(name, default: false)
+  value = ENV[name]
+  return default if value.to_s.empty?
+
+  %w[1 true yes on].include?(value.downcase)
+end
+
+def require_env_vars!(*names)
+  missing = names.flatten.select { |name| ENV[name].to_s.empty? }
+  return if missing.empty?
+
+  UI.user_error!("Fehlende Umgebungsvariablen: #{missing.join(', ')}")
+end
+
+def release_root
+  if ENV["RUNNER_TEMP"].to_s.empty?
+    File.expand_path("artifacts/release", Dir.pwd)
+  else
+    File.join(ENV["RUNNER_TEMP"], "migraine-tracker-release")
+  end
+end
+
+def normalized_api_key_content
+  value = ENV.fetch("APP_STORE_CONNECT_PRIVATE_KEY")
+  value = value.gsub("\\n", "\n") if value.include?("\\n") && !value.include?("\n")
+  value.end_with?("\n") ? value : "#{value}\n"
+end
+
+def app_store_api_key
+  require_env_vars!("APP_STORE_CONNECT_KEY_ID", "APP_STORE_CONNECT_ISSUER_ID", "APP_STORE_CONNECT_PRIVATE_KEY")
+
+  @app_store_api_key ||= app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: normalized_api_key_content,
+    is_key_content_base64: false,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+def write_local_secrets!
+  require_env_vars!("APPLE_DEVELOPER_TEAM_ID", "SENTRY_DSN")
+
+  FileUtils.mkdir_p(File.dirname(LOCAL_SECRETS_PATH))
+  File.write(
+    LOCAL_SECRETS_PATH,
+    <<~XCCONFIG
+      // Von fastlane in CI erzeugt. Nicht committen.
+      APPLE_DEVELOPER_TEAM_ID = #{ENV["APPLE_DEVELOPER_TEAM_ID"]}
+      SENTRY_DSN = #{ENV["SENTRY_DSN"]}
+      TELEMETRY_APP_ID = #{ENV["TELEMETRY_APP_ID"]}
+    XCCONFIG
+  )
+end
+
+def current_marketing_version
+  get_version_number(
+    xcodeproj: PROJECT_PATH,
+    target: TARGET_NAME
+  )
+end
+
+def current_release_tag
+  if ENV["GITHUB_REF_TYPE"] == "tag" && !ENV["GITHUB_REF_NAME"].to_s.empty?
+    ENV["GITHUB_REF_NAME"]
+  else
+    begin
+      sh("git describe --tags --exact-match", log: false).strip
+    rescue StandardError
+      nil
+    end
+  end
+end
+
+def ensure_release_tag_matches_version!
+  tag = current_release_tag
+  version = current_marketing_version
+
+  UI.user_error!("Für den App-Store-Lauf wurde kein Git-Tag gefunden.") if tag.to_s.empty?
+  UI.user_error!("Ungültiges Release-Tag '#{tag}'. Erwartet wird das Format vX.Y.Z.") unless tag.match?(/^v\d+\.\d+\.\d+$/)
+  UI.user_error!("Release-Tag '#{tag}' passt nicht zu MARKETING_VERSION '#{version}'.") unless tag.delete_prefix("v") == version
+end
+
+def sync_release_signing!(api_key:)
+  require_env_vars!("MATCH_GIT_URL", "MATCH_PASSWORD")
+
+  params = {
+    api_key: api_key,
+    type: "appstore",
+    app_identifier: [APP_IDENTIFIER],
+    git_url: ENV["MATCH_GIT_URL"],
+    git_branch: ENV["MATCH_GIT_BRANCH"].to_s.empty? ? "main" : ENV["MATCH_GIT_BRANCH"],
+    readonly: truthy_env?("MATCH_READONLY", default: true),
+    clone_branch_directly: true,
+    shallow_clone: true,
+    keychain_name: ENV["MATCH_KEYCHAIN_NAME"].to_s.empty? ? "fastlane_tmp_keychain" : ENV["MATCH_KEYCHAIN_NAME"],
+    generate_apple_certs: true
+  }
+
+  params[:git_basic_authorization] = ENV["MATCH_GIT_BASIC_AUTHORIZATION"] unless ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.empty?
+
+  match(params)
+end
+
+def configure_release_signing!(profile_mapping)
+  profile_name = profile_mapping[APP_IDENTIFIER]
+  UI.user_error!("Kein Match-Profil für #{APP_IDENTIFIER} gefunden.") if profile_name.to_s.empty?
+
+  update_code_signing_settings(
+    use_automatic_signing: false,
+    path: PROJECT_PATH,
+    targets: [TARGET_NAME],
+    build_configurations: [CONFIGURATION],
+    team_id: ENV["APPLE_DEVELOPER_TEAM_ID"],
+    code_sign_identity: "Apple Distribution",
+    profile_name: profile_name,
+    sdk: "iphoneos*"
+  )
+end
+
+def next_build_number(api_key:, version:)
+  ci_build_number = ENV["GITHUB_RUN_ID"].to_i
+  ci_build_number = 1 if ci_build_number <= 0
+
+  latest_uploaded = latest_testflight_build_number(
+    api_key: api_key,
+    app_identifier: APP_IDENTIFIER,
+    version: version,
+    initial_build_number: ci_build_number
+  ).to_i
+
+  [latest_uploaded + 1, ci_build_number].max
+end
+
+def build_release_ipa!(build_number:, profile_mapping:)
+  configure_release_signing!(profile_mapping)
+  increment_build_number(
+    build_number: build_number,
+    xcodeproj: PROJECT_PATH
+  )
+
+  output_directory = File.join(release_root, "fastlane")
+  FileUtils.rm_rf(output_directory)
+  FileUtils.mkdir_p(output_directory)
+
+  build_app(
+    project: PROJECT_PATH,
+    scheme: SCHEME,
+    configuration: CONFIGURATION,
+    clean: true,
+    export_method: "app-store",
+    output_directory: output_directory,
+    output_name: "MigraineTracker.ipa",
+    export_options: {
+      signingStyle: "manual",
+      provisioningProfiles: profile_mapping,
+      manageAppVersionAndBuildNumber: false,
+      teamID: ENV["APPLE_DEVELOPER_TEAM_ID"]
+    },
+    xcargs: "DEVELOPMENT_TEAM=#{ENV['APPLE_DEVELOPER_TEAM_ID']}"
+  )
+end
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+    write_local_secrets!
+  end
+
+  desc "Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch"
+  lane :testflight do
+    api_key = app_store_api_key
+    version = current_marketing_version
+    sync_release_signing!(api_key: api_key)
+
+    profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
+    build_number = next_build_number(api_key: api_key, version: version)
+    ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
+
+    pilot(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+
+  desc "Baut eine Distribution-IPA mit match und submitted sie für den App Store"
+  lane :app_store do
+    ensure_release_tag_matches_version!
+
+    api_key = app_store_api_key
+    version = current_marketing_version
+    sync_release_signing!(api_key: api_key)
+
+    profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
+    build_number = next_build_number(api_key: api_key, version: version)
+    ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
 
     deliver(
-      api_key_path: api_key_path,
-      app_identifier: app_identifier,
-      app_version: app_version,
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      app_version: version,
+      build_number: build_number.to_s,
       ipa: ipa_path,
       submit_for_review: true,
       automatic_release: false,

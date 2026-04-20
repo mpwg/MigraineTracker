@@ -93,8 +93,8 @@ Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Stor
 Dieses Projekt verwendet nur `GitHub Actions` für CI und CD:
 
 - Workflow `iOS CI` liefert Build-, Test- und PR-Feedback
-- Workflow `TestFlight Release` erzeugt bei jedem Push auf `main` eine signierte IPA und lädt sie mit der offiziellen Apple-Action nach `TestFlight`
-- Workflow `App Store Release` reagiert nur auf Tags im Format `vX.Y.Z`, baut den getaggten Commit erneut und submitted die passende Version direkt an den `App Store`
+- Workflow `TestFlight Release` ruft `fastlane ios testflight` auf
+- Workflow `App Store Release` reagiert nur auf Tags im Format `vX.Y.Z` und ruft `fastlane ios app_store` auf
 
 CI über `GitHub Actions`:
 
@@ -107,7 +107,8 @@ CD über `GitHub Actions`:
 - `main` ist der einzige automatische Pfad für neue `TestFlight`-Builds
 - nur Git-Tags `vX.Y.Z` lösen produktive `App Store`-Releases aus
 - `MARKETING_VERSION` im Projekt ist die führende Release-Version und muss zu `vX.Y.Z` passen
-- `CURRENT_PROJECT_VERSION` wird je Workflow-Lauf aus der eindeutigen GitHub-Run-ID gesetzt und nicht mehr im Repo gepflegt
+- `CURRENT_PROJECT_VERSION` wird in fastlane je Lauf auf eine eindeutig höhere Buildnummer gesetzt
+- `match` liefert Distribution-Zertifikate und Provisioning Profiles reproduzierbar aus einem separaten Signierungs-Repository
 
 Benötigte GitHub-Secrets für Release-Läufe:
 
@@ -115,16 +116,22 @@ Benötigte GitHub-Secrets für Release-Läufe:
 - `APP_STORE_CONNECT_ISSUER_ID`
 - `APP_STORE_CONNECT_KEY_ID`
 - `APP_STORE_CONNECT_PRIVATE_KEY`
+- `MATCH_GIT_URL`
+- `MATCH_PASSWORD`
 - `SENTRY_DSN`
 
 Optional:
 
+- `MATCH_GIT_BRANCH`
+- `MATCH_GIT_BASIC_AUTHORIZATION`
 - `TELEMETRY_APP_ID`
 
-Für die Distribution nutzt das Projekt bestehende Werkzeuge statt eigener Upload-Logik:
+Für die Distribution nutzt das Projekt fastlane durchgängig:
 
-- `apple-actions/upload-testflight-build` für `TestFlight`
-- `fastlane deliver` für den `App Store`
+- `match` für Distribution-Signing
+- `build_app` für Archiv und IPA-Export
+- `pilot` für `TestFlight`
+- `deliver` für den `App Store`
 
 Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
 

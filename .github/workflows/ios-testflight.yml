@@ -18,6 +18,10 @@ jobs:
       APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,14 +36,10 @@ jobs:
           xcodebuild -version
           xcode-select -p
 
-      - name: Release-Archiv bauen und nach TestFlight hochladen
-        id: release
-        run: ci_scripts/github_archive_upload.sh testflight
-
-      - name: IPA nach TestFlight hochladen
-        uses: apple-actions/upload-testflight-build@v3
+      - name: Ruby und Bundler einrichten
+        uses: ruby/setup-ruby@v1
         with:
-          app-path: ${{ steps.release.outputs.ipa_path }}
-          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          bundler-cache: true
+
+      - name: Release mit fastlane nach TestFlight hochladen
+        run: bundle exec fastlane ios testflight

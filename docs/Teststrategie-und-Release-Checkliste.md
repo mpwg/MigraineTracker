@@ -18,7 +18,8 @@ Automatisierte Gates im Projekt:
 3. Build des Shared Scheme `MigraineTracker`
 4. Ausführung von `MigraineTrackerTests`
 5. Upload des `xcresult` für nachvollziehbare Fehlerdiagnose in GitHub
-6. Workflow `TestFlight Release` bei jedem `push` auf `main` für signierte Archive und Verteilung nach `TestFlight`
+6. Workflow `TestFlight Release` bei jedem `push` auf `main` für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
+7. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Distribution-Signing via `match` und Submission via `deliver`
 
 Lokale Vorab-Prüfung vor einem Tag-Release:
 
@@ -88,4 +89,4 @@ Die Projektregeln für Releases sind:
 - Pull Requests und `main` werden über `GitHub Actions` validiert
 - `TestFlight` wird über den Workflow `TestFlight Release` auf `main` verteilt
 - der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
-- `apple-actions/upload-testflight-build` und `fastlane deliver` sind die Release-Werkzeuge für Distribution
+- `fastlane match`, `build_app`, `pilot` und `deliver` sind die Release-Werkzeuge für Distribution

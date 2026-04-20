@@ -5,7 +5,7 @@
 Dieses Projekt verwendet `GitHub Actions` als einzigen CI/CD-Kanal:
 
 - `GitHub Actions` ist der CI-Kanal für Builds, Unit-Tests und PR-Feedback
-- `GitHub Actions` ist auch der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte `App Store`-Submissions
+- `GitHub Actions` ist auch der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte `App Store`-Submissions über `fastlane`
 
 Es gibt genau drei relevante Workflows:
 
@@ -23,21 +23,25 @@ Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erf
   - `APP_STORE_CONNECT_ISSUER_ID`
   - `APP_STORE_CONNECT_KEY_ID`
   - `APP_STORE_CONNECT_PRIVATE_KEY`
+  - `MATCH_GIT_URL`
+  - `MATCH_PASSWORD`
   - `SENTRY_DSN`
-- optional ist `TELEMETRY_APP_ID`
+- optional:
+  - `MATCH_GIT_BRANCH`
+  - `MATCH_GIT_BASIC_AUTHORIZATION`
+  - `TELEMETRY_APP_ID`
 - das Shared Scheme `MigraineTracker` ist versioniert
-- Code Signing bleibt auf `Automatic`
+- das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile für `eu.mpwg.MigraineTracker`
 - die vorhandenen Entitlements für Push und iCloud bleiben aktiv
 - der verwendete App-Store-Connect-Schlüssel ist ein Team-Key, kein Individual Key
 
 Aus dem Projekt bestätigt:
 
-- `CODE_SIGN_STYLE = Automatic`
-- `DEVELOPMENT_TEAM = PZV43D6HWT`
+- `DEVELOPMENT_TEAM = $(APPLE_DEVELOPER_TEAM_ID)`
 - `Debug` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Development`
 - `Release` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Production`
 
-Damit kann `xcodebuild` in GitHub Actions die erforderlichen Signing-Assets über Apple-verwaltete Signierung bereitstellen, ohne `fastlane match` oder lokale Zertifikatsimporte. Team-ID, Sentry-DSN und optionale Telemetrie werden in CI über `MigraineTracker/Configs/LocalSecrets.xcconfig` bereitgestellt.
+Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `match` Distribution-Zertifikate und Provisioning Profiles in ein temporäres Keychain und bauen anschließend reproduzierbar mit manuellem Distribution-Signing.
 
 ## Zuständigkeiten
 
@@ -53,7 +57,7 @@ Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distributi
 
 - `main` zu `TestFlight`
 - Git-Tags `vX.Y.Z` zum `App Store`
-- Apple-verwaltetes Signing für Archive und Distribution via App-Store-Connect-Team-Key
+- Distribution-Signing über `fastlane match`
 
 ## Workflow 1: iOS CI
 
@@ -75,12 +79,11 @@ Dieser Workflow ist für Beta-Verteilung auf Basis eines erfolgreichen `main`-Pu
 - Startbedingung: `push` auf `main`
 - Scheme: `MigraineTracker`
 - Aktionen:
-  - `Release`-Archiv bauen
-  - automatische Signierung mit `-allowProvisioningUpdates`
-  - IPA exportieren
-  - Upload nach `TestFlight` mit `apple-actions/upload-testflight-build`
-  - `CURRENT_PROJECT_VERSION` aus `github.run_id` setzen
-  - `LocalSecrets.xcconfig` aus GitHub-Secrets erzeugen
+  - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
+  - `match(type: "appstore")`
+  - nächste Buildnummer über `latest_testflight_build_number` und `GITHUB_RUN_ID` bestimmen
+  - `build_app(export_method: "app-store")`
+  - Upload nach `TestFlight` mit `pilot`
 
 Dieser Workflow ist ausschließlich für produktive Releases zuständig.
 
@@ -91,29 +94,27 @@ Dieser Workflow ist ausschließlich für produktive Releases zuständig.
 - Aktionen:
   - Validierung des Tags `vX.Y.Z`
   - Abgleich mit `MARKETING_VERSION`
-- `Release`-Archiv bauen
-- Upload des getaggten Commits nach `App Store Connect`
-- Anlegen oder Wiederverwenden der Version `X.Y.Z`
-- Upload der signierten IPA
-- direkte Submission an den `App Store` über `fastlane deliver`
+  - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
+  - `match(type: "appstore")`
+  - Buildnummer wie im TestFlight-Lauf bestimmen
+  - `build_app(export_method: "app-store")`
+  - direkte Submission an den `App Store` über `deliver`
 
 Konfiguration:
 
 - Produktion wird nie durch einen normalen Push auf `main` veröffentlicht
 - ein Release wird nur durch ein Versions-Tag wie `v1.2.0` ausgelöst
 - der Workflow baut den getaggten Commit neu und promotet nicht einen vorhandenen `TestFlight`-Build
-- der App-Store-Submit erfolgt mit `fastlane deliver` und einem `App Store Connect API Key`
+- die Zertifikate und Profile werden nicht mehr über Xcode-Automatik erzeugt, sondern über `match` synchronisiert
 - die App-Version im Projekt bleibt führend; der Tag ändert sie nicht
 
 ## Versionierte CI-Skripte
 
-Das Repo enthält gemeinsame Release-Skripte in `ci_scripts`.
+Das Repo enthält die Release-Logik jetzt vollständig in `fastlane/Fastfile`.
 
-- `github_common.sh` kapselt Secrets, Build-Einstellungen, Export-Optionen und Archivierung
-- `github_archive_upload.sh` baut und exportiert die signierte IPA für `TestFlight` oder `App Store`
-- `fastlane/Fastfile` lädt eine signierte IPA hoch und submitted sie für den `App Store`
-
-Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und sind kein aktiver Release-Pfad mehr.
+- Lane `ios testflight` übernimmt Secrets, Signierung, Buildnummer, Build und Upload nach `TestFlight`
+- Lane `ios app_store` validiert zusätzlich den Tag und submitted die IPA mit `deliver`
+- `match` nutzt standardmäßig ein separates Git-Repository; auf CI läuft es über `setup_ci` im `readonly`-Modus
 
 ## Release-Ablauf
 
@@ -122,8 +123,8 @@ Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und si
 1. Änderungen nach `main` mergen
 2. `GitHub Actions` führt `iOS CI` aus
 3. `GitHub Actions` startet `TestFlight Release`
-4. der Workflow exportiert eine signierte IPA
-5. die offizielle Apple-Action lädt sie nach `TestFlight`
+4. `fastlane` synchronisiert Distribution-Signing mit `match`
+5. `fastlane pilot` lädt die signierte IPA nach `TestFlight`
 
 ### App Store
 
@@ -132,7 +133,7 @@ Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und si
 3. Tag auf `origin` pushen
 4. `GitHub Actions` startet `App Store Release`
 5. der Workflow validiert `MARKETING_VERSION = X.Y.Z`
-6. der Workflow exportiert die signierte IPA
+6. `fastlane` synchronisiert Distribution-Signing mit `match`
 7. `fastlane deliver` lädt den Build hoch und submitted die Version
 
 Beispiel:
