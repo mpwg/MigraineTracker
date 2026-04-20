@@ -34,13 +34,19 @@ jobs:
           xcodebuild -version
           xcode-select -p
 
+      - name: Ruby und Bundler einrichten
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
       - name: Release-Archiv bauen und hochladen
         id: release
         run: ci_scripts/github_archive_upload.sh app-store
 
       - name: Version in App Store Connect submitten
         run: |
-          python3 ci_scripts/app_store_connect.py submit-release \
-            --bundle-id "${{ steps.release.outputs.bundle_id }}" \
-            --version "${{ steps.release.outputs.marketing_version }}" \
-            --build-number "${{ steps.release.outputs.build_number }}"
+          bundle exec fastlane ios submit_app_store_review \
+            api_key_path:"${{ steps.release.outputs.app_store_connect_api_key_json_path }}" \
+            app_identifier:"${{ steps.release.outputs.bundle_id }}" \
+            app_version:"${{ steps.release.outputs.marketing_version }}" \
+            ipa:"${{ steps.release.outputs.ipa_path }}"

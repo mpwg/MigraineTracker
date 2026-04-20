@@ -80,6 +80,29 @@ with open(path, "w", encoding="utf-8") as handle:
 PY
   chmod 600 "${APP_STORE_CONNECT_KEY_PATH}"
   export APP_STORE_CONNECT_KEY_PATH
+
+  APP_STORE_CONNECT_API_KEY_JSON_PATH="${base_dir}/keys/app_store_connect_api_key.json"
+  python3 - "${APP_STORE_CONNECT_API_KEY_JSON_PATH}" "${APP_STORE_CONNECT_KEY_ID}" "${APP_STORE_CONNECT_ISSUER_ID}" "${APP_STORE_CONNECT_KEY_PATH}" <<'PY'
+import json
+import sys
+
+json_path, key_id, issuer_id, key_path = sys.argv[1:5]
+with open(key_path, "r", encoding="utf-8") as handle:
+    key_content = handle.read()
+with open(json_path, "w", encoding="utf-8") as handle:
+    json.dump(
+        {
+            "key_id": key_id,
+            "issuer_id": issuer_id,
+            "key": key_content,
+            "duration": 1200,
+            "in_house": False,
+        },
+        handle,
+    )
+PY
+  chmod 600 "${APP_STORE_CONNECT_API_KEY_JSON_PATH}"
+  export APP_STORE_CONNECT_API_KEY_JSON_PATH
 }
 
 read_build_setting() {
@@ -135,7 +158,7 @@ create_export_options_plist() {
 <plist version="1.0">
 <dict>
   <key>destination</key>
-  <string>upload</string>
+  <string>export</string>
   <key>distributionBundleIdentifier</key>
   <string>${bundle_id}</string>
   <key>manageAppVersionAndBuildNumber</key>
@@ -151,13 +174,6 @@ create_export_options_plist() {
   <key>uploadSymbols</key>
   <true/>
 EOF
-
-  if [[ "${mode}" == "testflight" ]]; then
-    cat >> "${output_path}" <<'EOF'
-  <key>testFlightInternalTestingOnly</key>
-  <false/>
-EOF
-  fi
 
   cat >> "${output_path}" <<'EOF'
 </dict>
@@ -185,12 +201,12 @@ archive_app() {
     clean archive
 }
 
-upload_archive() {
+export_archive() {
   local archive_path="$1"
   local export_path="$2"
   local export_options_path="$3"
 
-  log "Lade Archiv nach App Store Connect hoch."
+  log "Exportiere Archiv als IPA."
   xcodebuild \
     -exportArchive \
     -archivePath "${archive_path}" \

@@ -88,4 +88,4 @@ Die Projektregeln für Releases sind:
 - Pull Requests und `main` werden über `GitHub Actions` validiert
 - `TestFlight` wird über den Workflow `TestFlight Release` auf `main` verteilt
 - der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
-- `fastlane` ist kein primärer Release-Pfad
+- `apple-actions/upload-testflight-build` und `fastlane deliver` sind die Release-Werkzeuge für Distribution

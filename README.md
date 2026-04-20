@@ -93,7 +93,7 @@ Diese Entscheidungen reduzieren Integrationsrisiko und halten die erste App-Stor
 Dieses Projekt verwendet nur `GitHub Actions` für CI und CD:
 
 - Workflow `iOS CI` liefert Build-, Test- und PR-Feedback
-- Workflow `TestFlight Release` erzeugt bei jedem Push auf `main` ein signiertes Archiv und lädt einen neuen Build nach `TestFlight`
+- Workflow `TestFlight Release` erzeugt bei jedem Push auf `main` eine signierte IPA und lädt sie mit der offiziellen Apple-Action nach `TestFlight`
 - Workflow `App Store Release` reagiert nur auf Tags im Format `vX.Y.Z`, baut den getaggten Commit erneut und submitted die passende Version direkt an den `App Store`
 
 CI über `GitHub Actions`:
@@ -121,7 +121,12 @@ Optional:
 
 - `TELEMETRY_APP_ID`
 
-`fastlane` ist kein primärer Build- oder Release-Pfad. Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
+Für die Distribution nutzt das Projekt bestehende Werkzeuge statt eigener Upload-Logik:
+
+- `apple-actions/upload-testflight-build` für `TestFlight`
+- `fastlane deliver` für den `App Store`
+
+Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
 
 Für lokale Builds:
 

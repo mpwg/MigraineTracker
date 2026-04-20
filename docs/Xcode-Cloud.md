@@ -77,7 +77,8 @@ Dieser Workflow ist für Beta-Verteilung auf Basis eines erfolgreichen `main`-Pu
 - Aktionen:
   - `Release`-Archiv bauen
   - automatische Signierung mit `-allowProvisioningUpdates`
-  - Upload nach `TestFlight`
+  - IPA exportieren
+  - Upload nach `TestFlight` mit `apple-actions/upload-testflight-build`
   - `CURRENT_PROJECT_VERSION` aus `github.run_number` setzen
   - `LocalSecrets.xcconfig` aus GitHub-Secrets erzeugen
 
@@ -90,18 +91,18 @@ Dieser Workflow ist ausschließlich für produktive Releases zuständig.
 - Aktionen:
   - Validierung des Tags `vX.Y.Z`
   - Abgleich mit `MARKETING_VERSION`
-  - `Release`-Archiv bauen
-  - Upload des getaggten Commits nach `App Store Connect`
-  - Anlegen oder Wiederverwenden der Version `X.Y.Z`
-  - Zuordnung des hochgeladenen Builds zur Version
-  - direkte Submission an den `App Store`
+- `Release`-Archiv bauen
+- Upload des getaggten Commits nach `App Store Connect`
+- Anlegen oder Wiederverwenden der Version `X.Y.Z`
+- Upload der signierten IPA
+- direkte Submission an den `App Store` über `fastlane deliver`
 
 Konfiguration:
 
 - Produktion wird nie durch einen normalen Push auf `main` veröffentlicht
 - ein Release wird nur durch ein Versions-Tag wie `v1.2.0` ausgelöst
 - der Workflow baut den getaggten Commit neu und promotet nicht einen vorhandenen `TestFlight`-Build
-- der App-Store-Submit erfolgt über die `App Store Connect API`
+- der App-Store-Submit erfolgt mit `fastlane deliver` und einem `App Store Connect API Key`
 - die App-Version im Projekt bleibt führend; der Tag ändert sie nicht
 
 ## Versionierte CI-Skripte
@@ -109,8 +110,8 @@ Konfiguration:
 Das Repo enthält gemeinsame Release-Skripte in `ci_scripts`.
 
 - `github_common.sh` kapselt Secrets, Build-Einstellungen, Export-Optionen und Archivierung
-- `github_archive_upload.sh` baut und lädt Release-Artefakte für `TestFlight` oder `App Store Connect` hoch
-- `app_store_connect.py` ordnet einen verarbeiteten Build der App-Store-Version zu und stößt die Submission an
+- `github_archive_upload.sh` baut und exportiert die signierte IPA für `TestFlight` oder `App Store`
+- `fastlane/Fastfile` lädt eine signierte IPA hoch und submitted sie für den `App Store`
 
 Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und sind kein aktiver Release-Pfad mehr.
 
@@ -121,7 +122,8 @@ Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und si
 1. Änderungen nach `main` mergen
 2. `GitHub Actions` führt `iOS CI` aus
 3. `GitHub Actions` startet `TestFlight Release`
-4. ein neuer signierter Build erscheint in `TestFlight`
+4. der Workflow exportiert eine signierte IPA
+5. die offizielle Apple-Action lädt sie nach `TestFlight`
 
 ### App Store
 
@@ -130,7 +132,8 @@ Die früheren `Xcode Cloud`-Hilfsskripte bleiben nur als Historie im Repo und si
 3. Tag auf `origin` pushen
 4. `GitHub Actions` startet `App Store Release`
 5. der Workflow validiert `MARKETING_VERSION = X.Y.Z`
-6. der Workflow lädt einen neuen Build hoch und submitted die Version
+6. der Workflow exportiert die signierte IPA
+7. `fastlane deliver` lädt den Build hoch und submitted die Version
 
 Beispiel:
 

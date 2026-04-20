@@ -1,0 +1,31 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Lädt eine signierte IPA hoch und submitted sie für den App Store"
+  lane :submit_app_store_review do |options|
+    api_key_path = options[:api_key_path] || ENV["APP_STORE_CONNECT_API_KEY_JSON_PATH"]
+    app_version = options[:app_version] || ENV["APP_STORE_VERSION"]
+    app_identifier = options[:app_identifier] || ENV["APP_IDENTIFIER"]
+    ipa_path = options[:ipa] || ENV["APP_IPA_PATH"]
+
+    UI.user_error!("api_key_path fehlt") if api_key_path.to_s.empty?
+    UI.user_error!("app_version fehlt") if app_version.to_s.empty?
+    UI.user_error!("app_identifier fehlt") if app_identifier.to_s.empty?
+    UI.user_error!("ipa fehlt") if ipa_path.to_s.empty?
+
+    deliver(
+      api_key_path: api_key_path,
+      app_identifier: app_identifier,
+      app_version: app_version,
+      ipa: ipa_path,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      platform: "ios",
+      precheck_default_rule_level: :warn,
+      run_precheck_before_submit: false
+    )
+  end
+end
