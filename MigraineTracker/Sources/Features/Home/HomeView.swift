@@ -122,6 +122,7 @@ struct HomeView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .brandScreen()
         .navigationTitle("Willkommen")
         .task {
             reload()
@@ -174,22 +175,66 @@ private struct DiaryWelcomeCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(ProductBranding.displayName)
-                .font(.title3.weight(.semibold))
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(ProductBranding.displayName)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(AppTheme.foam)
 
-            Text(summaryTitle)
-                .font(.headline)
+                    Text(summaryTitle)
+                        .font(.headline)
+                        .foregroundStyle(Color.white)
 
-            Text(summaryDetail)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                    Text(summaryDetail)
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.foam.opacity(0.86))
 
-            if overview.episodeCount > 0 {
-                LabeledContent("Bisher dokumentiert", value: "\(overview.episodeCount) Eintrag\(overview.episodeCount == 1 ? "" : "e")")
-                    .font(.subheadline)
+                    if overview.episodeCount > 0 {
+                        LabeledContent("Bisher dokumentiert", value: "\(overview.episodeCount) Eintrag\(overview.episodeCount == 1 ? "" : "e")")
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.foam)
+                    }
+                }
+
+                Spacer(minLength: 12)
+
+                VStack(spacing: 10) {
+                    Image(systemName: "book.closed.fill")
+                        .font(.title2)
+                        .foregroundStyle(AppTheme.foam)
+
+                    Capsule()
+                        .fill(AppTheme.coral)
+                        .frame(width: 14, height: 44)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
-        .padding(.vertical, 8)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.heroGradient)
+        .overlay(alignment: .bottomLeading) {
+            WaveAccent()
+                .stroke(AppTheme.foam.opacity(0.82), lineWidth: 8)
+                .frame(height: 54)
+                .offset(x: -10, y: 18)
+        }
+        .overlay(alignment: .bottomLeading) {
+            WaveAccent()
+                .stroke(AppTheme.seaGlass.opacity(0.72), lineWidth: 5)
+                .frame(height: 44)
+                .offset(x: 6, y: 24)
+        }
+        .overlay(alignment: .bottomLeading) {
+            WaveAccent()
+                .stroke(AppTheme.coral.opacity(0.92), lineWidth: 4)
+                .frame(width: 132, height: 34)
+                .offset(x: -8, y: 28)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: AppTheme.shadowColor.opacity(1.2), radius: 24, y: 12)
         .accessibilityElement(children: .combine)
     }
 
@@ -207,6 +252,19 @@ private struct DiaryWelcomeCard: View {
         }
 
         return "Mit einem neuen Eintrag hältst du Beschwerden, Symptome, Medikamente und hilfreichen Kontext in wenigen Schritten fest."
+    }
+}
+
+private struct WaveAccent: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addCurve(
+            to: CGPoint(x: rect.maxX, y: rect.midY * 0.62),
+            control1: CGPoint(x: rect.width * 0.24, y: rect.maxY),
+            control2: CGPoint(x: rect.width * 0.66, y: rect.minY)
+        )
+        return path
     }
 }
 

@@ -147,8 +147,7 @@ struct EpisodeEditorView: View {
                                     }
                                 }
                                 .padding(12)
-                                .background(Color(.systemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .brandCard()
 
                                 if let footer = group.footer {
                                     Text(footer)
@@ -197,6 +196,7 @@ struct EpisodeEditorView: View {
             }
         }
         .navigationTitle(controller.mode == .create ? "Neuer Eintrag" : "Eintrag bearbeiten")
+        .brandScreen()
         .toolbar {
             if showsDismissButton {
                 ToolbarItem(placement: dismissButtonPlacement) {
@@ -275,9 +275,13 @@ struct EpisodeEditorView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .background(isSelected ? Color.accentColor.opacity(0.16) : Color(.secondarySystemGroupedBackground))
-                        .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+                        .background(isSelected ? AppTheme.selectedFill : AppTheme.secondaryFill)
+                        .foregroundStyle(isSelected ? AppTheme.ocean : Color.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(isSelected ? AppTheme.ocean.opacity(0.28) : Color.white.opacity(0.45), lineWidth: 1)
+                        }
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(title): \(option)")
@@ -399,8 +403,8 @@ private struct IntensityPicker: View {
                     Text("\(level)")
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 40)
-                        .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
-                        .foregroundStyle(isSelected ? .white : .primary)
+                        .background(isSelected ? AppTheme.ocean : AppTheme.secondaryFill)
+                        .foregroundStyle(isSelected ? Color.white : .primary)
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -428,7 +432,7 @@ private struct MedicationDefinitionRow: View {
                 HStack(alignment: .center, spacing: 12) {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .imageScale(.large)
-                        .foregroundStyle(isSelected ? Color.accentColor : .primary)
+                        .foregroundStyle(isSelected ? AppTheme.ocean : .primary)
                         .frame(width: 28, alignment: .center)
 
                     VStack(alignment: .leading, spacing: 3) {
@@ -478,8 +482,12 @@ private struct MedicationDefinitionRow: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, minHeight: isSelected ? 108 : 72, alignment: .leading)
-        .background(isSelected ? Color.accentColor.opacity(0.14) : Color(.secondarySystemGroupedBackground))
+        .background(isSelected ? AppTheme.selectedFill : AppTheme.secondaryFill)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(isSelected ? AppTheme.ocean.opacity(0.24) : Color.white.opacity(0.45), lineWidth: 1)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(isSelected ? "Medikament ausgewählt. Passe die Anzahl an." : "Wählt dieses Medikament aus.")
@@ -597,8 +605,12 @@ private struct SelectedMedicationSummaryRow: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppTheme.secondaryFill)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.white.opacity(0.45), lineWidth: 1)
+        }
     }
 
     private var summary: String {

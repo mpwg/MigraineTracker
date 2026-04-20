@@ -40,7 +40,7 @@ struct SettingsView: View {
                     get: { controller.isSyncEnabled },
                     set: { controller.setSyncEnabled($0) }
                 ))
-                .tint(.green)
+                .tint(AppTheme.ocean)
 
                 NavigationLink {
                     ManageCloudDataView(appContainer: appContainer, controller: controller)
@@ -85,6 +85,7 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Einstellungen")
+        .brandScreen()
         .toolbar {
             ToolbarItem(placement: closeButtonPlacement) {
                 Button("Schließen") {
@@ -206,6 +207,7 @@ private struct SyncStatusView: View {
             }
         }
         .navigationTitle("Status")
+        .brandScreen()
         .refreshable {
             controller.load()
         }
@@ -358,6 +360,7 @@ private struct ManageCloudDataView: View {
             }
         }
         .navigationTitle("Cloud-Daten")
+        .brandScreen()
         .disabled(isResolvingConflict)
         .overlay {
             if isResolvingConflict {

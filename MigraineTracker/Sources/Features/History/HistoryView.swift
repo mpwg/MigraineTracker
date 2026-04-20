@@ -80,6 +80,8 @@ struct HistoryView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 20)
         }
+        .background(AppTheme.appBackground.ignoresSafeArea())
+        .tint(AppTheme.ocean)
         .navigationTitle("Tagebuch")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -174,8 +176,7 @@ struct HistoryView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .brandCard()
 
             if let footer {
                 Text(footer)
@@ -299,6 +300,8 @@ private struct MonthHeader: View {
             Button(action: onPrevious) {
                 Image(systemName: "chevron.left")
             }
+            .padding(10)
+            .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .accessibilityLabel("Vorheriger Monat")
 
             Spacer()
@@ -312,6 +315,8 @@ private struct MonthHeader: View {
             Button(action: onNext) {
                 Image(systemName: "chevron.right")
             }
+            .padding(10)
+            .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .accessibilityLabel("Nächster Monat")
         }
         .buttonStyle(.plain)
@@ -413,8 +418,12 @@ private struct DayCell: View {
         }
         .frame(maxWidth: .infinity, minHeight: 52)
         .padding(.vertical, 6)
-        .background(isSelected ? Color.accentColor.opacity(0.18) : Color(.secondarySystemGroupedBackground))
+        .background(isSelected ? AppTheme.selectedFill : AppTheme.secondaryFill)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isSelected ? AppTheme.ocean.opacity(0.30) : Color.white.opacity(0.45), lineWidth: 1)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(isSelected ? "Ausgewählt" : "")
@@ -423,9 +432,9 @@ private struct DayCell: View {
 
     private var intensityColor: Color {
         switch peakIntensity {
-        case 8...10: .red
-        case 5...7: .orange
-        default: .yellow
+        case 8...10: AppTheme.coral
+        case 5...7: AppTheme.foam
+        default: AppTheme.seaGlass
         }
     }
 
