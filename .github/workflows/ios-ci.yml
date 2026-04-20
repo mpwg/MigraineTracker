@@ -4,9 +4,19 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'MigraineTracker/**'
+      - 'MigraineTrackerTests/**'
+      - 'MigraineTracker.xcodeproj/**'
+      - '.github/workflows/ios-ci.yml'
   push:
     branches:
       - main
+    paths:
+      - 'MigraineTracker/**'
+      - 'MigraineTrackerTests/**'
+      - 'MigraineTracker.xcodeproj/**'
+      - '.github/workflows/ios-ci.yml'
 
 jobs:
   build-and-test:
