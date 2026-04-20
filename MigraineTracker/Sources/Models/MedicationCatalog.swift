@@ -68,14 +68,17 @@ enum MedicationCatalog {
     }
 
     private static func loadAustrianCommonGroups(bundle: Bundle = .main) -> [MedicationCatalogGroup] {
-        let url = bundle.url(
-            forResource: resourceName,
-            withExtension: resourceExtension
-        ) ?? bundle.url(
-            forResource: resourceName,
-            withExtension: resourceExtension,
-            subdirectory: "Data"
-        )
+        let bundles = [bundle, Bundle(for: ResourceBundleLocator.self)]
+        let url = bundles.lazy.compactMap { candidate in
+            candidate.url(
+                forResource: resourceName,
+                withExtension: resourceExtension
+            ) ?? candidate.url(
+                forResource: resourceName,
+                withExtension: resourceExtension,
+                subdirectory: "Data"
+            )
+        }.first
 
         guard let url else {
             assertionFailure("Medication catalog JSON fehlt im App-Bundle.")
@@ -93,3 +96,5 @@ enum MedicationCatalog {
         }
     }
 }
+
+private final class ResourceBundleLocator {}

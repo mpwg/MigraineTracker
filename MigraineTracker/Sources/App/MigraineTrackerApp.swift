@@ -45,7 +45,7 @@ struct MigraineTrackerApp: App {
         if let telemetryAppID = Self.telemetryAppID {
             TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
         }
-        let schema = Schema(versionedSchema: MigraineTrackerSchemaV3.self)
+        let schema = Schema(versionedSchema: MigraineTrackerSchemaV4.self)
         let storeURL = Self.defaultStoreURL()
 
         let configuration = ModelConfiguration(
@@ -58,6 +58,7 @@ struct MigraineTrackerApp: App {
         do {
             let container = try Self.makeContainer(schema: schema, configuration: configuration)
             MedicationCatalog.importSeedDataIfNeeded(into: container)
+            DoctorDirectoryCatalog.importSeedDataIfNeeded(into: container)
             self.modelContainer = container
             let appLogStore = AppLogStore()
             self.appLogStore = appLogStore

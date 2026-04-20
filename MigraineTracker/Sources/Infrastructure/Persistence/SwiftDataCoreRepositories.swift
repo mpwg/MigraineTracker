@@ -276,6 +276,233 @@ final class SwiftDataExportRepository: ExportRepository {
     }
 }
 
+@MainActor
+final class SwiftDataDoctorRepository: DoctorRepository {
+    private let modelContainer: ModelContainer
+
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
+    func fetchAll() throws -> [DoctorRecord] {
+        let descriptor = FetchDescriptor<Doctor>(
+            sortBy: [SortDescriptor(\Doctor.name), SortDescriptor(\Doctor.specialty)]
+        )
+        return try context.fetch(descriptor)
+            .filter { !$0.isDeleted }
+            .map(DoctorRecord.init)
+    }
+
+    func load(id: UUID) throws -> DoctorRecord? {
+        let descriptor = FetchDescriptor<Doctor>(
+            predicate: #Predicate<Doctor> { $0.id == id }
+        )
+        return try context.fetch(descriptor).first.map(DoctorRecord.init)
+    }
+
+    @discardableResult
+    func save(draft: DoctorDraft) throws -> UUID {
+        let doctor: Doctor
+
+        if let id = draft.id, let existing = try fetchDoctor(id: id) {
+            doctor = existing
+        } else {
+            doctor = Doctor(name: draft.name)
+            context.insert(doctor)
+        }
+
+        doctor.markUpdated()
+        doctor.name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.specialty = draft.specialty.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.street = draft.street.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.city = draft.city.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.state = draft.state.trimmingCharacters(in: .whitespacesAndNewlines)
+        let postalCode = draft.postalCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.postalCode = postalCode.isEmpty ? nil : postalCode
+        doctor.phone = draft.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.email = draft.email.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.notes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        doctor.source = draft.source
+
+        try context.save()
+        return doctor.id
+    }
+
+    func softDelete(id: UUID) throws {
+        guard let doctor = try fetchDoctor(id: id) else {
+            return
+        }
+
+        doctor.markDeleted()
+        for appointment in doctor.appointments {
+            appointment.markDeleted()
+        }
+        try context.save()
+    }
+
+    private var context: ModelContext {
+        modelContainer.mainContext
+    }
+
+    private func fetchDoctor(id: UUID) throws -> Doctor? {
+        let descriptor = FetchDescriptor<Doctor>(
+            predicate: #Predicate<Doctor> { $0.id == id }
+        )
+        return try context.fetch(descriptor).first
+    }
+}
+
+@MainActor
+final class SwiftDataDoctorDirectoryRepository: DoctorDirectoryRepository {
+    private let modelContainer: ModelContainer
+
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
+    func fetchEntries(searchText: String?) throws -> [DoctorDirectoryRecord] {
+        let descriptor = FetchDescriptor<DoctorDirectoryEntry>(
+            sortBy: [SortDescriptor(\DoctorDirectoryEntry.name), SortDescriptor(\DoctorDirectoryEntry.city)]
+        )
+        let entries = try context.fetch(descriptor)
+        guard let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return entries.map(DoctorDirectoryRecord.init)
+        }
+
+        return entries
+            .filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+                    || $0.specialty.localizedCaseInsensitiveContains(searchText)
+                    || $0.city.localizedCaseInsensitiveContains(searchText)
+                    || $0.street.localizedCaseInsensitiveContains(searchText)
+            }
+            .map(DoctorDirectoryRecord.init)
+    }
+
+    func sourceAttribution() -> (label: String, url: String) {
+        let firstEntry = try? context.fetch(FetchDescriptor<DoctorDirectoryEntry>()).first
+        return (
+            firstEntry?.sourceLabel ?? "ÖGK Vertragspartner Fachärztinnen und Fachärzte",
+            firstEntry?.sourceURL ?? "https://www.gesundheitskasse.at/cdscontent/?contentid=10007.884365"
+        )
+    }
+
+    private var context: ModelContext {
+        modelContainer.mainContext
+    }
+}
+
+@MainActor
+final class SwiftDataAppointmentRepository: AppointmentRepository {
+    private let modelContainer: ModelContainer
+
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
+    func fetchUpcoming(limit: Int?) throws -> [AppointmentRecord] {
+        let descriptor = FetchDescriptor<DoctorAppointment>(
+            sortBy: [SortDescriptor(\DoctorAppointment.scheduledAt)]
+        )
+        let records = try context.fetch(descriptor)
+            .filter { !$0.isDeleted && $0.scheduledAt >= .now }
+            .map(AppointmentRecord.init)
+
+        if let limit {
+            return Array(records.prefix(limit))
+        }
+
+        return records
+    }
+
+    func fetchUpcoming(for doctorID: UUID) throws -> [AppointmentRecord] {
+        let descriptor = FetchDescriptor<DoctorAppointment>(
+            sortBy: [SortDescriptor(\DoctorAppointment.scheduledAt)]
+        )
+        return try context.fetch(descriptor)
+            .filter { !$0.isDeleted && $0.doctor?.id == doctorID && $0.scheduledAt >= .now }
+            .map(AppointmentRecord.init)
+    }
+
+    func load(id: UUID) throws -> AppointmentRecord? {
+        let descriptor = FetchDescriptor<DoctorAppointment>(
+            predicate: #Predicate<DoctorAppointment> { $0.id == id }
+        )
+        return try context.fetch(descriptor).first.map(AppointmentRecord.init)
+    }
+
+    @discardableResult
+    func save(draft: AppointmentDraft) throws -> UUID {
+        guard let doctor = try fetchDoctor(id: draft.doctorID) else {
+            throw AppointmentSaveError.missingDoctor
+        }
+
+        let appointment: DoctorAppointment
+        if let id = draft.id, let existing = try fetchAppointment(id: id) {
+            appointment = existing
+        } else {
+            appointment = DoctorAppointment(scheduledAt: draft.scheduledAt, doctor: doctor)
+            context.insert(appointment)
+        }
+
+        appointment.markUpdated()
+        appointment.doctor = doctor
+        appointment.scheduledAt = draft.scheduledAt
+        appointment.endsAt = draft.endsAtEnabled ? draft.endsAt : nil
+        appointment.practiceName = draft.practiceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        appointment.addressText = draft.addressText.trimmingCharacters(in: .whitespacesAndNewlines)
+        appointment.note = draft.note.trimmingCharacters(in: .whitespacesAndNewlines)
+        appointment.reminderEnabled = draft.reminderEnabled
+        appointment.reminderLeadTimeMinutes = draft.reminderLeadTimeMinutes
+        if !draft.reminderEnabled {
+            appointment.reminderStatus = .notRequested
+            appointment.notificationRequestID = nil
+        }
+
+        try context.save()
+        return appointment.id
+    }
+
+    func updateReminder(id: UUID, status: AppointmentReminderStatus, requestID: String?) throws {
+        guard let appointment = try fetchAppointment(id: id) else {
+            return
+        }
+
+        appointment.markUpdated()
+        appointment.reminderStatus = status
+        appointment.notificationRequestID = requestID
+        try context.save()
+    }
+
+    func softDelete(id: UUID) throws {
+        guard let appointment = try fetchAppointment(id: id) else {
+            return
+        }
+
+        appointment.markDeleted()
+        appointment.notificationRequestID = nil
+        try context.save()
+    }
+
+    private var context: ModelContext {
+        modelContainer.mainContext
+    }
+
+    private func fetchDoctor(id: UUID) throws -> Doctor? {
+        let descriptor = FetchDescriptor<Doctor>(
+            predicate: #Predicate<Doctor> { $0.id == id }
+        )
+        return try context.fetch(descriptor).first
+    }
+
+    private func fetchAppointment(id: UUID) throws -> DoctorAppointment? {
+        let descriptor = FetchDescriptor<DoctorAppointment>(
+            predicate: #Predicate<DoctorAppointment> { $0.id == id }
+        )
+        return try context.fetch(descriptor).first
+    }
+}
+
 private extension EpisodeRecord {
     init(episode: Episode) {
         self.init(
@@ -343,6 +570,68 @@ private extension MedicationDefinitionRecord {
             sortOrder: definition.sortOrder,
             isCustom: definition.isCustom,
             isDeleted: definition.isDeleted
+        )
+    }
+}
+
+private extension DoctorRecord {
+    init(doctor: Doctor) {
+        self.init(
+            id: doctor.id,
+            createdAt: doctor.createdAt,
+            updatedAt: doctor.updatedAt,
+            deletedAt: doctor.deletedAt,
+            name: doctor.name,
+            specialty: doctor.specialty,
+            street: doctor.street,
+            city: doctor.city,
+            state: doctor.state,
+            postalCode: doctor.postalCode,
+            phone: doctor.phone,
+            email: doctor.email,
+            notes: doctor.notes,
+            source: doctor.source,
+            appointments: doctor.appointments
+                .filter { !$0.isDeleted }
+                .sorted(by: { $0.scheduledAt < $1.scheduledAt })
+                .map(AppointmentRecord.init)
+        )
+    }
+}
+
+private extension AppointmentRecord {
+    init(appointment: DoctorAppointment) {
+        self.init(
+            id: appointment.id,
+            doctorID: appointment.doctor?.id,
+            createdAt: appointment.createdAt,
+            updatedAt: appointment.updatedAt,
+            deletedAt: appointment.deletedAt,
+            scheduledAt: appointment.scheduledAt,
+            endsAt: appointment.endsAt,
+            practiceName: appointment.practiceName,
+            addressText: appointment.addressText,
+            note: appointment.note,
+            reminderEnabled: appointment.reminderEnabled,
+            reminderLeadTimeMinutes: appointment.reminderLeadTimeMinutes,
+            reminderStatus: appointment.reminderStatus,
+            notificationRequestID: appointment.notificationRequestID
+        )
+    }
+}
+
+private extension DoctorDirectoryRecord {
+    init(entry: DoctorDirectoryEntry) {
+        self.init(
+            id: entry.id,
+            name: entry.name,
+            specialty: entry.specialty,
+            street: entry.street,
+            city: entry.city,
+            state: entry.state,
+            postalCode: entry.postalCode,
+            sourceLabel: entry.sourceLabel,
+            sourceURL: entry.sourceURL
         )
     }
 }

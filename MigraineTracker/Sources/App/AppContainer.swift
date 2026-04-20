@@ -13,8 +13,12 @@ final class AppContainer {
     let episodeRepository: EpisodeRepository
     let medicationCatalogRepository: MedicationCatalogRepository
     let exportRepository: ExportRepository
+    let doctorRepository: DoctorRepository
+    let doctorDirectoryRepository: DoctorDirectoryRepository
+    let appointmentRepository: AppointmentRepository
     let syncService: SyncService
     let appLogService: AppLogService
+    let notificationService: NotificationService
 
     init(modelContainer: ModelContainer, syncCoordinator: SyncCoordinator, appLogStore: AppLogStore) {
         self.modelContainer = modelContainer
@@ -32,8 +36,12 @@ final class AppContainer {
         self.episodeRepository = SwiftDataEpisodeRepository(modelContainer: modelContainer)
         self.medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
         self.exportRepository = SwiftDataExportRepository(modelContainer: modelContainer)
+        self.doctorRepository = SwiftDataDoctorRepository(modelContainer: modelContainer)
+        self.doctorDirectoryRepository = SwiftDataDoctorDirectoryRepository(modelContainer: modelContainer)
+        self.appointmentRepository = SwiftDataAppointmentRepository(modelContainer: modelContainer)
         self.syncService = SyncServiceAdapter(coordinator: syncCoordinator)
         self.appLogService = appLogStore
+        self.notificationService = UserNotificationService()
     }
 
     func makeEpisodeEditorController(episodeID: UUID? = nil, initialStartedAt: Date? = nil) -> EpisodeEditorController {
@@ -62,5 +70,30 @@ final class AppContainer {
 
     func makeDataExportController() -> DataExportController {
         DataExportController(repository: exportRepository)
+    }
+
+    func makeDoctorHubController() -> DoctorHubController {
+        DoctorHubController(
+            doctorRepository: doctorRepository,
+            appointmentRepository: appointmentRepository
+        )
+    }
+
+    func makeDoctorEditorController(doctor: DoctorRecord?) -> DoctorEditorController {
+        DoctorEditorController(
+            doctor: doctor,
+            doctorRepository: doctorRepository,
+            directoryRepository: doctorDirectoryRepository
+        )
+    }
+
+    func makeAppointmentEditorController(appointment: AppointmentRecord?, doctor: DoctorRecord) -> AppointmentEditorController {
+        AppointmentEditorController(
+            appointment: appointment,
+            doctor: doctor,
+            appointmentRepository: appointmentRepository,
+            doctorRepository: doctorRepository,
+            notificationService: notificationService
+        )
     }
 }

@@ -2,12 +2,22 @@ import SwiftUI
 
 struct HomeView: View {
     let appContainer: AppContainer
-    @Binding var selectedTab: AppTab
+
     @State private var overview: HomeOverviewData = .init(latestEpisode: nil, episodeCount: 0)
+    @State private var doctorHubController: DoctorHubController
+    @State private var isPresentingEpisodeEditor = false
+    @State private var isPresentingDoctorAddFlow = false
+    @State private var isPresentingManualDoctorAddFlow = false
+    @State private var isPresentingAppointmentFlow = false
+
+    init(appContainer: AppContainer) {
+        self.appContainer = appContainer
+        _doctorHubController = State(initialValue: appContainer.makeDoctorHubController())
+    }
 
     var body: some View {
         List {
-            Section("Heute") {
+            Section {
                 if let latestEpisode = overview.latestEpisode {
                     MetricRow(
                         title: "Letzte Episode: \(latestEpisode.type.rawValue)",
@@ -15,62 +25,150 @@ struct HomeView: View {
                     )
                 } else {
                     MetricRow(
-                        title: "Keine Episode erfasst",
+                        title: "Noch keine Episode erfasst",
                         detail: "Starte mit einem schnellen Eintrag für Intensität, Symptome und Medikamente."
                     )
                 }
-            }
 
-            Section("Schnellzugriffe") {
                 Button {
-                    selectedTab = .capture
+                    isPresentingEpisodeEditor = true
                 } label: {
                     Label("Episode erfassen", systemImage: "plus.circle.fill")
                 }
-                .accessibilityHint("Wechselt direkt zum schnellen Erfassungsformular.")
+            } header: {
+                Text("Tracking")
+            } footer: {
+                Text("Gespeicherte Episoden: \(overview.episodeCount)")
+            }
+
+            Section {
+                Button {
+                    isPresentingAppointmentFlow = true
+                } label: {
+                    Label("Termin hinzufügen", systemImage: "calendar.badge.plus")
+                }
+
+                if doctorHubController.upcomingAppointments.isEmpty {
+                    ContentUnavailableView(
+                        "Keine kommenden Termine",
+                        systemImage: "calendar.badge.clock",
+                        description: Text("Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow.")
+                    )
+                } else {
+                    ForEach(doctorHubController.upcomingAppointments) { appointment in
+                        if let doctor = doctorHubController.doctors.first(where: { $0.id == appointment.doctorID }) {
+                            NavigationLink {
+                                DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
+                            } label: {
+                                AppointmentSummaryRow(appointment: appointment, doctor: doctor)
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text("Termine")
+            }
+
+            Section {
+                Button {
+                    isPresentingDoctorAddFlow = true
+                } label: {
+                    Label("Arzt hinzufügen", systemImage: "cross.case.fill")
+                }
 
                 Button {
-                    selectedTab = .history
+                    isPresentingManualDoctorAddFlow = true
+                } label: {
+                    Label("Arzt manuell hinzufügen", systemImage: "square.and.pencil")
+                }
+
+                if doctorHubController.doctors.isEmpty {
+                    ContentUnavailableView(
+                        "Noch keine Ärztinnen oder Ärzte",
+                        systemImage: "cross.case",
+                        description: Text("Nutze die ÖGK-Liste als Startpunkt oder lege eine Ärztin bzw. einen Arzt vollständig manuell an.")
+                    )
+                } else {
+                    ForEach(doctorHubController.doctors) { doctor in
+                        NavigationLink {
+                            DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
+                        } label: {
+                            DoctorSummaryRow(doctor: doctor)
+                        }
+                    }
+                }
+            } header: {
+                Text("Meine Ärzte")
+            } footer: {
+                Text("Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden.")
+            }
+
+            Section {
+                NavigationLink {
+                    HistoryView(appContainer: appContainer)
                 } label: {
                     Label("Verlauf öffnen", systemImage: "calendar")
                 }
-                .accessibilityHint("Zeigt die gespeicherten Episoden in Liste oder Kalender.")
 
-                Button {
-                    selectedTab = .export
+                NavigationLink {
+                    SettingsView(appContainer: appContainer)
                 } label: {
-                    Label("Sync & Datenexport", systemImage: "arrow.trianglehead.2.clockwise.icloud")
+                    Label("Einstellungen", systemImage: "gearshape")
                 }
-                .accessibilityHint("Öffnet den Bereich für Sync-Status, Cloud-Daten und Exporte.")
 
                 NavigationLink {
                     ProductInformationView(mode: .standard)
                 } label: {
                     Label("Datenschutz und Hinweise", systemImage: "hand.raised")
                 }
-            }
-
-            Section("Version 1") {
-                MetricRow(title: "Gespeicherte Episoden", detail: "\(overview.episodeCount)")
-                MetricRow(title: "Lokale Speicherung", detail: "Lokale Primärdaten mit optionaler iCloud-Synchronisation.")
-                MetricRow(title: "Wetterkontext", detail: "Wird automatisch über Open-Meteo auf Basis von DWD ICON ergänzt, wenn Standortfreigabe vorliegt.")
-            }
-
-            Section("Medizinischer Hinweis") {
-                MetricRow(
-                    title: "Tracking statt Diagnose",
-                    detail: "Die App dokumentiert Episoden und Medikamente, gibt aber keine Diagnose und keine Therapieempfehlung."
-                )
-//                MetricRow(
-//                    title: "Aktuell keine Systemberechtigung nötig",
- //                   detail: "Standort- und Health-Daten werden in Version 1 nicht abgefragt."
-//                )
+            } header: {
+                Text("Verlauf & mehr")
             }
         }
-        .navigationTitle("Migraine Tracker")
+        .navigationTitle("Übersicht")
         .task {
-            overview = (try? LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
+            reload()
         }
+        .refreshable {
+            reload()
+        }
+        .fullScreenCover(isPresented: $isPresentingEpisodeEditor) {
+            NavigationStack {
+                EpisodeEditorView(appContainer: appContainer) {
+                    isPresentingEpisodeEditor = false
+                    reload()
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $isPresentingDoctorAddFlow) {
+            NavigationStack {
+                DoctorAddFlowView(appContainer: appContainer, startMode: .oegkDirectory) { _ in
+                    isPresentingDoctorAddFlow = false
+                    reload()
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $isPresentingManualDoctorAddFlow) {
+            NavigationStack {
+                DoctorAddFlowView(appContainer: appContainer, startMode: .manual) { _ in
+                    isPresentingManualDoctorAddFlow = false
+                    reload()
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $isPresentingAppointmentFlow) {
+            NavigationStack {
+                AppointmentCreationFlowView(appContainer: appContainer) {
+                    isPresentingAppointmentFlow = false
+                    reload()
+                }
+            }
+        }
+    }
+
+    private func reload() {
+        overview = (try? LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
+        doctorHubController.reload()
     }
 }
 
@@ -88,6 +186,29 @@ private struct MetricRow: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+}
+
+struct DoctorSummaryRow: View {
+    let doctor: DoctorRecord
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(doctor.name)
+                .font(.headline)
+
+            if !doctor.specialty.isEmpty {
+                Text(doctor.specialty)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !doctor.addressLine.isEmpty {
+                Text(doctor.addressLine)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
 

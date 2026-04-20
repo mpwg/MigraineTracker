@@ -5,7 +5,7 @@ struct AppShellView: View {
 
     var body: some View {
         NavigationStack {
-            HistoryView(appContainer: appContainer)
+            HomeView(appContainer: appContainer)
         }
         .task {
             await appContainer.weatherBackfillService.runIfNeeded()
