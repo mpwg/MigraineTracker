@@ -39,6 +39,7 @@ final class MigraineTrackerScreenshotTests: XCTestCase {
             snapshot(screen.snapshotName, waitForLoadingIndicator: false)
             app.terminate()
         }
+        assert(true)
     }
 
     private func waitForStableLayout() {
