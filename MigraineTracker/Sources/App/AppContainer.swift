@@ -20,12 +20,17 @@ final class AppContainer {
     let appLogService: AppLogService
     let notificationService: NotificationService
 
-    init(modelContainer: ModelContainer, syncCoordinator: SyncCoordinator, appLogStore: AppLogStore) {
+    init(
+        modelContainer: ModelContainer,
+        syncCoordinator: SyncCoordinator,
+        appLogStore: AppLogStore,
+        weatherService: any WeatherService = OpenMeteoDwdWeatherService(),
+        locationService: any LocationService = SystemLocationService(),
+        notificationService: any NotificationService = UserNotificationService()
+    ) {
         self.modelContainer = modelContainer
         self.syncCoordinator = syncCoordinator
         self.appLogStore = appLogStore
-        let weatherService = OpenMeteoDwdWeatherService()
-        let locationService = SystemLocationService()
         self.weatherService = weatherService
         self.locationService = locationService
         self.weatherBackfillService = WeatherBackfillService(
@@ -41,7 +46,7 @@ final class AppContainer {
         self.appointmentRepository = SwiftDataAppointmentRepository(modelContainer: modelContainer)
         self.syncService = SyncServiceAdapter(coordinator: syncCoordinator)
         self.appLogService = appLogStore
-        self.notificationService = UserNotificationService()
+        self.notificationService = notificationService
     }
 
     func makeEpisodeEditorController(episodeID: UUID? = nil, initialStartedAt: Date? = nil) -> EpisodeEditorController {

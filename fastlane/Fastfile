@@ -10,6 +10,18 @@ TARGET_NAME = "MigraineTracker"
 CONFIGURATION = "Release"
 APP_IDENTIFIER = "eu.mpwg.MigraineTracker"
 LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "MigraineTracker/Configs/LocalSecrets.xcconfig")
+SCREENSHOT_SCHEME = "MigraineTrackerScreenshots"
+SCREENSHOT_TEST_TARGET = "MigraineTrackerUITests"
+SCREENSHOT_LANGUAGE = "de-DE"
+SCREENSHOT_SEED = "default"
+SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
+IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
+MAC_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "macos")
+IOS_SCREENSHOT_DEVICES = [
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
+].freeze
+MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
 
 def truthy_env?(name, default: false)
   value = ENV[name]
@@ -149,6 +161,75 @@ def next_build_number
   Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
+def capture_screenshot_set!(devices:, output_directory:, override_status_bar:)
+  FileUtils.rm_rf(output_directory)
+  FileUtils.mkdir_p(output_directory)
+
+  snapshot(
+    project: PROJECT_PATH,
+    scheme: SCREENSHOT_SCHEME,
+    test_target_name: SCREENSHOT_TEST_TARGET,
+    devices: devices,
+    languages: [SCREENSHOT_LANGUAGE],
+    launch_arguments: ["-mt_screenshot_seed #{SCREENSHOT_SEED}"],
+    output_directory: output_directory,
+    clear_previous_screenshots: true,
+    reinstall_app: true,
+    erase_simulator: !devices.first.start_with?("Mac"),
+    override_status_bar: override_status_bar,
+    stop_after_first_error: true,
+    number_of_retries: 1,
+    concurrent_simulators: false,
+    skip_open_summary: true,
+    output_simulator_logs: true,
+    result_bundle: true
+  )
+end
+
+def capture_all_screenshots!
+  FileUtils.mkdir_p(SCREENSHOT_ROOT)
+  capture_screenshot_set!(
+    devices: IOS_SCREENSHOT_DEVICES,
+    output_directory: IOS_SCREENSHOT_OUTPUT,
+    override_status_bar: true
+  )
+  capture_screenshot_set!(
+    devices: MAC_SCREENSHOT_DEVICES,
+    output_directory: MAC_SCREENSHOT_OUTPUT,
+    override_status_bar: false
+  )
+end
+
+def upload_screenshot_sets!(api_key:, version:)
+  deliver(
+    api_key: api_key,
+    app_identifier: APP_IDENTIFIER,
+    app_version: version,
+    platform: "ios",
+    screenshots_path: IOS_SCREENSHOT_OUTPUT,
+    skip_binary_upload: true,
+    skip_metadata: true,
+    overwrite_screenshots: true,
+    force: true,
+    run_precheck_before_submit: false,
+    precheck_default_rule_level: :warn
+  )
+
+  deliver(
+    api_key: api_key,
+    app_identifier: APP_IDENTIFIER,
+    app_version: version,
+    platform: "osx",
+    screenshots_path: MAC_SCREENSHOT_OUTPUT,
+    skip_binary_upload: true,
+    skip_metadata: true,
+    overwrite_screenshots: true,
+    force: true,
+    run_precheck_before_submit: false,
+    precheck_default_rule_level: :warn
+  )
+end
+
 def build_release_ipa!(build_number:, profile_mapping:)
   output_directory = File.join(release_root, "fastlane")
   FileUtils.rm_rf(output_directory)
@@ -178,10 +259,23 @@ platform :ios do
     write_local_secrets!
   end
 
+  desc "Erzeugt App-Store-Screenshots für iPhone, iPad und Mac Catalyst"
+  lane :capture_screenshots do
+    capture_all_screenshots!
+  end
+
+  desc "Erzeugt und lädt Screenshots für iOS und Mac Catalyst nach App Store Connect hoch"
+  lane :upload_screenshots do
+    api_key = app_store_api_key
+    version = current_marketing_version
+
+    capture_all_screenshots!
+    upload_screenshot_sets!(api_key: api_key, version: version)
+  end
+
   desc "Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch"
   lane :release_testflight do
     api_key = app_store_api_key
-    version = current_marketing_version
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
@@ -203,6 +297,8 @@ platform :ios do
 
     api_key = app_store_api_key
     version = current_marketing_version
+    capture_all_screenshots!
+    upload_screenshot_sets!(api_key: api_key, version: version)
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
