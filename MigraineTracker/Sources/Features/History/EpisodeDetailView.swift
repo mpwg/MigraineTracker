@@ -102,6 +102,7 @@ struct EpisodeDetailView: View {
                                 }
                             }
                             .padding(.vertical, 2)
+                            .brandGroupedRow()
                         }
                     }
                 }
@@ -143,6 +144,7 @@ struct EpisodeDetailView: View {
             }
         }
         .navigationTitle("Episodendetail")
+        .brandGroupedScreen()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Bearbeiten") {
@@ -190,6 +192,7 @@ struct EpisodeDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 2)
+        .brandGroupedRow()
         .accessibilityElement(children: .combine)
     }
 

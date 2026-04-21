@@ -34,13 +34,14 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.vertical, 6)
+                    .brandGroupedRow()
                 }
 
                 Toggle("Sync aktivieren", isOn: Binding(
                     get: { controller.isSyncEnabled },
                     set: { controller.setSyncEnabled($0) }
                 ))
-                .tint(.green)
+                .tint(AppTheme.ocean)
 
                 NavigationLink {
                     ManageCloudDataView(appContainer: appContainer, controller: controller)
@@ -57,6 +58,7 @@ struct SettingsView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
+                    .brandGroupedRow()
                 }
             } header: {
                 Text("Synchronisation")
@@ -85,6 +87,7 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Einstellungen")
+        .brandGroupedScreen()
         .toolbar {
             ToolbarItem(placement: closeButtonPlacement) {
                 Button("Schließen") {
@@ -198,6 +201,7 @@ private struct SyncStatusView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
+                    .brandGroupedRow()
                 }
             } header: {
                 Text("Status")
@@ -206,6 +210,7 @@ private struct SyncStatusView: View {
             }
         }
         .navigationTitle("Status")
+        .brandGroupedScreen()
         .refreshable {
             controller.load()
         }
@@ -316,6 +321,7 @@ private struct ManageCloudDataView: View {
                             }
                         }
                         .padding(.vertical, 4)
+                        .brandGroupedRow()
                     }
                 }
             }
@@ -338,6 +344,7 @@ private struct ManageCloudDataView: View {
                                 controller.restoreEpisode(id: episode.id)
                             }
                         }
+                        .brandGroupedRow()
                     }
 
                     ForEach(controller.deletedDefinitions) { definition in
@@ -353,11 +360,13 @@ private struct ManageCloudDataView: View {
                                 controller.restoreMedicationDefinition(definition)
                             }
                         }
+                        .brandGroupedRow()
                     }
                 }
             }
         }
         .navigationTitle("Cloud-Daten")
+        .brandGroupedScreen()
         .disabled(isResolvingConflict)
         .overlay {
             if isResolvingConflict {

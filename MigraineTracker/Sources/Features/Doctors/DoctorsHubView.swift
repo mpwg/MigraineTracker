@@ -50,6 +50,7 @@ struct AppointmentSummaryRow: View {
             .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
+        .brandGroupedRow()
     }
 }
 
@@ -146,6 +147,7 @@ struct DoctorDetailView: View {
                                     .foregroundStyle(.secondary)
                             }
                             .padding(.vertical, 2)
+                            .brandGroupedRow()
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button("Löschen", role: .destructive) {
                                     pendingDeletion = appointment
@@ -164,6 +166,7 @@ struct DoctorDetailView: View {
             }
         }
         .navigationTitle("Arztdetail")
+        .brandGroupedScreen()
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button("Bearbeiten") {
@@ -235,6 +238,7 @@ struct DoctorDetailView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
+        .brandGroupedRow()
         .accessibilityElement(children: .combine)
     }
 
@@ -384,6 +388,7 @@ private struct DoctorDirectoryPickerView: View {
                                         .multilineTextAlignment(.leading)
                                 }
                                 .padding(.vertical, 2)
+                                .brandGroupedRow()
                             }
                             .buttonStyle(.plain)
                         }
@@ -392,6 +397,7 @@ private struct DoctorDirectoryPickerView: View {
             }
         }
         .navigationTitle("Arzt hinzufügen")
+        .brandGroupedScreen()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Abbrechen") {
@@ -485,6 +491,7 @@ struct DoctorEditorView: View {
             }
         }
         .navigationTitle(doctorID == nil ? "Arzt anlegen" : "Arzt bearbeiten")
+        .brandGroupedScreen()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Abbrechen") {
@@ -501,6 +508,7 @@ struct DoctorEditorView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
+        .brandGroupedRow()
     }
 }
 
@@ -551,6 +559,7 @@ struct AppointmentCreationFlowView: View {
                     }
                 }
                 .navigationTitle("Termin hinzufügen")
+                .brandGroupedScreen()
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button("Abbrechen") {
@@ -586,6 +595,7 @@ struct AppointmentCreationFlowView: View {
                     }
                 }
                 .navigationTitle("Termin hinzufügen")
+                .brandGroupedScreen()
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button("Abbrechen") {
@@ -712,6 +722,7 @@ struct AppointmentEditorView: View {
             }
         }
         .navigationTitle(appointmentID == nil ? "Termin speichern" : "Termin bearbeiten")
+        .brandGroupedScreen()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Abbrechen") {

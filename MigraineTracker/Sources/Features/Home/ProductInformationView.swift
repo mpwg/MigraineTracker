@@ -135,6 +135,7 @@ struct ProductInformationView: View {
             }
         }
         .navigationTitle("Datenschutz und Hinweise")
+        .brandGroupedScreen()
     }
 
     private var repositoryURL: URL { ProductBranding.repositoryURL }
@@ -149,6 +150,7 @@ struct ProductInformationView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
+        .brandGroupedRow()
     }
 }
 

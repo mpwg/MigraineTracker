@@ -100,11 +100,13 @@ struct DataExportView: View {
                             }
                         }
                         .padding(.vertical, 2)
+                        .brandGroupedRow()
                     }
                 }
             }
         }
         .navigationTitle("Datenexport")
+        .brandGroupedScreen()
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
             controller.reloadSummary()
