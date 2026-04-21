@@ -14,6 +14,7 @@ SCREENSHOT_SCHEME = "MigraineTrackerScreenshots"
 SCREENSHOT_TEST_TARGET = "MigraineTrackerUITests"
 SCREENSHOT_LANGUAGE = "de-DE"
 SCREENSHOT_SEED = "default"
+SCREENSHOT_IOS_VERSION = "26.4.1"
 SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
 IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
 MAC_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "macos")
@@ -176,6 +177,7 @@ def capture_screenshot_set!(devices:, output_directory:, override_status_bar:)
     languages: [SCREENSHOT_LANGUAGE],
     launch_arguments: ["-mt_screenshot_seed #{SCREENSHOT_SEED}"],
     output_directory: output_directory,
+    ios_version: SCREENSHOT_IOS_VERSION,
     clear_previous_screenshots: true,
     reinstall_app: true,
     erase_simulator: !devices.first.start_with?("Mac"),

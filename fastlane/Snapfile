@@ -1,6 +1,7 @@
 project("./MigraineTracker.xcodeproj")
 scheme("MigraineTrackerScreenshots")
 test_target_name("MigraineTrackerUITests")
+ios_version("26.4.1")
 languages(["de-DE"])
 clear_previous_screenshots(true)
 skip_open_summary(true)

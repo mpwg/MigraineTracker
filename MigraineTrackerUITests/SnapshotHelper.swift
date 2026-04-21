@@ -163,9 +163,10 @@ open class Snapshot: NSObject {
         let image = screenshot.image
         #endif
 
-        guard var simulator = ProcessInfo().environment["SIMULATOR_DEVICE_NAME"], let screenshotsDir = screenshotsDirectory else {
+        guard let screenshotsDir = screenshotsDirectory else {
             return
         }
+        var simulator = ProcessInfo().environment["SIMULATOR_DEVICE_NAME"] ?? "Mac"
 
         do {
             let regex = try NSRegularExpression(pattern: "Clone [0-9]+ of ")
