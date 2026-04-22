@@ -365,6 +365,8 @@ def capture_all_screenshots!
 end
 
 def upload_screenshot_sets!(api_key:, version:)
+  UI.user_error!("Keine vorhandenen iOS-Screenshots unter #{screenshot_language_directory(IOS_SCREENSHOT_OUTPUT)} gefunden.") if Dir.glob(File.join(screenshot_language_directory(IOS_SCREENSHOT_OUTPUT), "*.png")).empty?
+
   deliver(
     api_key: api_key,
     app_identifier: APP_IDENTIFIER,
@@ -419,7 +421,6 @@ platform :ios do
     api_key = app_store_api_key
     version = current_marketing_version
 
-    capture_all_screenshots!
     upload_screenshot_sets!(api_key: api_key, version: version)
   end
 
@@ -447,7 +448,6 @@ platform :ios do
 
     api_key = app_store_api_key
     version = current_marketing_version
-    capture_all_screenshots!
     upload_screenshot_sets!(api_key: api_key, version: version)
     sync_release_signing!(api_key: api_key)
 
