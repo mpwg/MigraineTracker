@@ -8,6 +8,7 @@ on:
       - 'MigraineTracker/**'
       - 'MigraineTracker.xcodeproj/**'
       - 'fastlane/**'
+      - '!fastlane/screenshots/**'
       - 'Gemfile'
       - 'Gemfile.lock'
       - '.ruby-version'

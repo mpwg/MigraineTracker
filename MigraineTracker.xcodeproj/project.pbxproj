@@ -21,6 +21,13 @@
 			remoteGlobalIDString = 402B8A5D2F896C00008B4D70;
 			remoteInfo = MigraineTracker;
 		};
+		4A2000013A00000100000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 402B8A562F896C00008B4D70 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 402B8A5D2F896C00008B4D70;
+			remoteInfo = MigraineTracker;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +35,7 @@
 		116485AA985446BE94991524 /* MigraineTracker/Configs/Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MigraineTracker/Configs/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		402B8A5E2F896C00008B4D70 /* MigraineTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MigraineTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MigraineTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A2000023A00000100000001 /* MigraineTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MigraineTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -58,6 +66,11 @@
 			path = MigraineTrackerTests;
 			sourceTree = "<group>";
 		};
+		4A2000033A00000100000001 /* MigraineTrackerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MigraineTrackerUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +92,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4A2000043A00000100000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -87,6 +107,7 @@
 			children = (
 				402B8A602F896C00008B4D70 /* MigraineTracker */,
 				402B8A702F896C00008B4D70 /* MigraineTrackerTests */,
+				4A2000033A00000100000001 /* MigraineTrackerUITests */,
 				402B8A5F2F896C00008B4D70 /* Products */,
 				40440D492F92A4E900B59D90 /* Recovered References */,
 			);
@@ -97,6 +118,7 @@
 			children = (
 				402B8A5E2F896C00008B4D70 /* MigraineTracker.app */,
 				402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */,
+				4A2000023A00000100000001 /* MigraineTrackerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -162,6 +184,29 @@
 			productReference = 402B8A6D2F896C00008B4D70 /* MigraineTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		4A2000073A00000100000001 /* MigraineTrackerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4A20000E3A00000100000001 /* Build configuration list for PBXNativeTarget "MigraineTrackerUITests" */;
+			buildPhases = (
+				4A2000053A00000100000001 /* Sources */,
+				4A2000043A00000100000001 /* Frameworks */,
+				4A2000063A00000100000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4A2000083A00000100000001 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4A2000033A00000100000001 /* MigraineTrackerUITests */,
+			);
+			name = MigraineTrackerUITests;
+			packageProductDependencies = (
+			);
+			productName = MigraineTrackerUITests;
+			productReference = 4A2000023A00000100000001 /* MigraineTrackerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -180,6 +225,10 @@
 						LastSwiftMigration = 2640;
 						TestTargetID = 402B8A5D2F896C00008B4D70;
 					};
+					4A2000073A00000100000001 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 402B8A5D2F896C00008B4D70;
+					};
 				};
 			};
 			buildConfigurationList = 402B8A592F896C00008B4D70 /* Build configuration list for PBXProject "MigraineTracker" */;
@@ -187,6 +236,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				de,
+				en,
 			);
 			mainGroup = 402B8A552F896C00008B4D70;
 			minimizedProjectReferenceProxies = 1;
@@ -202,6 +252,7 @@
 			targets = (
 				402B8A5D2F896C00008B4D70 /* MigraineTracker */,
 				402B8A6C2F896C00008B4D70 /* MigraineTrackerTests */,
+				4A2000073A00000100000001 /* MigraineTrackerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -215,6 +266,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		402B8A6B2F896C00008B4D70 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4A2000063A00000100000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -261,6 +319,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4A2000053A00000100000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -268,6 +333,11 @@
 			isa = PBXTargetDependency;
 			target = 402B8A5D2F896C00008B4D70 /* MigraineTracker */;
 			targetProxy = 402B8A6E2F896C00008B4D70 /* PBXContainerItemProxy */;
+		};
+		4A2000083A00000100000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 402B8A5D2F896C00008B4D70 /* MigraineTracker */;
+			targetProxy = 4A2000013A00000100000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -326,6 +396,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
 			};
@@ -378,6 +449,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
@@ -426,7 +498,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
@@ -497,7 +569,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
@@ -533,7 +605,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTrackerTests;
@@ -562,7 +634,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTrackerTests;
@@ -577,6 +649,59 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MigraineTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MigraineTracker";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
+		4A2000093A00000100000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTrackerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = MigraineTracker;
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		4A20000A3A00000100000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(APPLE_DEVELOPER_TEAM_ID)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTrackerUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = MigraineTracker;
 				XROS_DEPLOYMENT_TARGET = 26.4;
 			};
 			name = Release;
@@ -607,6 +732,15 @@
 			buildConfigurations = (
 				402B8A852F896C00008B4D70 /* Debug */,
 				402B8A862F896C00008B4D70 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4A20000E3A00000100000001 /* Build configuration list for PBXNativeTarget "MigraineTrackerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4A2000093A00000100000001 /* Debug */,
+				4A20000A3A00000100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

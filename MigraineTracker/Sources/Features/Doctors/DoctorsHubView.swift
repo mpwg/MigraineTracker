@@ -275,14 +275,21 @@ struct DoctorAddFlowView: View {
 
     let appContainer: AppContainer
     let startMode: DoctorAddEntryMode
+    let initialSearchText: String?
     let onSaved: ((UUID) -> Void)?
 
     @State private var mode: DoctorAddEntryMode
     @State private var selectedEntry: DoctorDirectoryRecord?
 
-    init(appContainer: AppContainer, startMode: DoctorAddEntryMode, onSaved: ((UUID) -> Void)? = nil) {
+    init(
+        appContainer: AppContainer,
+        startMode: DoctorAddEntryMode,
+        initialSearchText: String? = nil,
+        onSaved: ((UUID) -> Void)? = nil
+    ) {
         self.appContainer = appContainer
         self.startMode = startMode
+        self.initialSearchText = initialSearchText
         self.onSaved = onSaved
         _mode = State(initialValue: startMode)
     }
@@ -291,7 +298,7 @@ struct DoctorAddFlowView: View {
         Group {
             switch mode {
             case .oegkDirectory:
-                DoctorDirectoryPickerView(appContainer: appContainer) { entry in
+                DoctorDirectoryPickerView(appContainer: appContainer, initialSearchText: initialSearchText) { entry in
                     selectedEntry = entry
                     mode = .manual
                 } onManualEntry: {
@@ -312,6 +319,7 @@ private struct DoctorDirectoryPickerView: View {
     @Environment(\.dismiss) private var dismiss
 
     let appContainer: AppContainer
+    let initialSearchText: String?
     let onSelectEntry: (DoctorDirectoryRecord) -> Void
     let onManualEntry: () -> Void
 
@@ -319,13 +327,20 @@ private struct DoctorDirectoryPickerView: View {
 
     init(
         appContainer: AppContainer,
+        initialSearchText: String? = nil,
         onSelectEntry: @escaping (DoctorDirectoryRecord) -> Void,
         onManualEntry: @escaping () -> Void
     ) {
         self.appContainer = appContainer
+        self.initialSearchText = initialSearchText
         self.onSelectEntry = onSelectEntry
         self.onManualEntry = onManualEntry
-        _controller = State(initialValue: appContainer.makeDoctorEditorController(doctor: nil))
+        let controller = appContainer.makeDoctorEditorController(doctor: nil)
+        if let initialSearchText, !initialSearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            controller.searchText = initialSearchText
+            controller.refreshSearch()
+        }
+        _controller = State(initialValue: controller)
     }
 
     var body: some View {

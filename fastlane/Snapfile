@@ -1,0 +1,16 @@
+project("./MigraineTracker.xcodeproj")
+scheme("MigraineTrackerScreenshots")
+test_target_name("MigraineTrackerUITests")
+ios_version(ENV.fetch("SCREENSHOT_IOS_VERSION", "26.4"))
+languages(["de-DE"])
+clear_previous_screenshots(true)
+skip_open_summary(true)
+output_simulator_logs(true)
+override_status_bar(true)
+concurrent_simulators(true)
+launch_arguments(["-mt_screenshot_seed default"])
+devices([
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
+])
+headless(false)

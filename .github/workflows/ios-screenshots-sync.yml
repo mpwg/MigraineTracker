@@ -1,0 +1,82 @@
+name: Screenshots aktualisieren
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - main
+    paths:
+      - 'MigraineTracker/**'
+      - 'MigraineTrackerUITests/**'
+      - 'MigraineTracker.xcodeproj/**'
+      - 'fastlane/**'
+      - '!fastlane/screenshots/**'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - '.ruby-version'
+      - '.github/workflows/ios-screenshots-sync.yml'
+
+jobs:
+  capture-and-commit-screenshots:
+    if: github.actor != 'github-actions[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    env:
+      APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
+      SCREENSHOT_IOS_VERSION: '26.4'
+      SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT: '10'
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      CI: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.4'
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Screenshot-Secrets prüfen
+        run: |
+          if [ -z "${APPLE_DEVELOPER_TEAM_ID}" ]; then
+            echo "Das GitHub Secret APPLE_DEVELOPER_TEAM_ID fehlt."
+            exit 1
+          fi
+
+      - name: Ruby und Bundler einrichten
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Screenshots erzeugen
+        run: bundle exec fastlane ios sync_screenshots
+
+      - name: Screenshot-Änderungen committen
+        run: |
+          if git diff --quiet -- fastlane/screenshots; then
+            echo "Keine Änderungen an Screenshots festgestellt."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fastlane/screenshots
+          git commit -m "chore: Store-Screenshots aktualisieren [skip ci]"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

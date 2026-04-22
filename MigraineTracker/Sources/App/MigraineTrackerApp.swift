@@ -12,10 +12,15 @@ struct MigraineTrackerApp: App {
     private let modelContainer: ModelContainer
     private let appContainer: AppContainer
     private let appLogStore: AppLogStore
+    private let launchConfiguration: AppLaunchConfiguration
+    private let screenshotSeed: ScreenshotSeed?
     @State private var syncCoordinator: SyncCoordinator
 
     init() {
-        if let sentryDSN = Self.sentryDSN {
+        let launchConfiguration = AppLaunchConfiguration.current
+        self.launchConfiguration = launchConfiguration
+
+        if !launchConfiguration.isScreenshotMode, let sentryDSN = Self.sentryDSN {
             SentrySDK.start { options in
                 options.dsn = sentryDSN
 
@@ -42,33 +47,43 @@ struct MigraineTrackerApp: App {
         } else {
             Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
         }
-        if let telemetryAppID = Self.telemetryAppID {
+        if !launchConfiguration.isScreenshotMode, let telemetryAppID = Self.telemetryAppID {
             TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
         }
-        let schema = Schema(versionedSchema: MigraineTrackerSchemaV4.self)
-        let storeURL = Self.defaultStoreURL()
-
-        let configuration = ModelConfiguration(
-            "default",
-            schema: schema,
-            url: storeURL,
-            cloudKitDatabase: .none
-        )
 
         do {
-            let container = try Self.makeContainer(schema: schema, configuration: configuration)
-            MedicationCatalog.importSeedDataIfNeeded(into: container)
-            DoctorDirectoryCatalog.importSeedDataIfNeeded(into: container)
-            self.modelContainer = container
-            let appLogStore = AppLogStore()
-            self.appLogStore = appLogStore
-            let syncCoordinator = SyncCoordinator(modelContainer: container, appLogStore: appLogStore)
-            _syncCoordinator = State(initialValue: syncCoordinator)
-            self.appContainer = AppContainer(
-                modelContainer: container,
-                syncCoordinator: syncCoordinator,
-                appLogStore: appLogStore
-            )
+            if launchConfiguration.isScreenshotMode {
+                let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)
+                self.modelContainer = environment.0
+                self.appContainer = environment.1
+                self.appLogStore = environment.2
+                self.screenshotSeed = environment.4
+                _syncCoordinator = State(initialValue: environment.3)
+            } else {
+                let schema = Schema(versionedSchema: MigraineTrackerSchemaV4.self)
+                let storeURL = Self.defaultStoreURL()
+                let configuration = ModelConfiguration(
+                    "default",
+                    schema: schema,
+                    url: storeURL,
+                    cloudKitDatabase: .none
+                )
+
+                let container = try Self.makeContainer(schema: schema, configuration: configuration)
+                MedicationCatalog.importSeedDataIfNeeded(into: container)
+                DoctorDirectoryCatalog.importSeedDataIfNeeded(into: container)
+                self.modelContainer = container
+                let appLogStore = AppLogStore()
+                self.appLogStore = appLogStore
+                let syncCoordinator = SyncCoordinator(modelContainer: container, appLogStore: appLogStore)
+                _syncCoordinator = State(initialValue: syncCoordinator)
+                self.appContainer = AppContainer(
+                    modelContainer: container,
+                    syncCoordinator: syncCoordinator,
+                    appLogStore: appLogStore
+                )
+                self.screenshotSeed = nil
+            }
         } catch {
             fatalError("ModelContainer konnte nicht erstellt werden: \(error)")
         }
@@ -76,7 +91,15 @@ struct MigraineTrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppShellView(appContainer: appContainer)
+            if launchConfiguration.isScreenshotMode, let screenshotSeed {
+                ScreenshotRootView(
+                    appContainer: appContainer,
+                    configuration: launchConfiguration,
+                    seed: screenshotSeed
+                )
+            } else {
+                AppShellView(appContainer: appContainer)
+            }
         }
         .modelContainer(modelContainer)
     }

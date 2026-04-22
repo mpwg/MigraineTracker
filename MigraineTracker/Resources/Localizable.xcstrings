@@ -1,0 +1,742 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "" : {
+
+    },
+    "%@ · Intensität %lld/10" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · Intensität %2$lld/10"
+          }
+        }
+      }
+    },
+    "%@ abwählen" : {
+
+    },
+    "%@ speichert deine Angaben ausschließlich lokal auf diesem Gerät. Die App hilft dir, Migräne, Kopfschmerzen und andere Schmerzereignisse für dich und für Arztgespräche strukturiert festzuhalten." : {
+
+    },
+    "%@ wird aus SwiftData entfernt." : {
+
+    },
+    "%@ wird in den Papierkorb verschoben." : {
+
+    },
+    "%@: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+
+    },
+    "%lld Eintrag%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Eintrag%2$@"
+          }
+        }
+      }
+    },
+    "%lld Eintrag%@ · Höchste Intensität %lld/10" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Eintrag%2$@ · Höchste Intensität %3$lld/10"
+          }
+        }
+      }
+    },
+    "%lld/10" : {
+
+    },
+    "%lldx" : {
+
+    },
+    "2 Stunden" : {
+
+    },
+    "24 Stunden" : {
+
+    },
+    "30 Minuten" : {
+
+    },
+    "Abbrechen" : {
+
+    },
+    "Abweichende Felder: %@" : {
+
+    },
+    "Adresse" : {
+
+    },
+    "Aktionen" : {
+
+    },
+    "Aktive Episoden" : {
+
+    },
+    "Aktiviere den Sync, um iCloud-Synchronisation und Konfliktbehandlung zu verwenden." : {
+
+    },
+    "Aktualisieren" : {
+
+    },
+    "Aktuell ausgewählt." : {
+
+    },
+    "Alle" : {
+
+    },
+    "Allgemein" : {
+
+    },
+    "Als Wiederholungseinnahme dokumentiert" : {
+
+    },
+    "Änderungen speichern" : {
+
+    },
+    "Ansicht" : {
+
+    },
+    "Anzahl" : {
+
+    },
+    "Anzahl: %lld" : {
+
+    },
+    "Arzt" : {
+
+    },
+    "Arzt anlegen" : {
+
+    },
+    "Arzt aus ÖGK-Liste hinzufügen" : {
+
+    },
+    "Arzt auswählen" : {
+
+    },
+    "Arzt bearbeiten" : {
+
+    },
+    "Arzt hinzufügen" : {
+
+    },
+    "Arzt manuell hinzufügen" : {
+
+    },
+    "Arzt nicht gefunden" : {
+
+    },
+    "Arzt speichern" : {
+
+    },
+    "Arzt zuerst anlegen" : {
+
+    },
+    "Arztdetail" : {
+
+    },
+    "Ärzte" : {
+
+    },
+    "Ausgewählt" : {
+
+    },
+    "Bearbeiten" : {
+
+    },
+    "Beginn" : {
+
+    },
+    "Beim Laden wird dein ungefährer Standort verwendet, um Wetterdaten für den Episodenzeitpunkt abzurufen." : {
+
+    },
+    "Berechtigungen" : {
+
+    },
+    "Bericht" : {
+
+    },
+    "Bevor du startest" : {
+
+    },
+    "Bis" : {
+
+    },
+    "Bisher dokumentiert" : {
+
+    },
+    "Bundesland" : {
+
+    },
+    "CC BY 4.0 anzeigen" : {
+
+    },
+    "Cloud hat recht" : {
+
+    },
+    "Cloud-Daten" : {
+
+    },
+    "Cloud-Daten verwalten" : {
+
+    },
+    "Das Protokoll bleibt lokal auf diesem Gerät. Es enthält technische Metadaten zu Synchronisation, Konflikten und Fehlern, aber keine sensiblen Freitextinhalte im Klartext." : {
+
+    },
+    "Das Wetter wird mit deinem ungefähren Standort über Open-Meteo auf Basis von DWD ICON geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt." : {
+
+    },
+    "Daten exportieren" : {
+
+    },
+    "Daten sichern" : {
+
+    },
+    "Datenexport" : {
+
+    },
+    "Datenschutz" : {
+
+    },
+    "Datenschutz und Hinweise" : {
+
+    },
+    "Datenschutzerklärung öffnen" : {
+
+    },
+    "Dein Eintrag wurde lokal gespeichert." : {
+
+    },
+    "Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten." : {
+
+    },
+    "Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht." : {
+
+    },
+    "Der PDF-Bericht von %@ wird lokal erzeugt und kann systemweit geteilt werden." : {
+
+    },
+    "Der Termin wurde lokal gespeichert." : {
+
+    },
+    "Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden." : {
+
+    },
+    "Die Erinnerung wird lokal auf dem Gerät geplant. Ohne Berechtigung bleibt der Termin trotzdem gespeichert." : {
+
+    },
+    "Die Erinnerung zu diesem Termin wird ebenfalls entfernt." : {
+
+    },
+    "Die Liste zeigt Beispieldaten für den Screenshot-Modus." : {
+
+    },
+    "Die Treffer sind nach relevanten Fachgebieten gruppiert und innerhalb der Gruppen nach PLZ und Name sortiert." : {
+
+    },
+    "Diese Episode wird in den Papierkorb verschoben." : {
+
+    },
+    "Dosierung" : {
+
+    },
+    "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
+
+    },
+    "Durchschnittliche Intensität: %@/10" : {
+
+    },
+    "E-Mail" : {
+
+    },
+    "Eigenes Medikament" : {
+
+    },
+    "Eigenes Medikament hinzufügen" : {
+
+    },
+    "Eigenes Medikament löschen?" : {
+
+    },
+    "Einstellungen" : {
+
+    },
+    "Einstellungen öffnen" : {
+
+    },
+    "Eintrag bearbeiten" : {
+
+    },
+    "Eintrag gespeichert" : {
+
+    },
+    "Eintrag löschen?" : {
+
+    },
+    "Eintrag speichern" : {
+
+    },
+    "Einträge" : {
+
+    },
+    "Einträge im Zeitraum: %lld" : {
+
+    },
+    "Ende" : {
+
+    },
+    "Ende angeben" : {
+
+    },
+    "Endzeit angeben" : {
+
+    },
+    "Entfernen" : {
+
+    },
+    "Entfernt die Auswahl." : {
+
+    },
+    "Episode" : {
+
+    },
+    "Episode löschen?" : {
+
+    },
+    "Episode nicht gefunden" : {
+
+    },
+    "Episodendetail" : {
+
+    },
+    "Erinnerung" : {
+
+    },
+    "Erinnerung aktivieren" : {
+
+    },
+    "Erinnerung: %@" : {
+
+    },
+    "Erstelle einen PDF-Bericht oder ein JSON5-Backup für einen frei wählbaren Zeitraum." : {
+
+    },
+    "Fachgebiet" : {
+
+    },
+    "Fehler erneut versuchen" : {
+
+    },
+    "Fehler: %@" : {
+
+    },
+    "Filter" : {
+
+    },
+    "Füge zuerst eine Ärztin oder einen Arzt aus der ÖGK-Liste hinzu oder lege den Eintrag manuell an." : {
+
+    },
+    "Funktionelle Einschränkung" : {
+
+    },
+    "Für %@ ist noch nichts dokumentiert." : {
+
+    },
+    "Für Termine brauchst du zuerst einen Arzt" : {
+
+    },
+    "GitHub-Issues öffnen" : {
+
+    },
+    "Hinzufügen" : {
+
+    },
+    "Intensität" : {
+
+    },
+    "Intensität %lld" : {
+
+    },
+    "Jetzt synchronisieren" : {
+
+    },
+    "JSON5 erstellen" : {
+
+    },
+    "JSON5 importieren" : {
+
+    },
+    "JSON5 teilen" : {
+
+    },
+    "JSON5-Export enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen." : {
+
+    },
+    "Kategorie" : {
+
+    },
+    "Kein Medikament gefunden" : {
+
+    },
+    "Kein Protokoll vorhanden" : {
+
+    },
+    "Keine Einträge im Zeitraum" : {
+
+    },
+    "Keine gelöschten Einträge." : {
+
+    },
+    "Keine kommenden Termine" : {
+
+    },
+    "Keine offenen Konflikte." : {
+
+    },
+    "Keine passenden Ärztinnen oder Ärzte" : {
+
+    },
+    "Keine Termine" : {
+
+    },
+    "Kommende Termine" : {
+
+    },
+    "Konflikt lösen" : {
+
+    },
+    "Konflikt wird verarbeitet …" : {
+
+    },
+    "Konflikte" : {
+
+    },
+    "Kontakt" : {
+
+    },
+    "Kurz notieren, was auffällt" : {
+
+    },
+    "Lege den ersten Termin mit optionaler Erinnerung an." : {
+
+    },
+    "Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow." : {
+
+    },
+    "Letzter Fehler" : {
+
+    },
+    "Lokal hat recht" : {
+
+    },
+    "Lokaler Stand und Cloud-Stand unterscheiden sich." : {
+
+    },
+    "Lokales JSON5-Backup erstellen" : {
+
+    },
+    "Löschen" : {
+
+    },
+    "Medikament" : {
+
+    },
+    "Medikament ausgewählt. Passe die Anzahl an." : {
+
+    },
+    "Medikament bearbeiten" : {
+
+    },
+    "Medikament nach Namen filtern" : {
+
+    },
+    "Medikamente" : {
+
+    },
+    "Medizinische Einordnung" : {
+
+    },
+    "Mehr" : {
+
+    },
+    "Meine Ärzte" : {
+
+    },
+    "Menstruationsstatus" : {
+
+    },
+    "Nach Name, Fachgebiet oder Ort suchen" : {
+
+    },
+    "Nächster Monat" : {
+
+    },
+    "Name" : {
+
+    },
+    "Neuer Eintrag" : {
+
+    },
+    "Noch kein Eintrag für diesen Tag." : {
+
+    },
+    "Noch keine Ärztinnen oder Ärzte" : {
+
+    },
+    "Noch keine Einträge an diesem Tag" : {
+
+    },
+    "Notiz" : {
+
+    },
+    "Nur ergänzen, wenn du heute etwas genommen hast." : {
+
+    },
+    "Nur Fehler" : {
+
+    },
+    "Nur Sync" : {
+
+    },
+    "Nutze die ÖGK-Liste als Startpunkt oder lege eine Ärztin bzw. einen Arzt vollständig manuell an." : {
+
+    },
+    "Öffnet die Detailansicht des Eintrags." : {
+
+    },
+    "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
+
+    },
+    "ÖGK-Auswahl" : {
+
+    },
+    "OK" : {
+
+    },
+    "Open Source" : {
+
+    },
+    "Open-Meteo öffnen" : {
+
+    },
+    "Optionale Details" : {
+
+    },
+    "Optionaler Hinweis" : {
+
+    },
+    "Ort" : {
+
+    },
+    "Papierkorb" : {
+
+    },
+    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst." : {
+
+    },
+    "Passe den Suchbegriff an oder füge ein eigenes Medikament hinzu." : {
+
+    },
+    "Passe den Suchbegriff an oder nutze die manuelle Anlage." : {
+
+    },
+    "Passe den Zeitraum an, damit ein Bericht aus deinem Tagebuch erstellt werden kann." : {
+
+    },
+    "PDF" : {
+
+    },
+    "PDF erstellen" : {
+
+    },
+    "PDF teilen" : {
+
+    },
+    "PLZ" : {
+
+    },
+    "Praxis / Ort" : {
+
+    },
+    "Projekt auf GitHub öffnen" : {
+
+    },
+    "Protokoll löschen" : {
+
+    },
+    "Protokoll teilen" : {
+
+    },
+    "Quelle: %@" : {
+
+    },
+    "Schließen" : {
+
+    },
+    "Schmerzcharakter" : {
+
+    },
+    "Schmerzlokalisation" : {
+
+    },
+    "Schmerztagebuch" : {
+
+    },
+    "Schneller Eintrag" : {
+
+    },
+    "Setzt die Intensität auf %lld von 10." : {
+
+    },
+    "Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt." : {
+
+    },
+    "So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional." : {
+
+    },
+    "Sobald Sync-Vorgänge oder Fehler auftreten, erscheinen sie hier." : {
+
+    },
+    "Speichern" : {
+
+    },
+    "Stammdaten" : {
+
+    },
+    "Status" : {
+
+    },
+    "Straße" : {
+
+    },
+    "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden." : {
+
+    },
+    "Symptome" : {
+
+    },
+    "Sync aktivieren" : {
+
+    },
+    "Sync-Protokoll" : {
+
+    },
+    "Synchronisation" : {
+
+    },
+    "Tagebuch" : {
+
+    },
+    "Tagebuch öffnen" : {
+
+    },
+    "Telefon" : {
+
+    },
+    "Termin" : {
+
+    },
+    "Termin bearbeiten" : {
+
+    },
+    "Termin gespeichert" : {
+
+    },
+    "Termin hinzufügen" : {
+
+    },
+    "Termin löschen?" : {
+
+    },
+    "Termin speichern" : {
+
+    },
+    "Termine" : {
+
+    },
+    "Trigger" : {
+
+    },
+    "Typ" : {
+
+    },
+    "Übersicht" : {
+
+    },
+    "Version 1" : {
+
+    },
+    "Verstanden" : {
+
+    },
+    "Von" : {
+
+    },
+    "Vorheriger Monat" : {
+
+    },
+    "Vorlauf" : {
+
+    },
+    "Vorschau" : {
+
+    },
+    "Wählt diese Option aus." : {
+
+    },
+    "Wählt dieses Medikament aus." : {
+
+    },
+    "Weitere Angaben" : {
+
+    },
+    "Wetter" : {
+
+    },
+    "Wetter wird ermittelt …" : {
+
+    },
+    "Wetter wird vorbereitet" : {
+
+    },
+    "Wetter: %@" : {
+
+    },
+    "Wetterdaten" : {
+
+    },
+    "Wiederherstellen" : {
+
+    },
+    "Wirkung: %@" : {
+
+    },
+    "Wirkungseintritt: %@" : {
+
+    },
+    "Zeigt die Episoden dieses Tages darunter an." : {
+
+    },
+    "Zeitraum" : {
+
+    }
+  },
+  "version" : "1.2"
+}

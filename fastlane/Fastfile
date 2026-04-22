@@ -1,5 +1,7 @@
 require "fileutils"
 require "shellwords"
+require "simctl"
+require "snapshot"
 
 default_platform(:ios)
 
@@ -10,6 +12,190 @@ TARGET_NAME = "MigraineTracker"
 CONFIGURATION = "Release"
 APP_IDENTIFIER = "eu.mpwg.MigraineTracker"
 LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "MigraineTracker/Configs/LocalSecrets.xcconfig")
+SCREENSHOT_SCHEME = "MigraineTrackerScreenshots"
+SCREENSHOT_TEST_TARGET = "MigraineTrackerUITests"
+SCREENSHOT_TEST_IDENTIFIER = "MigraineTrackerUITests/MigraineTrackerScreenshotTests/testCaptureMainStoreScreens"
+SCREENSHOT_LANGUAGE = "de-DE"
+SCREENSHOT_SEED = "default"
+SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
+IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
+MAC_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "macos")
+IOS_SCREENSHOT_DEVICES = [
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
+].freeze
+MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
+
+def screenshot_ios_version
+  configured_version = ENV["SCREENSHOT_IOS_VERSION"].to_s.strip
+  configured_version.empty? ? "26.4" : configured_version
+end
+
+def include_mac_screenshots?
+  truthy_env?("CAPTURE_MAC_SCREENSHOTS", default: false)
+end
+
+def screenshot_cache_directory
+  File.expand_path("~/Library/Caches/tools.fastlane")
+end
+
+def screenshot_image_cache_directory
+  File.join(screenshot_cache_directory, "screenshots")
+end
+
+def screenshot_language_directory(output_directory)
+  File.join(output_directory, SCREENSHOT_LANGUAGE)
+end
+
+def screenshot_result_bundle_path(output_directory, device_name)
+  sanitized_name = device_name.gsub(/[^A-Za-z0-9]+/, "-").gsub(/^-|-$/, "")
+  File.join(output_directory, "test_output", SCREENSHOT_LANGUAGE, "#{SCREENSHOT_SCHEME}-#{sanitized_name}.xcresult")
+end
+
+def write_snapshot_configuration_files!
+  FileUtils.mkdir_p(screenshot_cache_directory)
+  File.write(File.join(screenshot_cache_directory, "language.txt"), "#{SCREENSHOT_LANGUAGE}\n")
+  File.write(File.join(screenshot_cache_directory, "locale.txt"), "de_DE\n")
+  File.write(File.join(screenshot_cache_directory, "snapshot-launch_arguments.txt"), "-mt_screenshot_seed #{SCREENSHOT_SEED}\n")
+end
+
+def clear_screenshot_cache!
+  FileUtils.rm_rf(screenshot_image_cache_directory)
+  FileUtils.mkdir_p(screenshot_image_cache_directory)
+end
+
+def resolve_simulator_for_capture(device_name, requested_version = screenshot_ios_version)
+  version_prefix = "#{requested_version}."
+  candidates = SimCtl.list_devices.where(name: device_name).select(&:available?)
+  candidates.sort_by! do |device|
+    runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : "0"
+    Gem::Version.new(runtime_version)
+  end
+  candidates.reverse!
+
+  exact_match = candidates.find do |device|
+    runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
+    runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+  end
+  return exact_match if exact_match
+  return candidates.first if candidates.first
+
+  UI.user_error!("Kein Simulator mit Namen '#{device_name}' für Screenshot-Läufe gefunden.")
+end
+
+def prepare_ios_simulator!(device, override_status_bar:)
+  wait_timeout = ENV.fetch("SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT", "10")
+
+  sh("xcrun simctl shutdown #{device.udid.shellescape} || true")
+  sh("xcrun simctl erase #{device.udid.shellescape}")
+  sh("xcrun simctl boot #{device.udid.shellescape} || true")
+  sh("xcrun simctl bootstatus #{device.udid.shellescape} -b")
+
+  return unless override_status_bar
+
+  sleep(wait_timeout.to_i)
+  sh("xcrun simctl status_bar #{device.udid.shellescape} override --time 09:41 --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --operatorName '' --cellularBars 4 --batteryState charged --batteryLevel 100")
+end
+
+def clear_ios_status_bar!(device)
+  sh("xcrun simctl status_bar #{device.udid.shellescape} clear || true")
+end
+
+def run_screenshot_test!(destination:, result_bundle_path:)
+  FileUtils.rm_rf(result_bundle_path)
+  FileUtils.mkdir_p(File.dirname(result_bundle_path))
+
+  Dir.mktmpdir("snapshot_derived") do |derived_data_path|
+    command = [
+      "xcodebuild",
+      "test",
+      "-scheme", SCREENSHOT_SCHEME.shellescape,
+      "-project", PROJECT_PATH.shellescape,
+      "-derivedDataPath", derived_data_path.shellescape,
+      "-resultBundlePath", result_bundle_path.shellescape,
+      "-destination", destination.shellescape,
+      "-only-testing:#{SCREENSHOT_TEST_IDENTIFIER.shellescape}"
+    ].join(" ")
+
+    sh(
+      {
+        "FASTLANE_SNAPSHOT" => "YES",
+        "FASTLANE_LANGUAGE" => SCREENSHOT_LANGUAGE,
+        "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET
+      },
+      command
+    )
+  end
+end
+
+def copy_device_screenshots!(device_name:, output_directory:)
+  destination_directory = screenshot_language_directory(output_directory)
+  FileUtils.mkdir_p(destination_directory)
+
+  screenshots = Dir.glob(File.join(screenshot_image_cache_directory, "#{device_name}-*.png")).sort
+  UI.user_error!("Es wurden keine Screenshots für '#{device_name}' erzeugt.") if screenshots.empty?
+
+  screenshots.each do |path|
+    FileUtils.cp(path, File.join(destination_directory, File.basename(path)))
+  end
+end
+
+def apply_snapshot_destination_patch!
+  return if defined?($migraine_tracker_snapshot_destination_patch_applied) && $migraine_tracker_snapshot_destination_patch_applied
+
+  patch = Module.new do
+    def destination(devices)
+      unless verify_devices_share_os(devices)
+        UI.user_error!("All devices provided to snapshot should run the same operating system")
+      end
+
+      return ["-destination 'platform=macOS'"] if devices.first.to_s =~ /^Mac/
+
+      os = case devices.first.to_s
+           when /^Apple TV/
+             "tvOS"
+           when /^Apple Watch/
+             "watchOS"
+           else
+             "iOS"
+           end
+
+      requested_version = ::Snapshot.config[:ios_version] || ::Snapshot::LatestOsVersion.version(os)
+      destinations = devices.map do |device_name|
+        simulator = migraine_tracker_resolve_simulator(device_name, requested_version)
+        "-destination 'platform=#{os} Simulator,id=#{simulator.udid}'"
+      end
+
+      [destinations.join(" ")]
+    end
+
+    private
+
+    def migraine_tracker_resolve_simulator(device_name, requested_version)
+      version_prefix = "#{requested_version}."
+      candidates = SimCtl.list_devices.where(name: device_name).select(&:available?)
+      candidates.sort_by! do |device|
+        runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : "0"
+        Gem::Version.new(runtime_version)
+      end
+      candidates.reverse!
+
+      exact_match = candidates.find do |device|
+        runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
+        runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+      end
+      return exact_match if exact_match
+
+      fallback = candidates.first
+      return fallback if fallback
+
+      UI.user_error!("Kein Simulator mit Namen '#{device_name}' für Screenshot-Läufe gefunden.")
+    end
+  end
+
+  ::Snapshot::TestCommandGenerator.singleton_class.prepend(patch)
+  $migraine_tracker_snapshot_destination_patch_applied = true
+end
 
 def truthy_env?(name, default: false)
   value = ENV[name]
@@ -53,7 +239,9 @@ def app_store_api_key
 end
 
 def write_local_secrets!
-  require_env_vars!("APPLE_DEVELOPER_TEAM_ID", "SENTRY_DSN")
+  return if ENV["APPLE_DEVELOPER_TEAM_ID"].to_s.empty? && File.exist?(LOCAL_SECRETS_PATH)
+
+  require_env_vars!("APPLE_DEVELOPER_TEAM_ID")
 
   FileUtils.mkdir_p(File.dirname(LOCAL_SECRETS_PATH))
   File.write(
@@ -61,8 +249,8 @@ def write_local_secrets!
     <<~XCCONFIG
       // Von fastlane in CI erzeugt. Nicht committen.
       APPLE_DEVELOPER_TEAM_ID = #{ENV["APPLE_DEVELOPER_TEAM_ID"]}
-      SENTRY_DSN = #{ENV["SENTRY_DSN"]}
-      TELEMETRY_APP_ID = #{ENV["TELEMETRY_APP_ID"]}
+      SENTRY_DSN = #{ENV["SENTRY_DSN"].to_s}
+      TELEMETRY_APP_ID = #{ENV["TELEMETRY_APP_ID"].to_s}
     XCCONFIG
   )
 end
@@ -149,6 +337,51 @@ def next_build_number
   Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
+def capture_screenshot_set!(devices:, output_directory:, override_status_bar:)
+  FileUtils.rm_rf(output_directory)
+  FileUtils.mkdir_p(output_directory)
+  write_snapshot_configuration_files!
+
+  devices.each do |device_name|
+    device = resolve_simulator_for_capture(device_name)
+    clear_screenshot_cache!
+    prepare_ios_simulator!(device, override_status_bar: override_status_bar)
+    run_screenshot_test!(
+      destination: "platform=iOS Simulator,id=#{device.udid}",
+      result_bundle_path: screenshot_result_bundle_path(output_directory, device_name)
+    )
+    copy_device_screenshots!(device_name: device_name, output_directory: output_directory)
+    clear_ios_status_bar!(device) if override_status_bar
+  end
+end
+
+def capture_all_screenshots!
+  FileUtils.mkdir_p(SCREENSHOT_ROOT)
+  capture_screenshot_set!(
+    devices: IOS_SCREENSHOT_DEVICES,
+    output_directory: IOS_SCREENSHOT_OUTPUT,
+    override_status_bar: true
+  )
+end
+
+def upload_screenshot_sets!(api_key:, version:)
+  UI.user_error!("Keine vorhandenen iOS-Screenshots unter #{screenshot_language_directory(IOS_SCREENSHOT_OUTPUT)} gefunden.") if Dir.glob(File.join(screenshot_language_directory(IOS_SCREENSHOT_OUTPUT), "*.png")).empty?
+
+  deliver(
+    api_key: api_key,
+    app_identifier: APP_IDENTIFIER,
+    app_version: version,
+    platform: "ios",
+    screenshots_path: IOS_SCREENSHOT_OUTPUT,
+    skip_binary_upload: true,
+    skip_metadata: true,
+    overwrite_screenshots: true,
+    force: true,
+    run_precheck_before_submit: false,
+    precheck_default_rule_level: :warn
+  )
+end
+
 def build_release_ipa!(build_number:, profile_mapping:)
   output_directory = File.join(release_root, "fastlane")
   FileUtils.rm_rf(output_directory)
@@ -178,10 +411,22 @@ platform :ios do
     write_local_secrets!
   end
 
+  desc "Erzeugt App-Store-Screenshots für iPhone, iPad und Mac Catalyst"
+  lane :sync_screenshots do
+    capture_all_screenshots!
+  end
+
+  desc "Erzeugt und lädt Screenshots für iOS und Mac Catalyst nach App Store Connect hoch"
+  lane :upload_screenshots do
+    api_key = app_store_api_key
+    version = current_marketing_version
+
+    upload_screenshot_sets!(api_key: api_key, version: version)
+  end
+
   desc "Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch"
   lane :release_testflight do
     api_key = app_store_api_key
-    version = current_marketing_version
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
@@ -203,6 +448,7 @@ platform :ios do
 
     api_key = app_store_api_key
     version = current_marketing_version
+    upload_screenshot_sets!(api_key: api_key, version: version)
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
