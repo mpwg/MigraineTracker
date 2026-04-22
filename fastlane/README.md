@@ -15,10 +15,10 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
-### ios capture_screenshots
+### ios sync_screenshots
 
 ```sh
-[bundle exec] fastlane ios capture_screenshots
+[bundle exec] fastlane ios sync_screenshots
 ```
 
 Erzeugt App-Store-Screenshots für iPhone, iPad und Mac Catalyst

@@ -412,7 +412,7 @@ platform :ios do
   end
 
   desc "Erzeugt App-Store-Screenshots für iPhone, iPad und Mac Catalyst"
-  lane :capture_screenshots do
+  lane :sync_screenshots do
     capture_all_screenshots!
   end
 

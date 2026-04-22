@@ -66,7 +66,7 @@ jobs:
           bundler-cache: true
 
       - name: Screenshots erzeugen
-        run: bundle exec fastlane ios capture_screenshots
+        run: bundle exec fastlane ios sync_screenshots
 
       - name: Screenshot-Änderungen committen
         run: |
