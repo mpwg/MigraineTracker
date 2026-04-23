@@ -37,6 +37,7 @@ struct AppShellView: View {
     let appContainer: AppContainer
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selectedSection: AppSection = .overview
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         Group {
@@ -69,11 +70,12 @@ struct AppShellView: View {
     }
 
     private var regularRoot: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             List {
                 ForEach(AppSection.allCases) { section in
                     Button {
                         selectedSection = section
+                        columnVisibility = .all
                     } label: {
                         Label(section.title, systemImage: section.systemImage)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -86,7 +88,7 @@ struct AppShellView: View {
             .navigationSplitViewColumnWidth(min: 220, ideal: 250)
         } detail: {
             NavigationStack {
-                content(for: selectedSection)
+                regularContent(for: selectedSection)
             }
         }
         .navigationSplitViewStyle(.balanced)
@@ -109,8 +111,39 @@ struct AppShellView: View {
             ProductInformationView(mode: .standard)
         }
     }
+
+    @ViewBuilder
+    private func regularContent(for section: AppSection) -> some View {
+        switch section {
+        case .overview, .history, .doctors:
+            content(for: section)
+        case .export, .settings, .information:
+            RegularDetailSurface {
+                content(for: section)
+            }
+        }
+    }
 }
 
 #Preview {
     Text("Preview nicht verfügbar")
+}
+
+private struct RegularDetailSurface<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Divider()
+
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .brandScreen()
+    }
 }
