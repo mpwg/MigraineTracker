@@ -54,6 +54,13 @@ struct DataExportView: View {
             }
 
             Section("PDF") {
+                Picker("PDF-Modus", selection: $controller.pdfReportMode) {
+                    ForEach(PDFReportMode.allCases) { mode in
+                        Text(LocalizedStringKey(mode.rawValue)).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
                 Button("PDF erstellen") {
                     controller.createPDF()
                 }

@@ -3,9 +3,16 @@ import Observation
 
 protocol ExportRepository {
     func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary
-    func createPDF(summary: ExportPeriodSummary) throws -> URL
+    func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL
     func createBackup() throws -> URL
     func importBackup(from url: URL) throws
+}
+
+enum PDFReportMode: String, CaseIterable, Identifiable {
+    case compact = "Kompakter Arztbericht"
+    case detailed = "Detaillierter Bericht"
+
+    var id: String { rawValue }
 }
 
 struct LoadExportPreviewUseCase {
@@ -19,8 +26,8 @@ struct LoadExportPreviewUseCase {
 struct CreatePDFExportUseCase {
     let repository: ExportRepository
 
-    func execute(summary: ExportPeriodSummary) throws -> URL {
-        try repository.createPDF(summary: summary)
+    func execute(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
+        try repository.createPDF(summary: summary, mode: mode)
     }
 }
 
@@ -50,6 +57,7 @@ final class DataExportController {
     var dataExportURL: URL?
     var dataTransferMessage: String?
     var isImportingData = false
+    var pdfReportMode: PDFReportMode = .compact
     private(set) var summary = ExportPeriodSummary(startDate: .now, endDate: .now, records: [])
 
     private let loadExportPreviewUseCase: LoadExportPreviewUseCase
@@ -96,7 +104,7 @@ final class DataExportController {
         }
 
         do {
-            exportURL = try createPDFExportUseCase.execute(summary: summary)
+            exportURL = try createPDFExportUseCase.execute(summary: summary, mode: pdfReportMode)
         } catch {
             exportErrorMessage = "Der PDF-Export konnte nicht erstellt werden."
         }

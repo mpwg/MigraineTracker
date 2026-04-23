@@ -259,8 +259,8 @@ final class SwiftDataExportRepository: ExportRepository {
         return ExportPeriodSummary(startDate: startDate, endDate: endDate, records: filtered)
     }
 
-    func createPDF(summary: ExportPeriodSummary) throws -> URL {
-        try PDFExportWriter.write(summary: summary)
+    func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
+        try PDFExportWriter.write(summary: summary, mode: mode)
     }
 
     func createBackup() throws -> URL {
