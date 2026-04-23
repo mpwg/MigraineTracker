@@ -346,6 +346,16 @@
         }
       }
     },
+    "Arzt aus Musterverzeichnis hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Doctor from Sample Directory"
+          }
+        }
+      }
+    },
     "Arzt auswählen": {
       "localizations": {
         "en": {
@@ -1142,6 +1152,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add"
+          }
+        }
+      }
+    },
+    "Im Screenshot-Modus werden ausschließlich anonymisierte Musterärztinnen und Musterärzte angezeigt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot mode shows anonymized sample doctors only."
           }
         }
       }

@@ -87,36 +87,36 @@ enum AppStoreScreenshotMode {
 
             let doctorOne = Doctor(
                 name: "Dr. Clara Heiden",
-                specialty: "Neurologie",
+                specialty: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology"),
                 street: "Lindenhofgasse 12",
                 city: "Wien",
                 state: "Wien",
                 postalCode: "1010",
                 phone: "01 2345678",
                 email: "ordination.clara.heiden@example.com",
-                notes: "Sample contact for App Store screenshots.",
+                notes: ScreenshotLocalization.text(de: "Beispielkontakt für App-Store-Screenshots.", en: "Sample contact for App Store screenshots."),
                 sourceRaw: DoctorSource.manual.rawValue
             )
 
             let doctorTwo = Doctor(
                 name: "Dr. Mira Sonnberg",
-                specialty: "General medicine",
+                specialty: ScreenshotLocalization.text(de: "Allgemeinmedizin", en: "General medicine"),
                 street: "Auenweg 5",
                 city: "Wien",
                 state: "Wien",
                 postalCode: "1070",
                 phone: "01 8765432",
                 email: "ordination.mira.sonnberg@example.com",
-                notes: "Anonymized demo data.",
+                notes: ScreenshotLocalization.text(de: "Anonymisierte Demo-Daten.", en: "Anonymized demo data."),
                 sourceRaw: DoctorSource.manual.rawValue
             )
 
             let appointment = DoctorAppointment(
                 scheduledAt: calendar.date(bySettingHour: 9, minute: 15, second: 0, of: today.addingTimeInterval(2 * 24 * 60 * 60)) ?? today,
                 endsAt: calendar.date(bySettingHour: 9, minute: 45, second: 0, of: today.addingTimeInterval(2 * 24 * 60 * 60)),
-                practiceName: "Practice Dr. Clara Heiden",
+                practiceName: ScreenshotLocalization.text(de: "Ordination Dr. Clara Heiden", en: "Practice Dr. Clara Heiden"),
                 addressText: "Lindenhofgasse 12, 1010 Wien",
-                note: "Follow-up discussion and adjustment of the acute plan.",
+                note: ScreenshotLocalization.text(de: "Verlaufsgespräch und Anpassung des Akutplans.", en: "Follow-up discussion and adjustment of the acute plan."),
                 reminderEnabled: true,
                 reminderLeadTimeMinutes: 24 * 60,
                 notificationStatusRaw: AppointmentReminderStatus.scheduled.rawValue,
@@ -143,7 +143,7 @@ enum AppStoreScreenshotMode {
 
             try context.save()
         } catch {
-            assertionFailure("Screenshot data could not be prepared: \(error)")
+            assertionFailure("Screenshot-Daten konnten nicht vorbereitet werden: \(error)")
         }
     }
 
@@ -158,13 +158,16 @@ enum AppStoreScreenshotMode {
             startedAt: startedAt,
             endedAtEnabled: false,
             endedAt: startedAt,
-            painLocation: "right temple",
-            painCharacter: "throbbing",
-            notes: "Sample App Store data. It improved after a quiet break.",
-            functionalImpact: "Work continued in a quiet environment",
+            painLocation: ScreenshotLocalization.text(de: "rechte Schläfe", en: "right temple"),
+            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
+            notes: ScreenshotLocalization.text(
+                de: "Beispieldaten für den App Store. Nach einer ruhigen Pause wurde es besser.",
+                en: "Sample App Store data. It improved after a quiet break."
+            ),
+            functionalImpact: ScreenshotLocalization.text(de: "Arbeit in ruhiger Umgebung fortgesetzt", en: "Work continued in a quiet environment"),
             menstruationStatus: .unknown,
-            selectedSymptoms: ["Nausea", "Light sensitivity"],
-            selectedTriggers: ["Stress", "Screen time"],
+            selectedSymptoms: Set(ScreenshotLocalization.list(de: ["Übelkeit", "Lichtempfindlichkeit"], en: ["Nausea", "Light sensitivity"])),
+            selectedTriggers: Set(ScreenshotLocalization.list(de: ["Stress", "Bildschirmzeit"], en: ["Stress", "Screen time"])),
             medications: [
                 MedicationSelectionDraft(
                     selectionKey: MedicationSelectionDraft.makeSelectionKey(
@@ -184,13 +187,13 @@ enum AppStoreScreenshotMode {
     static func sampleWeatherSnapshot(for startedAt: Date) -> WeatherSnapshotData {
         WeatherSnapshotData(
             recordedAt: startedAt,
-            condition: "Partly cloudy",
+            condition: ScreenshotLocalization.text(de: "Leicht bewölkt", en: "Partly cloudy"),
             temperature: 17.8,
             humidity: 62,
             pressure: 1016,
             precipitation: 0.0,
             weatherCode: 2,
-            source: "Sample weather"
+            source: ScreenshotLocalization.text(de: "Beispielwetter", en: "Sample weather")
         )
     }
 
@@ -205,12 +208,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 3, to: todayMorning),
             type: .migraine,
             intensity: 6,
-            painLocation: "right temple",
-            painCharacter: "throbbing",
-            notes: "Sample data for App Store screenshots.",
-            symptoms: ["Nausea", "Light sensitivity"],
-            triggers: ["Stress", "Screen time"],
-            functionalImpact: "Quiet morning with breaks",
+            painLocation: ScreenshotLocalization.text(de: "rechte Schläfe", en: "right temple"),
+            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
+            notes: ScreenshotLocalization.text(de: "Beispieldaten für App-Store-Screenshots.", en: "Sample data for App Store screenshots."),
+            symptoms: ScreenshotLocalization.list(de: ["Übelkeit", "Lichtempfindlichkeit"], en: ["Nausea", "Light sensitivity"]),
+            triggers: ScreenshotLocalization.list(de: ["Stress", "Bildschirmzeit"], en: ["Stress", "Screen time"]),
+            functionalImpact: ScreenshotLocalization.text(de: "Ruhiger Vormittag mit Pausen", en: "Quiet morning with breaks"),
             medications: [
                 MedicationEntry(
                     name: "Paracetamol",
@@ -229,12 +232,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 2, to: threeDaysAgo),
             type: .headache,
             intensity: 4,
-            painLocation: "forehead",
-            painCharacter: "dull",
-            notes: "Settled after water and a short break.",
-            symptoms: ["Sound sensitivity"],
-            triggers: ["Lack of sleep"],
-            functionalImpact: "Short break in the afternoon",
+            painLocation: ScreenshotLocalization.text(de: "Stirn", en: "forehead"),
+            painCharacter: ScreenshotLocalization.text(de: "dumpf", en: "dull"),
+            notes: ScreenshotLocalization.text(de: "Nach Wasser und kurzer Pause abgeklungen.", en: "Settled after water and a short break."),
+            symptoms: ScreenshotLocalization.list(de: ["Geräuschempfindlichkeit"], en: ["Sound sensitivity"]),
+            triggers: ScreenshotLocalization.list(de: ["Schlafmangel"], en: ["Lack of sleep"]),
+            functionalImpact: ScreenshotLocalization.text(de: "Kurze Pause am Nachmittag", en: "Short break in the afternoon"),
             medications: [
                 MedicationEntry(
                     name: "Ibuprofen",
@@ -252,12 +255,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 5, to: eightDaysAgo),
             type: .migraine,
             intensity: 8,
-            painLocation: "left frontal",
-            painCharacter: "pulsating",
-            notes: "Retreated to a darkened room.",
-            symptoms: ["Aura", "Light sensitivity", "Nausea"],
+            painLocation: ScreenshotLocalization.text(de: "links frontal", en: "left frontal"),
+            painCharacter: ScreenshotLocalization.text(de: "pulsierend", en: "pulsating"),
+            notes: ScreenshotLocalization.text(de: "Rückzug in einen abgedunkelten Raum.", en: "Retreated to a darkened room."),
+            symptoms: ScreenshotLocalization.list(de: ["Aura", "Lichtempfindlichkeit", "Übelkeit"], en: ["Aura", "Light sensitivity", "Nausea"]),
             triggers: ["Stress"],
-            functionalImpact: "Appointments postponed",
+            functionalImpact: ScreenshotLocalization.text(de: "Termine verschoben", en: "Appointments postponed"),
             medications: [
                 MedicationEntry(
                     name: "Metoclopramid",
@@ -276,12 +279,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 1, to: fifteenDaysAgo),
             type: .unclear,
             intensity: 3,
-            painLocation: "Nacken",
-            painCharacter: "ziehend",
-            notes: "Observed and documented without medication.",
-            symptoms: ["Kiefer-/Aufbissschmerz"],
-            triggers: ["Bildschirmzeit"],
-            functionalImpact: "Later finish to the workday",
+            painLocation: ScreenshotLocalization.text(de: "Nacken", en: "neck"),
+            painCharacter: ScreenshotLocalization.text(de: "ziehend", en: "pulling"),
+            notes: ScreenshotLocalization.text(de: "Beobachtet und ohne Medikament dokumentiert.", en: "Observed and documented without medication."),
+            symptoms: ScreenshotLocalization.list(de: ["Kiefer-/Aufbissschmerz"], en: ["Jaw/bite pain"]),
+            triggers: ScreenshotLocalization.list(de: ["Bildschirmzeit"], en: ["Screen time"]),
+            functionalImpact: ScreenshotLocalization.text(de: "Späterer Feierabend", en: "Later finish to the workday"),
             medications: []
         )
         episodeFour.weatherSnapshot = WeatherSnapshot(snapshot: sampleWeatherSnapshot(for: fifteenDaysAgo), episode: episodeFour)
@@ -294,8 +297,11 @@ enum AppStoreScreenshotMode {
             MedicationDefinition(
                 catalogKey: "screenshot:acute",
                 groupID: "screenshot-medications",
-                groupTitle: "Beispielmedikamente",
-                groupFooter: "These anonymized medication names are only used to create screenshots.",
+                groupTitle: ScreenshotLocalization.text(de: "Beispielmedikamente", en: "Sample Medications"),
+                groupFooter: ScreenshotLocalization.text(
+                    de: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
+                    en: "These anonymized medication names are only used to create screenshots."
+                ),
                 name: "Paracetamol",
                 category: .paracetamol,
                 suggestedDosage: "500 mg",
@@ -305,8 +311,11 @@ enum AppStoreScreenshotMode {
             MedicationDefinition(
                 catalogKey: "screenshot:support",
                 groupID: "screenshot-medications",
-                groupTitle: "Beispielmedikamente",
-                groupFooter: "These anonymized medication names are only used to create screenshots.",
+                groupTitle: ScreenshotLocalization.text(de: "Beispielmedikamente", en: "Sample Medications"),
+                groupFooter: ScreenshotLocalization.text(
+                    de: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
+                    en: "These anonymized medication names are only used to create screenshots."
+                ),
                 name: "Ibuprofen",
                 category: .nsar,
                 suggestedDosage: "400 mg",
@@ -316,8 +325,11 @@ enum AppStoreScreenshotMode {
             MedicationDefinition(
                 catalogKey: "screenshot:reserve",
                 groupID: "screenshot-medications",
-                groupTitle: "Beispielmedikamente",
-                groupFooter: "These anonymized medication names are only used to create screenshots.",
+                groupTitle: ScreenshotLocalization.text(de: "Beispielmedikamente", en: "Sample Medications"),
+                groupFooter: ScreenshotLocalization.text(
+                    de: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
+                    en: "These anonymized medication names are only used to create screenshots."
+                ),
                 name: "Metoclopramid",
                 category: .antiemetic,
                 suggestedDosage: "10 mg",
@@ -332,34 +344,34 @@ enum AppStoreScreenshotMode {
             DoctorDirectoryEntry(
                 id: "screenshot-doctor-anna",
                 name: "Dr. Clara Heiden",
-                specialty: "Neurologie",
+                specialty: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology"),
                 street: "Lindenhofgasse 12",
                 city: "Wien",
                 state: "Wien",
                 postalCode: "1010",
-                sourceLabel: "Sample directory for App Store screenshots",
+                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
                 sourceURL: "https://example.com/app-store-screenshots"
             ),
             DoctorDirectoryEntry(
                 id: "screenshot-doctor-lea",
                 name: "Dr. Mira Sonnberg",
-                specialty: "Allgemeinmedizin",
+                specialty: ScreenshotLocalization.text(de: "Allgemeinmedizin", en: "General medicine"),
                 street: "Auenweg 5",
                 city: "Wien",
                 state: "Wien",
                 postalCode: "1070",
-                sourceLabel: "Sample directory for App Store screenshots",
+                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
                 sourceURL: "https://example.com/app-store-screenshots"
             ),
             DoctorDirectoryEntry(
                 id: "screenshot-doctor-noah",
                 name: "Dr. Jonas Erlach",
-                specialty: "Schmerzambulanz",
+                specialty: ScreenshotLocalization.text(de: "Schmerzambulanz", en: "Pain clinic"),
                 street: "Parkring 8",
                 city: "Graz",
                 state: "Steiermark",
                 postalCode: "8010",
-                sourceLabel: "Sample directory for App Store screenshots",
+                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
                 sourceURL: "https://example.com/app-store-screenshots"
             )
         ]
