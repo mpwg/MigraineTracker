@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EpisodeDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     let appContainer: AppContainer
     let episodeID: UUID
@@ -22,6 +23,54 @@ struct EpisodeDetailView: View {
     }
 
     var body: some View {
+        Group {
+            if horizontalSizeClass == .compact {
+                detailList
+            } else {
+                regularDetail
+            }
+        }
+        .navigationTitle("Episodendetail")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Bearbeiten") {
+                    isEditing = true
+                }
+                .disabled(episode == nil)
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Löschen", role: .destructive) {
+                    isShowingDeleteConfirmation = true
+                }
+                .disabled(episode == nil)
+            }
+        }
+        .sheet(isPresented: $isEditing) {
+            NavigationStack {
+                EpisodeEditorView(
+                    appContainer: appContainer,
+                    episodeID: episodeID,
+                    onSaved: reload
+                )
+            }
+        }
+        .confirmationDialog(
+            "Episode löschen?",
+            isPresented: $isShowingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Löschen", role: .destructive) {
+                deleteEpisode()
+            }
+
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Diese Episode wird in den Papierkorb verschoben.")
+        }
+    }
+
+    private var detailList: some View {
         List {
             if let episode {
                 Section("Episode") {
@@ -145,45 +194,107 @@ struct EpisodeDetailView: View {
                 ContentUnavailableView("Episode nicht gefunden", systemImage: "exclamationmark.triangle")
             }
         }
-        .navigationTitle("Episodendetail")
         .brandGroupedScreen()
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Bearbeiten") {
-                    isEditing = true
-                }
-                .disabled(episode == nil)
-            }
+    }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Löschen", role: .destructive) {
-                    isShowingDeleteConfirmation = true
-                }
-                .disabled(episode == nil)
-            }
-        }
-        .sheet(isPresented: $isEditing) {
-            NavigationStack {
-                EpisodeEditorView(
-                    appContainer: appContainer,
-                    episodeID: episodeID,
-                    onSaved: reload
-                )
-            }
-        }
-        .confirmationDialog(
-            "Episode löschen?",
-            isPresented: $isShowingDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Löschen", role: .destructive) {
-                deleteEpisode()
-            }
+    private var regularDetail: some View {
+        ScrollView {
+            if let episode {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 320), spacing: AppTheme.dashboardSpacing, alignment: .top)],
+                    alignment: .leading,
+                    spacing: AppTheme.dashboardSpacing
+                ) {
+                    AdaptiveDashboardCard(title: "Episode") {
+                        detailValue("Typ", episode.type.rawValue)
+                        detailValue("Intensität", "\(episode.intensity) / 10")
+                        detailValue("Beginn", episode.startedAt.formatted(date: .abbreviated, time: .shortened))
+                        if let endedAt = episode.endedAt {
+                            detailValue("Ende", endedAt.formatted(date: .abbreviated, time: .shortened))
+                        }
+                        if !episode.painLocation.isEmpty {
+                            detailValue("Lokalisation", episode.painLocation)
+                        }
+                        if !episode.painCharacter.isEmpty {
+                            detailValue("Charakter", episode.painCharacter)
+                        }
+                        if !episode.functionalImpact.isEmpty {
+                            detailValue("Einschränkung", episode.functionalImpact)
+                        }
+                        if episode.menstruationStatus != .unknown {
+                            detailValue("Menstruationsstatus", episode.menstruationStatus.rawValue)
+                        }
+                    }
 
-            Button("Abbrechen", role: .cancel) {}
-        } message: {
-            Text("Diese Episode wird in den Papierkorb verschoben.")
+                    if !episode.symptoms.isEmpty {
+                        AdaptiveDashboardCard(title: "Symptome") {
+                            tagFlow(episode.symptoms)
+                        }
+                    }
+
+                    if !episode.triggers.isEmpty {
+                        AdaptiveDashboardCard(title: "Trigger") {
+                            tagFlow(episode.triggers)
+                        }
+                    }
+
+                    if !episode.medications.isEmpty {
+                        AdaptiveDashboardCard(title: "Medikamente") {
+                            ForEach(episode.medications.sorted(by: { $0.takenAt < $1.takenAt })) { medication in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(medication.name)
+                                            .font(.headline)
+                                        Spacer()
+                                        Text(medication.takenAt.formatted(date: .omitted, time: .shortened))
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Text(medicationHeadline(for: medication))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(12)
+                                .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                        }
+                    }
+
+                    if let weatherSnapshot = episode.weather {
+                        AdaptiveDashboardCard(title: "Wetter") {
+                            if !weatherSnapshot.condition.isEmpty {
+                                detailValue("Bedingung", weatherSnapshot.condition)
+                            }
+                            if let temperature = weatherSnapshot.temperature {
+                                detailValue("Temperatur", temperature.formatted(.number.precision(.fractionLength(1))) + " °C")
+                            }
+                            if let humidity = weatherSnapshot.humidity {
+                                detailValue("Luftfeuchte", humidity.formatted(.number.precision(.fractionLength(0))) + " %")
+                            }
+                            if let pressure = weatherSnapshot.pressure {
+                                detailValue("Luftdruck", pressure.formatted(.number.precision(.fractionLength(0))) + " hPa")
+                            }
+                            if let precipitation = weatherSnapshot.precipitation {
+                                detailValue("Niederschlag", precipitation.formatted(.number.precision(.fractionLength(1))) + " mm")
+                            }
+                            detailValue("Erfasst", weatherSnapshot.recordedAt.formatted(date: .abbreviated, time: .shortened))
+                            WeatherAttributionView()
+                        }
+                    }
+
+                    if !episode.notes.isEmpty {
+                        AdaptiveDashboardCard(title: "Notiz") {
+                            Text(episode.notes)
+                        }
+                    }
+                }
+                .padding(24)
+                .wideContent()
+            } else {
+                ContentUnavailableView("Episode nicht gefunden", systemImage: "exclamationmark.triangle")
+                    .frame(maxWidth: .infinity, minHeight: 360)
+            }
         }
+        .brandScreen()
     }
 
     private func detailRow(_ title: String, _ value: String) -> some View {
@@ -196,6 +307,29 @@ struct EpisodeDetailView: View {
         .padding(.vertical, 2)
         .brandGroupedRow()
         .accessibilityElement(children: .combine)
+    }
+
+    private func detailValue(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func tagFlow(_ values: [String]) -> some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 8)], alignment: .leading, spacing: 8) {
+            ForEach(values, id: \.self) { value in
+                Text(value)
+                    .font(.subheadline.weight(.medium))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(AppTheme.secondaryFill, in: Capsule())
+            }
+        }
     }
 
     private func medicationHeadline(for medication: MedicationRecord) -> String {

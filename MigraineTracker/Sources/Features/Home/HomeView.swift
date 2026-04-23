@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     let appContainer: AppContainer
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var overview: HomeOverviewData = .init(latestEpisode: nil, episodeCount: 0)
     @State private var doctorHubController: DoctorHubController
@@ -16,119 +17,30 @@ struct HomeView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                DiaryWelcomeCard(overview: overview)
-                    .padding(.vertical, 6)
-
+        Group {
+            if horizontalSizeClass == .compact {
+                compactDashboard
+            } else {
+                regularDashboard
+            }
+        }
+        .navigationTitle("Schmerztagebuch")
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
                     isPresentingEpisodeEditor = true
                 } label: {
                     Label("Neuer Eintrag", systemImage: "plus.circle.fill")
-                        .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .keyboardShortcut("n", modifiers: .command)
 
-                NavigationLink {
-                    HistoryView(appContainer: appContainer)
-                } label: {
-                    Label("Tagebuch öffnen", systemImage: "book.closed")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-            } header: {
-                Text("Tagebuch")
-            } footer: {
-                Text("Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten.")
-            }
-
-            Section {
                 Button {
                     isPresentingAppointmentFlow = true
                 } label: {
-                    Label("Termin hinzufügen", systemImage: "calendar.badge.plus")
+                    Label("Termin", systemImage: "calendar.badge.plus")
                 }
-
-                if doctorHubController.upcomingAppointments.isEmpty {
-                    ContentUnavailableView(
-                        "Keine kommenden Termine",
-                        systemImage: "calendar.badge.clock",
-                        description: Text("Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow.")
-                    )
-                } else {
-                    ForEach(doctorHubController.upcomingAppointments) { appointment in
-                        if let doctor = doctorHubController.doctors.first(where: { $0.id == appointment.doctorID }) {
-                            NavigationLink {
-                                DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
-                            } label: {
-                                AppointmentSummaryRow(appointment: appointment, doctor: doctor)
-                            }
-                        }
-                    }
-                }
-            } header: {
-                Text("Termine")
-            }
-
-            Section {
-                Button {
-                    isPresentingDoctorAddFlow = true
-                } label: {
-                    Label("Arzt hinzufügen", systemImage: "cross.case.fill")
-                }
-
-                Button {
-                    isPresentingManualDoctorAddFlow = true
-                } label: {
-                    Label("Arzt manuell hinzufügen", systemImage: "square.and.pencil")
-                }
-
-                if doctorHubController.doctors.isEmpty {
-                    ContentUnavailableView(
-                        "Noch keine Ärztinnen oder Ärzte",
-                        systemImage: "cross.case",
-                        description: Text("Nutze die ÖGK-Liste als Startpunkt oder lege eine Ärztin bzw. einen Arzt vollständig manuell an.")
-                    )
-                } else {
-                    ForEach(doctorHubController.doctors) { doctor in
-                        NavigationLink {
-                            DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
-                        } label: {
-                            DoctorSummaryRow(doctor: doctor)
-                        }
-                    }
-                }
-            } header: {
-                Text("Meine Ärzte")
-            } footer: {
-                Text(
-                    AppStoreScreenshotMode.isEnabled
-                    ? "Im Screenshot-Modus werden ausschließlich anonymisierte Musterärztinnen und Musterärzte angezeigt."
-                    : "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden."
-                )
-            }
-
-            Section {
-                NavigationLink {
-                    SettingsView(appContainer: appContainer)
-                } label: {
-                    Label("Einstellungen", systemImage: "gearshape")
-                }
-
-                NavigationLink {
-                    ProductInformationView(mode: .standard)
-                } label: {
-                    Label("Datenschutz und Hinweise", systemImage: "hand.raised")
-                }
-            } header: {
-                Text("Mehr")
             }
         }
-        .listStyle(.insetGrouped)
-        .brandGroupedScreen()
-        .navigationTitle("Schmerztagebuch")
         .task {
             reload()
         }
@@ -169,9 +81,223 @@ struct HomeView: View {
         }
     }
 
+    private var compactDashboard: some View {
+        List {
+            Section {
+                DiaryWelcomeCard(overview: overview)
+                    .padding(.vertical, 6)
+
+                Button {
+                    isPresentingEpisodeEditor = true
+                } label: {
+                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+            } header: {
+                Text("Heute")
+            }
+
+            appointmentsSection
+            doctorsSection
+        }
+        .listStyle(.insetGrouped)
+        .brandGroupedScreen()
+    }
+
+    private var regularDashboard: some View {
+        ScrollView {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(minimum: 360), spacing: AppTheme.dashboardSpacing, alignment: .top),
+                    GridItem(.flexible(minimum: 320), spacing: AppTheme.dashboardSpacing, alignment: .top)
+                ],
+                alignment: .leading,
+                spacing: AppTheme.dashboardSpacing
+            ) {
+                VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
+                    DiaryWelcomeCard(overview: overview)
+
+                    AdaptiveDashboardCard(title: "Schnellaktionen") {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 180), spacing: 12)],
+                            alignment: .leading,
+                            spacing: 12
+                        ) {
+                            QuickActionTile("Neuer Eintrag", systemImage: "plus.circle.fill") {
+                                isPresentingEpisodeEditor = true
+                            }
+
+                            QuickActionTile("Termin hinzufügen", systemImage: "calendar.badge.plus") {
+                                isPresentingAppointmentFlow = true
+                            }
+
+                            QuickActionTile("Arzt hinzufügen", systemImage: "cross.case.fill") {
+                                isPresentingDoctorAddFlow = true
+                            }
+
+                            QuickActionTile("Manuell anlegen", systemImage: "square.and.pencil") {
+                                isPresentingManualDoctorAddFlow = true
+                            }
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
+                    AdaptiveDashboardCard(title: "Kommende Termine") {
+                        appointmentContent
+                    }
+
+                    AdaptiveDashboardCard(title: "Meine Ärzte") {
+                        doctorContent
+                    }
+                }
+            }
+            .padding(24)
+            .wideContent()
+        }
+        .brandScreen()
+        .refreshable {
+            reload()
+        }
+    }
+
+    private var appointmentsSection: some View {
+        Section {
+            Button {
+                isPresentingAppointmentFlow = true
+            } label: {
+                Label("Termin hinzufügen", systemImage: "calendar.badge.plus")
+            }
+
+            appointmentContent
+        } header: {
+            Text("Termine")
+        }
+    }
+
+    private var doctorsSection: some View {
+        Section {
+            Button {
+                isPresentingDoctorAddFlow = true
+            } label: {
+                Label("Arzt hinzufügen", systemImage: "cross.case.fill")
+            }
+
+            Button {
+                isPresentingManualDoctorAddFlow = true
+            } label: {
+                Label("Arzt manuell hinzufügen", systemImage: "square.and.pencil")
+            }
+
+            doctorContent
+        } header: {
+            Text("Meine Ärzte")
+        } footer: {
+            Text(
+                AppStoreScreenshotMode.isEnabled
+                ? "Im Screenshot-Modus werden ausschließlich anonymisierte Musterärztinnen und Musterärzte angezeigt."
+                : "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden."
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var appointmentContent: some View {
+        if doctorHubController.upcomingAppointments.isEmpty {
+            ContentUnavailableView(
+                "Keine kommenden Termine",
+                systemImage: "calendar.badge.clock",
+                description: Text("Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow.")
+            )
+        } else {
+            ForEach(doctorHubController.upcomingAppointments) { appointment in
+                if let doctor = doctorHubController.doctors.first(where: { $0.id == appointment.doctorID }) {
+                    NavigationLink {
+                        DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
+                    } label: {
+                        AppointmentSummaryRow(appointment: appointment, doctor: doctor)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var doctorContent: some View {
+        if doctorHubController.doctors.isEmpty {
+            ContentUnavailableView(
+                "Noch keine Ärztinnen oder Ärzte",
+                systemImage: "cross.case",
+                description: Text("Nutze die ÖGK-Liste als Startpunkt oder lege eine Ärztin bzw. einen Arzt vollständig manuell an.")
+            )
+        } else {
+            ForEach(doctorHubController.doctors.prefix(horizontalSizeClass == .compact ? 5 : 6)) { doctor in
+                NavigationLink {
+                    DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
+                } label: {
+                    DoctorSummaryRow(doctor: doctor)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     private func reload() {
         overview = (try? LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
         doctorHubController.reload()
+    }
+}
+
+struct AdaptiveDashboardCard<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title)
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .brandCard()
+    }
+}
+
+private struct QuickActionTile: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    init(_ title: String, systemImage: String, action: @escaping () -> Void) {
+        self.title = title
+        self.systemImage = systemImage
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+                .padding(.horizontal, 14)
+                .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .hoverEffect(.highlight)
     }
 }
 

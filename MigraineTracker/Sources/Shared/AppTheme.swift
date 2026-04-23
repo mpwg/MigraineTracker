@@ -4,6 +4,9 @@ enum AppTheme {
     static let groupedHorizontalInset: CGFloat = 20
     static let groupedTopInset: CGFloat = 12
     static let groupedRowInsets = EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
+    static let wideContentMaxWidth: CGFloat = 1180
+    static let readableContentMaxWidth: CGFloat = 760
+    static let dashboardSpacing: CGFloat = 20
 
     static let ink = Color(red: 0.04, green: 0.30, blue: 0.38)
     static let ocean = Color(red: 0.08, green: 0.56, blue: 0.62)
@@ -57,11 +60,27 @@ private struct BrandScreenModifier: ViewModifier {
 }
 
 private struct BrandGroupedScreenModifier: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     func body(content: Content) -> some View {
         content
             .brandScreen()
-            .contentMargins(.horizontal, AppTheme.groupedHorizontalInset, for: .scrollContent)
+            .contentMargins(.horizontal, horizontalInset, for: .scrollContent)
             .contentMargins(.top, AppTheme.groupedTopInset, for: .scrollContent)
+    }
+
+    private var horizontalInset: CGFloat {
+        horizontalSizeClass == .compact ? AppTheme.groupedHorizontalInset : 36
+    }
+}
+
+private struct WideContentModifier: ViewModifier {
+    let maxWidth: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .frame(maxWidth: maxWidth, alignment: .center)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 
@@ -85,6 +104,10 @@ extension View {
 
     func brandGroupedScreen() -> some View {
         modifier(BrandGroupedScreenModifier())
+    }
+
+    func wideContent(maxWidth: CGFloat = AppTheme.wideContentMaxWidth) -> some View {
+        modifier(WideContentModifier(maxWidth: maxWidth))
     }
 
     func brandGroupedRow() -> some View {
