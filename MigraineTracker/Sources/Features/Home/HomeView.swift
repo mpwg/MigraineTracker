@@ -42,16 +42,16 @@ struct HomeView: View {
             }
         }
         .task {
-            reload()
+            reloadAll()
         }
         .refreshable {
-            reload()
+            reloadAll()
         }
         .fullScreenCover(isPresented: $isPresentingEpisodeEditor) {
             NavigationStack {
                 EpisodeEditorView(appContainer: appContainer) {
                     isPresentingEpisodeEditor = false
-                    reload()
+                    reloadOverview()
                 }
             }
         }
@@ -59,7 +59,7 @@ struct HomeView: View {
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: .oegkDirectory) { _ in
                     isPresentingDoctorAddFlow = false
-                    reload()
+                    reloadDoctorData()
                 }
             }
         }
@@ -67,7 +67,7 @@ struct HomeView: View {
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: .manual) { _ in
                     isPresentingManualDoctorAddFlow = false
-                    reload()
+                    reloadDoctorData()
                 }
             }
         }
@@ -75,7 +75,7 @@ struct HomeView: View {
             NavigationStack {
                 AppointmentCreationFlowView(appContainer: appContainer) {
                     isPresentingAppointmentFlow = false
-                    reload()
+                    reloadAppointments()
                 }
             }
         }
@@ -159,7 +159,7 @@ struct HomeView: View {
         }
         .brandScreen()
         .refreshable {
-            reload()
+            reloadAll()
         }
     }
 
@@ -205,22 +205,20 @@ struct HomeView: View {
 
     @ViewBuilder
     private var appointmentContent: some View {
-        if doctorHubController.upcomingAppointments.isEmpty {
+        if doctorHubController.upcomingAppointmentItems.isEmpty {
             ContentUnavailableView(
                 "Keine kommenden Termine",
                 systemImage: "calendar.badge.clock",
                 description: Text("Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow.")
             )
         } else {
-            ForEach(doctorHubController.upcomingAppointments) { appointment in
-                if let doctor = doctorHubController.doctors.first(where: { $0.id == appointment.doctorID }) {
-                    NavigationLink {
-                        DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
-                    } label: {
-                        AppointmentSummaryRow(appointment: appointment, doctor: doctor)
-                    }
-                    .buttonStyle(.plain)
+            ForEach(doctorHubController.upcomingAppointmentItems) { item in
+                NavigationLink {
+                    DoctorDetailView(appContainer: appContainer, doctorID: item.doctor.id)
+                } label: {
+                    AppointmentSummaryRow(appointment: item.appointment, doctor: item.doctor)
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -245,9 +243,32 @@ struct HomeView: View {
         }
     }
 
-    private func reload() {
+    private func reloadAll() {
+        reloadOverview()
+        reloadDoctorData()
+    }
+
+    private func reloadOverview() {
         overview = (try? LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
-        doctorHubController.reload()
+    }
+
+    private func reloadDoctorData() {
+        do {
+            try doctorHubController.reloadDoctors()
+            try doctorHubController.reloadAppointments()
+            doctorHubController.errorMessage = nil
+        } catch {
+            doctorHubController.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
+        }
+    }
+
+    private func reloadAppointments() {
+        do {
+            try doctorHubController.reloadAppointments()
+            doctorHubController.errorMessage = nil
+        } catch {
+            doctorHubController.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
+        }
     }
 }
 

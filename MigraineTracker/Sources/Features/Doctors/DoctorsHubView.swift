@@ -53,16 +53,16 @@ struct DoctorsHubView: View {
             }
         }
         .task {
-            reload()
+            reloadAll()
         }
         .refreshable {
-            reload()
+            reloadAll()
         }
         .sheet(item: $doctorAddMode) { mode in
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: mode) { doctorID in
                     doctorAddMode = nil
-                    reload(selecting: doctorID)
+                    reloadDoctors(selecting: doctorID)
                 }
             }
         }
@@ -70,7 +70,7 @@ struct DoctorsHubView: View {
             NavigationStack {
                 AppointmentCreationFlowView(appContainer: appContainer) {
                     isPresentingAppointmentFlow = false
-                    reload()
+                    reloadAppointments()
                 }
             }
         }
@@ -157,22 +157,20 @@ struct DoctorsHubView: View {
 
     @ViewBuilder
     private var appointmentRows: some View {
-        if controller.upcomingAppointments.isEmpty {
+        if controller.upcomingAppointmentItems.isEmpty {
             ContentUnavailableView(
                 "Keine kommenden Termine",
                 systemImage: "calendar.badge.clock",
                 description: Text("Lege einen Termin an, sobald du eine Ärztin oder einen Arzt erfasst hast.")
             )
         } else {
-            ForEach(controller.upcomingAppointments) { appointment in
-                if let doctor = controller.doctors.first(where: { $0.id == appointment.doctorID }) {
-                    NavigationLink {
-                        DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
-                    } label: {
-                        AppointmentSummaryRow(appointment: appointment, doctor: doctor)
-                    }
-                    .buttonStyle(.plain)
+            ForEach(controller.upcomingAppointmentItems) { item in
+                NavigationLink {
+                    DoctorDetailView(appContainer: appContainer, doctorID: item.doctor.id)
+                } label: {
+                    AppointmentSummaryRow(appointment: item.appointment, doctor: item.doctor)
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -216,12 +214,36 @@ struct DoctorsHubView: View {
         }
     }
 
-    private func reload(selecting doctorID: UUID? = nil) {
-        controller.reload()
+    private func reloadAll() {
+        controller.reloadAll()
+        updateSelection()
+    }
 
+    private func reloadDoctors(selecting doctorID: UUID? = nil) {
+        do {
+            try controller.reloadDoctors()
+            controller.errorMessage = nil
+        } catch {
+            controller.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
+        }
         if let doctorID {
             selectedDoctorID = doctorID
-        } else if selectedDoctorID == nil {
+        }
+        updateSelection()
+    }
+
+    private func reloadAppointments() {
+        do {
+            try controller.reloadAppointments()
+            controller.errorMessage = nil
+        } catch {
+            controller.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
+        }
+        updateSelection()
+    }
+
+    private func updateSelection() {
+        if selectedDoctorID == nil {
             selectedDoctorID = controller.doctors.first?.id
         } else if !controller.doctors.contains(where: { $0.id == selectedDoctorID }) {
             selectedDoctorID = controller.doctors.first?.id
@@ -557,7 +579,7 @@ private struct DoctorDirectoryPickerView: View {
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
                     .onChange(of: controller.searchText) {
-                        controller.refreshSearch()
+                        controller.scheduleSearchRefresh()
                     }
 
                 Text("Quelle: \(controller.sourceAttribution.label)")

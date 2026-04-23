@@ -91,7 +91,7 @@ final class HistoryController {
         self.loadDayEpisodesUseCase = LoadDayEpisodesUseCase(repository: repository)
         self.deleteEpisodeUseCase = DeleteEpisodeUseCase(repository: repository)
         self.monthData = HistoryMonthData(month: calendar.startOfMonth(for: initialDay), episodesByDay: [:])
-        reload()
+        reloadAll()
     }
 
     var episodesByDay: [Date: [EpisodeRecord]] {
@@ -107,33 +107,62 @@ final class HistoryController {
         )
     }
 
-    func reload() {
+    func reloadAll() {
         do {
-            monthData = try loadHistoryMonthUseCase.execute(month: displayedMonth)
-            selectedDayEpisodes = try loadDayEpisodesUseCase.execute(day: selectedDay)
+            try reloadMonthData()
+            try reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
         }
     }
 
+    func reloadMonthData() throws {
+        monthData = try loadHistoryMonthUseCase.execute(month: displayedMonth)
+    }
+
+    func reloadSelectedDayEpisodes() throws {
+        selectedDayEpisodes = try loadDayEpisodesUseCase.execute(day: selectedDay)
+        syncSelectedDayIntoMonthData()
+    }
+
     func goToPreviousMonth() {
         displayedMonth = Calendar.current.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
-        reload()
+        do {
+            try reloadMonthData()
+            errorMessage = nil
+        } catch {
+            errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
     }
 
     func goToNextMonth() {
         displayedMonth = Calendar.current.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
-        reload()
+        do {
+            try reloadMonthData()
+            errorMessage = nil
+        } catch {
+            errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
     }
 
     func selectDay(_ day: Date) {
         selectedDay = day
         let month = Calendar.current.startOfMonth(for: day)
-        if !Calendar.current.isDate(month, equalTo: displayedMonth, toGranularity: .month) {
+        let didChangeMonth = !Calendar.current.isDate(month, equalTo: displayedMonth, toGranularity: .month)
+        if didChangeMonth {
             displayedMonth = month
         }
-        reload()
+
+        do {
+            if didChangeMonth {
+                try reloadMonthData()
+            }
+            try reloadSelectedDayEpisodes()
+            errorMessage = nil
+        } catch {
+            errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
     }
 
     func deletePendingEpisode() {
@@ -144,9 +173,20 @@ final class HistoryController {
         do {
             try deleteEpisodeUseCase.execute(id: pendingDeletionID)
             self.pendingDeletionID = nil
-            reload()
+            try reloadSelectedDayEpisodes()
+            errorMessage = nil
         } catch {
             errorMessage = "Löschen fehlgeschlagen."
+        }
+    }
+
+    func handleSavedEpisode() {
+        do {
+            try reloadMonthData()
+            try reloadSelectedDayEpisodes()
+            errorMessage = nil
+        } catch {
+            errorMessage = "Tagebuch konnte nicht geladen werden."
         }
     }
 
@@ -160,5 +200,21 @@ final class HistoryController {
         }
 
         return calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
+    }
+
+    private func syncSelectedDayIntoMonthData() {
+        let selectedMonth = Calendar.current.startOfMonth(for: selectedDay)
+        guard Calendar.current.isDate(selectedMonth, equalTo: displayedMonth, toGranularity: .month) else {
+            return
+        }
+
+        var updated = monthData.episodesByDay
+        let day = Calendar.current.startOfDay(for: selectedDay)
+        if selectedDayEpisodes.isEmpty {
+            updated.removeValue(forKey: day)
+        } else {
+            updated[day] = selectedDayEpisodes
+        }
+        monthData = HistoryMonthData(month: monthData.month, episodesByDay: updated)
     }
 }

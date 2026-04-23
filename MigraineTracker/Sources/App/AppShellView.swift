@@ -51,6 +51,10 @@ struct AppShellView: View {
         .toolbarBackground(AppTheme.ink.opacity(0.96), for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else {
+                return
+            }
             await appContainer.weatherBackfillService.runIfNeeded()
         }
     }
