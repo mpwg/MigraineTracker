@@ -5,7 +5,7 @@
 Dieses Projekt verwendet `GitHub Actions` als einzigen CI/CD-Kanal:
 
 - `GitHub Actions` ist der CI-Kanal für Builds, Unit-Tests und PR-Feedback
-- `GitHub Actions` ist auch der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte `App Store`-Submissions über `fastlane`
+- `GitHub Actions` ist auch der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte App-Store-Uploads über `fastlane`
 
 Es gibt genau drei relevante Workflows:
 
@@ -94,11 +94,12 @@ Dieser Workflow ist ausschließlich für produktive Releases zuständig.
 - Aktionen:
   - Validierung des Tags `vX.Y.Z`
   - Abgleich mit `MARKETING_VERSION`
+  - App-Store-Screenshots erzeugen und nach App Store Connect hochladen
   - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
   - `match(type: "appstore")`
   - Buildnummer wie im TestFlight-Lauf bestimmen
   - `build_app(export_method: "app-store")`
-  - direkte Submission an den `App Store` über `deliver`
+  - Upload des Builds nach App Store Connect über `deliver`
 
 Konfiguration:
 
@@ -113,7 +114,7 @@ Konfiguration:
 Das Repo enthält die Release-Logik jetzt vollständig in `fastlane/Fastfile`.
 
 - Lane `ios testflight` übernimmt Secrets, Signierung, Buildnummer, Build und Upload nach `TestFlight`
-- Lane `ios app_store` validiert zusätzlich den Tag und submitted die IPA mit `deliver`
+- Lane `ios release_app_store` validiert zusätzlich den Tag, erzeugt Screenshots, lädt Screenshots und IPA mit `deliver` hoch und reicht die Version nicht automatisch ein
 - `match` nutzt standardmäßig ein separates Git-Repository; auf CI läuft es über `setup_ci` im `readonly`-Modus
 
 ## Release-Ablauf
@@ -133,8 +134,10 @@ Das Repo enthält die Release-Logik jetzt vollständig in `fastlane/Fastfile`.
 3. Tag auf `origin` pushen
 4. `GitHub Actions` startet `App Store Release`
 5. der Workflow validiert `MARKETING_VERSION = X.Y.Z`
-6. `fastlane` synchronisiert Distribution-Signing mit `match`
-7. `fastlane deliver` lädt den Build hoch und submitted die Version
+6. `fastlane` erzeugt die App-Store-Screenshots und lädt sie hoch
+7. `fastlane` synchronisiert Distribution-Signing mit `match`
+8. `fastlane deliver` lädt den Build hoch
+9. App Store Connect öffnen, Build und Metadaten prüfen und manuell auf `Submit` klicken
 
 Beispiel:
 
@@ -151,4 +154,4 @@ Die GitHub-Actions-Einrichtung gilt als korrekt, wenn:
 - ein Push auf `main` den Workflow `TestFlight Release` startet
 - der erfolgreiche `main`-Lauf einen `TestFlight`-Build erzeugt
 - ein Tag wie `v1.2.0` ausschließlich den Workflow `App Store Release` startet
-- der Tag-Workflow ein veröffentlichbares Archiv und eine App-Store-Submission erzeugt
+- der Tag-Workflow Screenshots und ein veröffentlichbares Archiv in App Store Connect hochlädt, aber die Version nicht automatisch einreicht

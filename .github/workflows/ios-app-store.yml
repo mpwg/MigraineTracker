@@ -27,7 +27,7 @@ jobs:
 
           printf 'Geänderte Dateien:\n%s\n' "${changed_files}"
 
-          if printf '%s\n' "${changed_files}" | grep -Eq '^(MigraineTracker/|MigraineTracker\.xcodeproj/|fastlane/|Gemfile$|Gemfile\.lock$|\.ruby-version$|\.github/workflows/ios-app-store\.yml$)'; then
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(MigraineTracker/|MigraineTrackerUITests/|MigraineTracker\.xcodeproj/|fastlane/|Gemfile$|Gemfile\.lock$|\.ruby-version$|\.github/workflows/ios-app-store\.yml$)'; then
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
@@ -35,11 +35,11 @@ jobs:
           fi
         shell: bash
 
-  submit-to-app-store:
+  upload-app-store-release:
     needs: detect-release-changes
     if: needs.detect-release-changes.outputs.should_deploy == 'true'
     runs-on: macos-26
-    timeout-minutes: 120
+    timeout-minutes: 180
     permissions:
       contents: read
     env:
@@ -53,6 +53,10 @@ jobs:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      SCREENSHOT_IOS_VERSION: '26.4'
+      SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT: '10'
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      CI: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -101,5 +105,5 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
-      - name: Release mit fastlane in den App Store submitten
+      - name: App-Store-Release mit fastlane vorbereiten
         run: bundle exec fastlane ios release_app_store

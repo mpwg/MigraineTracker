@@ -45,7 +45,7 @@ Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch
 [bundle exec] fastlane ios release_app_store
 ```
 
-Baut eine Distribution-IPA mit match und submitted sie für den App Store
+Erzeugt Screenshots, baut eine Distribution-IPA mit match und lädt sie für die manuelle App-Store-Einreichung hoch
 
 ----
 

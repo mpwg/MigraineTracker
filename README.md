@@ -85,12 +85,14 @@ CI:
 - Workflow `iOS CI` bei `pull_request` und `push` auf `main`
 - Build und Tests für das Shared Scheme `MigraineTracker`
 - Upload des `xcresult` als Artifact
+- keine automatische Screenshot-Erstellung bei Pull Requests
 
 CD:
 
 - Workflow `TestFlight Release` für Builds von `main`
 - Workflow `App Store Release` für Tags im Format `vX.Y.Z`
-- `fastlane match`, `build_app`, `pilot` und `deliver` für Signing und Distribution
+- App-Store-Screenshots werden erst im App-Store-Release erzeugt und hochgeladen
+- `fastlane match`, `build_app`, `pilot` und `deliver` für Signing und Distribution; die App-Store-Einreichung bleibt manuell in App Store Connect
 
 Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
 

@@ -19,7 +19,8 @@ Automatisierte Gates im Projekt:
 4. Ausführung von `MigraineTrackerTests`
 5. Upload des `xcresult` für nachvollziehbare Fehlerdiagnose in GitHub
 6. Workflow `TestFlight Release` bei jedem `push` auf `main` für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
-7. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Distribution-Signing via `match` und Submission via `deliver`
+7. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Screenshot-Erstellung, Distribution-Signing via `match` und Upload via `deliver`
+8. Die finale Einreichung erfolgt manuell in App Store Connect über `Submit`
 
 Lokale Vorab-Prüfung vor einem Tag-Release:
 
