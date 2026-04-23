@@ -111,7 +111,7 @@ struct EpisodeEditorView: View {
             } header: {
                 Text("Wetter")
             } footer: {
-                Text("Das Wetter wird mit deinem ungefähren Standort über Open-Meteo auf Basis von DWD ICON geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
+                Text("Das Wetter wird mit deinem ungefähren Standort über Apple Weather geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
             }
 
             Section("Medikamente") {
@@ -365,9 +365,7 @@ private struct WeatherStatusContent: View {
                 if !weather.source.isEmpty {
                     detailRow("Quelle", weather.source)
                 }
-                Text(WeatherAttribution.sourceDescription)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                WeatherAttributionView()
             }
             .padding(.vertical, 4)
         case .unavailable(let message):

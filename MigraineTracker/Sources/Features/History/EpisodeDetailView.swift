@@ -131,6 +131,8 @@ struct EpisodeDetailView: View {
                             detailRow("Quelle", weatherSnapshot.source)
                         }
                         detailRow("Erfasst", weatherSnapshot.recordedAt.formatted(date: .abbreviated, time: .shortened))
+                        WeatherAttributionView()
+                            .padding(.vertical, 4)
                     }
                 }
 

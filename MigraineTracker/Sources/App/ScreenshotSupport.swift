@@ -220,7 +220,7 @@ private enum ScreenshotSeedFactory {
                 pressure: 1007,
                 precipitation: 0.7,
                 weatherCode: 61,
-                source: "Open-Meteo Demo"
+                source: "Apple Weather Demo"
             ),
             episode: primaryEpisode
         )
@@ -505,7 +505,7 @@ private struct ScreenshotWeatherService: WeatherService {
             pressure: 1007,
             precipitation: 0.7,
             weatherCode: 61,
-            source: "Open-Meteo Demo"
+            source: "Apple Weather Demo"
         )
     }
 }

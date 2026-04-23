@@ -1,7 +1,7 @@
 import CoreLocation
 import Foundation
-import OpenMeteoSdk
 import SwiftData
+import WeatherKit
 
 struct WeatherSnapshotData: Equatable, Sendable {
     let recordedAt: Date
@@ -48,11 +48,41 @@ struct WeatherSnapshotData: Equatable, Sendable {
 }
 
 enum WeatherAttribution {
-    static let providerName = "Open-Meteo"
-    static let providerURL = URL(string: "https://open-meteo.com/")!
-    static let licenceName = "CC BY 4.0"
-    static let licenceURL = URL(string: "https://creativecommons.org/licenses/by/4.0/")!
-    static let sourceDescription = "Wetterdaten von Open-Meteo, basierend auf DWD ICON."
+    static let providerName = "Apple Weather"
+    static let providerURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html")!
+    static let sourceDescription = "Wetterdaten von Apple Weather über WeatherKit."
+    static let modifiedSourceDescription = "Wetterdaten von Apple Weather über WeatherKit. Die Werte werden als Snapshot für den Episodenzeitpunkt gespeichert."
+
+    static let fallback = WeatherAttributionData(
+        serviceName: providerName,
+        legalPageURL: providerURL,
+        combinedMarkDarkURL: nil,
+        combinedMarkLightURL: nil,
+        legalAttributionText: nil
+    )
+
+    static func load() async -> WeatherAttributionData {
+        do {
+            let attribution = try await WeatherKit.WeatherService.shared.attribution
+            return WeatherAttributionData(
+                serviceName: attribution.serviceName,
+                legalPageURL: attribution.legalPageURL,
+                combinedMarkDarkURL: attribution.combinedMarkDarkURL,
+                combinedMarkLightURL: attribution.combinedMarkLightURL,
+                legalAttributionText: attribution.legalAttributionText
+            )
+        } catch {
+            return fallback
+        }
+    }
+}
+
+struct WeatherAttributionData: Equatable, Sendable {
+    let serviceName: String
+    let legalPageURL: URL
+    let combinedMarkDarkURL: URL?
+    let combinedMarkLightURL: URL?
+    let legalAttributionText: String?
 }
 
 protocol WeatherService {
@@ -84,6 +114,7 @@ enum LocationServiceError: LocalizedError {
 enum WeatherServiceError: LocalizedError {
     case noHourlyData
     case noMatchingHour
+    case weatherKitAuthentication
 
     var errorDescription: String? {
         switch self {
@@ -91,6 +122,8 @@ enum WeatherServiceError: LocalizedError {
             "Die Wetterquelle hat keine stündlichen Daten geliefert."
         case .noMatchingHour:
             "Für den Episodenzeitpunkt wurde kein passender Wetterwert gefunden."
+        case .weatherKitAuthentication:
+            "WeatherKit konnte nicht authentifizieren. Prüfe, ob WeatherKit im Apple Developer Portal für diese App-ID aktiviert ist und ob das Provisioning Profile aktualisiert wurde."
         }
     }
 }
@@ -173,93 +206,139 @@ final class SystemLocationService: NSObject, LocationService, CLLocationManagerD
     }
 }
 
-struct OpenMeteoDwdWeatherService: WeatherService {
+struct AppleWeatherKitWeatherService: WeatherService {
+    private let service = WeatherKit.WeatherService.shared
+    private let earliestHourlyDate = Date(timeIntervalSince1970: 1_627_776_000)
+
     func fetchWeather(for date: Date, location: CLLocation) async throws -> WeatherSnapshotData? {
         if date > .now {
             throw EpisodeSaveError.futureDate
         }
 
-        let endpoint = endpointURL(for: date)
-        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)
-        components?.queryItems = [
-            URLQueryItem(name: "latitude", value: String(location.coordinate.latitude)),
-            URLQueryItem(name: "longitude", value: String(location.coordinate.longitude)),
-            URLQueryItem(name: "hourly", value: "temperature_2m,relative_humidity_2m,surface_pressure,precipitation,weather_code"),
-            URLQueryItem(name: "timezone", value: "auto"),
-            URLQueryItem(name: "format", value: "flatbuffers"),
-            URLQueryItem(name: "start_date", value: isoDayString(for: date)),
-            URLQueryItem(name: "end_date", value: isoDayString(for: date)),
-            URLQueryItem(name: "past_days", value: "0"),
-            URLQueryItem(name: "models", value: isHistorical(date) ? "icon_seamless" : nil),
-        ].compactMap { item in
-            guard let value = item.value else {
-                return nil
-            }
-            return URLQueryItem(name: item.name, value: value)
-        }
-
-        guard let url = components?.url else {
+        guard date >= earliestHourlyDate else {
             return nil
         }
 
-        let responses = try await WeatherApiResponse.fetch(url: url)
-        guard let response = responses.first, let hourly = response.hourly else {
-            throw WeatherServiceError.noHourlyData
+        let interval = hourlyInterval(containing: date)
+        let hourlyForecast: Forecast<HourWeather>
+        do {
+            hourlyForecast = try await service.weather(
+                for: location,
+                including: .hourly(startDate: interval.start, endDate: interval.end)
+            )
+        } catch {
+            if isWeatherKitAuthenticationError(error) {
+                throw WeatherServiceError.weatherKitAuthentication
+            }
+            throw error
         }
 
-        let timestamps = hourly.getDateTime(offset: response.utcOffsetSeconds)
-        guard let matchedIndex = timestamps.enumerated().min(by: {
-            abs($0.element.timeIntervalSince(date)) < abs($1.element.timeIntervalSince(date))
-        })?.offset else {
+        guard let matchedHour = hourlyForecast.forecast.min(by: {
+            abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
+        }) else {
             throw WeatherServiceError.noMatchingHour
         }
 
-        let temperature = value(at: matchedIndex, from: hourly, variableIndex: 0)
-        let humidity = value(at: matchedIndex, from: hourly, variableIndex: 1)
-        let pressure = value(at: matchedIndex, from: hourly, variableIndex: 2)
-        let precipitation = value(at: matchedIndex, from: hourly, variableIndex: 3)
-        let weatherCodeValue = value(at: matchedIndex, from: hourly, variableIndex: 4)
-        let weatherCode = weatherCodeValue.map { Int($0.rounded()) }
-
         return WeatherSnapshotData(
-            recordedAt: timestamps[matchedIndex],
-            condition: WeatherCodeMapper.description(for: weatherCode),
-            temperature: temperature,
-            humidity: humidity,
-            pressure: pressure,
-            precipitation: precipitation,
-            weatherCode: weatherCode,
-            source: isHistorical(date) ? "Open-Meteo DWD ICON Archiv" : "Open-Meteo DWD ICON"
+            recordedAt: matchedHour.date,
+            condition: WeatherConditionMapper.description(for: matchedHour.condition),
+            temperature: matchedHour.temperature.converted(to: .celsius).value,
+            humidity: matchedHour.humidity * 100,
+            pressure: matchedHour.pressure.converted(to: .hectopascals).value,
+            precipitation: matchedHour.precipitationAmount.converted(to: .millimeters).value,
+            weatherCode: nil,
+            source: WeatherAttribution.providerName
         )
     }
 
-    private func endpointURL(for date: Date) -> URL {
-        if isHistorical(date) {
-            return URL(string: "https://historical-forecast-api.open-meteo.com/v1/forecast")!
+    private func hourlyInterval(containing date: Date) -> DateInterval {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date.addingTimeInterval(86_400)
+        return DateInterval(start: startOfDay, end: endOfDay)
+    }
+
+    private func isWeatherKitAuthenticationError(_ error: any Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.domain.contains("WeatherDaemon.WDSJWTAuthenticatorServiceListener.Errors")
+            || nsError.localizedDescription.contains("WDSJWTAuthenticator")
+    }
+}
+
+enum WeatherConditionMapper {
+    static func description(for condition: WeatherCondition) -> String {
+        switch condition {
+        case .blizzard:
+            return "Schneesturm"
+        case .blowingDust:
+            return "Staubwind"
+        case .blowingSnow:
+            return "Schneetreiben"
+        case .breezy:
+            return "Windig"
+        case .clear:
+            return "Klar"
+        case .cloudy:
+            return "Bedeckt"
+        case .drizzle:
+            return "Nieselregen"
+        case .flurries:
+            return "Leichter Schneefall"
+        case .foggy:
+            return "Nebelig"
+        case .freezingDrizzle:
+            return "Gefrierender Nieselregen"
+        case .freezingRain:
+            return "Gefrierender Regen"
+        case .frigid:
+            return "Frostig"
+        case .hail:
+            return "Hagel"
+        case .haze:
+            return "Dunstig"
+        case .heavyRain:
+            return "Starker Regen"
+        case .heavySnow:
+            return "Starker Schneefall"
+        case .hot:
+            return "Heiß"
+        case .hurricane:
+            return "Orkan"
+        case .isolatedThunderstorms:
+            return "Vereinzelte Gewitter"
+        case .mostlyClear:
+            return "Überwiegend klar"
+        case .mostlyCloudy:
+            return "Überwiegend bewölkt"
+        case .partlyCloudy:
+            return "Teilweise bewölkt"
+        case .rain:
+            return "Regen"
+        case .scatteredThunderstorms:
+            return "Verstreute Gewitter"
+        case .sleet:
+            return "Schneeregen"
+        case .smoky:
+            return "Rauchig"
+        case .snow:
+            return "Schnee"
+        case .strongStorms:
+            return "Schwere Gewitter"
+        case .sunFlurries:
+            return "Schneeschauer mit Sonne"
+        case .sunShowers:
+            return "Regenschauer mit Sonne"
+        case .thunderstorms:
+            return "Gewitter"
+        case .tropicalStorm:
+            return "Tropischer Sturm"
+        case .windy:
+            return "Windig"
+        case .wintryMix:
+            return "Winterlicher Niederschlag"
+        @unknown default:
+            return "Unbekannt"
         }
-
-        return URL(string: "https://api.open-meteo.com/v1/dwd-icon")!
-    }
-
-    private func isHistorical(_ date: Date) -> Bool {
-        !Calendar.current.isDate(date, inSameDayAs: .now)
-    }
-
-    private func isoDayString(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
-
-    private func value(at offset: Int, from hourly: openmeteo_sdk_VariablesWithTime, variableIndex: Int) -> Double? {
-        guard let values = hourly.variables(at: Int32(variableIndex))?.values, values.indices.contains(offset) else {
-            return nil
-        }
-
-        return Double(values[offset])
     }
 }
 
@@ -270,40 +349,24 @@ enum WeatherCodeMapper {
         }
 
         switch code {
-        case 0:
-            return "Klar"
-        case 1:
-            return "Überwiegend klar"
-        case 2:
-            return "Teilweise bewölkt"
-        case 3:
-            return "Bedeckt"
-        case 45, 48:
-            return "Nebelig"
-        case 51, 53, 55:
-            return "Nieselregen"
-        case 56, 57:
-            return "Gefrierender Nieselregen"
-        case 61, 63, 65:
-            return "Regen"
-        case 66, 67:
-            return "Gefrierender Regen"
-        case 71, 73, 75, 77:
-            return "Schnee"
-        case 80, 81, 82:
-            return "Regenschauer"
-        case 85, 86:
-            return "Schneeschauer"
-        case 95:
-            return "Gewitter"
-        case 96, 99:
-            return "Gewitter mit Hagel"
-        default:
-            return "Unbekannt"
+        case 0: return "Klar"
+        case 1: return "Überwiegend klar"
+        case 2: return "Teilweise bewölkt"
+        case 3: return "Bedeckt"
+        case 45, 48: return "Nebelig"
+        case 51, 53, 55: return "Nieselregen"
+        case 56, 57: return "Gefrierender Nieselregen"
+        case 61, 63, 65: return "Regen"
+        case 66, 67: return "Gefrierender Regen"
+        case 71, 73, 75, 77: return "Schnee"
+        case 80, 81, 82: return "Regenschauer"
+        case 85, 86: return "Schneeschauer"
+        case 95: return "Gewitter"
+        case 96, 99: return "Gewitter mit Hagel"
+        default: return "Unbekannt"
         }
     }
 }
-
 @MainActor
 final class WeatherBackfillService {
     private let modelContainer: ModelContainer

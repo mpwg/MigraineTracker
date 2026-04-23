@@ -20,7 +20,7 @@ Diese Entscheidungen gelten für die erste App-Store-Submission als fest:
 - Persistenz: `SwiftData`
 - Plattform: `iPhone only`
 - Architekturprinzip: `lokal-first`
-- Wetterquelle: `Open-Meteo`
+- Wetterquelle: `Apple Weather` über `WeatherKit`
 - Export: PDF lokal auf dem Gerät erzeugen
 
 Nicht Teil dieser Architekturversion sind:
@@ -104,10 +104,10 @@ Beim Anlegen einer Episode:
 - Luftfeuchtigkeit, sofern verfügbar
 - Luftdruck, sofern verfügbar
 
-Quelle im MVP:
+Quelle:
 
-- bevorzugt `Open-Meteo` oder vergleichbare freie Quelle
-- `WeatherKit` später als Ausbauoption
+- `Apple Weather` über `WeatherKit`
+- Wetter wird als Snapshot gespeichert und bleibt optional
 
 ### 4. Tagebuch und Auswertung
 
@@ -204,7 +204,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
    - zuständig für Laden, Schreiben, Filtern und Sortieren lokaler Daten
 
 4. Integrationen
-   - Wetterdienst über `Open-Meteo`
+   - Wetterdienst über `WeatherKit`
    - PDF-Erzeugung und systemweites Teilen
    - keine weitere externe Abhängigkeit in v1
 
@@ -232,7 +232,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 ### Integrationsansatz
 
 - Wetterabruf
-  - über `Open-Meteo`
+  - über `WeatherKit`
   - bei fehlender Verbindung bleibt die Episode trotzdem speicherbar
   - Wetter wird als Snapshot zur Episode abgelegt, nicht live nachgeladen
 
