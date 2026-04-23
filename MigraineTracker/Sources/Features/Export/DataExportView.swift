@@ -82,7 +82,7 @@ struct DataExportView: View {
                 }
             } else {
                 Section("Vorschau") {
-                    ForEach(controller.summary.records.prefix(5)) { record in
+                    ForEach(controller.summary.records.prefix(8)) { record in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(record.startedAt, style: .date)
                                 .font(.headline)

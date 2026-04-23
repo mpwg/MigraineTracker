@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HistoryView: View {
     let appContainer: AppContainer
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var controller: HistoryController
 
     init(appContainer: AppContainer) {
@@ -11,79 +12,33 @@ struct HistoryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                contentSection(
-                    title: "Kalender",
-                    footer: "Wähle einen Tag aus und füge direkt einen neuen Eintrag hinzu oder öffne vorhandene Dokumentationen."
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        MonthHeader(
-                            month: controller.displayedMonth,
-                            onPrevious: controller.goToPreviousMonth,
-                            onNext: controller.goToNextMonth
-                        )
-
-                        MonthGrid(
-                            month: controller.displayedMonth,
-                            selectedDay: Binding(
-                                get: { controller.selectedDay },
-                                set: { controller.selectDay($0) }
-                            ),
-                            episodesByDay: controller.episodesByDay
-                        )
-                    }
-                }
-
-                Button {
-                    controller.isPresentingNewEpisode = true
-                } label: {
-                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .accessibilityHint("Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag.")
-
-                contentSection(title: "Ausgewählter Tag") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        daySummary
-
-                        if controller.selectedDayEpisodes.isEmpty {
-                            ContentUnavailableView(
-                                "Noch keine Einträge an diesem Tag",
-                                systemImage: "calendar",
-                                description: Text("Für \(controller.selectedDay.formatted(date: .complete, time: .omitted)) ist noch nichts dokumentiert.")
-                            )
-                        } else {
-                            ForEach(controller.selectedDayEpisodes) { episode in
-                                episodeLink(for: episode)
-                            }
-                        }
-                    }
-                }
-
-                contentSection(title: "Export") {
-                    NavigationLink {
-                        DataExportView(appContainer: appContainer)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Label("Daten exportieren", systemImage: "square.and.arrow.up")
-                            Text("Erstelle einen PDF-Bericht oder ein JSON5-Backup für einen frei wählbaren Zeitraum.")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
-                }
+            if horizontalSizeClass == .compact {
+                compactContent
+            } else {
+                regularContent
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 20)
         }
         .background(AppTheme.appBackground.ignoresSafeArea())
         .tint(AppTheme.ocean)
         .navigationTitle("Tagebuch")
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    DataExportView(appContainer: appContainer)
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    controller.isPresentingNewEpisode = true
+                } label: {
+                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
+                }
+                .keyboardShortcut("n", modifiers: .command)
+            }
+
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     controller.isPresentingSettings = true
@@ -147,6 +102,82 @@ struct HistoryView: View {
             }
         } message: { episode in
             Text("\(episode.startedAt.formatted(date: .abbreviated, time: .shortened)) wird in den Papierkorb verschoben.")
+        }
+    }
+
+    private var compactContent: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            calendarSection
+
+            Button {
+                controller.isPresentingNewEpisode = true
+            } label: {
+                Label("Neuer Eintrag", systemImage: "plus.circle.fill")
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .accessibilityHint("Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag.")
+
+            selectedDaySection
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 20)
+    }
+
+    private var regularContent: some View {
+        HStack(alignment: .top, spacing: AppTheme.dashboardSpacing) {
+            calendarSection
+                .frame(minWidth: 420, maxWidth: 560, alignment: .top)
+
+            selectedDaySection
+                .frame(maxWidth: .infinity, alignment: .top)
+        }
+        .padding(24)
+        .wideContent()
+    }
+
+    private var calendarSection: some View {
+        contentSection(
+            title: "Kalender",
+            footer: "Wähle einen Tag aus und füge direkt einen neuen Eintrag hinzu oder öffne vorhandene Dokumentationen."
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                MonthHeader(
+                    month: controller.displayedMonth,
+                    onPrevious: controller.goToPreviousMonth,
+                    onNext: controller.goToNextMonth
+                )
+
+                MonthGrid(
+                    month: controller.displayedMonth,
+                    selectedDay: Binding(
+                        get: { controller.selectedDay },
+                        set: { controller.selectDay($0) }
+                    ),
+                    episodesByDay: controller.episodesByDay
+                )
+            }
+        }
+    }
+
+    private var selectedDaySection: some View {
+        contentSection(title: "Ausgewählter Tag") {
+            VStack(alignment: .leading, spacing: 12) {
+                daySummary
+
+                if controller.selectedDayEpisodes.isEmpty {
+                    ContentUnavailableView(
+                        "Noch keine Einträge an diesem Tag",
+                        systemImage: "calendar",
+                        description: Text("Für \(controller.selectedDay.formatted(date: .complete, time: .omitted)) ist noch nichts dokumentiert.")
+                    )
+                } else {
+                    ForEach(controller.selectedDayEpisodes) { episode in
+                        episodeLink(for: episode)
+                    }
+                }
+            }
         }
     }
 

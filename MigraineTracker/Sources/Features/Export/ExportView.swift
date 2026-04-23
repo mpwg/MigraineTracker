@@ -3,10 +3,12 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     let appContainer: AppContainer
+    let showsCloseButton: Bool
     @State private var controller: SettingsController
 
-    init(appContainer: AppContainer) {
+    init(appContainer: AppContainer, showsCloseButton: Bool = true) {
         self.appContainer = appContainer
+        self.showsCloseButton = showsCloseButton
         _controller = State(initialValue: appContainer.makeSettingsController())
     }
 
@@ -89,9 +91,11 @@ struct SettingsView: View {
         .navigationTitle("Einstellungen")
         .brandGroupedScreen()
         .toolbar {
-            ToolbarItem(placement: closeButtonPlacement) {
-                Button("Schließen") {
-                    dismiss()
+            if showsCloseButton {
+                ToolbarItem(placement: closeButtonPlacement) {
+                    Button("Schließen") {
+                        dismiss()
+                    }
                 }
             }
         }

@@ -16,9 +16,216 @@ enum DoctorAddEntryMode: Identifiable {
 
 struct DoctorsHubView: View {
     let appContainer: AppContainer
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    @State private var controller: DoctorHubController
+    @State private var selectedDoctorID: UUID?
+    @State private var doctorAddMode: DoctorAddEntryMode?
+    @State private var isPresentingAppointmentFlow = false
+
+    init(appContainer: AppContainer) {
+        self.appContainer = appContainer
+        _controller = State(initialValue: appContainer.makeDoctorHubController())
+    }
 
     var body: some View {
-        HomeView(appContainer: appContainer)
+        Group {
+            if horizontalSizeClass == .compact {
+                compactContent
+            } else {
+                regularContent
+            }
+        }
+        .navigationTitle("Ärzte")
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    isPresentingAppointmentFlow = true
+                } label: {
+                    Label("Termin", systemImage: "calendar.badge.plus")
+                }
+
+                Button {
+                    doctorAddMode = .oegkDirectory
+                } label: {
+                    Label("Arzt hinzufügen", systemImage: "cross.case.fill")
+                }
+            }
+        }
+        .task {
+            reload()
+        }
+        .refreshable {
+            reload()
+        }
+        .sheet(item: $doctorAddMode) { mode in
+            NavigationStack {
+                DoctorAddFlowView(appContainer: appContainer, startMode: mode) { doctorID in
+                    doctorAddMode = nil
+                    reload(selecting: doctorID)
+                }
+            }
+        }
+        .sheet(isPresented: $isPresentingAppointmentFlow) {
+            NavigationStack {
+                AppointmentCreationFlowView(appContainer: appContainer) {
+                    isPresentingAppointmentFlow = false
+                    reload()
+                }
+            }
+        }
+    }
+
+    private var compactContent: some View {
+        List {
+            actionSection
+            appointmentsSection
+            doctorsSection(compactLinks: true)
+        }
+        .listStyle(.insetGrouped)
+        .brandGroupedScreen()
+    }
+
+    private var regularContent: some View {
+        HStack(alignment: .top, spacing: 0) {
+            List(selection: $selectedDoctorID) {
+                actionSection
+                doctorsSection(compactLinks: false)
+            }
+            .listStyle(.sidebar)
+            .frame(minWidth: 300, idealWidth: 360, maxWidth: 420)
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.appBackground)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
+                AdaptiveDashboardCard(title: "Kommende Termine") {
+                    appointmentRows
+                }
+
+                if let selectedDoctorID {
+                    DoctorDetailView(appContainer: appContainer, doctorID: selectedDoctorID)
+                        .frame(maxHeight: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                } else {
+                    ContentUnavailableView(
+                        "Arzt auswählen",
+                        systemImage: "cross.case",
+                        description: Text("Wähle links eine Ärztin oder einen Arzt aus, um Stammdaten und Termine parallel zu sehen.")
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .brandCard()
+                }
+            }
+            .padding(24)
+            .wideContent()
+            .frame(maxHeight: .infinity, alignment: .top)
+            .brandScreen()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .brandScreen()
+    }
+
+    private var actionSection: some View {
+        Section {
+            Button {
+                doctorAddMode = .oegkDirectory
+            } label: {
+                Label("Arzt aus ÖGK-Liste hinzufügen", systemImage: "cross.case.fill")
+            }
+
+            Button {
+                doctorAddMode = .manual
+            } label: {
+                Label("Arzt manuell hinzufügen", systemImage: "square.and.pencil")
+            }
+
+            Button {
+                isPresentingAppointmentFlow = true
+            } label: {
+                Label("Termin hinzufügen", systemImage: "calendar.badge.plus")
+            }
+        }
+    }
+
+    private var appointmentsSection: some View {
+        Section("Kommende Termine") {
+            appointmentRows
+        }
+    }
+
+    @ViewBuilder
+    private var appointmentRows: some View {
+        if controller.upcomingAppointments.isEmpty {
+            ContentUnavailableView(
+                "Keine kommenden Termine",
+                systemImage: "calendar.badge.clock",
+                description: Text("Lege einen Termin an, sobald du eine Ärztin oder einen Arzt erfasst hast.")
+            )
+        } else {
+            ForEach(controller.upcomingAppointments) { appointment in
+                if let doctor = controller.doctors.first(where: { $0.id == appointment.doctorID }) {
+                    NavigationLink {
+                        DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
+                    } label: {
+                        AppointmentSummaryRow(appointment: appointment, doctor: doctor)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func doctorsSection(compactLinks: Bool) -> some View {
+        Section {
+            if controller.doctors.isEmpty {
+                ContentUnavailableView(
+                    "Noch keine Ärztinnen oder Ärzte",
+                    systemImage: "cross.case",
+                    description: Text("Nutze die ÖGK-Liste als Startpunkt oder lege eine Ärztin bzw. einen Arzt vollständig manuell an.")
+                )
+            } else {
+                ForEach(controller.doctors) { doctor in
+                    if compactLinks {
+                        NavigationLink {
+                            DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
+                        } label: {
+                            DoctorSummaryRow(doctor: doctor)
+                        }
+                    } else {
+                        Button {
+                            selectedDoctorID = doctor.id
+                        } label: {
+                            DoctorSummaryRow(doctor: doctor)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(selectedDoctorID == doctor.id ? AppTheme.selectedFill : Color.clear)
+                    }
+                }
+            }
+        } header: {
+            Text("Meine Ärzte")
+        } footer: {
+            Text(
+                AppStoreScreenshotMode.isEnabled
+                ? "Im Screenshot-Modus werden ausschließlich anonymisierte Musterärztinnen und Musterärzte angezeigt."
+                : "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden."
+            )
+        }
+    }
+
+    private func reload(selecting doctorID: UUID? = nil) {
+        controller.reload()
+
+        if let doctorID {
+            selectedDoctorID = doctorID
+        } else if selectedDoctorID == nil {
+            selectedDoctorID = controller.doctors.first?.id
+        } else if !controller.doctors.contains(where: { $0.id == selectedDoctorID }) {
+            selectedDoctorID = controller.doctors.first?.id
+        }
     }
 }
 
