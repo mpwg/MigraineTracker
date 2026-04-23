@@ -12,9 +12,11 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
     }
 
     func fetchRecent() throws -> [EpisodeRecord] {
-        let descriptor = FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)])
-        return try context.fetch(descriptor)
-            .filter { !$0.isDeleted }
+        let descriptor = FetchDescriptor<Episode>(
+            predicate: #Predicate<Episode> { $0.deletedAt == nil },
+            sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]
+        )
+        return try readContext().fetch(descriptor)
             .map { EpisodeRecord(episode: $0, healthContextStore: healthContextStore) }
     }
 
@@ -24,12 +26,11 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
         let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
         let descriptor = FetchDescriptor<Episode>(
             predicate: #Predicate<Episode> { episode in
-                episode.startedAt >= start && episode.startedAt < end
+                episode.deletedAt == nil && episode.startedAt >= start && episode.startedAt < end
             },
             sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]
         )
-        return try context.fetch(descriptor)
-            .filter { !$0.isDeleted }
+        return try readContext().fetch(descriptor)
             .map { EpisodeRecord(episode: $0, healthContextStore: healthContextStore) }
     }
 
@@ -39,12 +40,11 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
         let end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
         let descriptor = FetchDescriptor<Episode>(
             predicate: #Predicate<Episode> { episode in
-                episode.startedAt >= start && episode.startedAt < end
+                episode.deletedAt == nil && episode.startedAt >= start && episode.startedAt < end
             },
             sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]
         )
-        return try context.fetch(descriptor)
-            .filter { !$0.isDeleted }
+        return try readContext().fetch(descriptor)
             .map { EpisodeRecord(episode: $0, healthContextStore: healthContextStore) }
     }
 
@@ -52,7 +52,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
         let descriptor = FetchDescriptor<Episode>(
             predicate: #Predicate<Episode> { $0.id == id }
         )
-        return try context.fetch(descriptor).first.map { EpisodeRecord(episode: $0, healthContextStore: healthContextStore) }
+        return try readContext().fetch(descriptor).first.map { EpisodeRecord(episode: $0, healthContextStore: healthContextStore) }
     }
 
     @discardableResult
@@ -66,7 +66,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
             target = existing
         } else {
             target = Episode(startedAt: draft.startedAt, intensity: draft.intensity)
-            context.insert(target)
+            mainContext.insert(target)
         }
 
         target.markUpdated()
@@ -83,11 +83,11 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
         target.triggers = Array(draft.selectedTriggers).sorted()
 
         for medication in target.medications {
-            context.delete(medication)
+            mainContext.delete(medication)
         }
 
         if let existingWeatherSnapshot = target.weatherSnapshot {
-            context.delete(existingWeatherSnapshot)
+            mainContext.delete(existingWeatherSnapshot)
             target.weatherSnapshot = nil
         }
 
@@ -109,7 +109,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
             target.weatherSnapshot = WeatherSnapshot(snapshot: weatherSnapshot, episode: target)
         }
 
-        try context.save()
+        try mainContext.save()
         healthContextStore.save(healthContext, for: target.id)
         return target.id
     }
@@ -120,7 +120,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
         }
 
         episode.markDeleted()
-        try context.save()
+        try mainContext.save()
     }
 
     func restore(id: UUID) throws {
@@ -129,25 +129,31 @@ final class SwiftDataEpisodeRepository: EpisodeRepository {
         }
 
         episode.restore()
-        try context.save()
+        try mainContext.save()
     }
 
     func fetchDeleted() throws -> [EpisodeRecord] {
-        let descriptor = FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)])
-        return try context.fetch(descriptor)
-            .filter(\.isDeleted)
+        let descriptor = FetchDescriptor<Episode>(
+            predicate: #Predicate<Episode> { $0.deletedAt != nil },
+            sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]
+        )
+        return try readContext().fetch(descriptor)
             .map { EpisodeRecord(episode: $0, healthContextStore: healthContextStore) }
     }
 
-    private var context: ModelContext {
+    private var mainContext: ModelContext {
         modelContainer.mainContext
+    }
+
+    private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
     }
 
     private func fetchEpisode(id: UUID) throws -> Episode? {
         let descriptor = FetchDescriptor<Episode>(
             predicate: #Predicate<Episode> { $0.id == id }
         )
-        return try context.fetch(descriptor).first
+        return try mainContext.fetch(descriptor).first
     }
 }
 
@@ -160,20 +166,21 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository {
     }
 
     func fetchDefinitions(searchText: String?) throws -> [MedicationDefinitionRecord] {
+        let basePredicate: Predicate<MedicationDefinition>
+        if let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            basePredicate = #Predicate<MedicationDefinition> {
+                $0.deletedAt == nil && $0.name.localizedStandardContains(searchText)
+            }
+        } else {
+            basePredicate = #Predicate<MedicationDefinition> { $0.deletedAt == nil }
+        }
+
         let descriptor = FetchDescriptor<MedicationDefinition>(
+            predicate: basePredicate,
             sortBy: [SortDescriptor(\MedicationDefinition.sortOrder), SortDescriptor(\MedicationDefinition.name)]
         )
 
-        let definitions = try context.fetch(descriptor)
-            .filter { !$0.isDeleted }
-
-        guard let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return definitions.map(MedicationDefinitionRecord.init)
-        }
-
-        return definitions
-            .filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-            .map(MedicationDefinitionRecord.init)
+        return try readContext().fetch(descriptor).map(MedicationDefinitionRecord.init)
     }
 
     func saveCustomDefinition(_ draft: CustomMedicationDefinitionDraft) throws -> MedicationDefinitionRecord {
@@ -188,7 +195,7 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository {
             definition.category = draft.category
             definition.suggestedDosage = trimmedDosage
         } else {
-            let nextSortOrder = ((try? context.fetch(FetchDescriptor<MedicationDefinition>())) ?? []).map(\.sortOrder).max() ?? 0
+            let nextSortOrder = ((try? mainContext.fetch(FetchDescriptor<MedicationDefinition>())) ?? []).map(\.sortOrder).max() ?? 0
             definition = MedicationDefinition(
                 catalogKey: draft.id.hasPrefix("custom:") ? draft.id : "custom:\(UUID().uuidString)",
                 groupID: "custom-medications",
@@ -200,10 +207,10 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository {
                 sortOrder: nextSortOrder + 1,
                 isCustom: true
             )
-            context.insert(definition)
+            mainContext.insert(definition)
         }
 
-        try context.save()
+        try mainContext.save()
         return MedicationDefinitionRecord(definition: definition)
     }
 
@@ -213,27 +220,30 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository {
         }
 
         definition.markDeleted()
-        try context.save()
+        try mainContext.save()
     }
 
     func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord] {
         let descriptor = FetchDescriptor<MedicationDefinition>(
+            predicate: #Predicate<MedicationDefinition> { $0.deletedAt != nil },
             sortBy: [SortDescriptor(\MedicationDefinition.updatedAt, order: .reverse)]
         )
-        return try context.fetch(descriptor)
-            .filter(\.isDeleted)
-            .map(MedicationDefinitionRecord.init)
+        return try readContext().fetch(descriptor).map(MedicationDefinitionRecord.init)
     }
 
-    private var context: ModelContext {
+    private var mainContext: ModelContext {
         modelContainer.mainContext
+    }
+
+    private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
     }
 
     private func fetchDefinition(catalogKey: String) throws -> MedicationDefinition? {
         let descriptor = FetchDescriptor<MedicationDefinition>(
             predicate: #Predicate<MedicationDefinition> { $0.catalogKey == catalogKey }
         )
-        return try context.fetch(descriptor).first
+        return try mainContext.fetch(descriptor).first
     }
 }
 
@@ -248,12 +258,14 @@ final class SwiftDataExportRepository: ExportRepository {
     }
 
     func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary {
-        let episodes = try context.fetch(FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]))
-            .filter { !$0.isDeleted }
-
         let endOfDay = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: endDate) ?? endDate
-        let filtered = episodes
-            .filter { $0.startedAt >= startDate && $0.startedAt <= endOfDay }
+        let descriptor = FetchDescriptor<Episode>(
+            predicate: #Predicate<Episode> { episode in
+                episode.deletedAt == nil && episode.startedAt >= startDate && episode.startedAt <= endOfDay
+            },
+            sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]
+        )
+        let filtered = try readContext().fetch(descriptor)
             .map { EpisodeExportRecord(episode: $0, healthContext: healthContextStore.load(for: $0.id)) }
 
         return ExportPeriodSummary(startDate: startDate, endDate: endDate, records: filtered)
@@ -264,9 +276,14 @@ final class SwiftDataExportRepository: ExportRepository {
     }
 
     func createBackup() throws -> URL {
-        let episodes = try context.fetch(FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]))
-        let definitions = try context.fetch(FetchDescriptor<MedicationDefinition>(sortBy: [SortDescriptor(\MedicationDefinition.sortOrder)]))
-            .filter(\.isCustom)
+        let readContext = readContext()
+        let episodes = try readContext.fetch(FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]))
+        let definitions = try readContext.fetch(
+            FetchDescriptor<MedicationDefinition>(
+                predicate: #Predicate<MedicationDefinition> { $0.isCustom },
+                sortBy: [SortDescriptor(\MedicationDefinition.sortOrder)]
+            )
+        )
         let snapshot = DataTransferSnapshot(
             episodes: episodes,
             customMedicationDefinitions: definitions,
@@ -277,11 +294,15 @@ final class SwiftDataExportRepository: ExportRepository {
 
     func importBackup(from url: URL) throws {
         let snapshot = try DataTransferSnapshot.load(from: url)
-        try snapshot.merge(into: context)
+        try snapshot.merge(into: mainContext)
     }
 
-    private var context: ModelContext {
+    private var mainContext: ModelContext {
         modelContainer.mainContext
+    }
+
+    private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
     }
 }
 
@@ -295,18 +316,17 @@ final class SwiftDataDoctorRepository: DoctorRepository {
 
     func fetchAll() throws -> [DoctorRecord] {
         let descriptor = FetchDescriptor<Doctor>(
+            predicate: #Predicate<Doctor> { $0.deletedAt == nil },
             sortBy: [SortDescriptor(\Doctor.name), SortDescriptor(\Doctor.specialty)]
         )
-        return try context.fetch(descriptor)
-            .filter { !$0.isDeleted }
-            .map(DoctorRecord.init)
+        return try readContext().fetch(descriptor).map(DoctorRecord.init)
     }
 
     func load(id: UUID) throws -> DoctorRecord? {
         let descriptor = FetchDescriptor<Doctor>(
             predicate: #Predicate<Doctor> { $0.id == id }
         )
-        return try context.fetch(descriptor).first.map(DoctorRecord.init)
+        return try readContext().fetch(descriptor).first.map(DoctorRecord.init)
     }
 
     @discardableResult
@@ -317,7 +337,7 @@ final class SwiftDataDoctorRepository: DoctorRepository {
             doctor = existing
         } else {
             doctor = Doctor(name: draft.name)
-            context.insert(doctor)
+            mainContext.insert(doctor)
         }
 
         doctor.markUpdated()
@@ -333,7 +353,7 @@ final class SwiftDataDoctorRepository: DoctorRepository {
         doctor.notes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
         doctor.source = draft.source
 
-        try context.save()
+        try mainContext.save()
         return doctor.id
     }
 
@@ -346,18 +366,22 @@ final class SwiftDataDoctorRepository: DoctorRepository {
         for appointment in doctor.appointments {
             appointment.markDeleted()
         }
-        try context.save()
+        try mainContext.save()
     }
 
-    private var context: ModelContext {
+    private var mainContext: ModelContext {
         modelContainer.mainContext
+    }
+
+    private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
     }
 
     private func fetchDoctor(id: UUID) throws -> Doctor? {
         let descriptor = FetchDescriptor<Doctor>(
             predicate: #Predicate<Doctor> { $0.id == id }
         )
-        return try context.fetch(descriptor).first
+        return try mainContext.fetch(descriptor).first
     }
 }
 
@@ -370,34 +394,36 @@ final class SwiftDataDoctorDirectoryRepository: DoctorDirectoryRepository {
     }
 
     func fetchEntries(searchText: String?) throws -> [DoctorDirectoryRecord] {
-        let descriptor = FetchDescriptor<DoctorDirectoryEntry>(
-            sortBy: [SortDescriptor(\DoctorDirectoryEntry.name), SortDescriptor(\DoctorDirectoryEntry.city)]
-        )
-        let entries = try context.fetch(descriptor)
-        guard let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return entries.map(DoctorDirectoryRecord.init)
+        let descriptor: FetchDescriptor<DoctorDirectoryEntry>
+        if let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            descriptor = FetchDescriptor<DoctorDirectoryEntry>(
+                predicate: #Predicate<DoctorDirectoryEntry> {
+                    $0.name.localizedStandardContains(searchText)
+                        || $0.specialty.localizedStandardContains(searchText)
+                        || $0.city.localizedStandardContains(searchText)
+                        || $0.street.localizedStandardContains(searchText)
+                },
+                sortBy: [SortDescriptor(\DoctorDirectoryEntry.name), SortDescriptor(\DoctorDirectoryEntry.city)]
+            )
+        } else {
+            descriptor = FetchDescriptor<DoctorDirectoryEntry>(
+                sortBy: [SortDescriptor(\DoctorDirectoryEntry.name), SortDescriptor(\DoctorDirectoryEntry.city)]
+            )
         }
 
-        return entries
-            .filter {
-                $0.name.localizedCaseInsensitiveContains(searchText)
-                    || $0.specialty.localizedCaseInsensitiveContains(searchText)
-                    || $0.city.localizedCaseInsensitiveContains(searchText)
-                    || $0.street.localizedCaseInsensitiveContains(searchText)
-            }
-            .map(DoctorDirectoryRecord.init)
+        return try readContext().fetch(descriptor).map(DoctorDirectoryRecord.init)
     }
 
     func sourceAttribution() -> (label: String, url: String) {
-        let firstEntry = try? context.fetch(FetchDescriptor<DoctorDirectoryEntry>()).first
+        let firstEntry = try? readContext().fetch(FetchDescriptor<DoctorDirectoryEntry>()).first
         return (
             firstEntry?.sourceLabel ?? "ÖGK Vertragspartner Fachärztinnen und Fachärzte",
             firstEntry?.sourceURL ?? "https://www.gesundheitskasse.at/cdscontent/?contentid=10007.884365"
         )
     }
 
-    private var context: ModelContext {
-        modelContainer.mainContext
+    private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
     }
 }
 
@@ -410,12 +436,12 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
     }
 
     func fetchUpcoming(limit: Int?) throws -> [AppointmentRecord] {
+        let now = Date.now
         let descriptor = FetchDescriptor<DoctorAppointment>(
+            predicate: #Predicate<DoctorAppointment> { $0.deletedAt == nil && $0.scheduledAt >= now },
             sortBy: [SortDescriptor(\DoctorAppointment.scheduledAt)]
         )
-        let records = try context.fetch(descriptor)
-            .filter { !$0.isDeleted && $0.scheduledAt >= .now }
-            .map(AppointmentRecord.init)
+        let records = try readContext().fetch(descriptor).map(AppointmentRecord.init)
 
         if let limit {
             return Array(records.prefix(limit))
@@ -425,11 +451,13 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
     }
 
     func fetchUpcoming(for doctorID: UUID) throws -> [AppointmentRecord] {
+        let now = Date.now
         let descriptor = FetchDescriptor<DoctorAppointment>(
+            predicate: #Predicate<DoctorAppointment> { $0.deletedAt == nil && $0.scheduledAt >= now },
             sortBy: [SortDescriptor(\DoctorAppointment.scheduledAt)]
         )
-        return try context.fetch(descriptor)
-            .filter { !$0.isDeleted && $0.doctor?.id == doctorID && $0.scheduledAt >= .now }
+        return try readContext().fetch(descriptor)
+            .filter { $0.doctor?.id == doctorID }
             .map(AppointmentRecord.init)
     }
 
@@ -437,7 +465,7 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
         let descriptor = FetchDescriptor<DoctorAppointment>(
             predicate: #Predicate<DoctorAppointment> { $0.id == id }
         )
-        return try context.fetch(descriptor).first.map(AppointmentRecord.init)
+        return try readContext().fetch(descriptor).first.map(AppointmentRecord.init)
     }
 
     @discardableResult
@@ -451,7 +479,7 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
             appointment = existing
         } else {
             appointment = DoctorAppointment(scheduledAt: draft.scheduledAt, doctor: doctor)
-            context.insert(appointment)
+            mainContext.insert(appointment)
         }
 
         appointment.markUpdated()
@@ -468,7 +496,7 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
             appointment.notificationRequestID = nil
         }
 
-        try context.save()
+        try mainContext.save()
         return appointment.id
     }
 
@@ -480,7 +508,7 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
         appointment.markUpdated()
         appointment.reminderStatus = status
         appointment.notificationRequestID = requestID
-        try context.save()
+        try mainContext.save()
     }
 
     func softDelete(id: UUID) throws {
@@ -490,25 +518,29 @@ final class SwiftDataAppointmentRepository: AppointmentRepository {
 
         appointment.markDeleted()
         appointment.notificationRequestID = nil
-        try context.save()
+        try mainContext.save()
     }
 
-    private var context: ModelContext {
+    private var mainContext: ModelContext {
         modelContainer.mainContext
+    }
+
+    private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
     }
 
     private func fetchDoctor(id: UUID) throws -> Doctor? {
         let descriptor = FetchDescriptor<Doctor>(
             predicate: #Predicate<Doctor> { $0.id == id }
         )
-        return try context.fetch(descriptor).first
+        return try mainContext.fetch(descriptor).first
     }
 
     private func fetchAppointment(id: UUID) throws -> DoctorAppointment? {
         let descriptor = FetchDescriptor<DoctorAppointment>(
             predicate: #Predicate<DoctorAppointment> { $0.id == id }
         )
-        return try context.fetch(descriptor).first
+        return try mainContext.fetch(descriptor).first
     }
 }
 

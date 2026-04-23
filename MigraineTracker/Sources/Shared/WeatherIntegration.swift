@@ -404,6 +404,10 @@ final class WeatherBackfillService {
         }
 
         for episode in episodes.prefix(limit) {
+            guard !Task.isCancelled else {
+                return
+            }
+
             do {
                 guard let snapshot = try await weatherService.fetchWeather(for: episode.startedAt, location: location) else {
                     continue

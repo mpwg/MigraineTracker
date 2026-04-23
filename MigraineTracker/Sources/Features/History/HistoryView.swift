@@ -54,7 +54,7 @@ struct HistoryView: View {
                     initialStartedAt: controller.defaultStartDateForSelectedDay(),
                     onSaved: {
                         controller.isPresentingNewEpisode = false
-                        controller.reload()
+                        controller.handleSavedEpisode()
                     }
                 )
             }
@@ -71,7 +71,7 @@ struct HistoryView: View {
                     episodeID: episodeID.id,
                     onSaved: {
                         controller.editingEpisodeID = nil
-                        controller.reload()
+                        controller.handleSavedEpisode()
                     }
                 )
             }

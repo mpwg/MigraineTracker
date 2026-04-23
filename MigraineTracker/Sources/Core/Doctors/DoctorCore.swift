@@ -75,6 +75,13 @@ struct DoctorDirectorySection: Identifiable, Equatable, Sendable {
     var id: String { title }
 }
 
+struct UpcomingAppointmentListItem: Identifiable, Equatable, Sendable {
+    let appointment: AppointmentRecord
+    let doctor: DoctorRecord
+
+    var id: UUID { appointment.id }
+}
+
 struct AppointmentRecord: Identifiable, Equatable, Sendable {
     let id: UUID
     let doctorID: UUID?
@@ -324,22 +331,45 @@ final class DoctorHubController {
     private let appointmentRepository: AppointmentRepository
 
     private(set) var doctors: [DoctorRecord] = []
+    private(set) var doctorsByID: [UUID: DoctorRecord] = [:]
     private(set) var upcomingAppointments: [AppointmentRecord] = []
+    private(set) var upcomingAppointmentItems: [UpcomingAppointmentListItem] = []
     var errorMessage: String?
 
     init(doctorRepository: DoctorRepository, appointmentRepository: AppointmentRepository) {
         self.doctorRepository = doctorRepository
         self.appointmentRepository = appointmentRepository
-        reload()
+        reloadAll()
     }
 
-    func reload() {
+    func reloadAll() {
         do {
-            doctors = try doctorRepository.fetchAll()
-            upcomingAppointments = try appointmentRepository.fetchUpcoming(limit: 20)
+            try reloadDoctors()
+            try reloadAppointments()
             errorMessage = nil
         } catch {
             errorMessage = "Ärzte und Termine konnten nicht geladen werden."
+        }
+    }
+
+    func reloadDoctors() throws {
+        doctors = try doctorRepository.fetchAll()
+        doctorsByID = Dictionary(uniqueKeysWithValues: doctors.map { ($0.id, $0) })
+        rebuildUpcomingAppointmentItems()
+    }
+
+    func reloadAppointments(limit: Int = 20) throws {
+        upcomingAppointments = try appointmentRepository.fetchUpcoming(limit: limit)
+        rebuildUpcomingAppointmentItems()
+    }
+
+    private func rebuildUpcomingAppointmentItems() {
+        upcomingAppointmentItems = upcomingAppointments.compactMap { appointment in
+            guard let doctorID = appointment.doctorID, let doctor = doctorsByID[doctorID] else {
+                return nil
+            }
+
+            return UpcomingAppointmentListItem(appointment: appointment, doctor: doctor)
         }
     }
 }
@@ -370,11 +400,13 @@ final class DoctorEditorController {
     var draft: DoctorDraft
     var searchText = ""
     private(set) var searchResults: [DoctorDirectoryRecord] = []
+    private(set) var groupedSearchResults: [DoctorDirectorySection] = []
     private(set) var sourceAttribution: (label: String, url: String)
     var validationMessage: String?
 
     private let saveDoctorUseCase: SaveDoctorUseCase
     private let directoryRepository: DoctorDirectoryRepository
+    private var searchTask: Task<Void, Never>?
 
     init(
         doctor: DoctorRecord?,
@@ -389,10 +421,23 @@ final class DoctorEditorController {
     }
 
     func refreshSearch() {
-        searchResults = (try? directoryRepository.fetchEntries(searchText: searchText)) ?? []
+        let results = (try? directoryRepository.fetchEntries(searchText: searchText)) ?? []
+        searchResults = results
+        groupedSearchResults = Self.makeGroupedSearchResults(from: results)
     }
 
-    var groupedSearchResults: [DoctorDirectorySection] {
+    func scheduleSearchRefresh() {
+        searchTask?.cancel()
+        searchTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard let self, !Task.isCancelled else {
+                return
+            }
+            self.refreshSearch()
+        }
+    }
+
+    private static func makeGroupedSearchResults(from searchResults: [DoctorDirectoryRecord]) -> [DoctorDirectorySection] {
         let grouped = Dictionary(grouping: searchResults) { entry in
             let trimmed = entry.specialty.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? "Sonstige Fachgebiete" : trimmed
