@@ -6,6 +6,9 @@ struct EpisodeExportRecord: Identifiable {
     let endedAt: Date?
     let type: String
     let intensity: Int
+    let painLocation: String
+    let painCharacter: String
+    let menstruationStatus: String
     let symptoms: [String]
     let triggers: [String]
     let notes: String
@@ -20,6 +23,9 @@ struct EpisodeExportRecord: Identifiable {
         self.endedAt = episode.endedAt
         self.type = episode.type.rawValue
         self.intensity = episode.intensity
+        self.painLocation = episode.painLocation
+        self.painCharacter = episode.painCharacter
+        self.menstruationStatus = episode.menstruationStatus.rawValue
         self.symptoms = episode.symptoms
         self.triggers = episode.triggers
         self.notes = episode.notes

@@ -4,6 +4,36 @@
     "" : {
 
     },
+    ", Anzahl: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", quantity: %1$lld"
+          }
+        }
+      }
+    },
+    ", Wirkung: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", effect: %1$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ · Intensität %lld/10" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · Intensity %3$lld/10"
+          }
+        }
+      }
+    },
     "%@ · Intensität %lld/10" : {
       "localizations" : {
         "de" : {
@@ -20,6 +50,16 @@
         }
       }
     },
+    "%@ %% Luftfeuchte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %% humidity"
+          }
+        }
+      }
+    },
     "%@ abwählen" : {
       "localizations" : {
         "en" : {
@@ -30,12 +70,32 @@
         }
       }
     },
+    "%@ Bericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ report"
+          }
+        }
+      }
+    },
     "%@ ist dein persönliches Schmerztagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ is your personal pain diary. You record what happened and decide which additional data you want to include."
+          }
+        }
+      }
+    },
+    "%@ mm Niederschlag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ mm precipitation"
           }
         }
       }
@@ -269,6 +329,9 @@
         }
       }
     },
+    "Alle Details" : {
+
+    },
     "Allgemein" : {
       "localizations" : {
         "en" : {
@@ -309,6 +372,16 @@
         }
       }
     },
+    "Antiemetikum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antiemetic"
+          }
+        }
+      }
+    },
     "Anzahl" : {
       "localizations" : {
         "en" : {
@@ -325,6 +398,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quantity: %lld"
+          }
+        }
+      }
+    },
+    "App herunterladen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download the app"
           }
         }
       }
@@ -551,6 +634,28 @@
         }
       }
     },
+    "Auswertung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysis"
+          }
+        }
+      }
+    },
+    "Backup" : {
+
+    },
+    "Backup einlesen" : {
+
+    },
+    "Backup erstellen" : {
+
+    },
+    "Backup teilen" : {
+
+    },
     "Bearbeiten" : {
       "localizations" : {
         "en" : {
@@ -622,6 +727,7 @@
       }
     },
     "Bericht" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -701,6 +807,9 @@
         }
       }
     },
+    "Das Backup enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen." : {
+
+    },
     "Das Projekt steht unter der GNU GPL v3." : {
       "localizations" : {
         "en" : {
@@ -743,6 +852,7 @@
       }
     },
     "Daten sichern" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -845,6 +955,7 @@
       }
     },
     "Der PDF-Bericht von %@ wird lokal erzeugt und kann systemweit geteilt werden." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -860,6 +971,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The appointment was saved locally."
+          }
+        }
+      }
+    },
+    "Detaillierte Einträge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detailed entries"
+          }
+        }
+      }
+    },
+    "Detaillierter Bericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detailed report"
           }
         }
       }
@@ -985,6 +1116,16 @@
         }
       }
     },
+    "Dokumentierte Medikamente: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documented medications: %1$@"
+          }
+        }
+      }
+    },
     "Dosierung" : {
       "localizations" : {
         "en" : {
@@ -1085,6 +1226,16 @@
         }
       }
     },
+    "Einschränkung: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Functional impact: %1$@"
+          }
+        }
+      }
+    },
     "Einstellungen" : {
       "localizations" : {
         "en" : {
@@ -1156,6 +1307,7 @@
       }
     },
     "Einträge im Zeitraum: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1186,6 +1338,16 @@
         }
       }
     },
+    "Einträge: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entries: %1$lld"
+          }
+        }
+      }
+    },
     "Ende" : {
       "localizations" : {
         "en" : {
@@ -1202,6 +1364,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Specify End"
+          }
+        }
+      }
+    },
+    "Ende: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End: %1$@"
           }
         }
       }
@@ -1276,6 +1448,16 @@
         }
       }
     },
+    "Episodentypen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode types"
+          }
+        }
+      }
+    },
     "Erinnerung" : {
       "localizations" : {
         "en" : {
@@ -1323,6 +1505,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create a PDF report or JSON5 backup for a freely selectable period."
+          }
+        }
+      }
+    },
+    "Erstellt mit %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created with %1$@."
           }
         }
       }
@@ -1488,6 +1680,46 @@
         }
       }
     },
+    "Gut" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good"
+          }
+        }
+      }
+    },
+    "Häufige Symptome: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common symptoms: %1$@"
+          }
+        }
+      }
+    },
+    "Häufige Trigger: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Common triggers: %1$@"
+          }
+        }
+      }
+    },
+    "Herzfrequenz %@ bpm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heart rate %1$@ bpm"
+          }
+        }
+      }
+    },
     "Heute" : {
       "localizations" : {
         "en" : {
@@ -1548,6 +1780,16 @@
         }
       }
     },
+    "Intensität im Verlauf" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intensity over time"
+          }
+        }
+      }
+    },
     "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
       "localizations" : {
         "en" : {
@@ -1580,6 +1822,7 @@
       }
     },
     "JSON5 erstellen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1590,6 +1833,7 @@
       }
     },
     "JSON5 importieren" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1600,6 +1844,7 @@
       }
     },
     "JSON5 teilen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1610,6 +1855,7 @@
       }
     },
     "JSON5-Export enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1649,6 +1895,16 @@
         }
       }
     },
+    "Keine" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        }
+      }
+    },
     "Keine Diagnose, keine Therapieempfehlung" : {
       "localizations" : {
         "en" : {
@@ -1660,6 +1916,7 @@
       }
     },
     "Keine Einträge im Zeitraum" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1729,6 +1986,16 @@
         }
       }
     },
+    "Kompakter Arztbericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compact doctor report"
+          }
+        }
+      }
+    },
     "Konflikt lösen" : {
       "localizations" : {
         "en" : {
@@ -1769,12 +2036,32 @@
         }
       }
     },
+    "Kopfschmerz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Headache"
+          }
+        }
+      }
+    },
     "Kurz notieren, was auffällt" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Briefly note what stands out"
+          }
+        }
+      }
+    },
+    "Kurzüberblick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Executive summary"
           }
         }
       }
@@ -1971,6 +2258,16 @@
         }
       }
     },
+    "Medikamente: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medications: %1$@"
+          }
+        }
+      }
+    },
     "Medizinische Einordnung" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2013,12 +2310,32 @@
         }
       }
     },
+    "Menstruation %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menstruation %1$@"
+          }
+        }
+      }
+    },
     "Menstruationsstatus" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menstruation Status"
+          }
+        }
+      }
+    },
+    "Migräne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migraine"
           }
         }
       }
@@ -2110,6 +2427,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Note"
+          }
+        }
+      }
+    },
+    "Notiz: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note: %1$@"
+          }
+        }
+      }
+    },
+    "NSAR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NSAID"
           }
         }
       }
@@ -2275,6 +2612,7 @@
       }
     },
     "Passe den Zeitraum an, damit ein Bericht aus deinem Tagebuch erstellt werden kann." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2295,6 +2633,7 @@
       }
     },
     "PDF erstellen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2345,6 +2684,17 @@
         }
       }
     },
+    "PDF-Modus" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF mode"
+          }
+        }
+      }
+    },
     "PLZ" : {
       "localizations" : {
         "en" : {
@@ -2361,6 +2711,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Practice / Place"
+          }
+        }
+      }
+    },
+    "Professioneller Bericht für Arztgespräche" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Professional report for doctor appointments"
           }
         }
       }
@@ -2435,6 +2795,26 @@
         }
       }
     },
+    "Ruhepuls %@ bpm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resting heart rate %1$@ bpm"
+          }
+        }
+      }
+    },
+    "Schlaf %@ min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep %1$@ min"
+          }
+        }
+      }
+    },
     "Schließen" : {
       "localizations" : {
         "en" : {
@@ -2475,12 +2855,32 @@
         }
       }
     },
+    "Schmerztage im Zeitraum: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pain days in period: %1$lld"
+          }
+        }
+      }
+    },
     "Schmerztagebuch" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pain Diary"
+          }
+        }
+      }
+    },
+    "Schmerztagebuch-Bericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pain-Diary-Report"
           }
         }
       }
@@ -2511,6 +2911,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Request Write Access"
+          }
+        }
+      }
+    },
+    "Schritte %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steps %1$@"
           }
         }
       }
@@ -2556,6 +2966,16 @@
         }
       }
     },
+    "Sonstiges" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
     "Speichern" : {
       "localizations" : {
         "en" : {
@@ -2576,12 +2996,25 @@
         }
       }
     },
+    "Standardmäßig startet der Zeitraum am ersten Tag des vorvorherigen Monats und endet inklusive heute." : {
+
+    },
     "Standort für Wetter" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Location for Weather"
+          }
+        }
+      }
+    },
+    "Stärkste Episode: %@ · %lld/10" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strongest episode: %1$@ · %2$lld/10"
           }
         }
       }
@@ -2636,6 +3069,26 @@
         }
       }
     },
+    "Symptome %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symptoms %1$@"
+          }
+        }
+      }
+    },
+    "Symptome: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symptoms: %1$@"
+          }
+        }
+      }
+    },
     "Sync aktivieren" : {
       "localizations" : {
         "en" : {
@@ -2683,6 +3136,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Diary"
+          }
+        }
+      }
+    },
+    "Tagebuchübersicht" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diary overview"
+          }
+        }
+      }
+    },
+    "Teilweise" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partial"
           }
         }
       }
@@ -2787,6 +3261,16 @@
         }
       }
     },
+    "Trigger: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Triggers: %1$@"
+          }
+        }
+      }
+    },
     "Typ" : {
       "localizations" : {
         "en" : {
@@ -2803,6 +3287,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Overview"
+          }
+        }
+      }
+    },
+    "Unklar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unclear"
           }
         }
       }
@@ -2912,6 +3406,7 @@
       }
     },
     "Vorschau" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2991,6 +3486,9 @@
           }
         }
       }
+    },
+    "Wenn aktiviert, enthält das PDF zusätzlich die detaillierten Einträge mit Medikamenten, Triggern, Wetterdaten, Apple-Health-Kontext und Notizen." : {
+
     },
     "Wetter" : {
       "localizations" : {
@@ -3129,6 +3627,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Period"
+          }
+        }
+      }
+    },
+    "Zeitraum: %@ bis %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period: %1$@ to %2$@"
           }
         }
       }

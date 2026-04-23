@@ -3,9 +3,16 @@ import Observation
 
 protocol ExportRepository {
     func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary
-    func createPDF(summary: ExportPeriodSummary) throws -> URL
+    func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL
     func createBackup() throws -> URL
     func importBackup(from url: URL) throws
+}
+
+enum PDFReportMode: String, CaseIterable, Identifiable {
+    case compact = "Kompakter Arztbericht"
+    case detailed = "Detaillierter Bericht"
+
+    var id: String { rawValue }
 }
 
 struct LoadExportPreviewUseCase {
@@ -19,8 +26,8 @@ struct LoadExportPreviewUseCase {
 struct CreatePDFExportUseCase {
     let repository: ExportRepository
 
-    func execute(summary: ExportPeriodSummary) throws -> URL {
-        try repository.createPDF(summary: summary)
+    func execute(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
+        try repository.createPDF(summary: summary, mode: mode)
     }
 }
 
@@ -43,13 +50,14 @@ struct ImportBackupUseCase {
 @MainActor
 @Observable
 final class DataExportController {
-    var startDate = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
-    var endDate = Date()
+    var startDate: Date
+    var endDate: Date
     var exportURL: URL?
     var exportErrorMessage: String?
     var dataExportURL: URL?
     var dataTransferMessage: String?
     var isImportingData = false
+    var includeAllDetails = false
     private(set) var summary = ExportPeriodSummary(startDate: .now, endDate: .now, records: [])
 
     private let loadExportPreviewUseCase: LoadExportPreviewUseCase
@@ -58,6 +66,9 @@ final class DataExportController {
     private let importBackupUseCase: ImportBackupUseCase
 
     init(repository: ExportRepository) {
+        let defaultRange = Self.defaultDateRange()
+        self.startDate = defaultRange.startDate
+        self.endDate = defaultRange.endDate
         self.loadExportPreviewUseCase = LoadExportPreviewUseCase(repository: repository)
         self.createPDFExportUseCase = CreatePDFExportUseCase(repository: repository)
         self.createBackupUseCase = CreateBackupUseCase(repository: repository)
@@ -69,8 +80,8 @@ final class DataExportController {
         !summary.records.isEmpty && startDate <= endDate
     }
 
-    var hasTransferData: Bool {
-        !summary.records.isEmpty || dataExportURL != nil || summary.startDate != summary.endDate
+    var pdfReportMode: PDFReportMode {
+        includeAllDetails ? .detailed : .compact
     }
 
     func reloadSummary() {
@@ -79,9 +90,15 @@ final class DataExportController {
         } catch {
             summary = ExportPeriodSummary(startDate: startDate, endDate: endDate, records: [])
         }
+
+        updatePreparedPDF()
     }
 
     func createPDF() {
+        updatePreparedPDF()
+    }
+
+    func updatePreparedPDF() {
         exportErrorMessage = nil
         exportURL = nil
 
@@ -96,7 +113,7 @@ final class DataExportController {
         }
 
         do {
-            exportURL = try createPDFExportUseCase.execute(summary: summary)
+            exportURL = try createPDFExportUseCase.execute(summary: summary, mode: pdfReportMode)
         } catch {
             exportErrorMessage = "Der PDF-Export konnte nicht erstellt werden."
         }
@@ -127,5 +144,11 @@ final class DataExportController {
         } catch {
             dataTransferMessage = "Fehler beim Import der JSON5-Datei."
         }
+    }
+
+    private static func defaultDateRange(calendar: Calendar = .current, now: Date = .now) -> (startDate: Date, endDate: Date) {
+        let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let startDate = calendar.date(byAdding: .month, value: -2, to: startOfCurrentMonth) ?? now
+        return (startDate, now)
     }
 }
