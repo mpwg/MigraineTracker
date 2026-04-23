@@ -30,7 +30,6 @@ jobs:
       TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
       RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/MigraineTrackerTests.xcresult
       TEST_DESTINATION: platform=macOS,arch=arm64,variant=Mac Catalyst
-      CODE_SIGNING_ALLOWED: NO
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -67,7 +66,7 @@ jobs:
 
       - name: Tests vorbereiten
         run: |
-          CODE_SIGNING_ALLOWED=NO xcodebuild build-for-testing \
+          xcodebuild build-for-testing \
             -project MigraineTracker.xcodeproj \
             -scheme MigraineTrackerTests \
             -destination "${TEST_DESTINATION}" \
@@ -75,7 +74,7 @@ jobs:
 
       - name: Tests ausführen
         run: |
-          CODE_SIGNING_ALLOWED=NO xcodebuild test-without-building \
+          xcodebuild test-without-building \
             -project MigraineTracker.xcodeproj \
             -scheme MigraineTrackerTests \
             -destination "${TEST_DESTINATION}" \
