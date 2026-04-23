@@ -24,7 +24,7 @@ struct ProductInformationView: View {
             Section("Datenschutz") {
                 infoRow(
                     title: "Lokale Gesundheitsdaten",
-                    detail: "Episoden, Medikamente, Notizen, Trigger, Symptome und Wetter-Snapshots werden lokal auf dem Gerät gespeichert."
+                    detail: "Episoden, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden lokal auf dem Gerät gespeichert."
                 )
                 infoRow(
                     title: "Optionale iCloud-Synchronisation",
@@ -46,8 +46,8 @@ struct ProductInformationView: View {
                     detail: "Die App fragt beim Wetterabruf nach dem ungefähren Standort. Die Koordinaten werden nicht gespeichert."
                 )
                 infoRow(
-                    title: "Keine Health-Anbindung",
-                    detail: "Apple Health und andere sensible Systemdaten sind in Version 1 nicht integriert. Termine verwaltet die App ausschließlich lokal."
+                    title: "Apple Health optional",
+                    detail: "Apple Health wird nur nach deiner Freigabe pro Datentyp genutzt. Nicht auf deiner iOS-Version verfügbare HealthKit-Daten werden nicht erzwungen."
                 )
             }
 
@@ -82,11 +82,15 @@ struct ProductInformationView: View {
             Section("Version 1") {
                 infoRow(
                     title: "Aktueller Umfang",
-                    detail: "Neuer Eintrag, Tagebuch, Medikamente, Export und hilfreicher Kontext wie Wetter."
+                    detail: "Neuer Eintrag, Tagebuch, Medikamente, Export und hilfreicher Kontext wie Wetter und Apple Health."
                 )
                 infoRow(
                     title: "Plattform und Sprache",
-                    detail: "Version 1 ist auf iPhone und Deutsch ausgelegt."
+                    detail: "Version 1 ist auf iPhone, Deutsch und iOS 17.6 oder neuer ausgelegt."
+                )
+                infoRow(
+                    title: "Technische Mindestversion",
+                    detail: "Die App nutzt moderne SwiftUI- und SwiftData-Funktionen ohne Backport-Kompromisse. Einzelne HealthKit-Datentypen können je nach iOS-Version fehlen."
                 )
                 infoRow(
                     title: "Weiterentwicklung",
@@ -133,7 +137,7 @@ struct ProductInformationView: View {
     private var repositoryURL: URL { ProductBranding.repositoryURL }
 
     @ViewBuilder
-    private func infoRow(title: String, detail: String) -> some View {
+    private func infoRow(title: LocalizedStringKey, detail: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.headline)

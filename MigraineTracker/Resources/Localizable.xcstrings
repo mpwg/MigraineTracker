@@ -318,6 +318,39 @@
         }
       }
     },
+    "Apple Health" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health"
+          }
+        }
+      }
+    },
+    "Apple Health optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health Optional"
+          }
+        }
+      }
+    },
+    "Apple Health wird nur nach deiner Freigabe pro Datentyp genutzt. Nicht auf deiner iOS-Version verfügbare HealthKit-Daten werden nicht erzwungen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health is used only after you grant access per data type. HealthKit data that is not available on your iOS version is not forced."
+          }
+        }
+      }
+    },
+    "Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen." : {
+
+    },
     "Arzt" : {
       "localizations" : {
         "en" : {
@@ -1134,6 +1167,9 @@
         }
       }
     },
+    "Gesundheit" : {
+
+    },
     "GitHub-Issues öffnen" : {
       "localizations" : {
         "en" : {
@@ -1186,6 +1222,9 @@
           }
         }
       }
+    },
+    "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
+
     },
     "Jetzt synchronisieren" : {
       "localizations" : {
@@ -1409,6 +1448,15 @@
           }
         }
       }
+    },
+    "Lesen" : {
+
+    },
+    "Lesen und Schreiben werden getrennt verwaltet. Die App nutzt nur Daten, die für Schmerzepisoden als Kontext sinnvoll sind." : {
+
+    },
+    "Leserechte anfragen" : {
+
     },
     "Letzter Fehler" : {
       "localizations" : {
@@ -1951,6 +1999,12 @@
         }
       }
     },
+    "Schreiben" : {
+
+    },
+    "Schreibrechte anfragen" : {
+
+    },
     "Setzt die Intensität auf %lld von 10." : {
       "localizations" : {
         "en" : {
@@ -2211,6 +2265,12 @@
           }
         }
       }
+    },
+    "V1 schreibt nur Kopfschmerz und ausgewählte Begleitsymptome. Medikamente, Zyklusdaten und Konfliktlogik sind eigene Folge-Issues." : {
+
+    },
+    "Verbindung" : {
+
     },
     "Version 1" : {
       "localizations" : {
