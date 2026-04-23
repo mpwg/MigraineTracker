@@ -30,7 +30,18 @@
         }
       }
     },
+    "%@ ist dein persönliches Schmerztagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is your personal pain diary. You record what happened and decide which additional data you want to include."
+          }
+        }
+      }
+    },
     "%@ speichert deine Angaben ausschließlich lokal auf diesem Gerät. Die App hilft dir, Migräne, Kopfschmerzen und andere Schmerzereignisse für dich und für Arztgespräche strukturiert festzuhalten." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -338,7 +349,29 @@
         }
       }
     },
+    "Apple Health wird nur genutzt, wenn du einzelne Datentypen freigibst. Wenn ein Health-Datentyp auf deinem Gerät nicht verfügbar ist, wird er ausgelassen." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health is used only if you allow individual data types. If a Health data type is not available on your device, it is skipped."
+          }
+        }
+      }
+    },
+    "Apple Health wird nur genutzt, wenn du einzelne Informationen freigibst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health is used only if you share individual information."
+          }
+        }
+      }
+    },
     "Apple Health wird nur nach deiner Freigabe pro Datentyp genutzt. Nicht auf deiner iOS-Version verfügbare HealthKit-Daten werden nicht erzwungen." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -349,7 +382,14 @@
       }
     },
     "Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Health data remains optional. Read values are labeled as Apple Health context; written symptoms do not include notes."
+          }
+        }
+      }
     },
     "Arzt" : {
       "localizations" : {
@@ -481,6 +521,26 @@
         }
       }
     },
+    "Arztgespräche vorbereiten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepare Doctor Visits"
+          }
+        }
+      }
+    },
+    "Attribution" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attribution"
+          }
+        }
+      }
+    },
     "Ausgewählt" : {
       "localizations" : {
         "en" : {
@@ -511,12 +571,42 @@
         }
       }
     },
+    "Bei neuen, starken oder ungewohnten Symptomen, bei Unsicherheit oder im Notfall solltest du medizinische Hilfe holen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For new, severe or unusual symptoms, uncertainty or emergencies, you should seek medical help."
+          }
+        }
+      }
+    },
+    "Bei Warnzeichen Hilfe holen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Help for Warning Signs"
+          }
+        }
+      }
+    },
     "Beim Laden wird dein ungefährer Standort verwendet, um Wetterdaten für den Episodenzeitpunkt abzurufen." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "When loading, your approximate location is used to retrieve weather data for the episode time."
+          }
+        }
+      }
+    },
+    "Beiträge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contributions"
           }
         }
       }
@@ -611,6 +701,16 @@
         }
       }
     },
+    "Das Projekt steht unter der GNU GPL v3." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The project is licensed under the GNU GPL v3."
+          }
+        }
+      }
+    },
     "Das Protokoll bleibt lokal auf diesem Gerät. Es enthält technische Metadaten zu Synchronisation, Konflikten und Fehlern, aber keine sensiblen Freitextinhalte im Klartext." : {
       "localizations" : {
         "en" : {
@@ -663,6 +763,7 @@
       }
     },
     "Datenschutz" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -698,6 +799,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your entry was saved locally."
+          }
+        }
+      }
+    },
+    "Deine Daten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Data"
+          }
+        }
+      }
+    },
+    "Deine Daten gehören dir" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Data Belongs to You"
           }
         }
       }
@@ -753,6 +874,57 @@
         }
       }
     },
+    "Die App funktioniert auch ohne iCloud. Wenn du Sync aktivierst, werden deine App-Daten über deinen eigenen iCloud-Account abgeglichen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app also works without iCloud. If you enable sync, your app data is synced through your own iCloud account."
+          }
+        }
+      }
+    },
+    "Die App hilft dir, eigene Beobachtungen festzuhalten und später wiederzufinden." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app helps you record your own observations and find them again later."
+          }
+        }
+      }
+    },
+    "Die App ist aktuell für iPhone, deutsche Sprache und iOS 17.6 oder neuer ausgelegt." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app is currently designed for iPhone, German language and iOS 17.6 or later."
+          }
+        }
+      }
+    },
+    "Die App stellt keine Diagnose, bewertet deine Beschwerden nicht medizinisch und empfiehlt keine Behandlung." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app does not provide a diagnosis, does not medically assess your symptoms and does not recommend treatment."
+          }
+        }
+      }
+    },
+    "Die App unterstützt deine Dokumentation. Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app supports your documentation. It does not replace a medical diagnosis, treatment decisions or emergency contacts."
+          }
+        }
+      }
+    },
     "Die Erinnerung wird lokal auf dem Gerät geplant. Ohne Berechtigung bleibt der Termin trotzdem gespeichert." : {
       "localizations" : {
         "en" : {
@@ -803,6 +975,16 @@
         }
       }
     },
+    "Dokumentationshilfe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation Aid"
+          }
+        }
+      }
+    },
     "Dosierung" : {
       "localizations" : {
         "en" : {
@@ -813,12 +995,42 @@
         }
       }
     },
+    "Du behältst die Kontrolle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You Stay in Control"
+          }
+        }
+      }
+    },
+    "Du dokumentierst Zeitpunkt, Dauer, Intensität, Symptome, mögliche Auslöser, Medikamente und persönliche Notizen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You document timing, duration, intensity, symptoms, possible triggers, medication and personal notes."
+          }
+        }
+      }
+    },
     "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can change location permission in this app's settings under \"Location\" to \"While Using the App\"."
+          }
+        }
+      }
+    },
+    "Du kannst entscheiden ob und in welchem Ausmaß du deine Gesundheitsdaten an diese App freigibst. Sie werden niemals an Dritte weitergegeben." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can decide whether and to what extent you share your health data with this app. It is never shared with third parties."
           }
         }
       }
@@ -953,6 +1165,27 @@
         }
       }
     },
+    "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden auf diesem Gerät gespeichert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entries, medication, notes, triggers, symptoms, weather snapshots and read Apple Health context are stored on this device."
+          }
+        }
+      }
+    },
+    "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden zuerst auf diesem Gerät gespeichert." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entries, medication, notes, triggers, symptoms, weather snapshots and read Apple Health context are stored on this device first."
+          }
+        }
+      }
+    },
     "Ende" : {
       "localizations" : {
         "en" : {
@@ -1073,6 +1306,16 @@
         }
       }
     },
+    "Erinnerungen bleiben lokal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders Stay Local"
+          }
+        }
+      }
+    },
     "Erstelle einen PDF-Bericht oder ein JSON5-Backup für einen frei wählbaren Zeitraum." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1085,7 +1328,24 @@
       }
     },
     "Export" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export"
+          }
+        }
+      }
+    },
+    "Export nur mit deiner Aktion" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Only When You Choose"
+          }
+        }
+      }
     },
     "Fachgebiet" : {
       "localizations" : {
@@ -1097,12 +1357,32 @@
         }
       }
     },
+    "Feedback und Ideen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback and Ideas"
+          }
+        }
+      }
+    },
     "Fehler erneut versuchen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retry Error"
+          }
+        }
+      }
+    },
+    "Fehler, Ideen und Verbesserungsvorschläge kannst du als GitHub-Issue einreichen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can submit bugs, ideas and suggestions as GitHub issues."
           }
         }
       }
@@ -1167,8 +1447,36 @@
         }
       }
     },
+    "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nicht als eigener Tagebucheintrag gespeichert." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For weather data, the app asks for your approximate location. Coordinates are not stored as their own diary entry."
+          }
+        }
+      }
+    },
+    "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nur für den Wetteraufruf benötigt und nie gespeichert." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For weather data, the app asks for your approximate location. Coordinates are only needed for the weather request and are never stored."
+          }
+        }
+      }
+    },
     "Gesundheit" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health"
+          }
+        }
+      }
     },
     "GitHub-Issues öffnen" : {
       "localizations" : {
@@ -1181,7 +1489,14 @@
       }
     },
     "Heute" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
     },
     "Hinzufügen" : {
       "localizations" : {
@@ -1189,6 +1504,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add"
+          }
+        }
+      }
+    },
+    "iCloud ist freiwillig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Is Optional"
           }
         }
       }
@@ -1224,7 +1549,25 @@
       }
     },
     "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS manages Health permissions per data type. Denied read permissions appear in the app as missing data."
+          }
+        }
+      }
+    },
+    "iPhone und Deutsch" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone and German"
+          }
+        }
+      }
     },
     "Jetzt synchronisieren" : {
       "localizations" : {
@@ -1302,6 +1645,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Log Available"
+          }
+        }
+      }
+    },
+    "Keine Diagnose, keine Therapieempfehlung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Diagnosis, No Treatment Recommendation"
           }
         }
       }
@@ -1437,7 +1790,14 @@
       }
     },
     "Lege einen Termin an, sobald du eine Ärztin oder einen Arzt erfasst hast." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an appointment once you have added a doctor."
+          }
+        }
+      }
     },
     "Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow." : {
       "localizations" : {
@@ -1450,13 +1810,45 @@
       }
     },
     "Lesen" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read"
+          }
+        }
+      }
+    },
+    "Lesen und Schreiben sind getrennt. Du kannst jeden Health-Datentyp einzeln erlauben und später wieder deaktivieren." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading and writing are separate. You can allow each Health data type individually and turn it off again later."
+          }
+        }
+      }
     },
     "Lesen und Schreiben werden getrennt verwaltet. Die App nutzt nur Daten, die für Schmerzepisoden als Kontext sinnvoll sind." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading and writing are managed separately. The app uses only data that is useful as context for pain episodes."
+          }
+        }
+      }
     },
     "Leserechte anfragen" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request Read Access"
+          }
+        }
+      }
     },
     "Letzter Fehler" : {
       "localizations" : {
@@ -1464,6 +1856,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Latest Error"
+          }
+        }
+      }
+    },
+    "Lizenz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "License"
           }
         }
       }
@@ -1504,6 +1906,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete"
+          }
+        }
+      }
+    },
+    "Manche Health-Datentypen gibt es erst auf neueren iOS-Versionen. Die App bleibt nutzbar und zeigt einfach nur die verfügbaren Werte." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some Health data types exist only on newer iOS versions. The app remains usable and simply shows the available values."
           }
         }
       }
@@ -1559,11 +1972,22 @@
       }
     },
     "Medizinische Einordnung" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Medical Context"
+          }
+        }
+      }
+    },
+    "Medizinischer Hinweis" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medical Note"
           }
         }
       }
@@ -1635,6 +2059,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New Entry"
+          }
+        }
+      }
+    },
+    "Nicht alles ist überall verfügbar" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Everything Is Available Everywhere"
           }
         }
       }
@@ -1879,6 +2314,37 @@
         }
       }
     },
+    "PDF-Berichte helfen dir, Termine vorzubereiten. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF reports help you prepare appointments. They are created and shared only when you actively choose to do so."
+          }
+        }
+      }
+    },
+    "PDF-Berichte und Backups entstehen lokal. Sie verlassen die App erst, wenn du sie über iOS teilst oder speicherst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF reports and backups are created locally. They leave the app only when you share or save them through iOS."
+          }
+        }
+      }
+    },
+    "PDF-Berichte und Backups helfen dir, Termine vorzubereiten. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF reports and backups help you prepare appointments. They are created and shared only when you actively choose to do so."
+          }
+        }
+      }
+    },
     "PLZ" : {
       "localizations" : {
         "en" : {
@@ -1929,6 +2395,26 @@
         }
       }
     },
+    "Pull Requests sind willkommen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull requests are welcome."
+          }
+        }
+      }
+    },
+    "Quelle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source"
+          }
+        }
+      }
+    },
     "Quelle: %@" : {
       "localizations" : {
         "en" : {
@@ -1969,6 +2455,16 @@
         }
       }
     },
+    "Schmerzereignisse festhalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Pain Events"
+          }
+        }
+      }
+    },
     "Schmerzlokalisation" : {
       "localizations" : {
         "en" : {
@@ -2000,10 +2496,24 @@
       }
     },
     "Schreiben" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write"
+          }
+        }
+      }
     },
     "Schreibrechte anfragen" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request Write Access"
+          }
+        }
+      }
     },
     "Setzt die Intensität auf %lld von 10." : {
       "localizations" : {
@@ -2016,6 +2526,7 @@
       }
     },
     "Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2065,6 +2576,16 @@
         }
       }
     },
+    "Standort für Wetter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location for Weather"
+          }
+        }
+      }
+    },
     "Status" : {
       "localizations" : {
         "en" : {
@@ -2091,6 +2612,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Search source: OeGK contracted specialists. Missing contact details can be added manually afterwards."
+          }
+        }
+      }
+    },
+    "Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome können an Apple Health übertragen werden. Notizen und Medikamente bleiben in der App." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symptom data such as headache and selected accompanying symptoms can be transferred to Apple Health. Notes and medication stay in the app."
           }
         }
       }
@@ -2236,6 +2767,16 @@
         }
       }
     },
+    "Terminerinnerungen werden als lokale iOS-Mitteilungen geplant. Termine bleiben auch gespeichert, wenn du Mitteilungen nicht erlaubst." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appointment reminders are scheduled as local iOS notifications. Appointments remain saved even if you do not allow notifications."
+          }
+        }
+      }
+    },
     "Trigger" : {
       "localizations" : {
         "en" : {
@@ -2267,17 +2808,65 @@
       }
     },
     "V1 schreibt nur Kopfschmerz und ausgewählte Begleitsymptome. Medikamente, Zyklusdaten und Konfliktlogik sind eigene Folge-Issues." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V1 writes only headache and selected accompanying symptoms. Medication, cycle data and conflict logic are separate follow-up issues."
+          }
+        }
+      }
     },
     "Verbindung" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        }
+      }
     },
     "Version 1" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version 1"
+          }
+        }
+      }
+    },
+    "Version 2 schreibt nur einfache Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome. Notizen und Medikamente bleiben in der App." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 2 writes only simple symptom data such as headache and selected accompanying symptoms. Notes and medication stay in the app."
+          }
+        }
+      }
+    },
+    "Version 2 umfasst Tagebuch, Medikamente, Wetter, optionale Apple-Health-Anbindung, Export, Arztkontakte und lokale Termine." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 2 includes the diary, medication, weather, optional Apple Health integration, export, doctor contacts and local appointments."
+          }
+        }
+      }
+    },
+    "Version und Plattform" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version and Platform"
           }
         }
       }
@@ -2333,7 +2922,14 @@
       }
     },
     "Wähle links eine Ärztin oder einen Arzt aus, um Stammdaten und Termine parallel zu sehen." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a doctor on the left to see master data and appointments side by side."
+          }
+        }
+      }
     },
     "Wählt diese Option aus." : {
       "localizations" : {
@@ -2355,12 +2951,43 @@
         }
       }
     },
+    "Was die App macht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What the App Does"
+          }
+        }
+      }
+    },
+    "Was geschrieben wird" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What Gets Written"
+          }
+        }
+      }
+    },
     "Weitere Angaben" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Additional Details"
+          }
+        }
+      }
+    },
+    "Weitere Funktionen können folgen. Medizinische Auswertungen, zusätzliche Plattformen und komplexere Health-Abgleiche werden separat konzipiert." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More features may follow. Medical analysis, additional platforms and more complex Health syncing will be designed separately."
           }
         }
       }
@@ -2406,11 +3033,32 @@
       }
     },
     "Wetterdaten" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weather Data"
+          }
+        }
+      }
+    },
+    "Wetterdaten kommen von Apple Weather. Beim Speichern eines Eintrags merkt sich die App einen passenden Wetter-Snapshot." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weather data comes from Apple Weather. When saving an entry, the app stores a matching weather snapshot."
+          }
+        }
+      }
+    },
+    "Wetterdaten und freiwillig freigegebene Apple-Health-Daten ergänzen deine Einträge, damit du später mehr Kontext hast." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weather data and voluntarily shared Apple Health data add context to your entries for later review."
           }
         }
       }
@@ -2485,392 +3133,12 @@
         }
       }
     },
-    "%@ ist dein persönliches Schmerztagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ is your personal pain diary. You record what happened and decide which additional data you want to include."
-          }
-        }
-      }
-    },
-    "Die App unterstützt deine Dokumentation. Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app supports your documentation. It does not replace a medical diagnosis, treatment decisions or emergency contacts."
-          }
-        }
-      }
-    },
-    "Was die App macht" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What the App Does"
-          }
-        }
-      }
-    },
-    "Schmerzereignisse festhalten" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record Pain Events"
-          }
-        }
-      }
-    },
-    "Du dokumentierst Zeitpunkt, Dauer, Intensität, Symptome, mögliche Auslöser, Medikamente und persönliche Notizen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You document timing, duration, intensity, symptoms, possible triggers, medication and personal notes."
-          }
-        }
-      }
-    },
     "Zusammenhänge besser erkennen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "See Patterns More Clearly"
-          }
-        }
-      }
-    },
-    "Wetterdaten und freiwillig freigegebene Apple-Health-Daten ergänzen deine Einträge, damit du später mehr Kontext hast." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weather data and voluntarily shared Apple Health data add context to your entries for later review."
-          }
-        }
-      }
-    },
-    "Arztgespräche vorbereiten" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prepare Doctor Visits"
-          }
-        }
-      }
-    },
-    "PDF-Berichte und Backups helfen dir, Termine vorzubereiten. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF reports and backups help you prepare appointments. They are created and shared only when you actively choose to do so."
-          }
-        }
-      }
-    },
-    "Deine Daten" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your Data"
-          }
-        }
-      }
-    },
-    "Deine Daten gehören dir" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your Data Belongs to You"
-          }
-        }
-      }
-    },
-    "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden zuerst auf diesem Gerät gespeichert." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entries, medication, notes, triggers, symptoms, weather snapshots and read Apple Health context are stored on this device first."
-          }
-        }
-      }
-    },
-    "iCloud ist freiwillig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud Is Optional"
-          }
-        }
-      }
-    },
-    "Die App funktioniert auch ohne iCloud. Wenn du Sync aktivierst, werden deine App-Daten über deinen eigenen iCloud-Account abgeglichen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app also works without iCloud. If you enable sync, your app data is synced through your own iCloud account."
-          }
-        }
-      }
-    },
-    "Export nur mit deiner Aktion" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export Only When You Choose"
-          }
-        }
-      }
-    },
-    "PDF-Berichte und Backups entstehen lokal. Sie verlassen die App erst, wenn du sie über iOS teilst oder speicherst." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF reports and backups are created locally. They leave the app only when you share or save them through iOS."
-          }
-        }
-      }
-    },
-    "Standort für Wetter" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location for Weather"
-          }
-        }
-      }
-    },
-    "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nicht als eigener Tagebucheintrag gespeichert." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For weather data, the app asks for your approximate location. Coordinates are not stored as their own diary entry."
-          }
-        }
-      }
-    },
-    "Apple Health wird nur genutzt, wenn du einzelne Datentypen freigibst. Wenn ein Health-Datentyp auf deinem Gerät nicht verfügbar ist, wird er ausgelassen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Health is used only if you allow individual data types. If a Health data type is not available on your device, it is skipped."
-          }
-        }
-      }
-    },
-    "Erinnerungen bleiben lokal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminders Stay Local"
-          }
-        }
-      }
-    },
-    "Terminerinnerungen werden als lokale iOS-Mitteilungen geplant. Termine bleiben auch gespeichert, wenn du Mitteilungen nicht erlaubst." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appointment reminders are scheduled as local iOS notifications. Appointments remain saved even if you do not allow notifications."
-          }
-        }
-      }
-    },
-    "Du behältst die Kontrolle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You Stay in Control"
-          }
-        }
-      }
-    },
-    "Lesen und Schreiben sind getrennt. Du kannst jeden Health-Datentyp einzeln erlauben und später wieder deaktivieren." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reading and writing are separate. You can allow each Health data type individually and turn it off again later."
-          }
-        }
-      }
-    },
-    "Was geschrieben wird" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What Gets Written"
-          }
-        }
-      }
-    },
-    "Version 2 schreibt nur einfache Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome. Notizen und Medikamente bleiben in der App." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version 2 writes only simple symptom data such as headache and selected accompanying symptoms. Notes and medication stay in the app."
-          }
-        }
-      }
-    },
-    "Nicht alles ist überall verfügbar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not Everything Is Available Everywhere"
-          }
-        }
-      }
-    },
-    "Manche Health-Datentypen gibt es erst auf neueren iOS-Versionen. Die App bleibt nutzbar und zeigt einfach nur die verfügbaren Werte." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some Health data types exist only on newer iOS versions. The app remains usable and simply shows the available values."
-          }
-        }
-      }
-    },
-    "Wetterdaten kommen von Apple Weather. Beim Speichern eines Eintrags merkt sich die App einen passenden Wetter-Snapshot." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weather data comes from Apple Weather. When saving an entry, the app stores a matching weather snapshot."
-          }
-        }
-      }
-    },
-    "Medizinischer Hinweis" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medical Note"
-          }
-        }
-      }
-    },
-    "Die App hilft dir, eigene Beobachtungen festzuhalten und später wiederzufinden." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app helps you record your own observations and find them again later."
-          }
-        }
-      }
-    },
-    "Die App stellt keine Diagnose, bewertet deine Beschwerden nicht medizinisch und empfiehlt keine Behandlung." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app does not provide a diagnosis, does not medically assess your symptoms and does not recommend treatment."
-          }
-        }
-      }
-    },
-    "Bei Warnzeichen Hilfe holen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get Help for Warning Signs"
-          }
-        }
-      }
-    },
-    "Bei neuen, starken oder ungewohnten Symptomen, bei Unsicherheit oder im Notfall solltest du medizinische Hilfe holen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For new, severe or unusual symptoms, uncertainty or emergencies, you should seek medical help."
-          }
-        }
-      }
-    },
-    "Version und Plattform" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version and Platform"
-          }
-        }
-      }
-    },
-    "Version 2 umfasst Tagebuch, Medikamente, Wetter, optionale Apple-Health-Anbindung, Export, Arztkontakte und lokale Termine." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version 2 includes the diary, medication, weather, optional Apple Health integration, export, doctor contacts and local appointments."
-          }
-        }
-      }
-    },
-    "iPhone und Deutsch" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone and German"
-          }
-        }
-      }
-    },
-    "Die App ist aktuell für iPhone, deutsche Sprache und iOS 17.6 oder neuer ausgelegt." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app is currently designed for iPhone, German language and iOS 17.6 or later."
-          }
-        }
-      }
-    },
-    "Weitere Funktionen können folgen. Medizinische Auswertungen, zusätzliche Plattformen und komplexere Health-Abgleiche werden separat konzipiert." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More features may follow. Medical analysis, additional platforms and more complex Health syncing will be designed separately."
-          }
-        }
-      }
-    },
-    "Fehler, Ideen und Verbesserungsvorschläge kannst du als GitHub-Issue einreichen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can submit bugs, ideas and suggestions as GitHub issues."
           }
         }
       }

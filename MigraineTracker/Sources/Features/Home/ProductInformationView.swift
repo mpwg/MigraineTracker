@@ -34,7 +34,7 @@ struct ProductInformationView: View {
                 )
                 infoRow(
                     title: "Arztgespräche vorbereiten",
-                    detail: "PDF-Berichte und Backups helfen dir, Termine vorzubereiten. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst.",
+                    detail: "PDF-Berichte helfen dir, Termine vorzubereiten. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst.",
                     systemImage: "doc.text"
                 )
             }
@@ -42,7 +42,7 @@ struct ProductInformationView: View {
             Section("Deine Daten") {
                 infoRow(
                     title: "Deine Daten gehören dir",
-                    detail: "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden zuerst auf diesem Gerät gespeichert.",
+                    detail: "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden auf diesem Gerät gespeichert.",
                     systemImage: "lock"
                 )
                 infoRow(
@@ -63,12 +63,12 @@ struct ProductInformationView: View {
             Section("Berechtigungen") {
                 infoRow(
                     title: "Standort für Wetter",
-                    detail: "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nicht als eigener Tagebucheintrag gespeichert.",
+                    detail: "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nur für den Wetteraufruf benötigt und nie gespeichert.",
                     systemImage: "location"
                 )
                 infoRow(
                     title: "Apple Health optional",
-                    detail: "Apple Health wird nur genutzt, wenn du einzelne Datentypen freigibst. Wenn ein Health-Datentyp auf deinem Gerät nicht verfügbar ist, wird er ausgelassen.",
+                    detail: "Apple Health wird nur genutzt, wenn du einzelne Informationen freigibst.",
                     systemImage: "heart.text.square"
                 )
                 infoRow(
@@ -81,18 +81,13 @@ struct ProductInformationView: View {
             Section("Apple Health") {
                 infoRow(
                     title: "Du behältst die Kontrolle",
-                    detail: "Lesen und Schreiben sind getrennt. Du kannst jeden Health-Datentyp einzeln erlauben und später wieder deaktivieren.",
+                    detail: "Du kannst entscheiden ob und in welchem Ausmaß du deine Gesundheitsdaten an diese App freigibst. Sie werden niemals an Dritte weitergegeben.",
                     systemImage: "checklist"
                 )
                 infoRow(
                     title: "Was geschrieben wird",
-                    detail: "Version 2 schreibt nur einfache Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome. Notizen und Medikamente bleiben in der App.",
+                    detail: "Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome können an Apple Health übertragen werden. Notizen und Medikamente bleiben in der App.",
                     systemImage: "pencil.and.list.clipboard"
-                )
-                infoRow(
-                    title: "Nicht alles ist überall verfügbar",
-                    detail: "Manche Health-Datentypen gibt es erst auf neueren iOS-Versionen. Die App bleibt nutzbar und zeigt einfach nur die verfügbaren Werte.",
-                    systemImage: "info.circle"
                 )
             }
 
@@ -128,25 +123,6 @@ struct ProductInformationView: View {
                     systemImage: "exclamationmark.triangle"
                 )
             }
-
-            Section("Version und Plattform") {
-                infoRow(
-                    title: "Aktueller Umfang",
-                    detail: "Version 2 umfasst Tagebuch, Medikamente, Wetter, optionale Apple-Health-Anbindung, Export, Arztkontakte und lokale Termine.",
-                    systemImage: "app"
-                )
-                infoRow(
-                    title: "iPhone und Deutsch",
-                    detail: "Die App ist aktuell für iPhone, deutsche Sprache und iOS 17.6 oder neuer ausgelegt.",
-                    systemImage: "iphone"
-                )
-                infoRow(
-                    title: "Weiterentwicklung",
-                    detail: "Weitere Funktionen können folgen. Medizinische Auswertungen, zusätzliche Plattformen und komplexere Health-Abgleiche werden separat konzipiert.",
-                    systemImage: "arrow.triangle.branch"
-                )
-            }
-
             Section("Open Source") {
                 infoRow(
                     title: "Lizenz",
