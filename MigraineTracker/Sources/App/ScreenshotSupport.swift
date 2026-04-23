@@ -56,6 +56,20 @@ enum ScreenshotRoute: String, CaseIterable {
     case privacyInfo = "privacy-info"
 }
 
+enum ScreenshotLocalization {
+    static var isEnglish: Bool {
+        Locale.current.language.languageCode?.identifier == "en"
+    }
+
+    static func text(de german: String, en english: String) -> String {
+        isEnglish ? english : german
+    }
+
+    static func list(de german: [String], en english: [String]) -> [String] {
+        isEnglish ? english : german
+    }
+}
+
 struct ScreenshotSeed {
     let primaryEpisodeID: UUID
     let primaryDoctorID: UUID
@@ -154,12 +168,15 @@ private enum ScreenshotSeedFactory {
             endedAt: todayAtNine.addingTimeInterval(3.5 * 60 * 60),
             type: .migraine,
             intensity: 8,
-            painLocation: "left orbital",
-            painCharacter: "throbbing",
-            notes: "Screen seed: a dark room, water and a short break helped.",
-            symptoms: ["Nausea", "Light sensitivity", "Aura"],
-            triggers: ["Weather change", "Lack of sleep"],
-            functionalImpact: "Work only possible with limitations",
+            painLocation: ScreenshotLocalization.text(de: "links orbital", en: "left orbital"),
+            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
+            notes: ScreenshotLocalization.text(
+                de: "Screen-Seed: Dunkler Raum, Wasser und kurze Pause haben geholfen.",
+                en: "Screen seed: a dark room, water and a short break helped."
+            ),
+            symptoms: ScreenshotLocalization.list(de: ["Übelkeit", "Lichtempfindlichkeit", "Aura"], en: ["Nausea", "Light sensitivity", "Aura"]),
+            triggers: ScreenshotLocalization.list(de: ["Wetterumschwung", "Schlafmangel"], en: ["Weather change", "Lack of sleep"]),
+            functionalImpact: ScreenshotLocalization.text(de: "Arbeit nur eingeschränkt möglich", en: "Work only possible with limitations"),
             menstruationStatus: .expected,
             medications: [sumatriptan]
         )
@@ -169,12 +186,12 @@ private enum ScreenshotSeedFactory {
             endedAt: fourDaysAgo.addingTimeInterval(2 * 60 * 60),
             type: .headache,
             intensity: 6,
-            painLocation: "bilateral frontal",
-            painCharacter: "pressing",
-            notes: "A lot of screen work in the afternoon.",
-            symptoms: ["Tension"],
+            painLocation: ScreenshotLocalization.text(de: "beidseitig frontal", en: "bilateral frontal"),
+            painCharacter: ScreenshotLocalization.text(de: "drückend", en: "pressing"),
+            notes: ScreenshotLocalization.text(de: "Viel Bildschirmarbeit am Nachmittag.", en: "A lot of screen work in the afternoon."),
+            symptoms: ScreenshotLocalization.list(de: ["Verspannung"], en: ["Tension"]),
             triggers: ["Stress"],
-            functionalImpact: "Reduced concentration",
+            functionalImpact: ScreenshotLocalization.text(de: "Konzentration reduziert", en: "Reduced concentration"),
             menstruationStatus: .none,
             medications: [magnesium]
         )
@@ -184,12 +201,12 @@ private enum ScreenshotSeedFactory {
             endedAt: twelveDaysAgo.addingTimeInterval(90 * 60),
             type: .unclear,
             intensity: 4,
-            painLocation: "back of head",
-            painCharacter: "dull",
-            notes: "Short episode without other notable issues.",
-            symptoms: ["Fatigue"],
-            triggers: ["Too little water"],
-            functionalImpact: "Slightly limited",
+            painLocation: ScreenshotLocalization.text(de: "Hinterkopf", en: "back of head"),
+            painCharacter: ScreenshotLocalization.text(de: "dumpf", en: "dull"),
+            notes: ScreenshotLocalization.text(de: "Kurzer Verlauf ohne weitere Auffälligkeiten.", en: "Short episode without other notable issues."),
+            symptoms: ScreenshotLocalization.list(de: ["Müdigkeit"], en: ["Fatigue"]),
+            triggers: ScreenshotLocalization.list(de: ["Zu wenig Wasser"], en: ["Too little water"]),
+            functionalImpact: ScreenshotLocalization.text(de: "Leicht eingeschränkt", en: "Slightly limited"),
             menstruationStatus: .unknown,
             medications: [ibuprofen]
         )
@@ -197,7 +214,7 @@ private enum ScreenshotSeedFactory {
         let weatherSnapshot = WeatherSnapshot(
             snapshot: WeatherSnapshotData(
                 recordedAt: todayAtNine,
-                condition: "Light rain",
+                condition: ScreenshotLocalization.text(de: "Leichter Regen", en: "Light rain"),
                 temperature: 16.3,
                 humidity: 74,
                 pressure: 1007,
@@ -214,14 +231,14 @@ private enum ScreenshotSeedFactory {
             createdAt: calendar.date(byAdding: .month, value: -4, to: now) ?? now,
             updatedAt: now,
             name: "Dr. Clara Heiden",
-            specialty: "Neurology",
+            specialty: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology"),
             street: "Lindenhofgasse 12",
             city: "Wien",
             state: "Wien",
             postalCode: "1010",
             phone: "+43 1 000 12 34",
             email: "ordination.heiden@example.com",
-            notes: "Fictional sample doctor for migraine prevention.",
+            notes: ScreenshotLocalization.text(de: "Fiktive Beispielärztin für Migräneprophylaxe.", en: "Fictional sample doctor for migraine prevention."),
             sourceRaw: DoctorSource.oegkDirectory.rawValue
         )
         let secondDoctor = Doctor(
@@ -229,14 +246,14 @@ private enum ScreenshotSeedFactory {
             createdAt: calendar.date(byAdding: .month, value: -2, to: now) ?? now,
             updatedAt: now,
             name: "Dr. Mira Sonnberg",
-            specialty: "General medicine",
+            specialty: ScreenshotLocalization.text(de: "Allgemeinmedizin", en: "General medicine"),
             street: "Auenweg 5",
             city: "Wien",
             state: "Wien",
             postalCode: "1070",
             phone: "+43 1 000 56 78",
             email: "praxis.sonnberg@example.com",
-            notes: "Fictional sample contact for follow-up visits.",
+            notes: ScreenshotLocalization.text(de: "Fiktiver Beispielkontakt für Verlaufskontrollen.", en: "Fictional sample contact for follow-up visits."),
             sourceRaw: DoctorSource.manual.rawValue
         )
 
@@ -248,7 +265,7 @@ private enum ScreenshotSeedFactory {
             endsAt: calendar.date(bySettingHour: 14, minute: 45, second: 0, of: nextWeek),
             practiceName: "Ordination Dr. Clara Heiden",
             addressText: "Lindenhofgasse 12, 1010 Wien",
-            note: "Discussion about triggers and prevention.",
+            note: ScreenshotLocalization.text(de: "Gespräch zu Triggern und Prophylaxe.", en: "Discussion about triggers and prevention."),
             reminderEnabled: true,
             reminderLeadTimeMinutes: 24 * 60,
             notificationStatusRaw: AppointmentReminderStatus.scheduled.rawValue,
@@ -261,9 +278,9 @@ private enum ScreenshotSeedFactory {
             updatedAt: now,
             scheduledAt: calendar.date(bySettingHour: 9, minute: 30, second: 0, of: nextMonth) ?? nextMonth,
             endsAt: nil,
-            practiceName: "Practice Dr. Mira Sonnberg",
+            practiceName: ScreenshotLocalization.text(de: "Praxis Dr. Mira Sonnberg", en: "Practice Dr. Mira Sonnberg"),
             addressText: "Auenweg 5, 1070 Wien",
-            note: "Kontrolle Blutdruck und Begleitmedikation.",
+            note: ScreenshotLocalization.text(de: "Kontrolle Blutdruck und Begleitmedikation.", en: "Blood pressure and accompanying medication check."),
             reminderEnabled: true,
             reminderLeadTimeMinutes: 120,
             notificationStatusRaw: AppointmentReminderStatus.authorized.rawValue,
@@ -300,34 +317,34 @@ private enum ScreenshotSeedFactory {
             DoctorDirectoryEntry(
                 id: "screenshot-doctor-clara-heiden",
                 name: "Dr. Clara Heiden",
-                specialty: "Neurologie",
+                specialty: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology"),
                 street: "Lindenhofgasse 12",
                 city: "Wien",
                 state: "Wien",
                 postalCode: "1010",
-                sourceLabel: "Sample directory for App Store screenshots",
+                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
                 sourceURL: "https://example.com/app-store-screenshots"
             ),
             DoctorDirectoryEntry(
                 id: "screenshot-doctor-mira-sonnberg",
                 name: "Dr. Mira Sonnberg",
-                specialty: "Allgemeinmedizin",
+                specialty: ScreenshotLocalization.text(de: "Allgemeinmedizin", en: "General medicine"),
                 street: "Auenweg 5",
                 city: "Wien",
                 state: "Wien",
                 postalCode: "1070",
-                sourceLabel: "Sample directory for App Store screenshots",
+                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
                 sourceURL: "https://example.com/app-store-screenshots"
             ),
             DoctorDirectoryEntry(
                 id: "screenshot-doctor-jonas-erlach",
                 name: "Dr. Jonas Erlach",
-                specialty: "Schmerzambulanz",
+                specialty: ScreenshotLocalization.text(de: "Schmerzambulanz", en: "Pain clinic"),
                 street: "Parkring 8",
                 city: "Graz",
                 state: "Steiermark",
                 postalCode: "8010",
-                sourceLabel: "Sample directory for App Store screenshots",
+                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
                 sourceURL: "https://example.com/app-store-screenshots"
             )
         ]
@@ -389,7 +406,7 @@ struct ScreenshotRootView: View {
                 DoctorAddFlowView(
                     appContainer: appContainer,
                     startMode: .oegkDirectory,
-                    initialSearchText: "Neurologie"
+                    initialSearchText: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology")
                 )
             }
 
@@ -431,13 +448,13 @@ private struct ScreenshotDoctorsListView: View {
     var body: some View {
         List {
             Section {
-                Label("Add Doctor", systemImage: "cross.case.fill")
+                Label("Arzt hinzufügen", systemImage: "cross.case.fill")
                     .brandGroupedRow()
             } footer: {
-                Text("The list shows sample data for screenshot mode.")
+                Text("Die Liste zeigt Beispieldaten für den Screenshot-Modus.")
             }
 
-            Section("My Doctors") {
+            Section("Meine Ärzte") {
                 ForEach(doctors) { doctor in
                     NavigationLink {
                         DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
@@ -447,7 +464,7 @@ private struct ScreenshotDoctorsListView: View {
                 }
             }
         }
-        .navigationTitle("Doctors")
+        .navigationTitle("Ärzte")
         .brandGroupedScreen()
         .refreshable {
             doctors = (try? appContainer.doctorRepository.fetchAll()) ?? []
@@ -472,7 +489,7 @@ private struct ScreenshotAppointmentFlowView: View {
             if let doctor {
                 AppointmentEditorView(appContainer: appContainer, doctor: doctor, appointmentID: nil)
             } else {
-                ContentUnavailableView("Doctor not found", systemImage: "exclamationmark.triangle")
+                ContentUnavailableView("Arzt nicht gefunden", systemImage: "exclamationmark.triangle")
             }
         }
     }

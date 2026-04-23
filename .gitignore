@@ -118,5 +118,5 @@ Temporary Items
 MigraineTracker/Configs/LocalSecrets.xcconfig
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots/ios/test_output/
+fastlane/screenshots/test_output/
 fastlane/test_output/

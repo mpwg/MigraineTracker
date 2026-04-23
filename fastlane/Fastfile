@@ -15,7 +15,10 @@ LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "MigraineTracker/Configs/LocalSecrets.
 SCREENSHOT_SCHEME = "MigraineTrackerScreenshots"
 SCREENSHOT_TEST_TARGET = "MigraineTrackerUITests"
 SCREENSHOT_TEST_IDENTIFIER = "MigraineTrackerUITests/MigraineTrackerScreenshotTests/testCaptureMainStoreScreens"
-SCREENSHOT_LANGUAGE = "en-US"
+SCREENSHOT_LANGUAGES = [
+  { language: "de-DE", locale: "de_DE" },
+  { language: "en-US", locale: "en_US" }
+].freeze
 SCREENSHOT_SEED = "default"
 SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
 IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
@@ -43,20 +46,20 @@ def screenshot_image_cache_directory
   File.join(screenshot_cache_directory, "screenshots")
 end
 
-def screenshot_language_directory(output_directory)
-  File.join(output_directory, SCREENSHOT_LANGUAGE)
+def screenshot_language_directory(output_directory, language:)
+  File.join(output_directory, language)
 end
 
-def screenshot_result_bundle_path(output_directory, device_name)
+def screenshot_result_bundle_path(output_directory, device_name, language:)
   sanitized_name = device_name.gsub(/[^A-Za-z0-9]+/, "-").gsub(/^-|-$/, "")
   platform_name = File.basename(output_directory)
-  File.join(SCREENSHOT_ROOT, "test_output", platform_name, SCREENSHOT_LANGUAGE, "#{SCREENSHOT_SCHEME}-#{sanitized_name}.xcresult")
+  File.join(SCREENSHOT_ROOT, "test_output", platform_name, language, "#{SCREENSHOT_SCHEME}-#{sanitized_name}.xcresult")
 end
 
-def write_snapshot_configuration_files!
+def write_snapshot_configuration_files!(language:, locale:)
   FileUtils.mkdir_p(screenshot_cache_directory)
-  File.write(File.join(screenshot_cache_directory, "language.txt"), "#{SCREENSHOT_LANGUAGE}\n")
-  File.write(File.join(screenshot_cache_directory, "locale.txt"), "en_US\n")
+  File.write(File.join(screenshot_cache_directory, "language.txt"), "#{language}\n")
+  File.write(File.join(screenshot_cache_directory, "locale.txt"), "#{locale}\n")
   File.write(File.join(screenshot_cache_directory, "snapshot-launch_arguments.txt"), "-mt_screenshot_seed #{SCREENSHOT_SEED}\n")
 end
 
@@ -102,7 +105,7 @@ def clear_ios_status_bar!(device)
   sh("xcrun simctl status_bar #{device.udid.shellescape} clear || true")
 end
 
-def run_screenshot_test!(destination:, result_bundle_path:)
+def run_screenshot_test!(destination:, result_bundle_path:, language:)
   FileUtils.rm_rf(result_bundle_path)
   FileUtils.mkdir_p(File.dirname(result_bundle_path))
 
@@ -121,7 +124,7 @@ def run_screenshot_test!(destination:, result_bundle_path:)
     sh(
       {
         "FASTLANE_SNAPSHOT" => "YES",
-        "FASTLANE_LANGUAGE" => SCREENSHOT_LANGUAGE,
+        "FASTLANE_LANGUAGE" => language,
         "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET
       },
       command
@@ -129,8 +132,8 @@ def run_screenshot_test!(destination:, result_bundle_path:)
   end
 end
 
-def copy_device_screenshots!(device_name:, output_directory:)
-  destination_directory = screenshot_language_directory(output_directory)
+def copy_device_screenshots!(device_name:, output_directory:, language:)
+  destination_directory = screenshot_language_directory(output_directory, language: language)
   FileUtils.mkdir_p(destination_directory)
 
   screenshots = Dir.glob(File.join(screenshot_image_cache_directory, "#{device_name}-*.png")).sort
@@ -338,10 +341,11 @@ def next_build_number
   Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
-def capture_screenshot_set!(devices:, output_directory:, override_status_bar:)
-  FileUtils.rm_rf(output_directory)
+def capture_screenshot_set!(devices:, output_directory:, override_status_bar:, language_config:)
+  language = language_config.fetch(:language)
+  locale = language_config.fetch(:locale)
   FileUtils.mkdir_p(output_directory)
-  write_snapshot_configuration_files!
+  write_snapshot_configuration_files!(language: language, locale: locale)
 
   devices.each do |device_name|
     device = resolve_simulator_for_capture(device_name)
@@ -349,24 +353,36 @@ def capture_screenshot_set!(devices:, output_directory:, override_status_bar:)
     prepare_ios_simulator!(device, override_status_bar: override_status_bar)
     run_screenshot_test!(
       destination: "platform=iOS Simulator,id=#{device.udid}",
-      result_bundle_path: screenshot_result_bundle_path(output_directory, device_name)
+      result_bundle_path: screenshot_result_bundle_path(output_directory, device_name, language: language),
+      language: language
     )
-    copy_device_screenshots!(device_name: device_name, output_directory: output_directory)
+    copy_device_screenshots!(device_name: device_name, output_directory: output_directory, language: language)
     clear_ios_status_bar!(device) if override_status_bar
   end
 end
 
 def capture_all_screenshots!
   FileUtils.mkdir_p(SCREENSHOT_ROOT)
-  capture_screenshot_set!(
-    devices: IOS_SCREENSHOT_DEVICES,
-    output_directory: IOS_SCREENSHOT_OUTPUT,
-    override_status_bar: true
-  )
+  FileUtils.rm_rf(IOS_SCREENSHOT_OUTPUT)
+  FileUtils.mkdir_p(IOS_SCREENSHOT_OUTPUT)
+
+  SCREENSHOT_LANGUAGES.each do |language_config|
+    capture_screenshot_set!(
+      devices: IOS_SCREENSHOT_DEVICES,
+      output_directory: IOS_SCREENSHOT_OUTPUT,
+      override_status_bar: true,
+      language_config: language_config
+    )
+  end
 end
 
 def upload_screenshot_sets!(api_key:, version:)
-  UI.user_error!("Keine vorhandenen iOS-Screenshots unter #{screenshot_language_directory(IOS_SCREENSHOT_OUTPUT)} gefunden.") if Dir.glob(File.join(screenshot_language_directory(IOS_SCREENSHOT_OUTPUT), "*.png")).empty?
+  SCREENSHOT_LANGUAGES.each do |language_config|
+    language = language_config.fetch(:language)
+    directory = screenshot_language_directory(IOS_SCREENSHOT_OUTPUT, language: language)
+    UI.user_error!("Keine vorhandenen iOS-Screenshots unter #{directory} gefunden.") if Dir.glob(File.join(directory, "*.png")).empty?
+  end
+
   FileUtils.rm_rf(File.join(IOS_SCREENSHOT_OUTPUT, "test_output"))
 
   deliver(
