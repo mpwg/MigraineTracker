@@ -357,7 +357,7 @@ private struct DoctorDirectoryPickerView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } header: {
-                Text("Arzt aus ÖGK-Liste hinzufügen")
+                Text(AppStoreScreenshotMode.isEnabled ? "Arzt aus Musterverzeichnis hinzufügen" : "Arzt aus ÖGK-Liste hinzufügen")
             } footer: {
                 Text("Die Treffer sind nach relevanten Fachgebieten gruppiert und innerhalb der Gruppen nach PLZ und Name sortiert.")
             }

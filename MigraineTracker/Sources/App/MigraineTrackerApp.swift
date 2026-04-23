@@ -50,7 +50,6 @@ struct MigraineTrackerApp: App {
         if !launchConfiguration.isScreenshotMode, let telemetryAppID = Self.telemetryAppID {
             TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
         }
-
         do {
             if launchConfiguration.isScreenshotMode {
                 let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)

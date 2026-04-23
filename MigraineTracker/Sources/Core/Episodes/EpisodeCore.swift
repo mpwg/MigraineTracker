@@ -360,7 +360,13 @@ final class EpisodeEditorController {
             self.weatherLoadState = record.weather.map { .loaded(WeatherSnapshotData(record: $0)) } ?? .idle
         } else {
             self.mode = .create
-            self.draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
+            if AppStoreScreenshotMode.isEnabled {
+                let screenshotDraft = AppStoreScreenshotMode.sampleDraft(initialStartedAt: initialStartedAt)
+                self.draft = screenshotDraft
+                self.weatherLoadState = .loaded(AppStoreScreenshotMode.sampleWeatherSnapshot(for: screenshotDraft.startedAt))
+            } else {
+                self.draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
+            }
             self.originalStartedAt = nil
             self.originalWeatherSnapshot = nil
         }
@@ -436,6 +442,11 @@ final class EpisodeEditorController {
     }
 
     func refreshWeather() async {
+        if AppStoreScreenshotMode.isEnabled {
+            weatherLoadState = .loaded(AppStoreScreenshotMode.sampleWeatherSnapshot(for: draft.startedAt))
+            return
+        }
+
         if draft.startedAt > .now {
             weatherLoadState = .unavailable("Für zukünftige Zeitpunkte wird kein Wetter geladen.")
             return

@@ -70,13 +70,13 @@ jobs:
 
       - name: Screenshot-Änderungen committen
         run: |
-          if git diff --quiet -- fastlane/screenshots; then
+          if [ -z "$(git status --short --untracked-files=all -- fastlane/screenshots)" ]; then
             echo "Keine Änderungen an Screenshots festgestellt."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add fastlane/screenshots
+          git add -A fastlane/screenshots
           git commit -m "chore: Store-Screenshots aktualisieren [skip ci]"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}

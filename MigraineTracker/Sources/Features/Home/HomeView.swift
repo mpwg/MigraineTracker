@@ -103,7 +103,11 @@ struct HomeView: View {
             } header: {
                 Text("Meine Ärzte")
             } footer: {
-                Text("Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden.")
+                Text(
+                    AppStoreScreenshotMode.isEnabled
+                    ? "Im Screenshot-Modus werden ausschließlich anonymisierte Musterärztinnen und Musterärzte angezeigt."
+                    : "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden."
+                )
             }
 
             Section {
