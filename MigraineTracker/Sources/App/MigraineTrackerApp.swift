@@ -20,7 +20,7 @@ struct MigraineTrackerApp: App {
         let launchConfiguration = AppLaunchConfiguration.current
         self.launchConfiguration = launchConfiguration
 
-        if !launchConfiguration.isScreenshotMode, let sentryDSN = Self.sentryDSN {
+        if !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests, let sentryDSN = Self.sentryDSN {
             SentrySDK.start { options in
                 options.dsn = sentryDSN
 
@@ -47,7 +47,7 @@ struct MigraineTrackerApp: App {
         } else {
             Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
         }
-        if !launchConfiguration.isScreenshotMode, let telemetryAppID = Self.telemetryAppID {
+        if !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests, let telemetryAppID = Self.telemetryAppID {
             TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
         }
         do {
@@ -60,7 +60,7 @@ struct MigraineTrackerApp: App {
                 _syncCoordinator = State(initialValue: environment.3)
             } else {
                 let schema = Schema(versionedSchema: MigraineTrackerSchemaV4.self)
-                let storeURL = Self.defaultStoreURL()
+                let storeURL = launchConfiguration.isRunningTests ? Self.unitTestStoreURL() : Self.defaultStoreURL()
                 let configuration = ModelConfiguration(
                     "default",
                     schema: schema,
@@ -69,12 +69,18 @@ struct MigraineTrackerApp: App {
                 )
 
                 let container = try Self.makeContainer(schema: schema, configuration: configuration)
-                MedicationCatalog.importSeedDataIfNeeded(into: container)
-                DoctorDirectoryCatalog.importSeedDataIfNeeded(into: container)
+                if !launchConfiguration.isRunningTests {
+                    MedicationCatalog.importSeedDataIfNeeded(into: container)
+                    DoctorDirectoryCatalog.importSeedDataIfNeeded(into: container)
+                }
                 self.modelContainer = container
                 let appLogStore = AppLogStore()
                 self.appLogStore = appLogStore
-                let syncCoordinator = SyncCoordinator(modelContainer: container, appLogStore: appLogStore)
+                let syncCoordinator = SyncCoordinator(
+                    modelContainer: container,
+                    appLogStore: appLogStore,
+                    autostart: !launchConfiguration.isRunningTests
+                )
                 _syncCoordinator = State(initialValue: syncCoordinator)
                 self.appContainer = AppContainer(
                     modelContainer: container,
@@ -159,6 +165,10 @@ struct MigraineTrackerApp: App {
     private static func defaultStoreURL() -> URL {
         let applicationSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return applicationSupportURL.appending(path: "default.store")
+    }
+
+    private static func unitTestStoreURL() -> URL {
+        FileManager.default.temporaryDirectory.appending(path: "MigraineTracker-UnitTests-\(UUID().uuidString).store")
     }
 
     private static var sentryDSN: String? {

@@ -5,18 +5,18 @@ on:
     branches:
       - main
     paths:
-      - 'MigraineTracker/**'
-      - 'MigraineTrackerTests/**'
-      - 'MigraineTracker.xcodeproj/**'
-      - '.github/workflows/ios-ci.yml'
+      - "MigraineTracker/**"
+      - "MigraineTrackerTests/**"
+      - "MigraineTracker.xcodeproj/**"
+      - ".github/workflows/ios-ci.yml"
   push:
     branches:
       - main
     paths:
-      - 'MigraineTracker/**'
-      - 'MigraineTrackerTests/**'
-      - 'MigraineTracker.xcodeproj/**'
-      - '.github/workflows/ios-ci.yml'
+      - "MigraineTracker/**"
+      - "MigraineTrackerTests/**"
+      - "MigraineTracker.xcodeproj/**"
+      - ".github/workflows/ios-ci.yml"
 
 jobs:
   build-and-test:
@@ -29,6 +29,8 @@ jobs:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
       RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/MigraineTrackerTests.xcresult
+      TEST_DESTINATION: platform=macOS,arch=arm64,variant=Mac Catalyst
+      SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.swiftpm-cache
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -36,7 +38,7 @@ jobs:
       - name: Xcode 26.4 auswählen
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '26.4'
+          xcode-version: "26.4"
 
       - name: Xcode-Version ausgeben
         run: |
@@ -59,36 +61,44 @@ jobs:
           TELEMETRY_APP_ID = ${TELEMETRY_APP_ID}
           EOF
 
-      - name: Simulator-Ziel wählen
-        run: |
-          DEVICE_NAME="$(xcrun simctl list devices available | grep -E 'iPhone (17|Air)' | head -n 1 | sed -E 's/^[[:space:]]*([^()]+) \(.*/\1/' | xargs)"
-          if [ -z "${DEVICE_NAME}" ]; then
-            echo "Kein passender iPhone-Simulator gefunden."
-            xcrun simctl list devices available
-            exit 1
-          fi
-          echo "IOS_DESTINATION=platform=iOS Simulator,name=${DEVICE_NAME}" >> "$GITHUB_ENV"
-          echo "Verwende Simulator: ${DEVICE_NAME}"
+      - name: SwiftPM-Cache wiederherstellen
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.SWIFTPM_CACHE_PATH }}
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: swiftpm-macos-26-xcode-26_4-${{ hashFiles('MigraineTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            swiftpm-macos-26-xcode-26_4-
 
       - name: Swift Packages auflösen
-        run: xcodebuild -resolvePackageDependencies -project MigraineTracker.xcodeproj -scheme MigraineTracker
-
-      - name: App bauen
         run: |
-          xcodebuild build \
+          xcodebuild -resolvePackageDependencies \
             -project MigraineTracker.xcodeproj \
-            -scheme MigraineTracker \
-            -destination "${IOS_DESTINATION}" \
-            -derivedDataPath "${RUNNER_TEMP}/DerivedData"
+            -scheme MigraineTrackerTests \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}"
+
+      - name: Tests vorbereiten
+        run: |
+          xcodebuild build-for-testing \
+            -project MigraineTracker.xcodeproj \
+            -scheme MigraineTrackerTests \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
+            -destination "${TEST_DESTINATION}" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Tests ausführen
         run: |
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project MigraineTracker.xcodeproj \
-            -scheme MigraineTracker \
-            -destination "${IOS_DESTINATION}" \
+            -scheme MigraineTrackerTests \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
+            -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
-            -resultBundlePath "${RESULT_BUNDLE_PATH}"
+            -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: xcresult hochladen
         if: always()

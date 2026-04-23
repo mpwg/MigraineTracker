@@ -5,16 +5,21 @@ import UIKit
 
 struct AppLaunchConfiguration {
     let isScreenshotMode: Bool
+    let isRunningTests: Bool
     let screenshotRoute: ScreenshotRoute?
     let screenshotSeedName: String
 
     static var current: AppLaunchConfiguration {
-        AppLaunchConfiguration(arguments: ProcessInfo.processInfo.arguments)
+        AppLaunchConfiguration(
+            arguments: ProcessInfo.processInfo.arguments,
+            environment: ProcessInfo.processInfo.environment
+        )
     }
 
-    init(arguments: [String]) {
+    init(arguments: [String], environment: [String: String]) {
         let isFastlaneSnapshot = Self.boolValue(for: "-FASTLANE_SNAPSHOT", in: arguments) ?? false
         self.isScreenshotMode = isFastlaneSnapshot || arguments.contains("-ui_testing")
+        self.isRunningTests = environment["XCTestConfigurationFilePath"] != nil
         self.screenshotRoute = Self.value(for: "-mt_screenshot_screen", in: arguments).flatMap(ScreenshotRoute.init(rawValue:))
         self.screenshotSeedName = Self.value(for: "-mt_screenshot_seed", in: arguments) ?? "default"
     }
