@@ -81,7 +81,6 @@ enum ScreenshotBootstrap {
         )
 
         MedicationCatalog.importSeedDataIfNeeded(into: container)
-        DoctorDirectoryCatalog.importSeedDataIfNeeded(into: container)
 
         let seed = try ScreenshotSeedFactory.populate(seedName: seedName, in: container)
         let appLogStore = AppLogStore()
@@ -214,30 +213,30 @@ private enum ScreenshotSeedFactory {
             id: primaryDoctorID,
             createdAt: calendar.date(byAdding: .month, value: -4, to: now) ?? now,
             updatedAt: now,
-            name: "Dr. Anna Berger",
+            name: "Dr. Clara Heiden",
             specialty: "Neurologie",
-            street: "Mariahilfer Straße 88",
+            street: "Lindenhofgasse 12",
             city: "Wien",
             state: "Wien",
-            postalCode: "1070",
-            phone: "+43 1 555 44 33",
-            email: "ordination@berger-neuro.at",
-            notes: "Spezialistin für Migräneprophylaxe.",
+            postalCode: "1010",
+            phone: "+43 1 000 12 34",
+            email: "ordination.heiden@example.com",
+            notes: "Fiktive Beispielärztin für Migräneprophylaxe.",
             sourceRaw: DoctorSource.oegkDirectory.rawValue
         )
         let secondDoctor = Doctor(
             id: secondaryDoctorID,
             createdAt: calendar.date(byAdding: .month, value: -2, to: now) ?? now,
             updatedAt: now,
-            name: "Dr. Michael Leitner",
-            specialty: "Innere Medizin",
-            street: "Kaiserstraße 12",
+            name: "Dr. Mira Sonnberg",
+            specialty: "Allgemeinmedizin",
+            street: "Auenweg 5",
             city: "Wien",
             state: "Wien",
             postalCode: "1070",
-            phone: "+43 1 222 10 90",
-            email: "praxis@leitner.at",
-            notes: "Hausarzt für allgemeine Verlaufskontrollen.",
+            phone: "+43 1 000 56 78",
+            email: "praxis.sonnberg@example.com",
+            notes: "Fiktiver Beispielkontakt für Verlaufskontrollen.",
             sourceRaw: DoctorSource.manual.rawValue
         )
 
@@ -247,8 +246,8 @@ private enum ScreenshotSeedFactory {
             updatedAt: now,
             scheduledAt: calendar.date(bySettingHour: 14, minute: 0, second: 0, of: nextWeek) ?? nextWeek,
             endsAt: calendar.date(bySettingHour: 14, minute: 45, second: 0, of: nextWeek),
-            practiceName: "Ordination Dr. Berger",
-            addressText: "Mariahilfer Straße 88, 1070 Wien",
+            practiceName: "Ordination Dr. Clara Heiden",
+            addressText: "Lindenhofgasse 12, 1010 Wien",
             note: "Gespräch zu Triggern und Prophylaxe.",
             reminderEnabled: true,
             reminderLeadTimeMinutes: 24 * 60,
@@ -262,8 +261,8 @@ private enum ScreenshotSeedFactory {
             updatedAt: now,
             scheduledAt: calendar.date(bySettingHour: 9, minute: 30, second: 0, of: nextMonth) ?? nextMonth,
             endsAt: nil,
-            practiceName: "Praxis Dr. Leitner",
-            addressText: "Kaiserstraße 12, 1070 Wien",
+            practiceName: "Praxis Dr. Mira Sonnberg",
+            addressText: "Auenweg 5, 1070 Wien",
             note: "Kontrolle Blutdruck und Begleitmedikation.",
             reminderEnabled: true,
             reminderLeadTimeMinutes: 120,
@@ -283,6 +282,9 @@ private enum ScreenshotSeedFactory {
         context.insert(secondDoctor)
         context.insert(primaryAppointment)
         context.insert(secondAppointment)
+        for entry in sampleDoctorDirectoryEntries() {
+            context.insert(entry)
+        }
 
         try context.save()
 
@@ -291,6 +293,44 @@ private enum ScreenshotSeedFactory {
             primaryDoctorID: primaryDoctorID,
             newEntryDate: calendar.date(bySettingHour: 7, minute: 40, second: 0, of: now) ?? now
         )
+    }
+
+    private static func sampleDoctorDirectoryEntries() -> [DoctorDirectoryEntry] {
+        [
+            DoctorDirectoryEntry(
+                id: "screenshot-doctor-clara-heiden",
+                name: "Dr. Clara Heiden",
+                specialty: "Neurologie",
+                street: "Lindenhofgasse 12",
+                city: "Wien",
+                state: "Wien",
+                postalCode: "1010",
+                sourceLabel: "Musterverzeichnis für App-Store-Screenshots",
+                sourceURL: "https://example.com/app-store-screenshots"
+            ),
+            DoctorDirectoryEntry(
+                id: "screenshot-doctor-mira-sonnberg",
+                name: "Dr. Mira Sonnberg",
+                specialty: "Allgemeinmedizin",
+                street: "Auenweg 5",
+                city: "Wien",
+                state: "Wien",
+                postalCode: "1070",
+                sourceLabel: "Musterverzeichnis für App-Store-Screenshots",
+                sourceURL: "https://example.com/app-store-screenshots"
+            ),
+            DoctorDirectoryEntry(
+                id: "screenshot-doctor-jonas-erlach",
+                name: "Dr. Jonas Erlach",
+                specialty: "Schmerzambulanz",
+                street: "Parkring 8",
+                city: "Graz",
+                state: "Steiermark",
+                postalCode: "8010",
+                sourceLabel: "Musterverzeichnis für App-Store-Screenshots",
+                sourceURL: "https://example.com/app-store-screenshots"
+            )
+        ]
     }
 }
 

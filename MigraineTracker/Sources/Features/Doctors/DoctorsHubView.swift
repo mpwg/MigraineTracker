@@ -94,7 +94,7 @@ struct DoctorDetailView: View {
                         detailRow("E-Mail", doctor.email)
                     }
 
-                    detailRow("Quelle", doctor.source.rawValue)
+                    detailRow("Quelle", AppStoreScreenshotMode.isEnabled ? "Musterverzeichnis" : doctor.source.rawValue)
                 }
 
                 if !doctor.notes.isEmpty {
