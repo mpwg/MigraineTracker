@@ -1,5 +1,7 @@
 import Foundation
+import CoreLocation
 import Testing
+import WeatherKit
 @testable import MigraineTracker
 
 @MainActor
@@ -31,13 +33,31 @@ struct CoreArchitectureTests {
             pressure: 1004,
             precipitation: 1.4,
             weatherCode: 63,
-            source: "Open-Meteo DWD ICON"
+            source: "Apple Weather"
         )
 
         let savedID = try useCase.execute(draft, weatherSnapshot: snapshot)
 
         #expect(savedID == repository.savedDraftID)
         #expect(repository.lastWeatherSnapshot == snapshot)
+    }
+
+    @Test
+    func appleWeatherKitServiceSkipsDatesBeforeHourlyHistory() async throws {
+        let service = AppleWeatherKitWeatherService()
+        let oldDate = Date(timeIntervalSince1970: 1_627_775_999)
+        let location = CLLocation(latitude: 48.2082, longitude: 16.3738)
+
+        let snapshot = try await service.fetchWeather(for: oldDate, location: location)
+
+        #expect(snapshot == nil)
+    }
+
+    @Test
+    func weatherConditionMapperUsesGermanDescriptions() {
+        #expect(WeatherConditionMapper.description(for: .clear) == "Klar")
+        #expect(WeatherConditionMapper.description(for: .heavyRain) == "Starker Regen")
+        #expect(WeatherConditionMapper.description(for: .thunderstorms) == "Gewitter")
     }
 
     @Test

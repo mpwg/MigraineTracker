@@ -24,7 +24,7 @@ final class AppContainer {
         modelContainer: ModelContainer,
         syncCoordinator: SyncCoordinator,
         appLogStore: AppLogStore,
-        weatherService: any WeatherService = OpenMeteoDwdWeatherService(),
+        weatherService: any WeatherService = AppleWeatherKitWeatherService(),
         locationService: any LocationService = SystemLocationService(),
         notificationService: any NotificationService = UserNotificationService()
     ) {

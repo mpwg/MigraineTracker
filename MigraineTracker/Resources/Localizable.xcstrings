@@ -546,16 +546,6 @@
         }
       }
     },
-    "CC BY 4.0 anzeigen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show CC BY 4.0"
-          }
-        }
-      }
-    },
     "Cloud hat recht": {
       "localizations": {
         "en": {
@@ -596,12 +586,12 @@
         }
       }
     },
-    "Das Wetter wird mit deinem ungefähren Standort über Open-Meteo auf Basis von DWD ICON geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.": {
+    "Das Wetter wird mit deinem ungefähren Standort über Apple Weather geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Weather is loaded with your approximate location via Open-Meteo based on DWD ICON. The entry is still saved without weather if permission is not granted."
+            "value": "Weather is loaded with your approximate location via Apple Weather. The entry is still saved without weather if permission is not granted."
           }
         }
       }
@@ -1716,16 +1706,6 @@
         }
       }
     },
-    "Open-Meteo öffnen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Open-Meteo"
-          }
-        }
-      }
-    },
     "Optionale Details": {
       "localizations": {
         "en": {
@@ -1892,6 +1872,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Source: %1$@"
+          }
+        }
+      }
+    },
+    "Rechtliche Hinweise öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Legal Notices"
           }
         }
       }
@@ -2342,6 +2332,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weather Data"
+          }
+        }
+      }
+    },
+    "Wetterquellen anzeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Weather Sources"
+          }
+        }
+      }
+    },
+    "Wetterquellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather Sources"
           }
         }
       }

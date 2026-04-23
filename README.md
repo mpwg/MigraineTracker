@@ -10,7 +10,7 @@ Der aktuelle Stand der App deckt diese Bereiche ab:
 - schneller neuer Eintrag mit Intensität, Zeitpunkt und optionalen Zusatzangaben
 - Symptome, Trigger, Notizen, Schmerzlokalisation, Schmerzcharakter und funktionelle Einschränkung
 - Medikamentendokumentation inklusive eigener Vorlagen
-- Wetter-Snapshots über `Open-Meteo` auf Basis von `DWD ICON`
+- Wetter-Snapshots über `Apple Weather` mit `WeatherKit`
 - Tagebuchansicht mit Kalender, Tagesauswahl, Detailansicht, Bearbeiten und Papierkorb
 - PDF-Bericht und JSON5-Backup für frei wählbare Zeiträume
 - Ärztinnen- und Ärzte-Verwaltung inklusive lokaler Termine und Erinnerungen
@@ -63,7 +63,7 @@ Die App bleibt klar migränefokussiert, ist aber bewusst nicht nur für Migräne
 - lokale Persistenz mit `SwiftData`
 - Architektur `lokal-first`
 - Zielplattform primär `iPhone`
-- Wetterdaten über `Open-Meteo`
+- Wetterdaten über `Apple Weather` mit `WeatherKit`
 - PDF-Erzeugung lokal auf dem Gerät
 - optionale iCloud-Synchronisation getrennt von der lokalen Kernnutzung
 

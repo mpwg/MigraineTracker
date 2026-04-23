@@ -2,8 +2,6 @@ import SwiftUI
 
 struct ProductInformationView: View {
     private let privacyURL = URL(string: "https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVlcjdhQGljbG91ZC5jb20iLCJjb21wYW55IjoiTWF0dGhpYXMgV2FsbG5lci1H6WhyaSIsImdlbl9hdCI6IjIwMjYtMDQtMDlUMTE6MjI6MjUuOTYzWiJ9")!
-    private let weatherProviderURL = WeatherAttribution.providerURL
-    private let weatherLicenceURL = WeatherAttribution.licenceURL
 
     enum Mode {
         case standard
@@ -56,20 +54,14 @@ struct ProductInformationView: View {
             Section("Wetterdaten") {
                 infoRow(
                     title: "Quelle",
-                    detail: "Wetterdaten von Open-Meteo, basierend auf DWD ICON."
+                    detail: "Wetterdaten werden über WeatherKit von Apple Weather geladen."
                 )
                 infoRow(
-                    title: "Lizenz",
-                    detail: "Open-Meteo stellt diese Daten unter CC BY 4.0 bereit. Eine sichtbare Attribution ist erforderlich."
+                    title: "Attribution",
+                    detail: WeatherAttribution.modifiedSourceDescription
                 )
 
-                Link(destination: weatherProviderURL) {
-                    Label("Open-Meteo öffnen", systemImage: "link")
-                }
-
-                Link(destination: weatherLicenceURL) {
-                    Label("CC BY 4.0 anzeigen", systemImage: "doc.text")
-                }
+                WeatherAttributionView(showsDescription: false)
             }
 
             Section("Medizinische Einordnung") {

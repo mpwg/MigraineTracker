@@ -10,7 +10,6 @@
 		4066A4372F92AB4700724B7B /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 4066A4362F92AB4700724B7B /* TelemetryDeck */; };
 		40AF28D72F954481004EAEB9 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 40AF28D62F954481004EAEB9 /* Sentry */; };
 		40D264B02F929DBC0017627F /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = 4A1000023A00000100000001 /* OpenMeteoSdk */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,7 +77,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A1000013A00000100000001 /* OpenMeteoSdk in Frameworks */,
 				4066A4372F92AB4700724B7B /* TelemetryDeck in Frameworks */,
 				40AF28D72F954481004EAEB9 /* Sentry in Frameworks */,
 			);
@@ -153,7 +151,6 @@
 			);
 			name = MigraineTracker;
 			packageProductDependencies = (
-				4A1000023A00000100000001 /* OpenMeteoSdk */,
 				4066A4362F92AB4700724B7B /* TelemetryDeck */,
 				40AF28D62F954481004EAEB9 /* Sentry */,
 			);
@@ -241,7 +238,6 @@
 			mainGroup = 402B8A552F896C00008B4D70;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */,
 				4066A4352F92AB4700724B7B /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 				40AF28D52F954481004EAEB9 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
@@ -487,7 +483,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Schmerztagebuch;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Open-Meteo auf Basis von DWD ICON abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Apple Weather abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -558,7 +554,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Schmerztagebuch;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Open-Meteo auf Basis von DWD ICON abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Dein ungefährer Standort wird verwendet, um Wetterdaten für den ausgewählten Episodentag über Apple Weather abzurufen. Die App nutzt nur grob gerundete Koordinaten und speichert keine Positionsdaten.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -766,14 +762,6 @@
 			traits = (
 			);
 		};
-		4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/open-meteo/sdk.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -786,11 +774,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 40AF28D52F954481004EAEB9 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
-		};
-		4A1000023A00000100000001 /* OpenMeteoSdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4A1000033A00000100000001 /* XCRemoteSwiftPackageReference "sdk" */;
-			productName = OpenMeteoSdk;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
