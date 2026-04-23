@@ -20,12 +20,16 @@ final class SyncCoordinator {
     private var provider: (any SyncProvider)?
     private let zoneID = SyncConfiguration.zoneID
 
-    init(modelContainer: ModelContainer, appLogStore: AppLogStore) {
+    init(modelContainer: ModelContainer, appLogStore: AppLogStore, autostart: Bool = true) {
         self.modelContainer = modelContainer
         self.stateStore = SyncStateStore()
         self.appLogStore = appLogStore
         self.repository = LocalSyncRepository(modelContainer: modelContainer)
         self.deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+
+        guard autostart else {
+            return
+        }
 
         Task {
             await loadPersistedState()
