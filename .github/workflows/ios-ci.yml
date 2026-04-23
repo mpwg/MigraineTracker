@@ -67,7 +67,7 @@ jobs:
 
       - name: Tests vorbereiten
         run: |
-          xcodebuild build-for-testing \
+          CODE_SIGNING_ALLOWED=NO xcodebuild build-for-testing \
             -project MigraineTracker.xcodeproj \
             -scheme MigraineTrackerTests \
             -destination "${TEST_DESTINATION}" \
@@ -75,7 +75,7 @@ jobs:
 
       - name: Tests ausführen
         run: |
-          xcodebuild test-without-building \
+          CODE_SIGNING_ALLOWED=NO xcodebuild test-without-building \
             -project MigraineTracker.xcodeproj \
             -scheme MigraineTrackerTests \
             -destination "${TEST_DESTINATION}" \
