@@ -17,7 +17,7 @@ Es gibt genau drei relevante Workflows:
 
 Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erfüllt sein:
 
-- das Bundle `eu.mpwg.Symi` existiert bereits in `App Store Connect`
+- das Bundle `eu.mpwg.MigraineTracker` existiert bereits in `App Store Connect`
 - in `GitHub Actions` sind diese Secrets gesetzt:
   - `APPLE_DEVELOPER_TEAM_ID`
   - `APP_STORE_CONNECT_ISSUER_ID`
@@ -31,7 +31,7 @@ Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erf
   - `MATCH_GIT_BASIC_AUTHORIZATION`
   - `TELEMETRY_APP_ID`
 - das Shared Scheme `Symi` ist versioniert
-- das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile für `eu.mpwg.Symi`
+- das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile für `eu.mpwg.MigraineTracker`
 - die vorhandenen Entitlements für Push und iCloud bleiben aktiv
 - der verwendete App-Store-Connect-Schlüssel ist ein Team-Key, kein Individual Key
 

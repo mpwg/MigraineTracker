@@ -82,6 +82,8 @@ Interne technische Kennungen wie `Symi`, Bundle-ID, Scheme und iCloud-Container 
 
 Die App setzt mindestens `iOS 17.6` voraus. Diese Grenze erhält die aktuellen Swift-, SwiftUI- und SwiftData-Architekturentscheidungen ohne Backport- oder UI-Kompromisse. HealthKit-Datentypen, die erst in neueren iOS-Versionen verfügbar sind, werden separat per Availability behandelt und reduzieren auf älteren unterstützten Systemen nur den verfügbaren Health-Kontext.
 
+Aus Release- und Migrationsgründen bleiben App-Identifier, Provisioning Profile und iCloud-Container technisch auf `eu.mpwg.MigraineTracker` beziehungsweise `iCloud.eu.mpwg.MigraineTracker`. Die sichtbare Produktmarke, Projektstruktur und Schemes heißen `Symi`.
+
 ## Build und Release
 
 Dieses Projekt verwendet `GitHub Actions` und `fastlane` für CI/CD.

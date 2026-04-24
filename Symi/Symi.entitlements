@@ -14,7 +14,7 @@
 	<string>$(ICLOUD_CONTAINER_ENVIRONMENT)</string>
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
-		<string>iCloud.eu.mpwg.Symi</string>
+		<string>iCloud.eu.mpwg.MigraineTracker</string>
 	</array>
 	<key>com.apple.developer.icloud-services</key>
 	<array>

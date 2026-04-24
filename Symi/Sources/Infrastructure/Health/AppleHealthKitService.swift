@@ -295,7 +295,7 @@ final class AppleHealthKitService: HealthService {
 
         let metadata: [String: Any] = [
             HKMetadataKeyExternalUUID: "\(id.uuidString):\(type.rawValue)",
-            HKMetadataKeySyncIdentifier: "eu.mpwg.Symi.episode.\(id.uuidString).\(type.rawValue)",
+            HKMetadataKeySyncIdentifier: "eu.mpwg.MigraineTracker.episode.\(id.uuidString).\(type.rawValue)",
             HKMetadataKeySyncVersion: Int(draft.startedAt.timeIntervalSince1970),
             HKMetadataKeyTimeZone: TimeZone.current.identifier,
             HKMetadataKeyWasUserEntered: true

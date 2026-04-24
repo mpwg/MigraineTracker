@@ -2,9 +2,9 @@ import CloudKit
 import Foundation
 
 enum SyncConfiguration {
-    static let containerIdentifier = "iCloud.eu.mpwg.Symi"
-    static let zoneName = "SymiSync"
-    static let subscriptionID = "SymiSyncSubscription"
+    static let containerIdentifier = "iCloud.eu.mpwg.MigraineTracker"
+    static let zoneName = "MigraineTrackerSync"
+    static let subscriptionID = "MigraineTrackerSyncSubscription"
     static let recordType = "SyncDocument"
 
     static let zoneID = CKRecordZone.ID(
