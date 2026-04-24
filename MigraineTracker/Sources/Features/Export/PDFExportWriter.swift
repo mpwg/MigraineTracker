@@ -385,6 +385,10 @@ private struct PDFLayout {
     var topY: CGFloat { margin + 72 }
     var bottomY: CGFloat { pageRect.height - margin - footerHeight }
     var footerTopY: CGFloat { pageRect.height - margin - footerHeight + 10 }
+
+    init(pageRect: CGRect) {
+        self.pageRect = pageRect
+    }
 }
 
 private struct PDFPageContext {

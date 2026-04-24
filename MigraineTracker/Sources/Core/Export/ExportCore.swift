@@ -1,8 +1,8 @@
 import Foundation
 import Observation
 
-protocol ExportRepository {
-    func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary
+protocol ExportRepository: Sendable {
+    nonisolated func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary
     func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL
     func createBackup() throws -> URL
     func importBackup(from url: URL) throws
@@ -18,8 +18,11 @@ enum PDFReportMode: String, CaseIterable, Identifiable {
 struct LoadExportPreviewUseCase {
     let repository: ExportRepository
 
-    func execute(startDate: Date, endDate: Date) throws -> ExportPeriodSummary {
-        try repository.buildSummary(startDate: startDate, endDate: endDate)
+    func execute(startDate: Date, endDate: Date) async throws -> ExportPeriodSummary {
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.buildSummary(startDate: startDate, endDate: endDate)
+        }.value
     }
 }
 
@@ -73,7 +76,7 @@ final class DataExportController {
         self.createPDFExportUseCase = CreatePDFExportUseCase(repository: repository)
         self.createBackupUseCase = CreateBackupUseCase(repository: repository)
         self.importBackupUseCase = ImportBackupUseCase(repository: repository)
-        reloadSummary()
+        Task { await reloadSummary() }
     }
 
     var canExport: Bool {
@@ -84,21 +87,21 @@ final class DataExportController {
         includeAllDetails ? .detailed : .compact
     }
 
-    func reloadSummary() {
+    func reloadSummary() async {
         do {
-            summary = try loadExportPreviewUseCase.execute(startDate: startDate, endDate: endDate)
+            summary = try await loadExportPreviewUseCase.execute(startDate: startDate, endDate: endDate)
         } catch {
             summary = ExportPeriodSummary(startDate: startDate, endDate: endDate, records: [])
         }
 
-        updatePreparedPDF()
+        await updatePreparedPDF()
     }
 
     func createPDF() {
-        updatePreparedPDF()
+        Task { await updatePreparedPDF() }
     }
 
-    func updatePreparedPDF() {
+    func updatePreparedPDF() async {
         exportErrorMessage = nil
         exportURL = nil
 
@@ -123,26 +126,30 @@ final class DataExportController {
         dataTransferMessage = nil
         dataExportURL = nil
 
-        do {
-            dataExportURL = try createBackupUseCase.execute()
-            dataTransferMessage = "JSON5-Datei wurde lokal erstellt."
-        } catch {
-            dataTransferMessage = "Fehler beim Erstellen der JSON5-Datei."
+        Task {
+            do {
+                dataExportURL = try createBackupUseCase.execute()
+                dataTransferMessage = "JSON5-Datei wurde lokal erstellt."
+            } catch {
+                dataTransferMessage = "Fehler beim Erstellen der JSON5-Datei."
+            }
         }
     }
 
     func importBackup(from result: Result<URL, Error>) {
         dataTransferMessage = nil
 
-        do {
-            let url = try result.get()
-            try importBackupUseCase.execute(url: url)
-            dataTransferMessage = "JSON5-Daten wurden importiert."
-            reloadSummary()
-        } catch CocoaError.userCancelled {
-            return
-        } catch {
-            dataTransferMessage = "Fehler beim Import der JSON5-Datei."
+        Task {
+            do {
+                let url = try result.get()
+                try importBackupUseCase.execute(url: url)
+                dataTransferMessage = "JSON5-Daten wurden importiert."
+                await reloadSummary()
+            } catch CocoaError.userCancelled {
+                return
+            } catch {
+                dataTransferMessage = "Fehler beim Import der JSON5-Datei."
+            }
         }
     }
 

@@ -17,7 +17,7 @@ enum DataTransferError: LocalizedError {
     }
 }
 
-struct DataTransferSnapshot: Codable {
+struct DataTransferSnapshot:  Codable {
     let formatVersion: Int
     let exportedAt: Date
     let episodes: [EpisodePayload]

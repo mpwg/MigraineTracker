@@ -19,7 +19,7 @@ struct EpisodeDetailView: View {
         self.episodeID = episodeID
         self.loadEpisodeDetailUseCase = LoadEpisodeDetailUseCase(repository: appContainer.episodeRepository)
         self.deleteEpisodeUseCase = DeleteEpisodeUseCase(repository: appContainer.episodeRepository)
-        _episode = State(initialValue: try? loadEpisodeDetailUseCase.execute(id: episodeID))
+        _episode = State(initialValue: nil)
     }
 
     var body: some View {
@@ -51,7 +51,7 @@ struct EpisodeDetailView: View {
                 EpisodeEditorView(
                     appContainer: appContainer,
                     episodeID: episodeID,
-                    onSaved: reload
+                    onSaved: { Task { await reload() } }
                 )
             }
         }
@@ -67,6 +67,9 @@ struct EpisodeDetailView: View {
             Button("Abbrechen", role: .cancel) {}
         } message: {
             Text("Diese Episode wird in den Papierkorb verschoben.")
+        }
+        .task {
+            await reload()
         }
     }
 
@@ -400,15 +403,17 @@ struct EpisodeDetailView: View {
     }
 
     private func deleteEpisode() {
-        do {
-            try deleteEpisodeUseCase.execute(id: episodeID)
-            dismiss()
-        } catch {
-            assertionFailure("Löschen fehlgeschlagen: \(error)")
+        Task {
+            do {
+                try await deleteEpisodeUseCase.execute(id: episodeID)
+                dismiss()
+            } catch {
+                assertionFailure("Löschen fehlgeschlagen: \(error)")
+            }
         }
     }
 
-    private func reload() {
-        episode = try? loadEpisodeDetailUseCase.execute(id: episodeID)
+    private func reload() async {
+        episode = try? await loadEpisodeDetailUseCase.execute(id: episodeID)
     }
 }

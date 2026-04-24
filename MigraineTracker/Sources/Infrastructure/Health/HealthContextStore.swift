@@ -1,6 +1,6 @@
 import Foundation
 
-final class HealthContextStore {
+final class HealthContextStore: @unchecked Sendable {
     private let directoryURL: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -14,7 +14,7 @@ final class HealthContextStore {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    func save(_ snapshot: HealthContextSnapshotData?, for episodeID: UUID) {
+    nonisolated func save(_ snapshot: HealthContextSnapshotData?, for episodeID: UUID) {
         let url = fileURL(for: episodeID)
 
         guard let snapshot else {
@@ -29,7 +29,7 @@ final class HealthContextStore {
         } catch {}
     }
 
-    func load(for episodeID: UUID) -> HealthContextRecord? {
+    nonisolated func load(for episodeID: UUID) -> HealthContextRecord? {
         let url = fileURL(for: episodeID)
         guard let data = try? Data(contentsOf: url), let snapshot = try? decoder.decode(HealthContextSnapshotData.self, from: data) else {
             return nil
@@ -38,7 +38,7 @@ final class HealthContextStore {
         return HealthContextRecord(snapshot: snapshot)
     }
 
-    private func fileURL(for episodeID: UUID) -> URL {
+    nonisolated private func fileURL(for episodeID: UUID) -> URL {
         directoryURL.appendingPathComponent("\(episodeID.uuidString).json")
     }
 }

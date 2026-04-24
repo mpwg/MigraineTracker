@@ -17,7 +17,7 @@ struct EpisodeExportRecord: Identifiable {
     let weather: WeatherLine?
     let healthContext: HealthLine?
 
-    init(episode: Episode, healthContext: HealthContextRecord?) {
+    nonisolated init(episode: Episode, healthContext: HealthContextRecord?) {
         self.id = episode.id
         self.startedAt = episode.startedAt
         self.endedAt = episode.endedAt
@@ -83,7 +83,7 @@ struct EpisodeExportRecord: Identifiable {
         let menstrualFlow: String?
         let symptoms: [String]
 
-        init(record: HealthContextRecord) {
+        nonisolated init(record: HealthContextRecord) {
             self.recordedAt = record.recordedAt
             self.source = record.source
             self.sleepMinutes = record.sleepMinutes

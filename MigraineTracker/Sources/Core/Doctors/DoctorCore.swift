@@ -5,7 +5,7 @@ enum DoctorSource: String, CaseIterable, Codable, Identifiable {
     case manual = "Manuell"
     case oegkDirectory = "ÖGK-Suchkatalog"
 
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
 }
 
 enum AppointmentReminderStatus: String, CaseIterable, Codable, Identifiable {
@@ -15,31 +15,31 @@ enum AppointmentReminderStatus: String, CaseIterable, Codable, Identifiable {
     case scheduled = "Geplant"
     case failed = "Fehlgeschlagen"
 
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
 }
 
 struct DoctorRecord: Identifiable, Equatable, Sendable {
-    let id: UUID
-    let createdAt: Date
-    let updatedAt: Date
-    let deletedAt: Date?
-    let name: String
-    let specialty: String
-    let street: String
-    let city: String
-    let state: String
-    let postalCode: String?
-    let phone: String
-    let email: String
-    let notes: String
-    let source: DoctorSource
-    let appointments: [AppointmentRecord]
+    nonisolated let id: UUID
+    nonisolated let createdAt: Date
+    nonisolated let updatedAt: Date
+    nonisolated let deletedAt: Date?
+    nonisolated let name: String
+    nonisolated let specialty: String
+    nonisolated let street: String
+    nonisolated let city: String
+    nonisolated let state: String
+    nonisolated let postalCode: String?
+    nonisolated let phone: String
+    nonisolated let email: String
+    nonisolated let notes: String
+    nonisolated let source: DoctorSource
+    nonisolated let appointments: [AppointmentRecord]
 
-    var isDeleted: Bool {
+    nonisolated var isDeleted: Bool {
         deletedAt != nil
     }
 
-    var addressLine: String {
+    nonisolated var addressLine: String {
         [street, [postalCode, city].compactMap { $0 }.joined(separator: " "), state]
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: ", ")
@@ -47,76 +47,76 @@ struct DoctorRecord: Identifiable, Equatable, Sendable {
 }
 
 struct DoctorDirectoryRecord: Identifiable, Equatable, Sendable {
-    let id: String
-    let name: String
-    let specialty: String
-    let street: String
-    let city: String
-    let state: String
-    let postalCode: String?
-    let sourceLabel: String
-    let sourceURL: String
+    nonisolated let id: String
+    nonisolated let name: String
+    nonisolated let specialty: String
+    nonisolated let street: String
+    nonisolated let city: String
+    nonisolated let state: String
+    nonisolated let postalCode: String?
+    nonisolated let sourceLabel: String
+    nonisolated let sourceURL: String
 
-    var addressLine: String {
+    nonisolated var addressLine: String {
         [street, [postalCode, city].compactMap { $0 }.joined(separator: " "), state]
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: ", ")
     }
 
-    var postalCodeSortKey: String {
+    nonisolated var postalCodeSortKey: String {
         postalCode?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "9999"
     }
 }
 
 struct DoctorDirectorySection: Identifiable, Equatable, Sendable {
-    let title: String
-    let entries: [DoctorDirectoryRecord]
+    nonisolated let title: String
+    nonisolated let entries: [DoctorDirectoryRecord]
 
-    var id: String { title }
+    nonisolated var id: String { title }
 }
 
 struct UpcomingAppointmentListItem: Identifiable, Equatable, Sendable {
-    let appointment: AppointmentRecord
-    let doctor: DoctorRecord
+    nonisolated let appointment: AppointmentRecord
+    nonisolated let doctor: DoctorRecord
 
-    var id: UUID { appointment.id }
+    nonisolated var id: UUID { appointment.id }
 }
 
 struct AppointmentRecord: Identifiable, Equatable, Sendable {
-    let id: UUID
-    let doctorID: UUID?
-    let createdAt: Date
-    let updatedAt: Date
-    let deletedAt: Date?
-    let scheduledAt: Date
-    let endsAt: Date?
-    let practiceName: String
-    let addressText: String
-    let note: String
-    let reminderEnabled: Bool
-    let reminderLeadTimeMinutes: Int
-    let reminderStatus: AppointmentReminderStatus
-    let notificationRequestID: String?
+    nonisolated let id: UUID
+    nonisolated let doctorID: UUID?
+    nonisolated let createdAt: Date
+    nonisolated let updatedAt: Date
+    nonisolated let deletedAt: Date?
+    nonisolated let scheduledAt: Date
+    nonisolated let endsAt: Date?
+    nonisolated let practiceName: String
+    nonisolated let addressText: String
+    nonisolated let note: String
+    nonisolated let reminderEnabled: Bool
+    nonisolated let reminderLeadTimeMinutes: Int
+    nonisolated let reminderStatus: AppointmentReminderStatus
+    nonisolated let notificationRequestID: String?
 
-    var isDeleted: Bool {
+    nonisolated var isDeleted: Bool {
         deletedAt != nil
     }
 }
 
 struct DoctorDraft: Equatable, Sendable {
-    var id: UUID?
-    var name: String
-    var specialty: String
-    var street: String
-    var city: String
-    var state: String
-    var postalCode: String
-    var phone: String
-    var email: String
-    var notes: String
-    var source: DoctorSource
+    nonisolated var id: UUID?
+    nonisolated var name: String
+    nonisolated var specialty: String
+    nonisolated var street: String
+    nonisolated var city: String
+    nonisolated var state: String
+    nonisolated var postalCode: String
+    nonisolated var phone: String
+    nonisolated var email: String
+    nonisolated var notes: String
+    nonisolated var source: DoctorSource
 
-    static func makeNew() -> DoctorDraft {
+    nonisolated static func makeNew() -> DoctorDraft {
         DoctorDraft(
             id: nil,
             name: "",
@@ -132,7 +132,7 @@ struct DoctorDraft: Equatable, Sendable {
         )
     }
 
-    static func from(record: DoctorRecord) -> DoctorDraft {
+    nonisolated static func from(record: DoctorRecord) -> DoctorDraft {
         DoctorDraft(
             id: record.id,
             name: record.name,
@@ -148,7 +148,7 @@ struct DoctorDraft: Equatable, Sendable {
         )
     }
 
-    mutating func applyDirectoryEntry(_ entry: DoctorDirectoryRecord) {
+    nonisolated mutating func applyDirectoryEntry(_ entry: DoctorDirectoryRecord) {
         name = entry.name
         specialty = entry.specialty
         street = entry.street
@@ -160,18 +160,18 @@ struct DoctorDraft: Equatable, Sendable {
 }
 
 struct AppointmentDraft: Equatable, Sendable {
-    var id: UUID?
-    var doctorID: UUID
-    var scheduledAt: Date
-    var endsAtEnabled: Bool
-    var endsAt: Date
-    var practiceName: String
-    var addressText: String
-    var note: String
-    var reminderEnabled: Bool
-    var reminderLeadTimeMinutes: Int
+    nonisolated var id: UUID?
+    nonisolated var doctorID: UUID
+    nonisolated var scheduledAt: Date
+    nonisolated var endsAtEnabled: Bool
+    nonisolated var endsAt: Date
+    nonisolated var practiceName: String
+    nonisolated var addressText: String
+    nonisolated var note: String
+    nonisolated var reminderEnabled: Bool
+    nonisolated var reminderLeadTimeMinutes: Int
 
-    static func makeNew(doctor: DoctorRecord) -> AppointmentDraft {
+    nonisolated static func makeNew(doctor: DoctorRecord) -> AppointmentDraft {
         let scheduledAt = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
         return AppointmentDraft(
             id: nil,
@@ -187,7 +187,7 @@ struct AppointmentDraft: Equatable, Sendable {
         )
     }
 
-    static func from(record: AppointmentRecord) -> AppointmentDraft {
+    nonisolated static func from(record: AppointmentRecord) -> AppointmentDraft {
         AppointmentDraft(
             id: record.id,
             doctorID: record.doctorID ?? UUID(),
@@ -204,31 +204,31 @@ struct AppointmentDraft: Equatable, Sendable {
 }
 
 struct ReminderSchedulingResult: Equatable, Sendable {
-    let status: AppointmentReminderStatus
-    let requestID: String?
+    nonisolated let status: AppointmentReminderStatus
+    nonisolated let requestID: String?
 }
 
-protocol DoctorRepository {
-    func fetchAll() throws -> [DoctorRecord]
-    func load(id: UUID) throws -> DoctorRecord?
+protocol DoctorRepository: Sendable {
+    nonisolated func fetchAll() throws -> [DoctorRecord]
+    nonisolated func load(id: UUID) throws -> DoctorRecord?
     @discardableResult
-    func save(draft: DoctorDraft) throws -> UUID
-    func softDelete(id: UUID) throws
+    nonisolated func save(draft: DoctorDraft) throws -> UUID
+    nonisolated func softDelete(id: UUID) throws
 }
 
-protocol DoctorDirectoryRepository {
-    func fetchEntries(searchText: String?) throws -> [DoctorDirectoryRecord]
-    func sourceAttribution() -> (label: String, url: String)
+protocol DoctorDirectoryRepository: Sendable {
+    nonisolated func fetchEntries(searchText: String?) throws -> [DoctorDirectoryRecord]
+    nonisolated func sourceAttribution() -> (label: String, url: String)
 }
 
-protocol AppointmentRepository {
-    func fetchUpcoming(limit: Int?) throws -> [AppointmentRecord]
-    func fetchUpcoming(for doctorID: UUID) throws -> [AppointmentRecord]
-    func load(id: UUID) throws -> AppointmentRecord?
+protocol AppointmentRepository: Sendable {
+    nonisolated func fetchUpcoming(limit: Int?) throws -> [AppointmentRecord]
+    nonisolated func fetchUpcoming(for doctorID: UUID) throws -> [AppointmentRecord]
+    nonisolated func load(id: UUID) throws -> AppointmentRecord?
     @discardableResult
-    func save(draft: AppointmentDraft) throws -> UUID
-    func updateReminder(id: UUID, status: AppointmentReminderStatus, requestID: String?) throws
-    func softDelete(id: UUID) throws
+    nonisolated func save(draft: AppointmentDraft) throws -> UUID
+    nonisolated func updateReminder(id: UUID, status: AppointmentReminderStatus, requestID: String?) throws
+    nonisolated func softDelete(id: UUID) throws
 }
 
 protocol NotificationService {
@@ -265,12 +265,15 @@ struct SaveDoctorUseCase {
     let repository: DoctorRepository
 
     @discardableResult
-    func execute(_ draft: DoctorDraft) throws -> UUID {
+    func execute(_ draft: DoctorDraft) async throws -> UUID {
         if draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             throw DoctorSaveError.missingName
         }
 
-        return try repository.save(draft: draft)
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.save(draft: draft)
+        }.value
     }
 }
 
@@ -281,7 +284,12 @@ struct SaveAppointmentUseCase {
 
     @discardableResult
     func execute(_ draft: AppointmentDraft) async throws -> UUID {
-        guard let doctor = try doctorRepository.load(id: draft.doctorID) else {
+        let doctorRepository = doctorRepository
+        let appointmentRepository = appointmentRepository
+        let doctor = try await Task.detached(priority: .userInitiated) {
+            try doctorRepository.load(id: draft.doctorID)
+        }.value
+        guard let doctor else {
             throw AppointmentSaveError.missingDoctor
         }
 
@@ -289,22 +297,32 @@ struct SaveAppointmentUseCase {
             throw AppointmentSaveError.invalidDateRange
         }
 
-        let existingRecord = draft.id.flatMap { try? appointmentRepository.load(id: $0) } ?? nil
+        let existingRecord = try await Task.detached(priority: .userInitiated) {
+            try draft.id.flatMap { try appointmentRepository.load(id: $0) }
+        }.value
         if let requestID = existingRecord?.notificationRequestID {
             await notificationService.removePendingNotification(requestID: requestID)
         }
 
-        let id = try appointmentRepository.save(draft: draft)
-        let savedRecord = try appointmentRepository.load(id: id)
+        let id = try await Task.detached(priority: .userInitiated) {
+            try appointmentRepository.save(draft: draft)
+        }.value
+        let savedRecord = try await Task.detached(priority: .userInitiated) {
+            try appointmentRepository.load(id: id)
+        }.value
         guard let savedRecord else {
             return id
         }
 
         if savedRecord.reminderEnabled {
             let result = await notificationService.scheduleAppointmentReminder(for: savedRecord, doctor: doctor)
-            try appointmentRepository.updateReminder(id: id, status: result.status, requestID: result.requestID)
+            try await Task.detached(priority: .userInitiated) {
+                try appointmentRepository.updateReminder(id: id, status: result.status, requestID: result.requestID)
+            }.value
         } else {
-            try appointmentRepository.updateReminder(id: id, status: .notRequested, requestID: nil)
+            try await Task.detached(priority: .userInitiated) {
+                try appointmentRepository.updateReminder(id: id, status: .notRequested, requestID: nil)
+            }.value
         }
 
         return id
@@ -316,11 +334,17 @@ struct DeleteAppointmentUseCase {
     let notificationService: NotificationService
 
     func execute(id: UUID) async throws {
-        if let record = try appointmentRepository.load(id: id), let requestID = record.notificationRequestID {
+        let appointmentRepository = appointmentRepository
+        let record = try await Task.detached(priority: .userInitiated) {
+            try appointmentRepository.load(id: id)
+        }.value
+        if let requestID = record?.notificationRequestID {
             await notificationService.removePendingNotification(requestID: requestID)
         }
 
-        try appointmentRepository.softDelete(id: id)
+        try await Task.detached(priority: .userInitiated) {
+            try appointmentRepository.softDelete(id: id)
+        }.value
     }
 }
 
@@ -339,27 +363,33 @@ final class DoctorHubController {
     init(doctorRepository: DoctorRepository, appointmentRepository: AppointmentRepository) {
         self.doctorRepository = doctorRepository
         self.appointmentRepository = appointmentRepository
-        reloadAll()
+        Task { await reloadAll() }
     }
 
-    func reloadAll() {
+    func reloadAll() async {
         do {
-            try reloadDoctors()
-            try reloadAppointments()
+            try await reloadDoctors()
+            try await reloadAppointments()
             errorMessage = nil
         } catch {
             errorMessage = "Ärzte und Termine konnten nicht geladen werden."
         }
     }
 
-    func reloadDoctors() throws {
-        doctors = try doctorRepository.fetchAll()
+    func reloadDoctors() async throws {
+        let repository = doctorRepository
+        doctors = try await Task.detached(priority: .userInitiated) {
+            try repository.fetchAll()
+        }.value
         doctorsByID = Dictionary(uniqueKeysWithValues: doctors.map { ($0.id, $0) })
         rebuildUpcomingAppointmentItems()
     }
 
-    func reloadAppointments(limit: Int = 20) throws {
-        upcomingAppointments = try appointmentRepository.fetchUpcoming(limit: limit)
+    func reloadAppointments(limit: Int = 20) async throws {
+        let repository = appointmentRepository
+        upcomingAppointments = try await Task.detached(priority: .userInitiated) {
+            try repository.fetchUpcoming(limit: limit)
+        }.value
         rebuildUpcomingAppointmentItems()
     }
 
@@ -416,14 +446,24 @@ final class DoctorEditorController {
         self.draft = doctor.map(DoctorDraft.from(record:)) ?? .makeNew()
         self.saveDoctorUseCase = SaveDoctorUseCase(repository: doctorRepository)
         self.directoryRepository = directoryRepository
-        self.sourceAttribution = directoryRepository.sourceAttribution()
+        self.sourceAttribution = (
+            "ÖGK Vertragspartner Fachärztinnen und Fachärzte",
+            "https://www.gesundheitskasse.at/cdscontent/?contentid=10007.884365"
+        )
         refreshSearch()
+        Task { await refreshSourceAttribution() }
     }
 
     func refreshSearch() {
-        let results = (try? directoryRepository.fetchEntries(searchText: searchText)) ?? []
-        searchResults = results
-        groupedSearchResults = Self.makeGroupedSearchResults(from: results)
+        let repository = directoryRepository
+        let searchText = searchText
+        Task {
+            let results = await Task.detached(priority: .userInitiated) {
+                (try? repository.fetchEntries(searchText: searchText)) ?? []
+            }.value
+            searchResults = results
+            groupedSearchResults = Self.makeGroupedSearchResults(from: results)
+        }
     }
 
     func scheduleSearchRefresh() {
@@ -435,6 +475,13 @@ final class DoctorEditorController {
             }
             self.refreshSearch()
         }
+    }
+
+    private func refreshSourceAttribution() async {
+        let repository = directoryRepository
+        sourceAttribution = await Task.detached(priority: .utility) {
+            repository.sourceAttribution()
+        }.value
     }
 
     private static func makeGroupedSearchResults(from searchResults: [DoctorDirectoryRecord]) -> [DoctorDirectorySection] {
@@ -472,13 +519,19 @@ final class DoctorEditorController {
         draft.applyDirectoryEntry(entry)
     }
 
+    func applyDoctor(_ doctor: DoctorRecord) {
+        draft = DoctorDraft.from(record: doctor)
+    }
+
     func save(onSaved: @escaping (UUID) -> Void) {
-        do {
-            let id = try saveDoctorUseCase.execute(draft)
-            validationMessage = nil
-            onSaved(id)
-        } catch {
-            validationMessage = error.localizedDescription
+        Task {
+            do {
+                let id = try await saveDoctorUseCase.execute(draft)
+                validationMessage = nil
+                onSaved(id)
+            } catch {
+                validationMessage = error.localizedDescription
+            }
         }
     }
 }
@@ -491,6 +544,7 @@ final class AppointmentEditorController {
     var saveMessageVisible = false
 
     private let saveAppointmentUseCase: SaveAppointmentUseCase
+    private let appointmentRepository: AppointmentRepository
 
     init(
         appointment: AppointmentRecord?,
@@ -500,11 +554,23 @@ final class AppointmentEditorController {
         notificationService: NotificationService
     ) {
         self.draft = appointment.map(AppointmentDraft.from(record:)) ?? .makeNew(doctor: doctor)
+        self.appointmentRepository = appointmentRepository
         self.saveAppointmentUseCase = SaveAppointmentUseCase(
             appointmentRepository: appointmentRepository,
             doctorRepository: doctorRepository,
             notificationService: notificationService
         )
+    }
+
+    func loadAppointment(id: UUID) async {
+        let repository = appointmentRepository
+        guard let appointment = await Task.detached(priority: .userInitiated, operation: {
+            try? repository.load(id: id)
+        }).value else {
+            return
+        }
+
+        draft = AppointmentDraft.from(record: appointment)
     }
 
     func save(onSaved: @escaping (UUID) -> Void) {

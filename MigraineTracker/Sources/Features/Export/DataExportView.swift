@@ -76,16 +76,16 @@ struct DataExportView: View {
         .brandGroupedScreen()
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
-            controller.reloadSummary()
+            Task { await controller.reloadSummary() }
         }
         .onChange(of: controller.startDate) { _, _ in
-            controller.reloadSummary()
+            Task { await controller.reloadSummary() }
         }
         .onChange(of: controller.endDate) { _, _ in
-            controller.reloadSummary()
+            Task { await controller.reloadSummary() }
         }
         .onChange(of: controller.includeAllDetails) { _, _ in
-            controller.updatePreparedPDF()
+            Task { await controller.updatePreparedPDF() }
         }
         .fileImporter(
             isPresented: $controller.isImportingData,

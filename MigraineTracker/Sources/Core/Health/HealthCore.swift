@@ -21,7 +21,7 @@ enum HealthDataTypeID: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .sleep: "Schlaf"
         case .steps: "Schritte"
@@ -70,7 +70,7 @@ enum HealthDataCatalog {
     }
 }
 
-struct HealthSymptomSampleData: Codable, Equatable, Sendable {
+struct HealthSymptomSampleData: @preconcurrency Codable, Equatable, Sendable {
     let type: HealthDataTypeID
     let severity: String
     let startDate: Date
@@ -78,7 +78,7 @@ struct HealthSymptomSampleData: Codable, Equatable, Sendable {
     let source: String
 }
 
-struct HealthContextSnapshotData: Codable, Equatable, Sendable {
+struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sendable {
     let recordedAt: Date
     let source: String
     let sleepMinutes: Double?
@@ -111,7 +111,7 @@ struct HealthContextRecord: Equatable, Sendable {
     let menstrualFlow: String?
     let symptoms: [HealthSymptomSampleData]
 
-    init(snapshot: HealthContextSnapshotData) {
+    nonisolated init(snapshot: HealthContextSnapshotData) {
         self.recordedAt = snapshot.recordedAt
         self.source = snapshot.source
         self.sleepMinutes = snapshot.sleepMinutes

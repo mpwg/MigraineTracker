@@ -2,70 +2,70 @@ import Foundation
 import Observation
 
 struct WeatherRecord: Equatable, Sendable {
-    let recordedAt: Date
-    let condition: String
-    let temperature: Double?
-    let humidity: Double?
-    let pressure: Double?
-    let precipitation: Double?
-    let weatherCode: Int?
-    let source: String
+    nonisolated let recordedAt: Date
+    nonisolated let condition: String
+    nonisolated let temperature: Double?
+    nonisolated let humidity: Double?
+    nonisolated let pressure: Double?
+    nonisolated let precipitation: Double?
+    nonisolated let weatherCode: Int?
+    nonisolated let source: String
 
-    var isLegacySnapshot: Bool {
+    nonisolated var isLegacySnapshot: Bool {
         source.localizedCaseInsensitiveContains("legacy") || source.localizedCaseInsensitiveContains("manuell")
     }
 }
 
 struct MedicationRecord: Identifiable, Equatable, Sendable {
-    let id: UUID
-    let name: String
-    let category: MedicationCategory
-    let dosage: String
-    let quantity: Int
-    let takenAt: Date
-    let effectiveness: MedicationEffectiveness
-    let reliefStartedAt: Date?
-    let isRepeatDose: Bool
+    nonisolated let id: UUID
+    nonisolated let name: String
+    nonisolated let category: MedicationCategory
+    nonisolated let dosage: String
+    nonisolated let quantity: Int
+    nonisolated let takenAt: Date
+    nonisolated let effectiveness: MedicationEffectiveness
+    nonisolated let reliefStartedAt: Date?
+    nonisolated let isRepeatDose: Bool
 }
 
 struct EpisodeRecord: Identifiable, Equatable, Sendable {
-    let id: UUID
-    let startedAt: Date
-    let endedAt: Date?
-    let updatedAt: Date
-    let deletedAt: Date?
-    let type: EpisodeType
-    let intensity: Int
-    let painLocation: String
-    let painCharacter: String
-    let notes: String
-    let symptoms: [String]
-    let triggers: [String]
-    let functionalImpact: String
-    let menstruationStatus: MenstruationStatus
-    let medications: [MedicationRecord]
-    let weather: WeatherRecord?
-    let healthContext: HealthContextRecord?
+    nonisolated let id: UUID
+    nonisolated let startedAt: Date
+    nonisolated let endedAt: Date?
+    nonisolated let updatedAt: Date
+    nonisolated let deletedAt: Date?
+    nonisolated let type: EpisodeType
+    nonisolated let intensity: Int
+    nonisolated let painLocation: String
+    nonisolated let painCharacter: String
+    nonisolated let notes: String
+    nonisolated let symptoms: [String]
+    nonisolated let triggers: [String]
+    nonisolated let functionalImpact: String
+    nonisolated let menstruationStatus: MenstruationStatus
+    nonisolated let medications: [MedicationRecord]
+    nonisolated let weather: WeatherRecord?
+    nonisolated let healthContext: HealthContextRecord?
 
-    var isDeleted: Bool {
+    nonisolated var isDeleted: Bool {
         deletedAt != nil
     }
 }
 
 struct MedicationDefinitionRecord: Identifiable, Equatable, Sendable {
-    let id: String
-    let catalogKey: String
-    let groupID: String
-    let groupTitle: String
-    let groupFooter: String?
-    let name: String
-    let category: MedicationCategory
-    let suggestedDosage: String
-    let sortOrder: Int
-    let isCustom: Bool
-    let isDeleted: Bool
+    nonisolated let id: String
+    nonisolated let catalogKey: String
+    nonisolated let groupID: String
+    nonisolated let groupTitle: String
+    nonisolated let groupFooter: String?
+    nonisolated let name: String
+    nonisolated let category: MedicationCategory
+    nonisolated let suggestedDosage: String
+    nonisolated let sortOrder: Int
+    nonisolated let isCustom: Bool
+    nonisolated let isDeleted: Bool
 
-    init(
+    nonisolated init(
         catalogKey: String,
         groupID: String,
         groupTitle: String,
@@ -90,7 +90,7 @@ struct MedicationDefinitionRecord: Identifiable, Equatable, Sendable {
         self.isDeleted = isDeleted
     }
 
-    var selectionKey: String {
+    nonisolated var selectionKey: String {
         [
             name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
             category.rawValue,
@@ -100,15 +100,15 @@ struct MedicationDefinitionRecord: Identifiable, Equatable, Sendable {
 }
 
 struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
-    let id: UUID
-    var selectionKey: String
-    var name: String
-    var category: MedicationCategory
-    var dosage: String
-    var quantity: Int
-    var isSelected: Bool
+    nonisolated let id: UUID
+    nonisolated var selectionKey: String
+    nonisolated var name: String
+    nonisolated var category: MedicationCategory
+    nonisolated var dosage: String
+    nonisolated var quantity: Int
+    nonisolated var isSelected: Bool
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         selectionKey: String,
         name: String,
@@ -126,7 +126,7 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
         self.isSelected = isSelected
     }
 
-    init(record: MedicationRecord) {
+    nonisolated init(record: MedicationRecord) {
         self.init(
             id: record.id,
             selectionKey: Self.makeSelectionKey(
@@ -141,7 +141,7 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
         )
     }
 
-    init(definition: MedicationDefinitionRecord) {
+    nonisolated init(definition: MedicationDefinitionRecord) {
         self.init(
             selectionKey: definition.selectionKey,
             name: definition.name,
@@ -150,7 +150,7 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
         )
     }
 
-    static func makeSelectionKey(name: String, category: MedicationCategory, dosage: String) -> String {
+    nonisolated static func makeSelectionKey(name: String, category: MedicationCategory, dosage: String) -> String {
         [
             name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
             category.rawValue,
@@ -160,22 +160,22 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
 }
 
 struct EpisodeDraft: Equatable, Sendable {
-    var id: UUID?
-    var type: EpisodeType
-    var intensity: Int
-    var startedAt: Date
-    var endedAtEnabled: Bool
-    var endedAt: Date
-    var painLocation: String
-    var painCharacter: String
-    var notes: String
-    var functionalImpact: String
-    var menstruationStatus: MenstruationStatus
-    var selectedSymptoms: Set<String>
-    var selectedTriggers: Set<String>
-    var medications: [MedicationSelectionDraft]
+    nonisolated var id: UUID?
+    nonisolated var type: EpisodeType
+    nonisolated var intensity: Int
+    nonisolated var startedAt: Date
+    nonisolated var endedAtEnabled: Bool
+    nonisolated var endedAt: Date
+    nonisolated var painLocation: String
+    nonisolated var painCharacter: String
+    nonisolated var notes: String
+    nonisolated var functionalImpact: String
+    nonisolated var menstruationStatus: MenstruationStatus
+    nonisolated var selectedSymptoms: Set<String>
+    nonisolated var selectedTriggers: Set<String>
+    nonisolated var medications: [MedicationSelectionDraft]
 
-    static func makeNew(initialStartedAt: Date? = nil) -> EpisodeDraft {
+    nonisolated static func makeNew(initialStartedAt: Date? = nil) -> EpisodeDraft {
         let startedAt = initialStartedAt ?? .now
         return EpisodeDraft(
             id: nil,
@@ -195,7 +195,7 @@ struct EpisodeDraft: Equatable, Sendable {
         )
     }
 
-    static func from(record: EpisodeRecord) -> EpisodeDraft {
+    nonisolated static func from(record: EpisodeRecord) -> EpisodeDraft {
         EpisodeDraft(
             id: record.id,
             type: record.type,
@@ -216,44 +216,44 @@ struct EpisodeDraft: Equatable, Sendable {
 }
 
 struct CustomMedicationDefinitionDraft: Equatable, Sendable {
-    let id: String
-    let originalSelectionKey: String?
-    let name: String
-    let category: MedicationCategory
-    let dosage: String
+    nonisolated let id: String
+    nonisolated let originalSelectionKey: String?
+    nonisolated let name: String
+    nonisolated let category: MedicationCategory
+    nonisolated let dosage: String
 }
 
 struct EpisodeEditorMedicationGroup: Identifiable, Equatable, Sendable {
-    let id: String
-    let title: String
-    let footer: String?
-    let items: [MedicationDefinitionRecord]
+    nonisolated let id: String
+    nonisolated let title: String
+    nonisolated let footer: String?
+    nonisolated let items: [MedicationDefinitionRecord]
 }
 
-protocol EpisodeRepository {
-    func fetchRecent() throws -> [EpisodeRecord]
-    func fetchByDay(_ day: Date) throws -> [EpisodeRecord]
-    func fetchByMonth(_ month: Date) throws -> [EpisodeRecord]
-    func load(id: UUID) throws -> EpisodeRecord?
+protocol EpisodeRepository: Sendable {
+    nonisolated func fetchRecent() throws -> [EpisodeRecord]
+    nonisolated func fetchByDay(_ day: Date) throws -> [EpisodeRecord]
+    nonisolated func fetchByMonth(_ month: Date) throws -> [EpisodeRecord]
+    nonisolated func load(id: UUID) throws -> EpisodeRecord?
     @discardableResult
-    func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?, healthContext: HealthContextSnapshotData?) throws -> UUID
-    func softDelete(id: UUID) throws
-    func restore(id: UUID) throws
-    func fetchDeleted() throws -> [EpisodeRecord]
+    nonisolated func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?, healthContext: HealthContextSnapshotData?) throws -> UUID
+    nonisolated func softDelete(id: UUID) throws
+    nonisolated func restore(id: UUID) throws
+    nonisolated func fetchDeleted() throws -> [EpisodeRecord]
 }
 
-protocol MedicationCatalogRepository {
-    func fetchDefinitions(searchText: String?) throws -> [MedicationDefinitionRecord]
-    func saveCustomDefinition(_ draft: CustomMedicationDefinitionDraft) throws -> MedicationDefinitionRecord
-    func softDeleteCustomDefinition(catalogKey: String) throws
-    func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord]
+protocol MedicationCatalogRepository: Sendable {
+    nonisolated func fetchDefinitions(searchText: String?) throws -> [MedicationDefinitionRecord]
+    nonisolated func saveCustomDefinition(_ draft: CustomMedicationDefinitionDraft) throws -> MedicationDefinitionRecord
+    nonisolated func softDeleteCustomDefinition(catalogKey: String) throws
+    nonisolated func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord]
 }
 
 struct SaveEpisodeUseCase {
     let repository: EpisodeRepository
 
     @discardableResult
-    func execute(_ draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?, healthContext: HealthContextSnapshotData? = nil) throws -> UUID {
+    func execute(_ draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?, healthContext: HealthContextSnapshotData? = nil) async throws -> UUID {
         if draft.endedAtEnabled, draft.endedAt < draft.startedAt {
             throw EpisodeSaveError.invalidDateRange
         }
@@ -262,7 +262,10 @@ struct SaveEpisodeUseCase {
             throw EpisodeSaveError.futureDate
         }
 
-        return try repository.save(draft: draft, weatherSnapshot: weatherSnapshot, healthContext: healthContext)
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.save(draft: draft, weatherSnapshot: weatherSnapshot, healthContext: healthContext)
+        }.value
     }
 }
 
@@ -274,8 +277,11 @@ struct HomeOverviewData: Equatable {
 struct LoadHomeOverviewUseCase {
     let repository: EpisodeRepository
 
-    func execute() throws -> HomeOverviewData {
-        let episodes = try repository.fetchRecent()
+    func execute() async throws -> HomeOverviewData {
+        let repository = repository
+        let episodes = try await Task.detached(priority: .userInitiated) {
+            try repository.fetchRecent()
+        }.value
         return HomeOverviewData(
             latestEpisode: episodes.first,
             episodeCount: episodes.count
@@ -334,8 +340,8 @@ final class EpisodeEditorController {
     private let weatherService: WeatherService
     private let locationService: LocationService
     private let healthService: HealthService
-    private let originalStartedAt: Date?
-    private let originalWeatherSnapshot: WeatherSnapshotData?
+    private var originalStartedAt: Date?
+    private var originalWeatherSnapshot: WeatherSnapshotData?
 
     init(
         episodeID: UUID?,
@@ -353,15 +359,12 @@ final class EpisodeEditorController {
         self.healthService = healthService
         self.saveEpisodeUseCase = SaveEpisodeUseCase(repository: episodeRepository)
 
-        if
-            let episodeID,
-            let record = try? episodeRepository.load(id: episodeID)
-        {
+        if let episodeID {
             self.mode = .edit
-            self.draft = EpisodeDraft.from(record: record)
-            self.originalStartedAt = record.startedAt
-            self.originalWeatherSnapshot = record.weather.map(WeatherSnapshotData.init)
-            self.weatherLoadState = record.weather.map { .loaded(WeatherSnapshotData(record: $0)) } ?? .idle
+            self.draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
+            self.originalStartedAt = nil
+            self.originalWeatherSnapshot = nil
+            Task { await loadEpisode(id: episodeID) }
         } else {
             self.mode = .create
             if AppStoreScreenshotMode.isEnabled {
@@ -408,7 +411,29 @@ final class EpisodeEditorController {
     }
 
     func reloadMedicationDefinitions() {
-        medicationDefinitions = (try? medicationRepository.fetchDefinitions(searchText: nil)) ?? []
+        let repository = medicationRepository
+        Task {
+            let definitions = await Task.detached(priority: .userInitiated) {
+                (try? repository.fetchDefinitions(searchText: nil)) ?? []
+            }.value
+            medicationDefinitions = definitions
+        }
+    }
+
+    private func loadEpisode(id: UUID) async {
+        let repository = episodeRepository
+        let record = await Task.detached(priority: .userInitiated) {
+            try? repository.load(id: id)
+        }.value
+
+        guard let record else {
+            return
+        }
+
+        draft = EpisodeDraft.from(record: record)
+        originalStartedAt = record.startedAt
+        originalWeatherSnapshot = record.weather.map(WeatherSnapshotData.init)
+        weatherLoadState = record.weather.map { .loaded(WeatherSnapshotData(record: $0)) } ?? .idle
     }
 
     func save(onSaved: (() -> Void)?, onDismiss: @escaping () -> Void) {
@@ -425,7 +450,7 @@ final class EpisodeEditorController {
             do {
                 let weatherSnapshot = try await weatherSnapshotForSave()
                 let healthContext = await healthContextForSave()
-                let savedID = try saveEpisodeUseCase.execute(draft, weatherSnapshot: weatherSnapshot, healthContext: healthContext)
+                let savedID = try await saveEpisodeUseCase.execute(draft, weatherSnapshot: weatherSnapshot, healthContext: healthContext)
                 await writeHealthSampleIfNeeded(episodeID: savedID)
                 reloadMedicationDefinitions()
                 validationMessage = nil
@@ -547,31 +572,41 @@ final class EpisodeEditorController {
             return
         }
 
-        do {
-            let definition = try medicationRepository.saveCustomDefinition(draft)
-            reloadMedicationDefinitions()
-            customMedicationEditor = nil
-            validationMessage = nil
+        let repository = medicationRepository
+        Task {
+            do {
+                let definition = try await Task.detached(priority: .userInitiated) {
+                    try repository.saveCustomDefinition(draft)
+                }.value
+                reloadMedicationDefinitions()
+                customMedicationEditor = nil
+                validationMessage = nil
 
-            if let existingSelectionKey = draft.originalSelectionKey {
-                updateMedicationSelection(from: existingSelectionKey, to: definition)
-            } else {
-                toggleMedicationSelection(for: definition)
+                if let existingSelectionKey = draft.originalSelectionKey {
+                    updateMedicationSelection(from: existingSelectionKey, to: definition)
+                } else {
+                    toggleMedicationSelection(for: definition)
+                }
+            } catch {
+                validationMessage = "Eigenes Medikament konnte nicht gespeichert werden."
             }
-        } catch {
-            validationMessage = "Eigenes Medikament konnte nicht gespeichert werden."
         }
     }
 
     func deleteCustomMedication(_ definition: MedicationDefinitionRecord) {
-        do {
-            draft.medications.removeAll { $0.selectionKey == definition.selectionKey }
-            try medicationRepository.softDeleteCustomDefinition(catalogKey: definition.catalogKey)
-            reloadMedicationDefinitions()
-            pendingMedicationDeletion = nil
-            validationMessage = nil
-        } catch {
-            validationMessage = "Eigenes Medikament konnte nicht gelöscht werden."
+        draft.medications.removeAll { $0.selectionKey == definition.selectionKey }
+        let repository = medicationRepository
+        Task {
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    try repository.softDeleteCustomDefinition(catalogKey: definition.catalogKey)
+                }.value
+                reloadMedicationDefinitions()
+                pendingMedicationDeletion = nil
+                validationMessage = nil
+            } catch {
+                validationMessage = "Eigenes Medikament konnte nicht gelöscht werden."
+            }
         }
     }
 

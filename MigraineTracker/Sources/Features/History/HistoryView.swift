@@ -488,7 +488,7 @@ private struct IdentifiedEpisodeID: Identifiable {
 }
 
 extension Calendar {
-    func startOfMonth(for inputDate: Date) -> Date {
+    nonisolated func startOfMonth(for inputDate: Date) -> Date {
         self.date(from: dateComponents([.year, .month], from: inputDate)) ?? inputDate
     }
 }

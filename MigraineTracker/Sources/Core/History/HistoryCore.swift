@@ -33,8 +33,11 @@ struct HistoryMonthData: Equatable {
 struct LoadHistoryMonthUseCase {
     let repository: EpisodeRepository
 
-    func execute(month: Date) throws -> HistoryMonthData {
-        let records = try repository.fetchByMonth(month)
+    func execute(month: Date) async throws -> HistoryMonthData {
+        let repository = repository
+        let records = try await Task.detached(priority: .userInitiated) {
+            try repository.fetchByMonth(month)
+        }.value
         return HistoryMonthData(
             month: month,
             episodesByDay: Dictionary(grouping: records) { Calendar.current.startOfDay(for: $0.startedAt) }
@@ -45,24 +48,33 @@ struct LoadHistoryMonthUseCase {
 struct LoadDayEpisodesUseCase {
     let repository: EpisodeRepository
 
-    func execute(day: Date) throws -> [EpisodeRecord] {
-        try repository.fetchByDay(day)
+    func execute(day: Date) async throws -> [EpisodeRecord] {
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.fetchByDay(day)
+        }.value
     }
 }
 
 struct LoadEpisodeDetailUseCase {
     let repository: EpisodeRepository
 
-    func execute(id: UUID) throws -> EpisodeRecord? {
-        try repository.load(id: id)
+    func execute(id: UUID) async throws -> EpisodeRecord? {
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.load(id: id)
+        }.value
     }
 }
 
 struct DeleteEpisodeUseCase {
     let repository: EpisodeRepository
 
-    func execute(id: UUID) throws {
-        try repository.softDelete(id: id)
+    func execute(id: UUID) async throws {
+        let repository = repository
+        try await Task.detached(priority: .userInitiated) {
+            try repository.softDelete(id: id)
+        }.value
     }
 }
 
@@ -91,7 +103,7 @@ final class HistoryController {
         self.loadDayEpisodesUseCase = LoadDayEpisodesUseCase(repository: repository)
         self.deleteEpisodeUseCase = DeleteEpisodeUseCase(repository: repository)
         self.monthData = HistoryMonthData(month: calendar.startOfMonth(for: initialDay), episodesByDay: [:])
-        reloadAll()
+        Task { await reloadAll() }
     }
 
     var episodesByDay: [Date: [EpisodeRecord]] {
@@ -107,42 +119,46 @@ final class HistoryController {
         )
     }
 
-    func reloadAll() {
+    func reloadAll() async {
         do {
-            try reloadMonthData()
-            try reloadSelectedDayEpisodes()
+            try await reloadMonthData()
+            try await reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
         }
     }
 
-    func reloadMonthData() throws {
-        monthData = try loadHistoryMonthUseCase.execute(month: displayedMonth)
+    func reloadMonthData() async throws {
+        monthData = try await loadHistoryMonthUseCase.execute(month: displayedMonth)
     }
 
-    func reloadSelectedDayEpisodes() throws {
-        selectedDayEpisodes = try loadDayEpisodesUseCase.execute(day: selectedDay)
+    func reloadSelectedDayEpisodes() async throws {
+        selectedDayEpisodes = try await loadDayEpisodesUseCase.execute(day: selectedDay)
         syncSelectedDayIntoMonthData()
     }
 
     func goToPreviousMonth() {
         displayedMonth = Calendar.current.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
+        Task {
         do {
-            try reloadMonthData()
+            try await reloadMonthData()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
         }
     }
 
     func goToNextMonth() {
         displayedMonth = Calendar.current.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
+        Task {
         do {
-            try reloadMonthData()
+            try await reloadMonthData()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
         }
     }
 
@@ -154,14 +170,16 @@ final class HistoryController {
             displayedMonth = month
         }
 
+        Task {
         do {
             if didChangeMonth {
-                try reloadMonthData()
+                try await reloadMonthData()
             }
-            try reloadSelectedDayEpisodes()
+            try await reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
         }
     }
 
@@ -170,23 +188,27 @@ final class HistoryController {
             return
         }
 
+        Task {
         do {
-            try deleteEpisodeUseCase.execute(id: pendingDeletionID)
+            try await deleteEpisodeUseCase.execute(id: pendingDeletionID)
             self.pendingDeletionID = nil
-            try reloadSelectedDayEpisodes()
+            try await reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
             errorMessage = "Löschen fehlgeschlagen."
         }
+        }
     }
 
     func handleSavedEpisode() {
+        Task {
         do {
-            try reloadMonthData()
-            try reloadSelectedDayEpisodes()
+            try await reloadMonthData()
+            try await reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
+        }
         }
     }
 

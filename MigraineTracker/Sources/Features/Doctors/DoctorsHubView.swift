@@ -53,16 +53,16 @@ struct DoctorsHubView: View {
             }
         }
         .task {
-            reloadAll()
+            await reloadAll()
         }
         .refreshable {
-            reloadAll()
+            await reloadAll()
         }
         .sheet(item: $doctorAddMode) { mode in
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: mode) { doctorID in
                     doctorAddMode = nil
-                    reloadDoctors(selecting: doctorID)
+                    Task { await reloadDoctors(selecting: doctorID) }
                 }
             }
         }
@@ -70,7 +70,7 @@ struct DoctorsHubView: View {
             NavigationStack {
                 AppointmentCreationFlowView(appContainer: appContainer) {
                     isPresentingAppointmentFlow = false
-                    reloadAppointments()
+                    Task { await reloadAppointments() }
                 }
             }
         }
@@ -214,14 +214,14 @@ struct DoctorsHubView: View {
         }
     }
 
-    private func reloadAll() {
-        controller.reloadAll()
+    private func reloadAll() async {
+        await controller.reloadAll()
         updateSelection()
     }
 
-    private func reloadDoctors(selecting doctorID: UUID? = nil) {
+    private func reloadDoctors(selecting doctorID: UUID? = nil) async {
         do {
-            try controller.reloadDoctors()
+            try await controller.reloadDoctors()
             controller.errorMessage = nil
         } catch {
             controller.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
@@ -232,9 +232,9 @@ struct DoctorsHubView: View {
         updateSelection()
     }
 
-    private func reloadAppointments() {
+    private func reloadAppointments() async {
         do {
-            try controller.reloadAppointments()
+            try await controller.reloadAppointments()
             controller.errorMessage = nil
         } catch {
             controller.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
@@ -298,7 +298,7 @@ struct DoctorDetailView: View {
     init(appContainer: AppContainer, doctorID: UUID) {
         self.appContainer = appContainer
         self.doctorID = doctorID
-        _doctor = State(initialValue: try? appContainer.doctorRepository.load(id: doctorID))
+        _doctor = State(initialValue: nil)
     }
 
     var body: some View {
@@ -413,7 +413,7 @@ struct DoctorDetailView: View {
             NavigationStack {
                 DoctorEditorView(appContainer: appContainer, doctorID: doctorID) { _ in
                     isEditingDoctor = false
-                    reload()
+                    Task { await reload() }
                 }
             }
         }
@@ -422,7 +422,7 @@ struct DoctorDetailView: View {
                 NavigationStack {
                     AppointmentEditorView(appContainer: appContainer, doctor: doctor, appointmentID: nil) {
                         isPresentingNewAppointment = false
-                        reload()
+                        Task { await reload() }
                     }
                 }
             }
@@ -432,7 +432,7 @@ struct DoctorDetailView: View {
                 NavigationStack {
                     AppointmentEditorView(appContainer: appContainer, doctor: doctor, appointmentID: appointment.id) {
                         editingAppointment = nil
-                        reload()
+                        Task { await reload() }
                     }
                 }
             }
@@ -458,6 +458,9 @@ struct DoctorDetailView: View {
         } message: {
             Text("Die Erinnerung zu diesem Termin wird ebenfalls entfernt.")
         }
+        .task {
+            await reload()
+        }
     }
 
     private func detailRow(_ title: String, _ value: String) -> some View {
@@ -471,13 +474,21 @@ struct DoctorDetailView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func reload() {
-        doctor = try? appContainer.doctorRepository.load(id: doctorID)
+    private func reload() async {
+        let repository = appContainer.doctorRepository
+        doctor = await Task.detached(priority: .userInitiated) {
+            try? repository.load(id: doctorID)
+        }.value
     }
 
     private func deleteDoctor() {
-        try? appContainer.doctorRepository.softDelete(id: doctorID)
-        dismiss()
+        let repository = appContainer.doctorRepository
+        Task {
+            try? await Task.detached(priority: .userInitiated) {
+                try repository.softDelete(id: doctorID)
+            }.value
+            dismiss()
+        }
     }
 
     private func deleteAppointment() {
@@ -491,10 +502,8 @@ struct DoctorDetailView: View {
                 notificationService: appContainer.notificationService
             ).execute(id: pendingDeletion.id)
 
-            await MainActor.run {
-                self.pendingDeletion = nil
-                reload()
-            }
+            self.pendingDeletion = nil
+            await reload()
         }
     }
 }
@@ -672,8 +681,7 @@ struct DoctorEditorView: View {
         self.doctorID = doctorID
         self.onSaved = onSaved
 
-        let doctor = doctorID.flatMap { try? appContainer.doctorRepository.load(id: $0) }
-        let controller = appContainer.makeDoctorEditorController(doctor: doctor)
+        let controller = appContainer.makeDoctorEditorController(doctor: nil)
         if let initialDirectoryEntry {
             controller.applyDirectoryEntry(initialDirectoryEntry)
         }
@@ -743,6 +751,18 @@ struct DoctorEditorView: View {
                 }
             }
         }
+        .task {
+            guard let doctorID else {
+                return
+            }
+
+            let repository = appContainer.doctorRepository
+            if let doctor = await Task.detached(priority: .userInitiated, operation: {
+                try? repository.load(id: doctorID)
+            }).value {
+                controller.applyDoctor(doctor)
+            }
+        }
     }
 
     private func detailRow(_ title: String, _ value: String) -> some View {
@@ -769,7 +789,7 @@ struct AppointmentCreationFlowView: View {
     init(appContainer: AppContainer, onSaved: (() -> Void)? = nil) {
         self.appContainer = appContainer
         self.onSaved = onSaved
-        _doctors = State(initialValue: (try? appContainer.doctorRepository.fetchAll()) ?? [])
+        _doctors = State(initialValue: [])
     }
 
     var body: some View {
@@ -857,10 +877,13 @@ struct AppointmentCreationFlowView: View {
         .fullScreenCover(item: $doctorAddMode) { mode in
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: mode) { doctorID in
-                    reloadDoctors(selecting: doctorID)
+                    Task { await reloadDoctors(selecting: doctorID) }
                     doctorAddMode = nil
                 }
             }
+        }
+        .task {
+            await reloadDoctors(selecting: selectedDoctorID)
         }
     }
 
@@ -872,8 +895,11 @@ struct AppointmentCreationFlowView: View {
         return doctors.first(where: { $0.id == selectedDoctorID })
     }
 
-    private func reloadDoctors(selecting doctorID: UUID?) {
-        doctors = (try? appContainer.doctorRepository.fetchAll()) ?? []
+    private func reloadDoctors(selecting doctorID: UUID?) async {
+        let repository = appContainer.doctorRepository
+        doctors = await Task.detached(priority: .userInitiated) {
+            (try? repository.fetchAll()) ?? []
+        }.value
         selectedDoctorID = doctorID
     }
 }
@@ -893,8 +919,7 @@ struct AppointmentEditorView: View {
         self.doctor = doctor
         self.appointmentID = appointmentID
         self.onSaved = onSaved
-        let appointment = appointmentID.flatMap { try? appContainer.appointmentRepository.load(id: $0) }
-        _controller = State(initialValue: appContainer.makeAppointmentEditorController(appointment: appointment, doctor: doctor))
+        _controller = State(initialValue: appContainer.makeAppointmentEditorController(appointment: nil, doctor: doctor))
     }
 
     var body: some View {
@@ -978,6 +1003,13 @@ struct AppointmentEditorView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Der Termin wurde lokal gespeichert.")
+        }
+        .task {
+            guard let appointmentID else {
+                return
+            }
+
+            await controller.loadAppointment(id: appointmentID)
         }
     }
 }

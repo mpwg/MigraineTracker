@@ -18,14 +18,19 @@ struct LoadSettingsUseCase {
     let medicationRepository: MedicationCatalogRepository
     let syncService: SyncService
 
-    func execute() throws -> SettingsSummaryData {
-        let recent = try episodeRepository.fetchRecent()
-        let deletedEpisodes = try episodeRepository.fetchDeleted()
-        let deletedDefinitions = try medicationRepository.fetchDeletedDefinitions()
+    func execute() async throws -> SettingsSummaryData {
+        let episodeRepository = episodeRepository
+        let medicationRepository = medicationRepository
+        let result = try await Task.detached(priority: .userInitiated) {
+            let recent = try episodeRepository.fetchRecent()
+            let deletedEpisodes = try episodeRepository.fetchDeleted()
+            let deletedDefinitions = try medicationRepository.fetchDeletedDefinitions()
+            return (recent.count, deletedEpisodes.count + deletedDefinitions.count)
+        }.value
 
         return SettingsSummaryData(
-            activeEpisodeCount: recent.count,
-            trashCount: deletedEpisodes.count + deletedDefinitions.count,
+            activeEpisodeCount: result.0,
+            trashCount: result.1,
             conflictCount: syncService.conflicts.count
         )
     }
@@ -35,20 +40,25 @@ struct RestoreDeletedItemUseCase {
     let episodeRepository: EpisodeRepository
     let medicationRepository: MedicationCatalogRepository
 
-    func restoreEpisode(id: UUID) throws {
-        try episodeRepository.restore(id: id)
+    func restoreEpisode(id: UUID) async throws {
+        let episodeRepository = episodeRepository
+        try await Task.detached(priority: .userInitiated) {
+            try episodeRepository.restore(id: id)
+        }.value
     }
 
-    func restoreMedicationDefinition(_ definition: MedicationDefinitionRecord) throws {
-        _ = try medicationRepository.saveCustomDefinition(
-            CustomMedicationDefinitionDraft(
-                id: definition.catalogKey,
-                originalSelectionKey: definition.selectionKey,
-                name: definition.name,
-                category: definition.category,
-                dosage: definition.suggestedDosage
-            )
+    func restoreMedicationDefinition(_ definition: MedicationDefinitionRecord) async throws {
+        let medicationRepository = medicationRepository
+        let draft = CustomMedicationDefinitionDraft(
+            id: definition.catalogKey,
+            originalSelectionKey: definition.selectionKey,
+            name: definition.name,
+            category: definition.category,
+            dosage: definition.suggestedDosage
         )
+        _ = try await Task.detached(priority: .userInitiated) {
+            try medicationRepository.saveCustomDefinition(draft)
+        }.value
     }
 }
 
@@ -140,16 +150,26 @@ final class SettingsController {
     func load() {
         syncService.refreshStatus()
 
-        do {
-            summary = try loadSettingsUseCase.execute()
-            deletedEpisodes = try episodeRepository.fetchDeleted()
-            deletedDefinitions = try medicationRepository.fetchDeletedDefinitions()
-        } catch {
-            summary = SettingsSummaryData(
-                activeEpisodeCount: 0,
-                trashCount: deletedEpisodes.count + deletedDefinitions.count,
-                conflictCount: syncService.conflicts.count
-            )
+        let episodeRepository = episodeRepository
+        let medicationRepository = medicationRepository
+        Task {
+            do {
+                summary = try await loadSettingsUseCase.execute()
+                let deleted = try await Task.detached(priority: .userInitiated) {
+                    (
+                        try episodeRepository.fetchDeleted(),
+                        try medicationRepository.fetchDeletedDefinitions()
+                    )
+                }.value
+                deletedEpisodes = deleted.0
+                deletedDefinitions = deleted.1
+            } catch {
+                summary = SettingsSummaryData(
+                    activeEpisodeCount: 0,
+                    trashCount: deletedEpisodes.count + deletedDefinitions.count,
+                    conflictCount: syncService.conflicts.count
+                )
+            }
         }
     }
 
@@ -179,13 +199,17 @@ final class SettingsController {
     }
 
     func restoreEpisode(id: UUID) {
-        try? restoreDeletedItemUseCase.restoreEpisode(id: id)
-        load()
+        Task {
+            try? await restoreDeletedItemUseCase.restoreEpisode(id: id)
+            load()
+        }
     }
 
     func restoreMedicationDefinition(_ definition: MedicationDefinitionRecord) {
-        try? restoreDeletedItemUseCase.restoreMedicationDefinition(definition)
-        load()
+        Task {
+            try? await restoreDeletedItemUseCase.restoreMedicationDefinition(definition)
+            load()
+        }
     }
 
     func refreshLog(limit: Int = 200) {

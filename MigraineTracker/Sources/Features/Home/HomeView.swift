@@ -42,16 +42,16 @@ struct HomeView: View {
             }
         }
         .task {
-            reloadAll()
+            await reloadAll()
         }
         .refreshable {
-            reloadAll()
+            await reloadAll()
         }
         .fullScreenCover(isPresented: $isPresentingEpisodeEditor) {
             NavigationStack {
                 EpisodeEditorView(appContainer: appContainer) {
                     isPresentingEpisodeEditor = false
-                    reloadOverview()
+                    Task { await reloadOverview() }
                 }
             }
         }
@@ -59,7 +59,7 @@ struct HomeView: View {
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: .oegkDirectory) { _ in
                     isPresentingDoctorAddFlow = false
-                    reloadDoctorData()
+                    Task { await reloadDoctorData() }
                 }
             }
         }
@@ -67,7 +67,7 @@ struct HomeView: View {
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: .manual) { _ in
                     isPresentingManualDoctorAddFlow = false
-                    reloadDoctorData()
+                    Task { await reloadDoctorData() }
                 }
             }
         }
@@ -75,7 +75,7 @@ struct HomeView: View {
             NavigationStack {
                 AppointmentCreationFlowView(appContainer: appContainer) {
                     isPresentingAppointmentFlow = false
-                    reloadAppointments()
+                    Task { await reloadAppointments() }
                 }
             }
         }
@@ -159,7 +159,7 @@ struct HomeView: View {
         }
         .brandScreen()
         .refreshable {
-            reloadAll()
+            await reloadAll()
         }
     }
 
@@ -243,28 +243,28 @@ struct HomeView: View {
         }
     }
 
-    private func reloadAll() {
-        reloadOverview()
-        reloadDoctorData()
+    private func reloadAll() async {
+        await reloadOverview()
+        await reloadDoctorData()
     }
 
-    private func reloadOverview() {
-        overview = (try? LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
+    private func reloadOverview() async {
+        overview = (try? await LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
     }
 
-    private func reloadDoctorData() {
+    private func reloadDoctorData() async {
         do {
-            try doctorHubController.reloadDoctors()
-            try doctorHubController.reloadAppointments()
+            try await doctorHubController.reloadDoctors()
+            try await doctorHubController.reloadAppointments()
             doctorHubController.errorMessage = nil
         } catch {
             doctorHubController.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
         }
     }
 
-    private func reloadAppointments() {
+    private func reloadAppointments() async {
         do {
-            try doctorHubController.reloadAppointments()
+            try await doctorHubController.reloadAppointments()
             doctorHubController.errorMessage = nil
         } catch {
             doctorHubController.errorMessage = "Ärzte und Termine konnten nicht geladen werden."

@@ -7,7 +7,7 @@ import WeatherKit
 @MainActor
 struct CoreArchitectureTests {
     @Test
-    func saveEpisodeUseCaseRejectsInvalidDateRange() {
+    func saveEpisodeUseCaseRejectsInvalidDateRange() async {
         let repository = EpisodeRepositoryMock()
         let useCase = SaveEpisodeUseCase(repository: repository)
         var draft = EpisodeDraft.makeNew()
@@ -15,13 +15,13 @@ struct CoreArchitectureTests {
         draft.startedAt = Date(timeIntervalSince1970: 2_000)
         draft.endedAt = Date(timeIntervalSince1970: 1_000)
 
-        #expect(throws: EpisodeSaveError.invalidDateRange) {
-            try useCase.execute(draft, weatherSnapshot: nil)
+        await #expect(throws: EpisodeSaveError.invalidDateRange) {
+            try await useCase.execute(draft, weatherSnapshot: nil)
         }
     }
 
     @Test
-    func saveEpisodeUseCasePassesWeatherSnapshotToRepository() throws {
+    func saveEpisodeUseCasePassesWeatherSnapshotToRepository() async throws {
         let repository = EpisodeRepositoryMock()
         let useCase = SaveEpisodeUseCase(repository: repository)
         let draft = EpisodeDraft.makeNew()
@@ -36,14 +36,14 @@ struct CoreArchitectureTests {
             source: "Apple Weather"
         )
 
-        let savedID = try useCase.execute(draft, weatherSnapshot: snapshot)
+        let savedID = try await useCase.execute(draft, weatherSnapshot: snapshot)
 
         #expect(savedID == repository.savedDraftID)
         #expect(repository.lastWeatherSnapshot == snapshot)
     }
 
     @Test
-    func saveEpisodeUseCasePassesHealthContextToRepository() throws {
+    func saveEpisodeUseCasePassesHealthContextToRepository() async throws {
         let repository = EpisodeRepositoryMock()
         let useCase = SaveEpisodeUseCase(repository: repository)
         let draft = EpisodeDraft.makeNew()
@@ -67,7 +67,7 @@ struct CoreArchitectureTests {
             ]
         )
 
-        _ = try useCase.execute(draft, weatherSnapshot: nil, healthContext: context)
+        _ = try await useCase.execute(draft, weatherSnapshot: nil, healthContext: context)
 
         #expect(repository.lastHealthContext == context)
     }
@@ -115,19 +115,19 @@ struct CoreArchitectureTests {
     }
 
     @Test
-    func saveEpisodeUseCaseRejectsFutureDate() {
+    func saveEpisodeUseCaseRejectsFutureDate() async {
         let repository = EpisodeRepositoryMock()
         let useCase = SaveEpisodeUseCase(repository: repository)
         var draft = EpisodeDraft.makeNew()
         draft.startedAt = .now.addingTimeInterval(3_600)
 
-        #expect(throws: EpisodeSaveError.futureDate) {
-            try useCase.execute(draft, weatherSnapshot: nil)
+        await #expect(throws: EpisodeSaveError.futureDate) {
+            try await useCase.execute(draft, weatherSnapshot: nil)
         }
     }
 
     @Test
-    func loadHistoryMonthUseCaseGroupsByCalendarDay() throws {
+    func loadHistoryMonthUseCaseGroupsByCalendarDay() async throws {
         let repository = EpisodeRepositoryMock()
         let firstDay = Date(timeIntervalSince1970: 10_000)
         let sameDayLater = firstDay.addingTimeInterval(60 * 60)
@@ -138,7 +138,7 @@ struct CoreArchitectureTests {
             makeEpisode(id: UUID(), startedAt: secondDay, intensity: 3)
         ]
 
-        let result = try LoadHistoryMonthUseCase(repository: repository).execute(month: firstDay)
+        let result = try await LoadHistoryMonthUseCase(repository: repository).execute(month: firstDay)
 
         #expect(result.episodesByDay.count == 2)
         #expect(result.episodesByDay[Calendar.current.startOfDay(for: firstDay)]?.count == 2)
@@ -146,7 +146,7 @@ struct CoreArchitectureTests {
     }
 
     @Test
-    func loadSettingsUseCaseCountsActiveTrashAndConflicts() throws {
+    func loadSettingsUseCaseCountsActiveTrashAndConflicts() async throws {
         let episodeRepository = EpisodeRepositoryMock()
         let medicationRepository = MedicationCatalogRepositoryMock()
         let syncService = SyncServiceMock()
@@ -182,7 +182,7 @@ struct CoreArchitectureTests {
             )
         ]
 
-        let summary = try LoadSettingsUseCase(
+        let summary = try await LoadSettingsUseCase(
             episodeRepository: episodeRepository,
             medicationRepository: medicationRepository,
             syncService: syncService
@@ -194,12 +194,12 @@ struct CoreArchitectureTests {
     }
 
     @Test
-    func saveDoctorUseCaseRejectsMissingName() {
+    func saveDoctorUseCaseRejectsMissingName() async {
         let repository = DoctorRepositoryMock()
         let useCase = SaveDoctorUseCase(repository: repository)
 
-        #expect(throws: DoctorSaveError.missingName) {
-            try useCase.execute(.makeNew())
+        await #expect(throws: DoctorSaveError.missingName) {
+            try await useCase.execute(.makeNew())
         }
     }
 
@@ -241,8 +241,7 @@ struct CoreArchitectureTests {
     }
 }
 
-@MainActor
-private final class EpisodeRepositoryMock: EpisodeRepository {
+private final class EpisodeRepositoryMock: EpisodeRepository, @unchecked Sendable {
     var recentRecords: [EpisodeRecord] = []
     var monthRecords: [EpisodeRecord] = []
     var dayRecords: [EpisodeRecord] = []
@@ -268,8 +267,7 @@ private final class EpisodeRepositoryMock: EpisodeRepository {
     func fetchDeleted() throws -> [EpisodeRecord] { deletedRecords }
 }
 
-@MainActor
-private final class MedicationCatalogRepositoryMock: MedicationCatalogRepository {
+private final class MedicationCatalogRepositoryMock: MedicationCatalogRepository, @unchecked Sendable {
     var definitions: [MedicationDefinitionRecord] = []
     var deletedDefinitions: [MedicationDefinitionRecord] = []
 
@@ -307,8 +305,7 @@ private final class SyncServiceMock: SyncService {
     func resolveConflictUsingRemote(_ conflict: SyncConflict) async {}
 }
 
-@MainActor
-private final class DoctorRepositoryMock: DoctorRepository {
+private final class DoctorRepositoryMock: DoctorRepository, @unchecked Sendable {
     var doctors: [DoctorRecord] = []
     var loadedDoctor: DoctorRecord?
     var lastSavedDraft: DoctorDraft?
@@ -326,8 +323,7 @@ private final class DoctorRepositoryMock: DoctorRepository {
     }
 }
 
-@MainActor
-private final class AppointmentRepositoryMock: AppointmentRepository {
+private final class AppointmentRepositoryMock: AppointmentRepository, @unchecked Sendable {
     var appointments: [AppointmentRecord] = []
     var loadedAppointment: AppointmentRecord?
     var lastSavedDraft: AppointmentDraft?
