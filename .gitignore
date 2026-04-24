@@ -127,7 +127,7 @@ tmbootpicker.efi
 
 .sentryclirc
 
-MigraineTracker/Configs/LocalSecrets.xcconfig
+Symi/Configs/LocalSecrets.xcconfig
 # fastlane/report.xml
 # fastlane/Preview.html
 # fastlane/screenshots/test_output/
