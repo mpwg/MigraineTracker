@@ -7,7 +7,7 @@ import UIKit
 
 enum PDFExportWriter {
     static func write(summary: ExportPeriodSummary, mode: PDFReportMode = .detailed) throws -> URL {
-        let fileName = "\(localized("Schmerztagebuch-Bericht"))-\(dateStamp(summary.startDate))-\(dateStamp(summary.endDate)).pdf"
+        let fileName = "\(localized("Symi-Bericht"))-\(dateStamp(summary.startDate))-\(dateStamp(summary.endDate)).pdf"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         let pageRect = CGRect(x: 0, y: 0, width: 595, height: 842)
         let layout = PDFLayout(pageRect: pageRect)
@@ -20,7 +20,7 @@ enum PDFExportWriter {
 
     private static func writeRawPDF(summary: ExportPeriodSummary, mode: PDFReportMode, to url: URL, layout: PDFLayout) throws {
         var mediaBox = layout.pageRect
-        let documentTitle = localized("Schmerztagebuch")
+        let documentTitle = localized("Symi")
         let metadata = [
             kCGPDFContextCreator: ProductBranding.displayName,
             kCGPDFContextAuthor: ProductBranding.displayName,
@@ -36,7 +36,7 @@ enum PDFExportWriter {
         var page = PDFPageContext(
             context: context,
             layout: layout,
-            headerTitle: localized("Schmerztagebuch"),
+            headerTitle: localized("Symi"),
             headerLogo: brandLogo(),
             footerTitle: localized("App herunterladen"),
             footerLinkLabel: localized("App Store"),
@@ -90,7 +90,7 @@ enum PDFExportWriter {
         guard let document = PDFDocument(url: url), document.pageCount > 0 else {
             throw PDFExportError.documentValidationFailed
         }
-        let documentTitle = localized("Schmerztagebuch")
+        let documentTitle = localized("Symi")
 
         document.documentAttributes = [
             PDFDocumentAttribute.titleAttribute: documentTitle,

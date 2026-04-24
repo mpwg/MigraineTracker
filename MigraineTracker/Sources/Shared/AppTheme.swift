@@ -8,18 +8,26 @@ enum AppTheme {
     static let readableContentMaxWidth: CGFloat = 760
     static let dashboardSpacing: CGFloat = 20
 
-    static let ink = Color(red: 0.04, green: 0.30, blue: 0.38)
-    static let ocean = Color(red: 0.08, green: 0.56, blue: 0.62)
-    static let seaGlass = Color(red: 0.67, green: 0.86, blue: 0.82)
-    static let foam = Color(red: 0.96, green: 0.93, blue: 0.84)
-    static let coral = Color(red: 0.95, green: 0.46, blue: 0.35)
-    static let mist = Color(red: 0.90, green: 0.96, blue: 0.95)
+    static let symiPetrol = Color(red: 0.059, green: 0.239, blue: 0.243)
+    static let symiSage = Color(red: 0.557, green: 0.804, blue: 0.722)
+    static let symiCoral = Color(red: 1.000, green: 0.541, blue: 0.478)
+    static let symiBackground = Color(red: 0.965, green: 0.957, blue: 0.937)
+    static let symiCard = Color(red: 1.000, green: 0.996, blue: 0.984)
+    static let symiTextPrimary = Color(red: 0.110, green: 0.110, blue: 0.118)
+    static let symiTextSecondary = Color(red: 0.420, green: 0.420, blue: 0.431)
+
+    static let ink = symiPetrol
+    static let ocean = symiPetrol
+    static let seaGlass = symiSage
+    static let foam = symiBackground
+    static let coral = symiCoral
+    static let mist = Color(red: 0.925, green: 0.969, blue: 0.955)
 
     static let appBackground = LinearGradient(
         colors: [
-            mist,
-            foam.opacity(0.94),
-            seaGlass.opacity(0.30)
+            symiBackground,
+            Color.white.opacity(0.72),
+            symiSage.opacity(0.22)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -36,24 +44,23 @@ enum AppTheme {
 
     static let cardGradient = LinearGradient(
         colors: [
-            Color.white.opacity(0.78),
-            foam.opacity(0.92),
-            seaGlass.opacity(0.28)
+            symiCard,
+            Color.white.opacity(0.96)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    static let selectedFill = ocean.opacity(0.18)
-    static let secondaryFill = seaGlass.opacity(0.18)
-    static let cardBorder = Color.white.opacity(0.45)
-    static let shadowColor = ink.opacity(0.12)
+    static let selectedFill = symiSage.opacity(0.35)
+    static let secondaryFill = symiSage.opacity(0.18)
+    static let cardBorder = Color.clear
+    static let shadowColor = symiPetrol.opacity(0.10)
 }
 
 private struct BrandScreenModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .tint(AppTheme.ocean)
+            .tint(AppTheme.symiPetrol)
             .scrollContentBackground(.hidden)
             .background(AppTheme.appBackground.ignoresSafeArea())
     }
@@ -88,12 +95,33 @@ private struct BrandCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(AppTheme.cardGradient)
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppTheme.cardBorder, lineWidth: 1)
-            }
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: AppTheme.shadowColor, radius: 14, x: 0, y: 6)
+    }
+}
+
+struct SymiPrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(.white)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .background(AppTheme.symiCoral.opacity(configuration.isPressed ? 0.82 : 1))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .shadow(color: AppTheme.shadowColor, radius: 18, y: 10)
+            .shadow(color: AppTheme.symiCoral.opacity(configuration.isPressed ? 0.10 : 0.22), radius: 12, y: 6)
+    }
+}
+
+struct SymiSecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(AppTheme.symiPetrol)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(AppTheme.symiSage.opacity(configuration.isPressed ? 0.20 : 0.32))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 
@@ -117,4 +145,14 @@ extension View {
     func brandCard() -> some View {
         modifier(BrandCardModifier())
     }
+}
+
+extension Color {
+    static let symiPetrol = AppTheme.symiPetrol
+    static let symiSage = AppTheme.symiSage
+    static let symiCoral = AppTheme.symiCoral
+    static let symiBackground = AppTheme.symiBackground
+    static let symiCard = AppTheme.symiCard
+    static let symiTextPrimary = AppTheme.symiTextPrimary
+    static let symiTextSecondary = AppTheme.symiTextSecondary
 }

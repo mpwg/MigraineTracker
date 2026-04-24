@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProductInformationView: View {
-    private let privacyURL = URL(string: "https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVlcjdhQGljbG91ZC5jb20iLCJjb21wYW55IjoiTWF0dGhpYXMgV2FsbG5lci1H6WhyaSIsImdlbl9hdCI6IjIwMjYtMDQtMDlUMTE6MjI6MjUuOTYzWiJ9")!
+    private let privacyURL = URL(string: "https://symiapp.com/privacy")!
 
     enum Mode {
         case standard
@@ -15,20 +15,20 @@ struct ProductInformationView: View {
         List {
             if mode == .onboarding {
                 Section("Bevor du startest") {
-                    Text("\(ProductBranding.displayName) ist dein persönliches Schmerztagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst.")
+                    Text("\(ProductBranding.displayName) ist dein ruhiges Migräne Tagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst.")
                     Text("Die App unterstützt deine Dokumentation. Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt.")
                         .foregroundStyle(.secondary)
                 }
             }
 
-            Section("Was die App macht") {
+            Section("Mehr gute Tage") {
                 infoRow(
-                    title: "Schmerzereignisse festhalten",
-                    detail: "Du dokumentierst Zeitpunkt, Dauer, Intensität, Symptome, mögliche Auslöser, Medikamente und persönliche Notizen.",
+                    title: "In Sekunden eintragen",
+                    detail: "Du dokumentierst Zeitpunkt, Intensität, hilfreiche Hinweise und persönliche Notizen ohne Formulargefühl.",
                     systemImage: "square.and.pencil"
                 )
                 infoRow(
-                    title: "Zusammenhänge besser erkennen",
+                    title: "Muster verstehen",
                     detail: "Wetterdaten und freiwillig freigegebene Apple-Health-Daten ergänzen deine Einträge, damit du später mehr Kontext hast.",
                     systemImage: "cloud.sun"
                 )
@@ -57,6 +57,10 @@ struct ProductInformationView: View {
                 )
                 Link(destination: privacyURL) {
                     Label("Datenschutzerklärung öffnen", systemImage: "link")
+                }
+
+                Link(destination: ProductBranding.websiteURL) {
+                    Label("symiapp.com öffnen", systemImage: "link")
                 }
             }
 
@@ -131,7 +135,7 @@ struct ProductInformationView: View {
                 )
                 infoRow(
                     title: "Feedback und Ideen",
-                    detail: "Fehler, Ideen und Verbesserungsvorschläge kannst du als GitHub-Issue einreichen.",
+                    detail: "Feedback und Hilfe findest du über symiapp.com.",
                     systemImage: "bubble.left.and.text.bubble.right"
                 )
                 infoRow(
@@ -145,7 +149,7 @@ struct ProductInformationView: View {
                 }
 
                 Link(destination: ProductBranding.supportURL) {
-                    Label("GitHub-Issues öffnen", systemImage: "exclamationmark.bubble")
+                    Label("Support öffnen", systemImage: "questionmark.circle")
                 }
             }
 

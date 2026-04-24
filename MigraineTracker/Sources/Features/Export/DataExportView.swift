@@ -31,7 +31,7 @@ struct DataExportView: View {
                 if let exportErrorMessage = controller.exportErrorMessage {
                     Text(exportErrorMessage)
                         .font(.subheadline)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppTheme.symiCoral)
                 }
             }
 
@@ -68,11 +68,11 @@ struct DataExportView: View {
                 if let dataTransferMessage = controller.dataTransferMessage {
                     Text(dataTransferMessage)
                         .font(.subheadline)
-                        .foregroundStyle(dataTransferMessage.contains("Fehler") ? .red : .secondary)
+                        .foregroundStyle(dataTransferMessage.contains("Fehler") ? AppTheme.symiCoral : AppTheme.symiTextSecondary)
                 }
             }
         }
-        .navigationTitle("Datenexport")
+        .navigationTitle("Alles im Blick")
         .brandGroupedScreen()
         .scrollDismissesKeyboard(.interactively)
         .onAppear {

@@ -18,16 +18,16 @@ final class MigraineTrackerScreenshotTests: XCTestCase {
 
     func testCaptureMainStoreScreens() throws {
         let screens: [Screen] = [
-            .init(route: "home", germanSnapshotName: "01-startseite", englishSnapshotName: "01-home"),
-            .init(route: "new-entry", germanSnapshotName: "02-neuer-eintrag", englishSnapshotName: "02-new-entry"),
-            .init(route: "history", germanSnapshotName: "03-tagebuch", englishSnapshotName: "03-diary"),
-            .init(route: "episode-detail", germanSnapshotName: "04-eintragsdetail", englishSnapshotName: "04-entry-detail"),
-            .init(route: "export", germanSnapshotName: "05-export", englishSnapshotName: "05-export"),
-            .init(route: "doctors", germanSnapshotName: "06-aerzteliste", englishSnapshotName: "06-doctors"),
-            .init(route: "doctor-detail", germanSnapshotName: "07-arztdetail", englishSnapshotName: "07-doctor-detail"),
-            .init(route: "doctor-add", germanSnapshotName: "08-arzt-hinzufuegen", englishSnapshotName: "08-add-doctor"),
-            .init(route: "appointment-flow", germanSnapshotName: "09-termin-flow", englishSnapshotName: "09-appointment-flow"),
-            .init(route: "privacy-info", germanSnapshotName: "10-datenschutz", englishSnapshotName: "10-privacy")
+            .init(route: "home", germanSnapshotName: "01-mehr-gute-tage", englishSnapshotName: "01-more-good-days"),
+            .init(route: "new-entry", germanSnapshotName: "02-in-sekunden-eintragen", englishSnapshotName: "02-log-in-seconds"),
+            .init(route: "history", germanSnapshotName: "03-erkenne-deine-muster", englishSnapshotName: "03-recognize-patterns"),
+            .init(route: "episode-detail", germanSnapshotName: "04-alles-im-blick", englishSnapshotName: "04-everything-in-view"),
+            .init(route: "privacy-info", germanSnapshotName: "05-deine-daten-gehoeren-dir", englishSnapshotName: "05-your-data-belongs-to-you"),
+            .init(route: "export", germanSnapshotName: "06-export", englishSnapshotName: "06-export"),
+            .init(route: "doctors", germanSnapshotName: "07-aerzteliste", englishSnapshotName: "07-doctors"),
+            .init(route: "doctor-detail", germanSnapshotName: "08-arztdetail", englishSnapshotName: "08-doctor-detail"),
+            .init(route: "doctor-add", germanSnapshotName: "09-arzt-hinzufuegen", englishSnapshotName: "09-add-doctor"),
+            .init(route: "appointment-flow", germanSnapshotName: "10-termin-flow", englishSnapshotName: "10-appointment-flow")
         ]
 
         for screen in screens {

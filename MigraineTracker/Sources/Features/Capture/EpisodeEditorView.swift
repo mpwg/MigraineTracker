@@ -30,8 +30,8 @@ struct EpisodeEditorView: View {
                 Section {
                     Label(validationMessage, systemImage: "exclamationmark.triangle.fill")
                         .font(.subheadline)
-                        .foregroundStyle(.red)
-                        .accessibilityLabel("Fehler: \(validationMessage)")
+                        .foregroundStyle(AppTheme.symiCoral)
+                        .accessibilityLabel("Hinweis: \(validationMessage)")
                         .formAlignedRow()
                 }
             }
@@ -67,13 +67,13 @@ struct EpisodeEditorView: View {
                     displayedComponents: [.date, .hourAndMinute]
                 )
             } header: {
-                Text("Schneller Eintrag")
+                Text("In Sekunden eintragen")
             } footer: {
-                Text("So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional.")
+                Text("Wenige Angaben reichen. Alles Weitere bleibt optional.")
             }
 
-            tagSection(title: "Symptome", options: controller.symptomOptions, selection: $controller.draft.selectedSymptoms)
-            tagSection(title: "Trigger", options: controller.triggerOptions, selection: $controller.draft.selectedTriggers)
+            tagSection(title: "Was spürst du?", options: controller.symptomOptions, selection: $controller.draft.selectedSymptoms)
+            tagSection(title: "Was könnte mitspielen?", options: controller.triggerOptions, selection: $controller.draft.selectedTriggers)
 
             Section("Notiz") {
                 TextField("Kurz notieren, was auffällt", text: $controller.draft.notes, axis: .vertical)
@@ -188,7 +188,7 @@ struct EpisodeEditorView: View {
                 Button {
                     controller.presentEditor(for: nil)
                 } label: {
-                    Label("Eigenes Medikament hinzufügen", systemImage: "plus.circle")
+                    Label("Eigenes Medikament hinzufügen", systemImage: "plus")
                 }
                 .formAlignedRow()
             }
@@ -200,11 +200,11 @@ struct EpisodeEditorView: View {
                     }
                 }
                 .disabled(controller.isSaving)
-                .frame(maxWidth: .infinity, alignment: .center)
+                .buttonStyle(SymiPrimaryButtonStyle())
                 .formAlignedRow()
             }
         }
-        .navigationTitle(controller.mode == .create ? "Neuer Eintrag" : "Eintrag bearbeiten")
+        .navigationTitle(controller.mode == .create ? "Eintragen" : "Eintrag bearbeiten")
         .brandGroupedScreen()
         .toolbar {
             if showsDismissButton {
@@ -385,7 +385,7 @@ private struct WeatherStatusContent: View {
                         }
                         openURL(settingsURL)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(SymiSecondaryButtonStyle())
                 }
             }
             .padding(.vertical, 8)
@@ -410,28 +410,20 @@ private struct WeatherStatusContent: View {
 private struct IntensityPicker: View {
     @Binding var value: Double
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
-
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(1 ... 10, id: \.self) { level in
-                let isSelected = Int(value) == level
+        VStack(alignment: .leading, spacing: 10) {
+            Slider(value: $value, in: 0 ... 10, step: 1)
+                .tint(AppTheme.symiCoral)
+                .accessibilityLabel("Intensität")
+                .accessibilityValue("\(Int(value)) von 10")
 
-                Button {
-                    value = Double(level)
-                } label: {
-                    Text("\(level)")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, minHeight: 40)
-                        .background(isSelected ? AppTheme.ocean : AppTheme.secondaryFill)
-                        .foregroundStyle(isSelected ? Color.white : .primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Intensität \(level)")
-                .accessibilityHint(isSelected ? "Aktuell ausgewählt." : "Setzt die Intensität auf \(level) von 10.")
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            HStack {
+                Text("ruhig")
+                Spacer()
+                Text("stark")
             }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(AppTheme.symiTextSecondary)
         }
     }
 }

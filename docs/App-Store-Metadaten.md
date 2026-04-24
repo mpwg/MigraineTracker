@@ -2,27 +2,27 @@
 
 ## Produktname
 
-Schmerztagebuch - Migräne & Co.
+Symi
 
 ## Untertitel
 
-Beschwerden freundlich dokumentieren
+Migräne Tagebuch
 
 ## Kurzbeschreibung
 
-Erfasse Migräne, Kopfschmerzen, Medikamente, Trigger und Wetter lokal auf deinem iPhone. Behalte dein Tagebuch im Blick und exportiere kompakte PDF-Berichte für Arztgespräche.
+In Sekunden eintragen, Muster verstehen und mehr gute Tage planen. Symi hält dein Migräne Tagebuch ruhig, lokal und übersichtlich.
 
 ## Keywords
 
-Migräne,Kopfschmerz,Schmerzen,Tagebuch,Trigger,Medikamente,PDF,Wetter
+Migräne,Tagebuch,Kopfschmerz,Symi,Trigger,Medikamente,Wetter,PDF
 
 ## Support-URL
 
-https://github.com/mpwg/MigraineTracker/issues
+https://symiapp.com
 
 ## Privacy-URL
 
-https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVlcjdhQGljbG91ZC5jb20iLCJjb21wYW55IjoiTWF0dGhpYXMgV2FsbG5lci1H6WhyaSIsImdlbl9hdCI6IjIwMjYtMDQtMDlUMTE6MjI6MjUuOTYzWiJ9
+https://symiapp.com/privacy
 
 ## Marketing-Notizen
 
@@ -36,11 +36,11 @@ https://s3.privyr.com/privacy/privacy-policy.html?d=eyJlbWFpbCI6ImZldXJpZy5mZXVl
 
 Benötigte Screenshots vorbereiten:
 
-1. Home mit freundlichem Tagebuch-Einstieg und Schnellzugriffen
-2. Neuer Eintrag mit Typ, Intensität, Symptomen und optionalen Wetterdaten
-3. Tagebuch in Listenansicht
-4. Tagebuch in Kalenderansicht
-5. PDF-Export mit Zeitraum und Vorschau
+1. Emotion: „Mehr gute Tage.“
+2. Simplicity: „In Sekunden eintragen“
+3. Insight: „Erkenne deine Muster“
+4. Control: „Alles im Blick“
+5. Trust: „Deine Daten gehören dir“
 
 Wichtige Vorgabe für alle Store-Screenshots:
 

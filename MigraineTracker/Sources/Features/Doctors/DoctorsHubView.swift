@@ -695,7 +695,7 @@ struct DoctorEditorView: View {
             if let validationMessage = controller.validationMessage {
                 Section {
                     Label(validationMessage, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppTheme.symiCoral)
                 }
             }
 
@@ -929,7 +929,7 @@ struct AppointmentEditorView: View {
             if let validationMessage = controller.validationMessage {
                 Section {
                     Label(validationMessage, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppTheme.symiCoral)
                 }
             }
 

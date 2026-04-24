@@ -485,7 +485,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Development;
 				INFOPLIST_FILE = MigraineTracker/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Schmerztagebuch;
+				INFOPLIST_KEY_CFBundleDisplayName = Symi;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Apple Health wird optional gelesen, um Schmerzepisoden mit Kontext wie Schlaf, Aktivität, Herzfrequenz, Zyklusdaten und Symptomen zu ergänzen.";
@@ -559,7 +559,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				ICLOUD_CONTAINER_ENVIRONMENT = Production;
 				INFOPLIST_FILE = MigraineTracker/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Schmerztagebuch;
+				INFOPLIST_KEY_CFBundleDisplayName = Symi;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Apple Health wird optional gelesen, um Schmerzepisoden mit Kontext wie Schlaf, Aktivität, Herzfrequenz, Zyklusdaten und Symptomen zu ergänzen.";

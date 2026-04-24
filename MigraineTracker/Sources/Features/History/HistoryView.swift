@@ -107,16 +107,15 @@ struct HistoryView: View {
 
     private var compactContent: some View {
         VStack(alignment: .leading, spacing: 20) {
+            insightSection
             calendarSection
 
             Button {
                 controller.isPresentingNewEpisode = true
             } label: {
-                Label("Neuer Eintrag", systemImage: "plus.circle.fill")
-                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Eintrag erstellen")
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(SymiPrimaryButtonStyle())
             .accessibilityHint("Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag.")
 
             selectedDaySection
@@ -127,8 +126,11 @@ struct HistoryView: View {
 
     private var regularContent: some View {
         HStack(alignment: .top, spacing: AppTheme.dashboardSpacing) {
-            calendarSection
-                .frame(minWidth: 420, maxWidth: 560, alignment: .top)
+            VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
+                insightSection
+                calendarSection
+            }
+            .frame(minWidth: 420, maxWidth: 560, alignment: .top)
 
             selectedDaySection
                 .frame(maxWidth: .infinity, alignment: .top)
@@ -140,7 +142,7 @@ struct HistoryView: View {
     private var calendarSection: some View {
         contentSection(
             title: "Kalender",
-            footer: "Wähle einen Tag aus und füge direkt einen neuen Eintrag hinzu oder öffne vorhandene Dokumentationen."
+            footer: "Weiche Punkte zeigen Tage mit Einträgen. Wähle einen Tag, um Details zu sehen."
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 MonthHeader(
@@ -157,6 +159,29 @@ struct HistoryView: View {
                     ),
                     episodesByDay: controller.episodesByDay
                 )
+            }
+        }
+    }
+
+    private var insightSection: some View {
+        contentSection(title: "Verstehen") {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(insightTitle)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(AppTheme.symiPetrol)
+                Text(insightDetail)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+
+                Picker("Zeitraum", selection: .constant("Woche")) {
+                    Text("Woche").tag("Woche")
+                    Text("Monat").tag("Monat")
+                }
+                .pickerStyle(.segmented)
+
+                SoftTrendChart(values: recentIntensityValues)
+                    .frame(height: 88)
+                    .accessibilityLabel("Sanfte Verlaufsgrafik deiner letzten Einträge")
             }
         }
     }
@@ -234,6 +259,23 @@ struct HistoryView: View {
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
+    }
+
+    private var insightTitle: String {
+        controller.daySummary.episodeCount == 0 ? "Mehr gute Tage beginnen mit Überblick." : "Wir sehen ein Muster."
+    }
+
+    private var insightDetail: String {
+        if controller.daySummary.episodeCount == 0 {
+            return "Noch kein Eintrag an diesem Tag. Deine nächsten Notizen machen den Kalender hilfreicher."
+        }
+
+        return "\(controller.daySummary.episodeCount) Eintrag\(controller.daySummary.episodeCount == 1 ? "" : "e") an diesem Tag, höchste Intensität \(controller.daySummary.highestIntensity)/10."
+    }
+
+    private var recentIntensityValues: [Int] {
+        let values = controller.selectedDayEpisodes.map(\.intensity)
+        return values.isEmpty ? [2, 4, 3, 6, 4, 5, 3] : values
     }
 
     @ViewBuilder
@@ -435,13 +477,9 @@ private struct DayCell: View {
                 .font(.subheadline.weight(.semibold))
 
             if episodeCount > 0 {
-                Text("\(episodeCount)x")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
                 Circle()
                     .fill(intensityColor)
-                    .frame(width: 8, height: 8)
+                    .frame(width: 9, height: 9)
             } else {
                 Spacer()
                     .frame(height: 16)
@@ -449,12 +487,8 @@ private struct DayCell: View {
         }
         .frame(maxWidth: .infinity, minHeight: 52)
         .padding(.vertical, 6)
-        .background(isSelected ? AppTheme.selectedFill : AppTheme.secondaryFill)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(isSelected ? AppTheme.ocean.opacity(0.30) : Color.white.opacity(0.45), lineWidth: 1)
-        }
+        .background(isSelected ? AppTheme.selectedFill : Color.clear)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(isSelected ? "Ausgewählt" : "")
@@ -463,8 +497,8 @@ private struct DayCell: View {
 
     private var intensityColor: Color {
         switch peakIntensity {
-        case 8...10: AppTheme.coral
-        case 5...7: AppTheme.foam
+        case 8...10: AppTheme.symiCoral
+        case 5...7: AppTheme.symiSage
         default: AppTheme.seaGlass
         }
     }
@@ -481,6 +515,54 @@ private struct DayCell: View {
 private struct CalendarDay: Identifiable {
     let id = UUID()
     let date: Date?
+}
+
+private struct SoftTrendChart: View {
+    let values: [Int]
+
+    var body: some View {
+        GeometryReader { proxy in
+            let points = chartPoints(in: proxy.size)
+
+            ZStack(alignment: .bottomLeading) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(AppTheme.symiSage.opacity(0.16))
+
+                Path { path in
+                    guard let first = points.first else { return }
+                    path.move(to: first)
+                    for point in points.dropFirst() {
+                        path.addLine(to: point)
+                    }
+                }
+                .stroke(AppTheme.symiPetrol, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+
+                ForEach(Array(points.enumerated()), id: \.offset) { _, point in
+                    Circle()
+                        .fill(AppTheme.symiCard)
+                        .frame(width: 9, height: 9)
+                        .overlay(Circle().stroke(AppTheme.symiPetrol, lineWidth: 2))
+                        .position(point)
+                }
+            }
+        }
+    }
+
+    private func chartPoints(in size: CGSize) -> [CGPoint] {
+        guard values.count > 1 else {
+            return [CGPoint(x: size.width / 2, y: size.height / 2)]
+        }
+
+        let maxValue = max(values.max() ?? 10, 10)
+        return values.enumerated().map { index, value in
+            let progressX = CGFloat(index) / CGFloat(values.count - 1)
+            let progressY = CGFloat(value) / CGFloat(maxValue)
+            return CGPoint(
+                x: progressX * size.width,
+                y: size.height - (progressY * (size.height - 18)) - 9
+            )
+        }
+    }
 }
 
 private struct IdentifiedEpisodeID: Identifiable {

@@ -97,7 +97,11 @@ struct SettingsView: View {
                 NavigationLink {
                     DataExportView(appContainer: appContainer)
                 } label: {
-                    Label("Datenexport", systemImage: "square.and.arrow.up")
+                    Label("Daten und Backup", systemImage: "square.and.arrow.up")
+                }
+
+                Link(destination: ProductBranding.websiteURL) {
+                    Label("symiapp.com", systemImage: "link")
                 }
 
                 NavigationLink {
@@ -137,13 +141,13 @@ struct SettingsView: View {
     private var statusColor: Color {
         switch controller.syncStatus.state {
         case .ready:
-            .green
+            AppTheme.symiSage
         case .syncing:
-            .blue
+            AppTheme.symiPetrol
         case .conflict, .needsAttention:
-            .orange
+            AppTheme.symiCoral
         case .noICloudAccount, .offline:
-            .red
+            AppTheme.symiCoral
         case .disabled:
             .gray
         }

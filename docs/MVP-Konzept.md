@@ -2,7 +2,7 @@
 
 ## Produktziel
 
-Das MVP von Schmerztagebuch - Migräne & Co. soll ein verlässliches, schnelles Schmerztagebuch mit klarem Fokus auf Migräne sein. Nutzerinnen und Nutzer sollen einen Eintrag in wenigen Sekunden erfassen und später nachvollziehen können, wie häufig Beschwerden auftreten, welche Medikamente helfen und ob Wetter oder andere Faktoren eine Rolle spielen.
+Das MVP von Symi soll ein verlässliches, schnelles Migräne Tagebuch mit ruhigem Premium-Gefühl sein. Nutzerinnen und Nutzer sollen einen Eintrag in wenigen Sekunden erfassen und später nachvollziehen können, wie häufig Beschwerden auftreten, welche Medikamente helfen und ob Wetter oder andere Faktoren eine Rolle spielen.
 
 Für die erste App-Store-Submission gilt ein bewusst enger Scope:
 
@@ -61,7 +61,7 @@ Viele Betroffene dokumentieren Symptome unregelmäßig oder gar nicht, weil vorh
 
 ## Wertversprechen
 
-Schmerztagebuch - Migräne & Co. reduziert Dokumentation auf das Wesentliche und ergänzt automatisch Kontextdaten wie Wetter. Dadurch entsteht ohne großen Aufwand ein verwertbares Tagebuch für den Alltag und für ärztliche Gespräche.
+Symi reduziert Dokumentation auf das Wesentliche und ergänzt automatisch Kontextdaten wie Wetter. Dadurch entsteht ohne großen Aufwand ein verwertbares Tagebuch für den Alltag und für ärztliche Gespräche.
 
 ## MVP-Funktionsumfang
 

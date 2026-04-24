@@ -24,13 +24,13 @@ struct HomeView: View {
                 regularDashboard
             }
         }
-        .navigationTitle("Schmerztagebuch")
+        .navigationTitle(ProductBranding.displayName)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
                     isPresentingEpisodeEditor = true
                 } label: {
-                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
+                    Label("Eintragen", systemImage: "plus")
                 }
                 .keyboardShortcut("n", modifiers: .command)
 
@@ -82,28 +82,37 @@ struct HomeView: View {
     }
 
     private var compactDashboard: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
                 DiaryWelcomeCard(overview: overview)
-                    .padding(.vertical, 6)
 
                 Button {
                     isPresentingEpisodeEditor = true
                 } label: {
-                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    Text("Eintrag erstellen")
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-            } header: {
-                Text("Heute")
-            }
+                .buttonStyle(SymiPrimaryButtonStyle())
 
-            appointmentsSection
-            doctorsSection
+                FeelingCheckInCard()
+
+                AdaptiveDashboardCard(title: "Kommende Termine") {
+                    appointmentContent
+                }
+
+                AdaptiveDashboardCard(title: "Vertrauen") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("Deine Daten gehören dir.", systemImage: "lock")
+                            .font(.headline)
+                        Text("Symi bleibt lokal nutzbar. Sync und Export passieren nur, wenn du sie aktiv nutzt.")
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiTextSecondary)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
         }
-        .listStyle(.insetGrouped)
-        .brandGroupedScreen()
+        .brandScreen()
     }
 
     private var regularDashboard: some View {
@@ -118,6 +127,7 @@ struct HomeView: View {
             ) {
                 VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
                     DiaryWelcomeCard(overview: overview)
+                    FeelingCheckInCard()
 
                     AdaptiveDashboardCard(title: "Schnellaktionen") {
                         LazyVGrid(
@@ -125,7 +135,7 @@ struct HomeView: View {
                             alignment: .leading,
                             spacing: 12
                         ) {
-                            QuickActionTile("Neuer Eintrag", systemImage: "plus.circle.fill") {
+                            QuickActionTile("Eintragen", systemImage: "plus") {
                                 isPresentingEpisodeEditor = true
                             }
 
@@ -133,7 +143,7 @@ struct HomeView: View {
                                 isPresentingAppointmentFlow = true
                             }
 
-                            QuickActionTile("Arzt hinzufügen", systemImage: "cross.case.fill") {
+                            QuickActionTile("Kontakt hinzufügen", systemImage: "person.crop.circle.badge.plus") {
                                 isPresentingDoctorAddFlow = true
                             }
 
@@ -149,7 +159,17 @@ struct HomeView: View {
                         appointmentContent
                     }
 
-                    AdaptiveDashboardCard(title: "Meine Ärzte") {
+                    AdaptiveDashboardCard(title: "Vertrauen") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Label("Deine Daten gehören dir.", systemImage: "lock")
+                                .font(.headline)
+                            Text("Website und Support: symiapp.com")
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.symiTextSecondary)
+                        }
+                    }
+
+                    AdaptiveDashboardCard(title: "Kontakte") {
                         doctorContent
                     }
                 }
@@ -316,6 +336,7 @@ private struct QuickActionTile: View {
                 .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
                 .padding(.horizontal, 14)
                 .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .foregroundStyle(AppTheme.symiPetrol)
         }
         .buttonStyle(.plain)
         .hoverEffect(.highlight)
@@ -329,12 +350,12 @@ private struct DiaryWelcomeCard: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text(ProductBranding.displayName)
-                        .font(.title3.weight(.semibold))
+                    Text(greeting)
+                        .font(.title2.weight(.semibold))
                         .foregroundStyle(AppTheme.foam)
 
-                    Text(summaryTitle)
-                        .font(.headline)
+                    Text(ProductBranding.marketingClaim)
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(Color.white)
 
                     Text(summaryDetail)
@@ -408,10 +429,63 @@ private struct DiaryWelcomeCard: View {
 
     private var summaryDetail: String {
         if let latestEpisode = overview.latestEpisode {
-            return "Intensität \(latestEpisode.intensity)/10 · \(latestEpisode.startedAt.formatted(date: .abbreviated, time: .shortened))"
+            return "Letzter Eintrag: \(latestEpisode.type.rawValue), Intensität \(latestEpisode.intensity)/10 · \(latestEpisode.startedAt.formatted(date: .abbreviated, time: .shortened))"
         }
 
-        return "Mit einem neuen Eintrag hältst du Beschwerden, Symptome, Medikamente und hilfreichen Kontext in wenigen Schritten fest."
+        return "In Sekunden eintragen, später Muster verstehen und den Alltag ruhiger planen."
+    }
+
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: .now)
+        switch hour {
+        case 5 ..< 12:
+            return "Guten Morgen"
+        case 12 ..< 18:
+            return "Guten Tag"
+        default:
+            return "Guten Abend"
+        }
+    }
+}
+
+private struct FeelingCheckInCard: View {
+    @State private var currentState = 4.0
+
+    var body: some View {
+        AdaptiveDashboardCard(title: "Wie geht es dir heute?") {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("\(Int(currentState))")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.symiPetrol)
+                    Text(feelingLabel)
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+                }
+
+                Slider(value: $currentState, in: 0 ... 10, step: 1)
+                    .tint(AppTheme.symiCoral)
+                    .accessibilityLabel("Aktueller Zustand")
+                    .accessibilityValue("\(Int(currentState)) von 10")
+
+                Text("Eine schnelle Einschätzung reicht. Details kannst du im Eintrag ergänzen.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+            }
+        }
+    }
+
+    private var feelingLabel: String {
+        switch Int(currentState) {
+        case 0 ... 2:
+            return "ruhig"
+        case 3 ... 5:
+            return "mittel"
+        case 6 ... 8:
+            return "spürbar"
+        default:
+            return "stark"
+        }
     }
 }
 

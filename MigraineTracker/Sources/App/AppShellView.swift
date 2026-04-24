@@ -12,10 +12,10 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .overview: "Übersicht"
+        case .overview: "Heute"
         case .history: "Tagebuch"
-        case .doctors: "Ärzte"
-        case .export: "Export"
+        case .doctors: "Termine"
+        case .export: "Teilen"
         case .settings: "Einstellungen"
         case .information: "Hinweise"
         }
@@ -23,9 +23,9 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .overview: "house"
+        case .overview: "sparkles"
         case .history: "book.closed"
-        case .doctors: "cross.case"
+        case .doctors: "calendar"
         case .export: "square.and.arrow.up"
         case .settings: "gearshape"
         case .information: "hand.raised"
@@ -47,8 +47,8 @@ struct AppShellView: View {
                 regularRoot
             }
         }
-        .tint(AppTheme.ocean)
-        .toolbarBackground(AppTheme.ink.opacity(0.96), for: .navigationBar)
+        .tint(AppTheme.symiPetrol)
+        .toolbarBackground(AppTheme.symiPetrol.opacity(0.96), for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             appContainer.startDeferredMaintenanceIfNeeded()

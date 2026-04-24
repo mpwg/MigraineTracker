@@ -71,6 +71,7 @@
       }
     },
     "%@ Bericht" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -80,12 +81,12 @@
         }
       }
     },
-    "%@ ist dein persönliches Schmerztagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst." : {
+    "%@ ist dein ruhiges Migräne Tagebuch. Du hältst fest, was passiert ist, und entscheidest selbst, welche zusätzlichen Daten du einbeziehst." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ is your personal pain diary. You record what happened and decide which additional data you want to include."
+            "value" : "%1$@ is your calm migraine diary. You record what happened and decide which additional data you want to include."
           }
         }
       }
@@ -188,6 +189,9 @@
           }
         }
       }
+    },
+    "%lld von 10" : {
+
     },
     "%lld/10" : {
       "localizations" : {
@@ -310,6 +314,7 @@
       }
     },
     "Aktuell ausgewählt." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -318,6 +323,9 @@
           }
         }
       }
+    },
+    "Aktueller Zustand" : {
+
     },
     "Alle" : {
       "localizations" : {
@@ -330,6 +338,9 @@
       }
     },
     "Alle Details" : {
+
+    },
+    "Alles im Blick" : {
 
     },
     "Allgemein" : {
@@ -862,7 +873,11 @@
         }
       }
     },
+    "Daten und Backup" : {
+
+    },
     "Datenexport" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -932,6 +947,9 @@
           }
         }
       }
+    },
+    "Deine Daten gehören dir." : {
+
     },
     "Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten." : {
       "extractionState" : "stale",
@@ -1147,6 +1165,7 @@
       }
     },
     "Du dokumentierst Zeitpunkt, Dauer, Intensität, Symptome, mögliche Auslöser, Medikamente und persönliche Notizen." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1155,6 +1174,9 @@
           }
         }
       }
+    },
+    "Du dokumentierst Zeitpunkt, Intensität, hilfreiche Hinweise und persönliche Notizen ohne Formulargefühl." : {
+
     },
     "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
       "localizations" : {
@@ -1226,6 +1248,9 @@
         }
       }
     },
+    "Eine schnelle Einschätzung reicht. Details kannst du im Eintrag ergänzen." : {
+
+    },
     "Einschränkung: %@" : {
       "localizations" : {
         "en" : {
@@ -1265,6 +1290,9 @@
           }
         }
       }
+    },
+    "Eintrag erstellen" : {
+
     },
     "Eintrag gespeichert" : {
       "localizations" : {
@@ -1347,6 +1375,9 @@
           }
         }
       }
+    },
+    "Eintragen" : {
+
     },
     "Ende" : {
       "localizations" : {
@@ -1510,6 +1541,7 @@
       }
     },
     "Erstellt mit %@." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1549,6 +1581,9 @@
         }
       }
     },
+    "Feedback und Hilfe findest du über symiapp.com." : {
+
+    },
     "Feedback und Ideen" : {
       "localizations" : {
         "en" : {
@@ -1570,6 +1605,7 @@
       }
     },
     "Fehler, Ideen und Verbesserungsvorschläge kannst du als GitHub-Issue einreichen." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1580,6 +1616,7 @@
       }
     },
     "Fehler: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1671,6 +1708,7 @@
       }
     },
     "GitHub-Issues öffnen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1730,6 +1768,9 @@
         }
       }
     },
+    "Hinweis: %@" : {
+
+    },
     "Hinzufügen" : {
       "localizations" : {
         "en" : {
@@ -1760,6 +1801,9 @@
         }
       }
     },
+    "In Sekunden eintragen" : {
+
+    },
     "Intensität" : {
       "localizations" : {
         "en" : {
@@ -1771,6 +1815,7 @@
       }
     },
     "Intensität %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2300,6 +2345,9 @@
         }
       }
     },
+    "Mehr gute Tage" : {
+
+    },
     "Meine Ärzte" : {
       "localizations" : {
         "en" : {
@@ -2339,6 +2387,12 @@
           }
         }
       }
+    },
+    "Monat" : {
+
+    },
+    "Muster verstehen" : {
+
     },
     "Nach Name, Fachgebiet oder Ort suchen" : {
       "localizations" : {
@@ -2716,6 +2770,7 @@
       }
     },
     "Professioneller Bericht für Arztgespräche" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2805,6 +2860,12 @@
         }
       }
     },
+    "ruhig" : {
+
+    },
+    "Sanfte Verlaufsgrafik deiner letzten Einträge" : {
+
+    },
     "Schlaf %@ min" : {
       "localizations" : {
         "en" : {
@@ -2836,6 +2897,7 @@
       }
     },
     "Schmerzereignisse festhalten" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2865,27 +2927,8 @@
         }
       }
     },
-    "Schmerztagebuch" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pain Diary"
-          }
-        }
-      }
-    },
-    "Schmerztagebuch-Bericht" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pain-Diary-Report"
-          }
-        }
-      }
-    },
     "Schneller Eintrag" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2926,6 +2969,7 @@
       }
     },
     "Setzt die Intensität auf %lld von 10." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2947,6 +2991,7 @@
       }
     },
     "So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3009,6 +3054,9 @@
         }
       }
     },
+    "stark" : {
+
+    },
     "Stärkste Episode: %@ · %lld/10" : {
       "localizations" : {
         "en" : {
@@ -3048,6 +3096,38 @@
           }
         }
       }
+    },
+    "Support öffnen" : {
+
+    },
+    "Symi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symi"
+          }
+        }
+      }
+    },
+    "Symi bleibt lokal nutzbar. Sync und Export passieren nur, wenn du sie aktiv nutzt." : {
+
+    },
+    "Symi-Bericht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symi-Report"
+          }
+        }
+      }
+    },
+    "symiapp.com" : {
+
+    },
+    "symiapp.com öffnen" : {
+
     },
     "Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome können an Apple Health übertragen werden. Notizen und Medikamente bleiben in der App." : {
       "localizations" : {
@@ -3447,6 +3527,7 @@
       }
     },
     "Was die App macht" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3465,6 +3546,9 @@
           }
         }
       }
+    },
+    "Website und Support: symiapp.com" : {
+
     },
     "Weitere Angaben" : {
       "localizations" : {
@@ -3486,6 +3570,9 @@
           }
         }
       }
+    },
+    "Wenige Angaben reichen. Alles Weitere bleibt optional." : {
+
     },
     "Wenn aktiviert, enthält das PDF zusätzlich die detaillierten Einträge mit Medikamenten, Triggern, Wetterdaten, Apple-Health-Kontext und Notizen." : {
 
@@ -3611,6 +3698,9 @@
         }
       }
     },
+    "Woche" : {
+
+    },
     "Zeigt die Episoden dieses Tages darunter an." : {
       "localizations" : {
         "en" : {
@@ -3642,6 +3732,7 @@
       }
     },
     "Zusammenhänge besser erkennen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
