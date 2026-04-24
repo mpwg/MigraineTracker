@@ -3,12 +3,12 @@ import Observation
 
 protocol ExportRepository: Sendable {
     nonisolated func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary
-    func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL
+    nonisolated func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL
     func createBackup() throws -> URL
     func importBackup(from url: URL) throws
 }
 
-enum PDFReportMode: String, CaseIterable, Identifiable {
+enum PDFReportMode: String, CaseIterable, Identifiable, Sendable {
     case compact = "Kompakter Arztbericht"
     case detailed = "Detaillierter Bericht"
 
@@ -29,8 +29,11 @@ struct LoadExportPreviewUseCase {
 struct CreatePDFExportUseCase {
     let repository: ExportRepository
 
-    func execute(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
-        try repository.createPDF(summary: summary, mode: mode)
+    func execute(summary: ExportPeriodSummary, mode: PDFReportMode) async throws -> URL {
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.createPDF(summary: summary, mode: mode)
+        }.value
     }
 }
 
@@ -60,9 +63,14 @@ final class DataExportController {
     var dataExportURL: URL?
     var dataTransferMessage: String?
     var isImportingData = false
+    var isLoadingSummary = false
+    var isPreparingPDF = false
     var includeAllDetails = false
     private(set) var summary = ExportPeriodSummary(startDate: .now, endDate: .now, records: [])
 
+    @ObservationIgnored private var hasLoadedInitialSummary = false
+    @ObservationIgnored private var summaryReloadTask: Task<Void, Never>?
+    @ObservationIgnored private var pdfPreparationTask: Task<Void, Never>?
     private let loadExportPreviewUseCase: LoadExportPreviewUseCase
     private let createPDFExportUseCase: CreatePDFExportUseCase
     private let createBackupUseCase: CreateBackupUseCase
@@ -76,7 +84,6 @@ final class DataExportController {
         self.createPDFExportUseCase = CreatePDFExportUseCase(repository: repository)
         self.createBackupUseCase = CreateBackupUseCase(repository: repository)
         self.importBackupUseCase = ImportBackupUseCase(repository: repository)
-        Task { await reloadSummary() }
     }
 
     var canExport: Bool {
@@ -87,37 +94,128 @@ final class DataExportController {
         includeAllDetails ? .detailed : .compact
     }
 
-    func reloadSummary() async {
-        do {
-            summary = try await loadExportPreviewUseCase.execute(startDate: startDate, endDate: endDate)
-        } catch {
-            summary = ExportPeriodSummary(startDate: startDate, endDate: endDate, records: [])
-        }
-
-        await updatePreparedPDF()
+    func loadInitialSummary() {
+        guard !hasLoadedInitialSummary else { return }
+        hasLoadedInitialSummary = true
+        scheduleSummaryReload(debounce: nil)
     }
 
-    func createPDF() {
-        Task { await updatePreparedPDF() }
-    }
-
-    func updatePreparedPDF() async {
-        exportErrorMessage = nil
+    func scheduleSummaryReload(debounce: Duration? = .milliseconds(350)) {
+        summaryReloadTask?.cancel()
+        pdfPreparationTask?.cancel()
         exportURL = nil
+        exportErrorMessage = nil
+        isLoadingSummary = true
+        isPreparingPDF = false
 
-        guard startDate <= endDate else {
+        let requestedStartDate = startDate
+        let requestedEndDate = endDate
+        summaryReloadTask = Task { [weak self] in
+            if let debounce {
+                do {
+                    try await Task.sleep(for: debounce)
+                } catch {
+                    return
+                }
+            }
+
+            await self?.reloadSummary(startDate: requestedStartDate, endDate: requestedEndDate)
+        }
+    }
+
+    func reloadSummary() async {
+        await reloadSummary(startDate: startDate, endDate: endDate)
+    }
+
+    private func reloadSummary(startDate requestedStartDate: Date, endDate requestedEndDate: Date) async {
+        isLoadingSummary = true
+        isPreparingPDF = false
+        defer { isLoadingSummary = false }
+
+        guard requestedStartDate <= requestedEndDate else {
+            summary = ExportPeriodSummary(startDate: requestedStartDate, endDate: requestedEndDate, records: [])
             exportErrorMessage = "Der Zeitraum ist ungültig."
             return
         }
 
-        guard !summary.records.isEmpty else {
+        do {
+            let loadedSummary = try await loadExportPreviewUseCase.execute(
+                startDate: requestedStartDate,
+                endDate: requestedEndDate
+            )
+            guard !Task.isCancelled else { return }
+            summary = loadedSummary
+            exportErrorMessage = nil
+            schedulePDFPreparation(delay: .milliseconds(500))
+        } catch {
+            guard !Task.isCancelled else { return }
+            summary = ExportPeriodSummary(startDate: requestedStartDate, endDate: requestedEndDate, records: [])
+            exportErrorMessage = "Die Berichtsdaten konnten nicht geladen werden."
+        }
+    }
+
+    func createPDF() {
+        schedulePDFPreparation(delay: nil)
+    }
+
+    func schedulePDFPreparation(delay: Duration? = .milliseconds(350)) {
+        pdfPreparationTask?.cancel()
+        exportURL = nil
+        exportErrorMessage = nil
+
+        let requestedSummary = summary
+        let requestedMode = pdfReportMode
+        let requestedStartDate = startDate
+        let requestedEndDate = endDate
+        pdfPreparationTask = Task { [weak self] in
+            if let delay {
+                do {
+                    try await Task.sleep(for: delay)
+                } catch {
+                    return
+                }
+            }
+
+            await self?.updatePreparedPDF(
+                summary: requestedSummary,
+                mode: requestedMode,
+                startDate: requestedStartDate,
+                endDate: requestedEndDate
+            )
+        }
+    }
+
+    func updatePreparedPDF() async {
+        await updatePreparedPDF(summary: summary, mode: pdfReportMode, startDate: startDate, endDate: endDate)
+    }
+
+    private func updatePreparedPDF(
+        summary requestedSummary: ExportPeriodSummary,
+        mode requestedMode: PDFReportMode,
+        startDate requestedStartDate: Date,
+        endDate requestedEndDate: Date
+    ) async {
+        exportErrorMessage = nil
+        exportURL = nil
+
+        guard requestedStartDate <= requestedEndDate else {
+            exportErrorMessage = "Der Zeitraum ist ungültig."
+            return
+        }
+
+        guard !requestedSummary.records.isEmpty else {
             exportErrorMessage = "Für den gewählten Zeitraum gibt es keine Episoden."
             return
         }
 
+        isPreparingPDF = true
+        defer { isPreparingPDF = false }
         do {
-            exportURL = try createPDFExportUseCase.execute(summary: summary, mode: pdfReportMode)
+            let preparedURL = try await createPDFExportUseCase.execute(summary: requestedSummary, mode: requestedMode)
+            guard !Task.isCancelled else { return }
+            exportURL = preparedURL
         } catch {
+            guard !Task.isCancelled else { return }
             exportErrorMessage = "Der PDF-Export konnte nicht erstellt werden."
         }
     }

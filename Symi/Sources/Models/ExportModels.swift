@@ -1,6 +1,6 @@
 import Foundation
 
-struct EpisodeExportRecord: Identifiable {
+nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
     let id: UUID
     let startedAt: Date
     let endedAt: Date?
@@ -53,7 +53,7 @@ struct EpisodeExportRecord: Identifiable {
         self.healthContext = healthContext.map(HealthLine.init)
     }
 
-    struct MedicationLine: Identifiable {
+    nonisolated struct MedicationLine: Identifiable, Sendable {
         let id = UUID()
         let name: String
         let category: String
@@ -62,7 +62,7 @@ struct EpisodeExportRecord: Identifiable {
         let effectiveness: String
     }
 
-    struct WeatherLine {
+    nonisolated struct WeatherLine: Sendable {
         let condition: String
         let temperature: Double?
         let humidity: Double?
@@ -72,7 +72,7 @@ struct EpisodeExportRecord: Identifiable {
         let source: String
     }
 
-    struct HealthLine {
+    nonisolated struct HealthLine: Sendable {
         let recordedAt: Date
         let source: String
         let sleepMinutes: Double?
@@ -97,7 +97,7 @@ struct EpisodeExportRecord: Identifiable {
     }
 }
 
-struct ExportPeriodSummary {
+nonisolated struct ExportPeriodSummary: Sendable {
     let startDate: Date
     let endDate: Date
     let records: [EpisodeExportRecord]

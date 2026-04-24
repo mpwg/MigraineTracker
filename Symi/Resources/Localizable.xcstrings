@@ -1707,6 +1707,9 @@
         }
       }
     },
+    "Gib Name, Fachgebiet oder Ort ein, um passende Ärztinnen und Ärzte zu laden." : {
+
+    },
     "GitHub-Issues öffnen" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3086,6 +3089,9 @@
           }
         }
       }
+    },
+    "Suche starten" : {
+
     },
     "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden." : {
       "localizations" : {

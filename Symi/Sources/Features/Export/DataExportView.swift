@@ -18,8 +18,12 @@ struct DataExportView: View {
                         Label("PDF teilen", systemImage: "square.and.arrow.up")
                     }
                 } else {
-                    Label("PDF teilen", systemImage: "square.and.arrow.up")
-                        .foregroundStyle(.secondary)
+                    Button {
+                        controller.createPDF()
+                    } label: {
+                        Label("PDF vorbereiten", systemImage: "doc.richtext")
+                    }
+                    .disabled(!controller.canExport || controller.isLoadingSummary || controller.isPreparingPDF)
                 }
 
                 Toggle("Alle Details", isOn: $controller.includeAllDetails)
@@ -32,6 +36,15 @@ struct DataExportView: View {
                     Text(exportErrorMessage)
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.symiCoral)
+                }
+
+                if controller.isLoadingSummary || controller.isPreparingPDF {
+                    HStack {
+                        ProgressView()
+                        Text(controller.isLoadingSummary ? "Berichtsdaten werden vorbereitet." : "PDF wird vorbereitet.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -76,16 +89,16 @@ struct DataExportView: View {
         .brandGroupedScreen()
         .scrollDismissesKeyboard(.interactively)
         .onAppear {
-            Task { await controller.reloadSummary() }
+            controller.loadInitialSummary()
         }
         .onChange(of: controller.startDate) { _, _ in
-            Task { await controller.reloadSummary() }
+            controller.scheduleSummaryReload()
         }
         .onChange(of: controller.endDate) { _, _ in
-            Task { await controller.reloadSummary() }
+            controller.scheduleSummaryReload()
         }
         .onChange(of: controller.includeAllDetails) { _, _ in
-            Task { await controller.updatePreparedPDF() }
+            controller.schedulePDFPreparation()
         }
         .fileImporter(
             isPresented: $controller.isImportingData,

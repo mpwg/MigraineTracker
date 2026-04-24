@@ -5,7 +5,7 @@ import Foundation
 import PDFKit
 import UIKit
 
-enum PDFExportWriter {
+nonisolated enum PDFExportWriter {
     static func write(summary: ExportPeriodSummary, mode: PDFReportMode = .detailed) throws -> URL {
         let fileName = "\(localized("Symi-Bericht"))-\(dateStamp(summary.startDate))-\(dateStamp(summary.endDate)).pdf"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
@@ -355,13 +355,13 @@ private enum PDFExportError: Error {
     case drawingFailed
 }
 
-private struct PDFChartRow {
+nonisolated private struct PDFChartRow {
     let label: String
     let value: Int
     let detail: String
 }
 
-private struct PDFLayout {
+nonisolated private struct PDFLayout {
     let pageRect: CGRect
     let margin: CGFloat = 40
     let logoSize: CGFloat = 44
@@ -391,7 +391,7 @@ private struct PDFLayout {
     }
 }
 
-private struct PDFPageContext {
+nonisolated private struct PDFPageContext {
     let context: CGContext
     let layout: PDFLayout
     let headerTitle: String

@@ -277,7 +277,7 @@ final class SwiftDataExportRepository: ExportRepository, @unchecked Sendable {
         return ExportPeriodSummary(startDate: startDate, endDate: endDate, records: filtered)
     }
 
-    func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
+    nonisolated func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
         try PDFExportWriter.write(summary: summary, mode: mode)
     }
 
