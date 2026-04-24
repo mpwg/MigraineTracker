@@ -16,8 +16,8 @@ if [ -z "${APPLE_DEVELOPER_TEAM_ID:-}" ]; then
   exit 1
 fi
 
-if [ "${CI_XCODE_SCHEME:-}" != "MigraineTracker" ]; then
-  echo "Unerwartetes Scheme '${CI_XCODE_SCHEME:-}'. Erwartet wird 'MigraineTracker'."
+if [ "${CI_XCODE_SCHEME:-}" != "Symi" ]; then
+  echo "Unerwartetes Scheme '${CI_XCODE_SCHEME:-}'. Erwartet wird 'Symi'."
   exit 1
 fi
 

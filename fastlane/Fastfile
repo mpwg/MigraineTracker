@@ -6,15 +6,15 @@ require "snapshot"
 default_platform(:ios)
 
 REPO_ROOT = File.expand_path("..", __dir__)
-PROJECT_PATH = File.join(REPO_ROOT, "MigraineTracker.xcodeproj")
-SCHEME = "MigraineTracker"
-TARGET_NAME = "MigraineTracker"
+PROJECT_PATH = File.join(REPO_ROOT, "Symi.xcodeproj")
+SCHEME = "Symi"
+TARGET_NAME = "Symi"
 CONFIGURATION = "Release"
 APP_IDENTIFIER = "eu.mpwg.MigraineTracker"
-LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "MigraineTracker/Configs/LocalSecrets.xcconfig")
-SCREENSHOT_SCHEME = "MigraineTrackerScreenshots"
-SCREENSHOT_TEST_TARGET = "MigraineTrackerUITests"
-SCREENSHOT_TEST_IDENTIFIER = "MigraineTrackerUITests/MigraineTrackerScreenshotTests/testCaptureMainStoreScreens"
+LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "Symi/Configs/LocalSecrets.xcconfig")
+SCREENSHOT_SCHEME = "SymiScreenshots"
+SCREENSHOT_TEST_TARGET = "SymiUITests"
+SCREENSHOT_TEST_IDENTIFIER = "SymiUITests/SymiScreenshotTests/testCaptureMainStoreScreens"
 SCREENSHOT_LANGUAGES = [
   { language: "de-DE", locale: "de_DE" },
   { language: "en-US", locale: "en_US" }
@@ -219,7 +219,7 @@ def release_root
   if ENV["RUNNER_TEMP"].to_s.empty?
     File.join(REPO_ROOT, "artifacts/release")
   else
-    File.join(ENV["RUNNER_TEMP"], "migraine-tracker-release")
+    File.join(ENV["RUNNER_TEMP"], "symi-release")
   end
 end
 
@@ -412,7 +412,7 @@ def build_release_ipa!(build_number:, profile_mapping:)
     clean: true,
     export_method: "app-store",
     output_directory: output_directory,
-    output_name: "MigraineTracker.ipa",
+    output_name: "Symi.ipa",
     export_options: {
       signingStyle: "manual",
       provisioningProfiles: profile_mapping,

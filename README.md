@@ -1,6 +1,6 @@
-# Schmerztagebuch - Migräne & Co.
+# Symi
 
-Schmerztagebuch - Migräne & Co. ist eine lokal-first iPhone-App für das strukturierte Dokumentieren von Migräne, Kopfschmerzen und ähnlichen Schmerzereignissen. Die App kombiniert einen schnellen neuen Eintrag mit einem persönlichen Tagebuch, Wetterkontext, Medikamentendokumentation, Export und ergänzenden Organisationsfunktionen für Arztkontakte.
+Symi ist ein lokal-first Migräne Tagebuch für mehr gute Tage. Die App kombiniert einen schnellen, ruhigen Eintrag mit persönlichem Tagebuch, Wetterkontext, Medikamentendokumentation, Export und ergänzenden Organisationsfunktionen für Kontakte und Termine.
 
 ## Produktstand
 
@@ -18,7 +18,7 @@ Der aktuelle Stand der App deckt diese Bereiche ab:
 
 ## Produktidee
 
-Die App bleibt klar migränefokussiert, ist aber bewusst nicht nur für Migräne gedacht. Das Produktversprechen ist ein freundliches, nüchternes und alltagstaugliches Schmerztagebuch:
+Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein medizinisches Formular an. Das Produktversprechen ist ein ruhiger, hochwertiger und alltagstauglicher Gesundheitsbegleiter:
 
 - Beschwerden schnell dokumentieren, ohne von langen Formularen ausgebremst zu werden
 - Muster, Trigger und Medikamentenwirkung nachvollziehbarer machen
@@ -69,7 +69,7 @@ Die App bleibt klar migränefokussiert, ist aber bewusst nicht nur für Migräne
 - PDF-Erzeugung lokal auf dem Gerät
 - optionale iCloud-Synchronisation getrennt von der lokalen Kernnutzung
 
-Interne technische Kennungen wie `MigraineTracker`, Bundle-ID, Scheme und iCloud-Container bestehen derzeit aus Migrations- und Release-Gründen weiter, obwohl die sichtbare Produktmarke bereits auf `Schmerztagebuch - Migräne & Co.` umgestellt wird.
+Interne technische Kennungen wie `Symi`, Bundle-ID, Scheme und iCloud-Container bestehen derzeit aus Migrations- und Release-Gründen weiter, obwohl die sichtbare Produktmarke auf `Symi` umgestellt ist.
 
 ## Datenschutz und medizinische Einordnung
 
@@ -82,6 +82,8 @@ Interne technische Kennungen wie `MigraineTracker`, Bundle-ID, Scheme und iCloud
 
 Die App setzt mindestens `iOS 17.6` voraus. Diese Grenze erhält die aktuellen Swift-, SwiftUI- und SwiftData-Architekturentscheidungen ohne Backport- oder UI-Kompromisse. HealthKit-Datentypen, die erst in neueren iOS-Versionen verfügbar sind, werden separat per Availability behandelt und reduzieren auf älteren unterstützten Systemen nur den verfügbaren Health-Kontext.
 
+Aus Release- und Migrationsgründen bleiben App-Identifier, Provisioning Profile und iCloud-Container technisch auf `eu.mpwg.MigraineTracker` beziehungsweise `iCloud.eu.mpwg.MigraineTracker`. Die sichtbare Produktmarke, Projektstruktur und Schemes heißen `Symi`.
+
 ## Build und Release
 
 Dieses Projekt verwendet `GitHub Actions` und `fastlane` für CI/CD.
@@ -89,7 +91,7 @@ Dieses Projekt verwendet `GitHub Actions` und `fastlane` für CI/CD.
 CI:
 
 - Workflow `iOS CI` bei `pull_request` und `push` auf `main`
-- Build und Tests für das Shared Scheme `MigraineTracker`
+- Build und Tests für das Shared Scheme `Symi`
 - Upload des `xcresult` als Artifact
 - keine automatische Screenshot-Erstellung bei Pull Requests
 
@@ -100,30 +102,30 @@ CD:
 - App-Store-Screenshots werden erst im App-Store-Release erzeugt und hochgeladen
 - `fastlane match`, `build_app`, `pilot` und `deliver` für Signing und Distribution; die App-Store-Einreichung bleibt manuell in App Store Connect
 
-Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/MigraineTracker/docs/Xcode-Cloud.md) dokumentiert.
+Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/Symi/docs/Xcode-Cloud.md) dokumentiert.
 
 ## Lokale Entwicklung
 
 Voraussetzungen:
 
 - Xcode mit iPhone-Simulator
-- lokales Secrets-File auf Basis von [LocalSecrets.example.xcconfig](/Users/mat/code/MigraineTracker/MigraineTracker/Configs/LocalSecrets.example.xcconfig)
+- lokales Secrets-File auf Basis von [LocalSecrets.example.xcconfig](/Users/mat/code/Symi/Symi/Configs/LocalSecrets.example.xcconfig)
 
 Einrichtung:
 
-1. `MigraineTracker/Configs/LocalSecrets.example.xcconfig` nach `MigraineTracker/Configs/LocalSecrets.xcconfig` kopieren.
+1. `Symi/Configs/LocalSecrets.example.xcconfig` nach `Symi/Configs/LocalSecrets.xcconfig` kopieren.
 2. Mindestens `APPLE_DEVELOPER_TEAM_ID` setzen.
 3. Optional `SENTRY_DSN` und weitere Release-Secrets ergänzen.
 
 Typische lokale Prüfung:
 
 ```bash
-xcodebuild test -scheme MigraineTracker -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme Symi -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
 ## Weiterführende Dokumente
 
-- [docs/MVP-Konzept.md](/Users/mat/code/MigraineTracker/docs/MVP-Konzept.md)
-- [docs/App-Store-Metadaten.md](/Users/mat/code/MigraineTracker/docs/App-Store-Metadaten.md)
-- [docs/Teststrategie-und-Release-Checkliste.md](/Users/mat/code/MigraineTracker/docs/Teststrategie-und-Release-Checkliste.md)
-- [GitHub-Issues](https://github.com/mpwg/MigraineTracker/issues)
+- [docs/MVP-Konzept.md](/Users/mat/code/Symi/docs/MVP-Konzept.md)
+- [docs/App-Store-Metadaten.md](/Users/mat/code/Symi/docs/App-Store-Metadaten.md)
+- [docs/Teststrategie-und-Release-Checkliste.md](/Users/mat/code/Symi/docs/Teststrategie-und-Release-Checkliste.md)
+- [Symi Support](https://symiapp.com)

@@ -27,7 +27,7 @@ jobs:
 
           printf 'Geänderte Dateien:\n%s\n' "${changed_files}"
 
-          if printf '%s\n' "${changed_files}" | grep -Eq '^(MigraineTracker/|MigraineTrackerUITests/|MigraineTracker\.xcodeproj/|fastlane/|Gemfile$|Gemfile\.lock$|\.ruby-version$|\.github/workflows/ios-app-store\.yml$)'; then
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(Symi/|SymiUITests/|Symi\.xcodeproj/|fastlane/|Gemfile$|Gemfile\.lock$|\.ruby-version$|\.github/workflows/ios-app-store\.yml$)'; then
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"

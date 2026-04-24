@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'MigraineTracker/**'
-      - 'MigraineTracker.xcodeproj/**'
+      - 'Symi/**'
+      - 'Symi.xcodeproj/**'
       - 'fastlane/**'
       - '!fastlane/screenshots/**'
       - 'Gemfile'

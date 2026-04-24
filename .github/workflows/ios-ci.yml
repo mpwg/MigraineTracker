@@ -5,17 +5,17 @@ on:
     branches:
       - main
     paths:
-      - "MigraineTracker/**"
-      - "MigraineTrackerTests/**"
-      - "MigraineTracker.xcodeproj/**"
+      - "Symi/**"
+      - "SymiTests/**"
+      - "Symi.xcodeproj/**"
       - ".github/workflows/ios-ci.yml"
   push:
     branches:
       - main
     paths:
-      - "MigraineTracker/**"
-      - "MigraineTrackerTests/**"
-      - "MigraineTracker.xcodeproj/**"
+      - "Symi/**"
+      - "SymiTests/**"
+      - "Symi.xcodeproj/**"
       - ".github/workflows/ios-ci.yml"
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
       APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
-      RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/MigraineTrackerTests.xcresult
+      RESULT_BUNDLE_PATH: ${{ github.workspace }}/artifacts/SymiTests.xcresult
       TEST_DESTINATION: platform=macOS,arch=arm64,variant=Mac Catalyst
       SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.swiftpm-cache
     steps:
@@ -55,7 +55,7 @@ jobs:
       - name: Lokale CI-Konfiguration erzeugen
         run: |
           mkdir -p artifacts
-          cat > MigraineTracker/Configs/LocalSecrets.xcconfig <<EOF
+          cat > Symi/Configs/LocalSecrets.xcconfig <<EOF
           APPLE_DEVELOPER_TEAM_ID = ${APPLE_DEVELOPER_TEAM_ID}
           SENTRY_DSN = ${SENTRY_DSN}
           TELEMETRY_APP_ID = ${TELEMETRY_APP_ID}
@@ -68,22 +68,22 @@ jobs:
             ${{ env.SWIFTPM_CACHE_PATH }}
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/org.swift.swiftpm
-          key: swiftpm-macos-26-xcode-26_4-${{ hashFiles('MigraineTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: swiftpm-macos-26-xcode-26_4-${{ hashFiles('Symi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             swiftpm-macos-26-xcode-26_4-
 
       - name: Swift Packages auflösen
         run: |
           xcodebuild -resolvePackageDependencies \
-            -project MigraineTracker.xcodeproj \
-            -scheme MigraineTrackerTests \
+            -project Symi.xcodeproj \
+            -scheme SymiTests \
             -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}"
 
       - name: Tests vorbereiten
         run: |
           xcodebuild build-for-testing \
-            -project MigraineTracker.xcodeproj \
-            -scheme MigraineTrackerTests \
+            -project Symi.xcodeproj \
+            -scheme SymiTests \
             -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
             -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
@@ -92,8 +92,8 @@ jobs:
       - name: Tests ausführen
         run: |
           xcodebuild test-without-building \
-            -project MigraineTracker.xcodeproj \
-            -scheme MigraineTrackerTests \
+            -project Symi.xcodeproj \
+            -scheme SymiTests \
             -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
             -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData" \

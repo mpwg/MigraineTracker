@@ -28,7 +28,7 @@ if [ -z "${SENTRY_DSN:-}" ]; then
   exit 1
 fi
 
-secrets_file="${repo_root}/MigraineTracker/Configs/LocalSecrets.xcconfig"
+secrets_file="${repo_root}/Symi/Configs/LocalSecrets.xcconfig"
 secrets_dir="$(dirname "${secrets_file}")"
 
 if [ ! -d "${secrets_dir}" ]; then

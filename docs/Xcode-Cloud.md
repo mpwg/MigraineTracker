@@ -1,4 +1,4 @@
-# GitHub Actions Releases für Migraine Tracker
+# GitHub Actions Releases für Symi
 
 ## Zielbild
 
@@ -30,7 +30,7 @@ Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erf
   - `MATCH_GIT_BRANCH`
   - `MATCH_GIT_BASIC_AUTHORIZATION`
   - `TELEMETRY_APP_ID`
-- das Shared Scheme `MigraineTracker` ist versioniert
+- das Shared Scheme `Symi` ist versioniert
 - das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile für `eu.mpwg.MigraineTracker`
 - die vorhandenen Entitlements für Push und iCloud bleiben aktiv
 - der verwendete App-Store-Connect-Schlüssel ist ein Team-Key, kein Individual Key
@@ -49,8 +49,8 @@ Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `ma
 
 - `pull_request` auf `main`
 - `push` auf `main`
-- Build des Shared Scheme `MigraineTracker`
-- Ausführung von `MigraineTrackerTests`
+- Build des Shared Scheme `Symi`
+- Ausführung von `SymiTests`
 - Upload des `xcresult` als Artifact
 
 Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distribution:
@@ -65,7 +65,7 @@ Dieser Workflow liefert schnelles Entwickler-Feedback.
 
 - Name: `iOS CI`
 - Startbedingung: `pull_request` auf `main` und `push` auf `main`
-- Scheme: `MigraineTracker`
+- Scheme: `Symi`
 - Aktionen:
   - Build
   - Tests
@@ -77,7 +77,7 @@ Dieser Workflow ist für Beta-Verteilung auf Basis eines erfolgreichen `main`-Pu
 
 - Name: `TestFlight Release`
 - Startbedingung: `push` auf `main`
-- Scheme: `MigraineTracker`
+- Scheme: `Symi`
 - Aktionen:
   - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
   - `match(type: "appstore")`
@@ -90,7 +90,7 @@ Dieser Workflow ist ausschließlich für produktive Releases zuständig.
 - Name: `App Store Release`
 - Startbedingung: `push` auf Git-Tags
 - Tag-Muster: `v*`
-- Scheme: `MigraineTracker`
+- Scheme: `Symi`
 - Aktionen:
   - Validierung des Tags `vX.Y.Z`
   - Abgleich mit `MARKETING_VERSION`

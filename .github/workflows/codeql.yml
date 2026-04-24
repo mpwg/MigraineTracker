@@ -5,17 +5,17 @@ on:
     branches:
       - main
     paths:
-      - 'MigraineTracker/**'
-      - 'MigraineTrackerTests/**'
-      - 'MigraineTracker.xcodeproj/**'
+      - 'Symi/**'
+      - 'SymiTests/**'
+      - 'Symi.xcodeproj/**'
       - '.github/workflows/codeql.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'MigraineTracker/**'
-      - 'MigraineTrackerTests/**'
-      - 'MigraineTracker.xcodeproj/**'
+      - 'Symi/**'
+      - 'SymiTests/**'
+      - 'Symi.xcodeproj/**'
       - '.github/workflows/codeql.yml'
   schedule:
     - cron: '23 4 * * 1'
@@ -64,13 +64,13 @@ jobs:
           echo "Verwende Simulator: ${DEVICE_NAME}"
 
       - name: Swift Packages auflösen
-        run: xcodebuild -resolvePackageDependencies -project MigraineTracker.xcodeproj -scheme MigraineTracker
+        run: xcodebuild -resolvePackageDependencies -project Symi.xcodeproj -scheme Symi
 
       - name: App für CodeQL bauen
         run: |
           xcodebuild build \
-            -project MigraineTracker.xcodeproj \
-            -scheme MigraineTracker \
+            -project Symi.xcodeproj \
+            -scheme Symi \
             -destination "${IOS_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
             CODE_SIGNING_ALLOWED=NO
