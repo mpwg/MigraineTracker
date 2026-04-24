@@ -46,6 +46,7 @@
 				Configs/LocalSecrets.xcconfig,
 				Configs/Release.xcconfig,
 				Info.plist,
+				Resources/Data/OeGK_Vertragspartner_Fachaerzte_202602.pdf,
 			);
 			target = 402B8A5D2F896C00008B4D70 /* Symi */;
 		};

@@ -394,6 +394,8 @@ final class SwiftDataDoctorRepository: DoctorRepository, @unchecked Sendable {
 }
 
 final class SwiftDataDoctorDirectoryRepository: DoctorDirectoryRepository, @unchecked Sendable {
+    nonisolated private static let searchResultLimit = 120
+
     private let modelContainer: ModelContainer
 
     init(modelContainer: ModelContainer) {
@@ -401,28 +403,30 @@ final class SwiftDataDoctorDirectoryRepository: DoctorDirectoryRepository, @unch
     }
 
     nonisolated func fetchEntries(searchText: String?) throws -> [DoctorDirectoryRecord] {
-        let descriptor: FetchDescriptor<DoctorDirectoryEntry>
-        if let searchText, !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        var descriptor: FetchDescriptor<DoctorDirectoryEntry>
+        let trimmedSearchText = searchText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !trimmedSearchText.isEmpty {
             descriptor = FetchDescriptor<DoctorDirectoryEntry>(
                 predicate: #Predicate<DoctorDirectoryEntry> {
-                    $0.name.localizedStandardContains(searchText)
-                        || $0.specialty.localizedStandardContains(searchText)
-                        || $0.city.localizedStandardContains(searchText)
-                        || $0.street.localizedStandardContains(searchText)
+                    $0.name.localizedStandardContains(trimmedSearchText)
+                        || $0.specialty.localizedStandardContains(trimmedSearchText)
+                        || $0.city.localizedStandardContains(trimmedSearchText)
+                        || $0.street.localizedStandardContains(trimmedSearchText)
                 },
                 sortBy: [SortDescriptor(\DoctorDirectoryEntry.name), SortDescriptor(\DoctorDirectoryEntry.city)]
             )
         } else {
-            descriptor = FetchDescriptor<DoctorDirectoryEntry>(
-                sortBy: [SortDescriptor(\DoctorDirectoryEntry.name), SortDescriptor(\DoctorDirectoryEntry.city)]
-            )
+            return []
         }
+        descriptor.fetchLimit = Self.searchResultLimit
 
         return try readContext().fetch(descriptor).map(DoctorDirectoryRecord.init)
     }
 
     nonisolated func sourceAttribution() -> (label: String, url: String) {
-        let firstEntry = try? readContext().fetch(FetchDescriptor<DoctorDirectoryEntry>()).first
+        var descriptor = FetchDescriptor<DoctorDirectoryEntry>()
+        descriptor.fetchLimit = 1
+        let firstEntry = try? readContext().fetch(descriptor).first
         return (
             firstEntry?.sourceLabel ?? "ÖGK Vertragspartner Fachärztinnen und Fachärzte",
             firstEntry?.sourceURL ?? "https://www.gesundheitskasse.at/cdscontent/?contentid=10007.884365"

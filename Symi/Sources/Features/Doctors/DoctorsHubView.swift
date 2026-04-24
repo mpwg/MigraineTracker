@@ -58,7 +58,7 @@ struct DoctorsHubView: View {
         .refreshable {
             await reloadAll()
         }
-        .sheet(item: $doctorAddMode) { mode in
+        .fullScreenCover(item: $doctorAddMode) { mode in
             NavigationStack {
                 DoctorAddFlowView(appContainer: appContainer, startMode: mode) { doctorID in
                     doctorAddMode = nil
@@ -610,11 +610,19 @@ private struct DoctorDirectoryPickerView: View {
 
             if controller.groupedSearchResults.isEmpty {
                 Section {
-                    ContentUnavailableView(
-                        "Keine passenden Ärztinnen oder Ärzte",
-                        systemImage: "magnifyingglass",
-                        description: Text("Passe den Suchbegriff an oder nutze die manuelle Anlage.")
-                    )
+                    if controller.hasDirectorySearchQuery {
+                        ContentUnavailableView(
+                            "Keine passenden Ärztinnen oder Ärzte",
+                            systemImage: "magnifyingglass",
+                            description: Text("Passe den Suchbegriff an oder nutze die manuelle Anlage.")
+                        )
+                    } else {
+                        ContentUnavailableView(
+                            "Suche starten",
+                            systemImage: "magnifyingglass",
+                            description: Text("Gib Name, Fachgebiet oder Ort ein, um passende Ärztinnen und Ärzte zu laden.")
+                        )
+                    }
                 }
             } else {
                 ForEach(controller.groupedSearchResults) { section in
@@ -652,9 +660,11 @@ private struct DoctorDirectoryPickerView: View {
         .navigationTitle("Arzt hinzufügen")
         .brandGroupedScreen()
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Abbrechen") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button {
                     dismiss()
+                } label: {
+                    Label("Abbrechen", systemImage: "xmark")
                 }
             }
         }

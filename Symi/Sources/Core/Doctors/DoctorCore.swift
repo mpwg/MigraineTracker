@@ -429,6 +429,9 @@ final class DoctorEditorController {
 
     var draft: DoctorDraft
     var searchText = ""
+    var hasDirectorySearchQuery: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
     private(set) var searchResults: [DoctorDirectoryRecord] = []
     private(set) var groupedSearchResults: [DoctorDirectorySection] = []
     private(set) var sourceAttribution: (label: String, url: String)
@@ -436,7 +439,8 @@ final class DoctorEditorController {
 
     private let saveDoctorUseCase: SaveDoctorUseCase
     private let directoryRepository: DoctorDirectoryRepository
-    private var searchTask: Task<Void, Never>?
+    private var searchDebounceTask: Task<Void, Never>?
+    private var searchFetchTask: Task<Void, Never>?
 
     init(
         doctor: DoctorRecord?,
@@ -455,20 +459,31 @@ final class DoctorEditorController {
     }
 
     func refreshSearch() {
+        searchFetchTask?.cancel()
         let repository = directoryRepository
-        let searchText = searchText
-        Task {
+        let searchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !searchText.isEmpty else {
+            searchResults = []
+            groupedSearchResults = []
+            return
+        }
+
+        searchFetchTask = Task { @MainActor [weak self] in
             let results = await Task.detached(priority: .userInitiated) {
                 (try? repository.fetchEntries(searchText: searchText)) ?? []
             }.value
+            guard let self, !Task.isCancelled else {
+                return
+            }
             searchResults = results
             groupedSearchResults = Self.makeGroupedSearchResults(from: results)
         }
     }
 
     func scheduleSearchRefresh() {
-        searchTask?.cancel()
-        searchTask = Task { @MainActor [weak self] in
+        searchDebounceTask?.cancel()
+        searchDebounceTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(250))
             guard let self, !Task.isCancelled else {
                 return

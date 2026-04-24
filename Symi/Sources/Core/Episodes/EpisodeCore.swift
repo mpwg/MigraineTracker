@@ -333,6 +333,10 @@ final class EpisodeEditorController {
     var customMedicationEditor: CustomMedicationEditorSheetState?
     var pendingMedicationDeletion: MedicationDefinitionRecord?
     private(set) var medicationDefinitions: [MedicationDefinitionRecord] = []
+    private var selectedMedicationKeys: Set<String> = []
+    private var medicationSelectionIndicesByKey: [String: Int] = [:]
+    private var selectedMedicationsCache: [MedicationSelectionDraft] = []
+    private var allMedicationGroupsCache: [EpisodeEditorMedicationGroup] = []
 
     private let saveEpisodeUseCase: SaveEpisodeUseCase
     private let episodeRepository: EpisodeRepository
@@ -378,12 +382,13 @@ final class EpisodeEditorController {
             self.originalWeatherSnapshot = nil
         }
 
+        rebuildMedicationCaches()
         reloadMedicationDefinitions()
     }
 
     var filteredMedicationGroups: [EpisodeEditorMedicationGroup] {
         let query = medicationSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let groups = allMedicationGroups
+        let groups = allMedicationGroupsCache
 
         guard !query.isEmpty else {
             return groups
@@ -405,9 +410,7 @@ final class EpisodeEditorController {
     }
 
     var selectedMedications: [MedicationSelectionDraft] {
-        draft.medications
-            .filter(\.isSelected)
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        selectedMedicationsCache
     }
 
     func reloadMedicationDefinitions() {
@@ -417,6 +420,7 @@ final class EpisodeEditorController {
                 (try? repository.fetchDefinitions(searchText: nil)) ?? []
             }.value
             medicationDefinitions = definitions
+            rebuildMedicationCaches()
         }
     }
 
@@ -434,6 +438,7 @@ final class EpisodeEditorController {
         originalStartedAt = record.startedAt
         originalWeatherSnapshot = record.weather.map(WeatherSnapshotData.init)
         weatherLoadState = record.weather.map { .loaded(WeatherSnapshotData(record: $0)) } ?? .idle
+        rebuildMedicationCaches()
     }
 
     func save(onSaved: (() -> Void)?, onDismiss: @escaping () -> Void) {
@@ -461,6 +466,7 @@ final class EpisodeEditorController {
                     customMedicationEditor = nil
                     pendingMedicationDeletion = nil
                     weatherLoadState = .idle
+                    rebuildMedicationCaches()
                     saveMessageVisible = true
                 } else {
                     onSaved?()
@@ -507,38 +513,45 @@ final class EpisodeEditorController {
     }
 
     func isMedicationSelected(_ definition: MedicationDefinitionRecord) -> Bool {
-        draft.medications.contains { $0.selectionKey == definition.selectionKey && $0.isSelected }
+        selectedMedicationKeys.contains(definition.selectionKey)
     }
 
     func quantity(for definition: MedicationDefinitionRecord) -> Int {
-        draft.medications.first(where: { $0.selectionKey == definition.selectionKey })?.quantity ?? 1
+        guard let index = medicationSelectionIndicesByKey[definition.selectionKey] else {
+            return 1
+        }
+
+        return draft.medications[index].quantity
     }
 
     func toggleMedicationSelection(for definition: MedicationDefinitionRecord) {
-        if let index = draft.medications.firstIndex(where: { $0.selectionKey == definition.selectionKey }) {
+        if let index = medicationSelectionIndicesByKey[definition.selectionKey] {
             draft.medications[index].isSelected.toggle()
             draft.medications[index].quantity = max(1, draft.medications[index].quantity)
         } else {
             draft.medications.append(MedicationSelectionDraft(definition: definition))
         }
+        rebuildMedicationCaches()
     }
 
     func incrementMedicationQuantity(for definition: MedicationDefinitionRecord) {
-        if let index = draft.medications.firstIndex(where: { $0.selectionKey == definition.selectionKey }) {
+        if let index = medicationSelectionIndicesByKey[definition.selectionKey] {
             draft.medications[index].quantity += 1
             draft.medications[index].isSelected = true
         } else {
             draft.medications.append(MedicationSelectionDraft(definition: definition))
         }
+        rebuildMedicationCaches()
     }
 
     func decrementMedicationQuantity(for definition: MedicationDefinitionRecord) {
-        guard let index = draft.medications.firstIndex(where: { $0.selectionKey == definition.selectionKey }) else {
+        guard let index = medicationSelectionIndicesByKey[definition.selectionKey] else {
             return
         }
 
         draft.medications[index].quantity = max(1, draft.medications[index].quantity - 1)
         draft.medications[index].isSelected = true
+        rebuildMedicationCaches()
     }
 
     func removeMedicationSelection(id: UUID) {
@@ -548,6 +561,7 @@ final class EpisodeEditorController {
 
         draft.medications[index].isSelected = false
         draft.medications[index].quantity = 1
+        rebuildMedicationCaches()
     }
 
     func presentEditor(for definition: MedicationDefinitionRecord?) {
@@ -595,6 +609,7 @@ final class EpisodeEditorController {
 
     func deleteCustomMedication(_ definition: MedicationDefinitionRecord) {
         draft.medications.removeAll { $0.selectionKey == definition.selectionKey }
+        rebuildMedicationCaches()
         let repository = medicationRepository
         Task {
             do {
@@ -610,7 +625,23 @@ final class EpisodeEditorController {
         }
     }
 
-    private var allMedicationGroups: [EpisodeEditorMedicationGroup] {
+    private func rebuildMedicationCaches() {
+        rebuildMedicationSelectionCache()
+        rebuildMedicationGroupCache()
+    }
+
+    private func rebuildMedicationSelectionCache() {
+        medicationSelectionIndicesByKey = draft.medications.enumerated().reduce(into: [:]) { result, item in
+            let (index, medication) = item
+            result[medication.selectionKey] = index
+        }
+        selectedMedicationKeys = Set(draft.medications.filter(\.isSelected).map(\.selectionKey))
+        selectedMedicationsCache = draft.medications
+            .filter(\.isSelected)
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    private func rebuildMedicationGroupCache() {
         let knownKeys = Set(medicationDefinitions.map(\.selectionKey))
         let persistedGroups = Dictionary(grouping: medicationDefinitions) { $0.groupID }
         let sortedGroupIDs = persistedGroups.keys.sorted { lhs, rhs in
@@ -667,7 +698,7 @@ final class EpisodeEditorController {
             )
         }
 
-        return groups
+        allMedicationGroupsCache = groups
     }
 
     private func updateMedicationSelection(from oldSelectionKey: String, to definition: MedicationDefinitionRecord) {
@@ -680,6 +711,7 @@ final class EpisodeEditorController {
         draft.medications[index].category = definition.category
         draft.medications[index].dosage = definition.suggestedDosage
         draft.medications[index].isSelected = true
+        rebuildMedicationCaches()
     }
 
     private var isStartedAtUnchanged: Bool {
