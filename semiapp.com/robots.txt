@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://symiapp.com/sitemap.xml
