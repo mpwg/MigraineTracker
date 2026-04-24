@@ -8,6 +8,7 @@ on:
       - "Symi/**"
       - "SymiTests/**"
       - "Symi.xcodeproj/**"
+      - ".gitignore"
       - ".github/workflows/ios-ci.yml"
   push:
     branches:
@@ -16,6 +17,7 @@ on:
       - "Symi/**"
       - "SymiTests/**"
       - "Symi.xcodeproj/**"
+      - ".gitignore"
       - ".github/workflows/ios-ci.yml"
 
 jobs:
