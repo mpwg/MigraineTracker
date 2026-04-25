@@ -9,7 +9,7 @@ protocol ExportRepository: Sendable {
 }
 
 enum PDFReportMode: String, CaseIterable, Identifiable, Sendable {
-    case compact = "Kompakter Arztbericht"
+    case compact = "Kompakter Bericht"
     case detailed = "Detaillierter Bericht"
 
     var id: String { rawValue }

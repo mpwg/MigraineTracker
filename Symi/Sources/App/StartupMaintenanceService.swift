@@ -31,7 +31,6 @@ final class StartupMaintenanceService {
 
             await Task.detached(priority: .utility) {
                 MedicationCatalog.importSeedDataIfNeeded(into: modelContainer)
-                DoctorDirectoryCatalog.importSeedDataIfNeeded(into: modelContainer)
             }.value
 
             try? await Task.sleep(for: Self.weatherBackfillDelay - Self.seedImportDelay)

@@ -3,7 +3,6 @@ import SwiftUI
 enum AppSection: String, CaseIterable, Identifiable {
     case overview
     case history
-    case doctors
     case export
     case settings
     case information
@@ -14,7 +13,6 @@ enum AppSection: String, CaseIterable, Identifiable {
         switch self {
         case .overview: "Heute"
         case .history: "Tagebuch"
-        case .doctors: "Termine"
         case .export: "Teilen"
         case .settings: "Einstellungen"
         case .information: "Hinweise"
@@ -25,7 +23,6 @@ enum AppSection: String, CaseIterable, Identifiable {
         switch self {
         case .overview: "sparkles"
         case .history: "book.closed"
-        case .doctors: "calendar"
         case .export: "square.and.arrow.up"
         case .settings: "gearshape"
         case .information: "hand.raised"
@@ -57,7 +54,7 @@ struct AppShellView: View {
 
     private var compactRoot: some View {
         TabView(selection: $selectedSection) {
-            ForEach([AppSection.overview, .history, .doctors, .export, .settings]) { section in
+            ForEach([AppSection.overview, .history, .export, .settings]) { section in
                 NavigationStack {
                     content(for: section)
                 }
@@ -101,8 +98,6 @@ struct AppShellView: View {
             HomeView(appContainer: appContainer)
         case .history:
             HistoryView(appContainer: appContainer)
-        case .doctors:
-            DoctorsHubView(appContainer: appContainer)
         case .export:
             DataExportView(appContainer: appContainer)
         case .settings:
@@ -115,7 +110,7 @@ struct AppShellView: View {
     @ViewBuilder
     private func regularContent(for section: AppSection) -> some View {
         switch section {
-        case .overview, .history, .doctors:
+        case .overview, .history:
             content(for: section)
         case .export, .settings, .information:
             RegularDetailSurface {

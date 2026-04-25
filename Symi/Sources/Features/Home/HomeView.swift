@@ -5,15 +5,10 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var overview: HomeOverviewData = .init(latestEpisode: nil, episodeCount: 0)
-    @State private var doctorHubController: DoctorHubController
     @State private var isPresentingEpisodeEditor = false
-    @State private var isPresentingDoctorAddFlow = false
-    @State private var isPresentingManualDoctorAddFlow = false
-    @State private var isPresentingAppointmentFlow = false
 
     init(appContainer: AppContainer) {
         self.appContainer = appContainer
-        _doctorHubController = State(initialValue: appContainer.makeDoctorHubController())
     }
 
     var body: some View {
@@ -34,11 +29,6 @@ struct HomeView: View {
                 }
                 .keyboardShortcut("n", modifiers: .command)
 
-                Button {
-                    isPresentingAppointmentFlow = true
-                } label: {
-                    Label("Termin", systemImage: "calendar.badge.plus")
-                }
             }
         }
         .task {
@@ -52,30 +42,6 @@ struct HomeView: View {
                 EpisodeEditorView(appContainer: appContainer) {
                     isPresentingEpisodeEditor = false
                     Task { await reloadOverview() }
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $isPresentingDoctorAddFlow) {
-            NavigationStack {
-                DoctorAddFlowView(appContainer: appContainer, startMode: .oegkDirectory) { _ in
-                    isPresentingDoctorAddFlow = false
-                    Task { await reloadDoctorData() }
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $isPresentingManualDoctorAddFlow) {
-            NavigationStack {
-                DoctorAddFlowView(appContainer: appContainer, startMode: .manual) { _ in
-                    isPresentingManualDoctorAddFlow = false
-                    Task { await reloadDoctorData() }
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $isPresentingAppointmentFlow) {
-            NavigationStack {
-                AppointmentCreationFlowView(appContainer: appContainer) {
-                    isPresentingAppointmentFlow = false
-                    Task { await reloadAppointments() }
                 }
             }
         }
@@ -94,10 +60,6 @@ struct HomeView: View {
                 .buttonStyle(SymiPrimaryButtonStyle())
 
                 FeelingCheckInCard()
-
-                AdaptiveDashboardCard(title: "Kommende Termine") {
-                    appointmentContent
-                }
 
                 AdaptiveDashboardCard(title: "Vertrauen") {
                     VStack(alignment: .leading, spacing: 10) {
@@ -139,26 +101,11 @@ struct HomeView: View {
                                 isPresentingEpisodeEditor = true
                             }
 
-                            QuickActionTile("Termin hinzufügen", systemImage: "calendar.badge.plus") {
-                                isPresentingAppointmentFlow = true
-                            }
-
-                            QuickActionTile("Kontakt hinzufügen", systemImage: "person.crop.circle.badge.plus") {
-                                isPresentingDoctorAddFlow = true
-                            }
-
-                            QuickActionTile("Manuell anlegen", systemImage: "square.and.pencil") {
-                                isPresentingManualDoctorAddFlow = true
-                            }
                         }
                     }
                 }
 
                 VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
-                    AdaptiveDashboardCard(title: "Kommende Termine") {
-                        appointmentContent
-                    }
-
                     AdaptiveDashboardCard(title: "Vertrauen") {
                         VStack(alignment: .leading, spacing: 10) {
                             Label("Deine Daten gehören dir.", systemImage: "lock")
@@ -169,9 +116,6 @@ struct HomeView: View {
                         }
                     }
 
-                    AdaptiveDashboardCard(title: "Kontakte") {
-                        doctorContent
-                    }
                 }
             }
             .padding(24)
@@ -183,113 +127,14 @@ struct HomeView: View {
         }
     }
 
-    private var appointmentsSection: some View {
-        Section {
-            Button {
-                isPresentingAppointmentFlow = true
-            } label: {
-                Label("Termin hinzufügen", systemImage: "calendar.badge.plus")
-            }
-
-            appointmentContent
-        } header: {
-            Text("Termine")
-        }
-    }
-
-    private var doctorsSection: some View {
-        Section {
-            Button {
-                isPresentingDoctorAddFlow = true
-            } label: {
-                Label("Arzt hinzufügen", systemImage: "cross.case.fill")
-            }
-
-            Button {
-                isPresentingManualDoctorAddFlow = true
-            } label: {
-                Label("Arzt manuell hinzufügen", systemImage: "square.and.pencil")
-            }
-
-            doctorContent
-        } header: {
-            Text("Meine Ärzte")
-        } footer: {
-            Text(
-                AppStoreScreenshotMode.isEnabled
-                ? "Im Screenshot-Modus werden ausschließlich anonymisierte Musterärztinnen und Musterärzte angezeigt."
-                : "Suchquelle: ÖGK Vertragspartner Fachärztinnen und Fachärzte. Fehlende Kontaktdaten können danach manuell ergänzt werden."
-            )
-        }
-    }
-
-    @ViewBuilder
-    private var appointmentContent: some View {
-        if doctorHubController.upcomingAppointmentItems.isEmpty {
-            ContentUnavailableView(
-                "Keine kommenden Termine",
-                systemImage: "calendar.badge.clock",
-                description: Text("Lege einen Termin an. Falls noch keine Ärztin oder kein Arzt vorhanden ist, startet zuerst der Arzt-Flow.")
-            )
-        } else {
-            ForEach(doctorHubController.upcomingAppointmentItems) { item in
-                NavigationLink {
-                    DoctorDetailView(appContainer: appContainer, doctorID: item.doctor.id)
-                } label: {
-                    AppointmentSummaryRow(appointment: item.appointment, doctor: item.doctor)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var doctorContent: some View {
-        if doctorHubController.doctors.isEmpty {
-            ContentUnavailableView(
-                "Noch keine Ärztinnen oder Ärzte",
-                systemImage: "cross.case",
-                description: Text("Nutze die ÖGK-Liste als Startpunkt oder lege eine Ärztin bzw. einen Arzt vollständig manuell an.")
-            )
-        } else {
-            ForEach(doctorHubController.doctors.prefix(horizontalSizeClass == .compact ? 5 : 6)) { doctor in
-                NavigationLink {
-                    DoctorDetailView(appContainer: appContainer, doctorID: doctor.id)
-                } label: {
-                    DoctorSummaryRow(doctor: doctor)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-
     private func reloadAll() async {
         await reloadOverview()
-        await reloadDoctorData()
     }
 
     private func reloadOverview() async {
         overview = (try? await LoadHomeOverviewUseCase(repository: appContainer.episodeRepository).execute()) ?? .init(latestEpisode: nil, episodeCount: 0)
     }
 
-    private func reloadDoctorData() async {
-        do {
-            try await doctorHubController.reloadDoctors()
-            try await doctorHubController.reloadAppointments()
-            doctorHubController.errorMessage = nil
-        } catch {
-            doctorHubController.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
-        }
-    }
-
-    private func reloadAppointments() async {
-        do {
-            try await doctorHubController.reloadAppointments()
-            doctorHubController.errorMessage = nil
-        } catch {
-            doctorHubController.errorMessage = "Ärzte und Termine konnten nicht geladen werden."
-        }
-    }
 }
 
 struct AdaptiveDashboardCard<Content: View>: View {
@@ -499,29 +344,6 @@ private struct WaveAccent: Shape {
             control2: CGPoint(x: rect.width * 0.66, y: rect.minY)
         )
         return path
-    }
-}
-
-struct DoctorSummaryRow: View {
-    let doctor: DoctorRecord
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(doctor.name)
-                .font(.headline)
-
-            if !doctor.specialty.isEmpty {
-                Text(doctor.specialty)
-                    .foregroundStyle(.secondary)
-            }
-
-            if !doctor.addressLine.isEmpty {
-                Text(doctor.addressLine)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 2)
     }
 }
 

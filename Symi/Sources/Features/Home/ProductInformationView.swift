@@ -33,8 +33,8 @@ struct ProductInformationView: View {
                     systemImage: "cloud.sun"
                 )
                 infoRow(
-                    title: "Arztgespräche vorbereiten",
-                    detail: "PDF-Berichte helfen dir, Termine vorzubereiten. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst.",
+                    title: "Berichte erstellen",
+                    detail: "PDF-Berichte helfen dir, deine Einträge übersichtlich mitzunehmen. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst.",
                     systemImage: "doc.text"
                 )
             }
@@ -74,11 +74,6 @@ struct ProductInformationView: View {
                     title: "Apple Health optional",
                     detail: "Apple Health wird nur genutzt, wenn du einzelne Informationen freigibst.",
                     systemImage: "heart.text.square"
-                )
-                infoRow(
-                    title: "Erinnerungen bleiben lokal",
-                    detail: "Terminerinnerungen werden als lokale iOS-Mitteilungen geplant. Termine bleiben auch gespeichert, wenn du Mitteilungen nicht erlaubst.",
-                    systemImage: "bell"
                 )
             }
 

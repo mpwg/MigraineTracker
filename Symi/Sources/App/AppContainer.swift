@@ -16,12 +16,8 @@ final class AppContainer {
     let episodeRepository: EpisodeRepository
     let medicationCatalogRepository: MedicationCatalogRepository
     let exportRepository: ExportRepository
-    let doctorRepository: DoctorRepository
-    let doctorDirectoryRepository: DoctorDirectoryRepository
-    let appointmentRepository: AppointmentRepository
     let syncService: SyncService
     let appLogService: AppLogService
-    let notificationService: NotificationService
 
     init(
         modelContainer: ModelContainer,
@@ -30,8 +26,7 @@ final class AppContainer {
         weatherService: any WeatherService = AppleWeatherKitWeatherService(),
         locationService: any LocationService = SystemLocationService(),
         healthService: any HealthService = AppleHealthKitService(),
-        healthContextStore: HealthContextStore = HealthContextStore(),
-        notificationService: any NotificationService = UserNotificationService()
+        healthContextStore: HealthContextStore = HealthContextStore()
     ) {
         self.modelContainer = modelContainer
         self.syncCoordinator = syncCoordinator
@@ -52,12 +47,8 @@ final class AppContainer {
         self.episodeRepository = SwiftDataEpisodeRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
         self.medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
         self.exportRepository = SwiftDataExportRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
-        self.doctorRepository = SwiftDataDoctorRepository(modelContainer: modelContainer)
-        self.doctorDirectoryRepository = SwiftDataDoctorDirectoryRepository(modelContainer: modelContainer)
-        self.appointmentRepository = SwiftDataAppointmentRepository(modelContainer: modelContainer)
         self.syncService = SyncServiceAdapter(coordinator: syncCoordinator)
         self.appLogService = appLogStore
-        self.notificationService = notificationService
     }
 
     func startDeferredMaintenanceIfNeeded() {
@@ -94,28 +85,4 @@ final class AppContainer {
         DataExportController(repository: exportRepository)
     }
 
-    func makeDoctorHubController() -> DoctorHubController {
-        DoctorHubController(
-            doctorRepository: doctorRepository,
-            appointmentRepository: appointmentRepository
-        )
-    }
-
-    func makeDoctorEditorController(doctor: DoctorRecord?) -> DoctorEditorController {
-        DoctorEditorController(
-            doctor: doctor,
-            doctorRepository: doctorRepository,
-            directoryRepository: doctorDirectoryRepository
-        )
-    }
-
-    func makeAppointmentEditorController(appointment: AppointmentRecord?, doctor: DoctorRecord) -> AppointmentEditorController {
-        AppointmentEditorController(
-            appointment: appointment,
-            doctor: doctor,
-            appointmentRepository: appointmentRepository,
-            doctorRepository: doctorRepository,
-            notificationService: notificationService
-        )
-    }
 }

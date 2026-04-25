@@ -1,6 +1,6 @@
 # Symi
 
-Symi ist ein lokal-first Migräne Tagebuch für mehr gute Tage. Die App kombiniert einen schnellen, ruhigen Eintrag mit persönlichem Tagebuch, Wetterkontext, Medikamentendokumentation, Export und ergänzenden Organisationsfunktionen für Kontakte und Termine.
+Symi ist ein lokal-first Migräne Tagebuch für mehr gute Tage. Die App kombiniert einen schnellen, ruhigen Eintrag mit persönlichem Tagebuch, Wetterkontext, Medikamentendokumentation und Export.
 
 [![Im App Store laden](https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/de-at?size=250x83)](https://apps.apple.com/app/id6761906025)
 
@@ -23,7 +23,6 @@ Der aktuelle Stand der App deckt diese Bereiche ab:
 - Wetter-Snapshots über `Apple Weather` mit `WeatherKit`
 - Tagebuchansicht mit Kalender, Tagesauswahl, Detailansicht, Bearbeiten und Papierkorb
 - PDF-Bericht und JSON5-Backup für frei wählbare Zeiträume
-- Ärztinnen- und Ärzte-Verwaltung inklusive lokaler Termine und Erinnerungen
 - optionale iCloud-Synchronisation mit Konfliktanzeige, Cloud-Datenverwaltung und Sync-Protokoll
 
 ## Produktidee
@@ -32,7 +31,7 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 
 - Beschwerden schnell dokumentieren, ohne von langen Formularen ausgebremst zu werden
 - Muster, Trigger und Medikamentenwirkung nachvollziehbarer machen
-- Arztgespräche mit belastbaren, exportierbaren Daten vorbereiten
+- eigene Einträge mit belastbaren, exportierbaren Daten auswerten
 - sensible Gesundheitsdaten standardmäßig lokal halten
 
 ## Hauptflows
@@ -56,12 +55,7 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 - PDF-Bericht für einen Zeitraum erzeugen und teilen
 - JSON5-Backup erzeugen oder importieren
 
-### 4. Ärztinnen, Ärzte und Termine
-
-- Arztkontakte aus der ÖGK-Liste übernehmen oder manuell anlegen
-- lokale Termine mit Erinnerung verwalten
-
-### 5. Optionale Synchronisation
+### 4. Optionale Synchronisation
 
 - iCloud-Sync aktivieren oder deaktivieren
 - Konflikte einsehen und auflösen

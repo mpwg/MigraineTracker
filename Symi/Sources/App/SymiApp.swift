@@ -52,7 +52,7 @@ struct SymiApp: App {
                 self.screenshotSeed = environment.4
                 _syncCoordinator = State(initialValue: environment.3)
             } else {
-                let schema = Schema(versionedSchema: SymiSchemaV4.self)
+                let schema = Schema(versionedSchema: SymiSchemaV5.self)
                 let storeURL = launchConfiguration.isRunningTests ? Self.unitTestStoreURL() : Self.defaultStoreURL()
                 let configuration = ModelConfiguration(
                     "default",

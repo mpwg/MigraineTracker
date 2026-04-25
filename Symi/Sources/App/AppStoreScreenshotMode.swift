@@ -55,18 +55,7 @@ enum AppStoreScreenshotMode {
 
         do {
             let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
-            let existingDoctors = try context.fetch(FetchDescriptor<Doctor>())
-            let existingAppointments = try context.fetch(FetchDescriptor<DoctorAppointment>())
             let existingDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
-            let existingDirectoryEntries = try context.fetch(FetchDescriptor<DoctorDirectoryEntry>())
-
-            for appointment in existingAppointments {
-                context.delete(appointment)
-            }
-
-            for doctor in existingDoctors {
-                context.delete(doctor)
-            }
 
             for episode in existingEpisodes {
                 context.delete(episode)
@@ -76,65 +65,13 @@ enum AppStoreScreenshotMode {
                 context.delete(definition)
             }
 
-            for entry in existingDirectoryEntries {
-                context.delete(entry)
-            }
-
             let calendar = Calendar(identifier: .gregorian)
             let today = calendar.startOfDay(for: .now)
             let medications = sampleMedicationDefinitions()
-            let directoryEntries = sampleDoctorDirectoryEntries()
-
-            let doctorOne = Doctor(
-                name: "Dr. Clara Heiden",
-                specialty: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology"),
-                street: "Lindenhofgasse 12",
-                city: "Wien",
-                state: "Wien",
-                postalCode: "1010",
-                phone: "01 2345678",
-                email: "ordination.clara.heiden@example.com",
-                notes: ScreenshotLocalization.text(de: "Beispielkontakt für App-Store-Screenshots.", en: "Sample contact for App Store screenshots."),
-                sourceRaw: DoctorSource.manual.rawValue
-            )
-
-            let doctorTwo = Doctor(
-                name: "Dr. Mira Sonnberg",
-                specialty: ScreenshotLocalization.text(de: "Allgemeinmedizin", en: "General medicine"),
-                street: "Auenweg 5",
-                city: "Wien",
-                state: "Wien",
-                postalCode: "1070",
-                phone: "01 8765432",
-                email: "ordination.mira.sonnberg@example.com",
-                notes: ScreenshotLocalization.text(de: "Anonymisierte Demo-Daten.", en: "Anonymized demo data."),
-                sourceRaw: DoctorSource.manual.rawValue
-            )
-
-            let appointment = DoctorAppointment(
-                scheduledAt: calendar.date(bySettingHour: 9, minute: 15, second: 0, of: today.addingTimeInterval(2 * 24 * 60 * 60)) ?? today,
-                endsAt: calendar.date(bySettingHour: 9, minute: 45, second: 0, of: today.addingTimeInterval(2 * 24 * 60 * 60)),
-                practiceName: ScreenshotLocalization.text(de: "Ordination Dr. Clara Heiden", en: "Practice Dr. Clara Heiden"),
-                addressText: "Lindenhofgasse 12, 1010 Wien",
-                note: ScreenshotLocalization.text(de: "Verlaufsgespräch und Anpassung des Akutplans.", en: "Follow-up discussion and adjustment of the acute plan."),
-                reminderEnabled: true,
-                reminderLeadTimeMinutes: 24 * 60,
-                notificationStatusRaw: AppointmentReminderStatus.scheduled.rawValue,
-                doctor: doctorOne
-            )
-
             let episodes = sampleEpisodes(relativeTo: today, calendar: calendar)
-
-            context.insert(doctorOne)
-            context.insert(doctorTwo)
-            context.insert(appointment)
 
             for medication in medications {
                 context.insert(medication)
-            }
-
-            for entry in directoryEntries {
-                context.insert(entry)
             }
 
             for episode in episodes {
@@ -260,7 +197,7 @@ enum AppStoreScreenshotMode {
             notes: ScreenshotLocalization.text(de: "Rückzug in einen abgedunkelten Raum.", en: "Retreated to a darkened room."),
             symptoms: ScreenshotLocalization.list(de: ["Aura", "Lichtempfindlichkeit", "Übelkeit"], en: ["Aura", "Light sensitivity", "Nausea"]),
             triggers: ["Stress"],
-            functionalImpact: ScreenshotLocalization.text(de: "Termine verschoben", en: "Appointments postponed"),
+            functionalImpact: ScreenshotLocalization.text(de: "Tagesplanung angepasst", en: "Daily plan adjusted"),
             medications: [
                 MedicationEntry(
                     name: "Metoclopramid",
@@ -335,44 +272,6 @@ enum AppStoreScreenshotMode {
                 suggestedDosage: "10 mg",
                 sortOrder: 2,
                 isCustom: false
-            )
-        ]
-    }
-
-    private static func sampleDoctorDirectoryEntries() -> [DoctorDirectoryEntry] {
-        [
-            DoctorDirectoryEntry(
-                id: "screenshot-doctor-anna",
-                name: "Dr. Clara Heiden",
-                specialty: ScreenshotLocalization.text(de: "Neurologie", en: "Neurology"),
-                street: "Lindenhofgasse 12",
-                city: "Wien",
-                state: "Wien",
-                postalCode: "1010",
-                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
-                sourceURL: "https://example.com/app-store-screenshots"
-            ),
-            DoctorDirectoryEntry(
-                id: "screenshot-doctor-lea",
-                name: "Dr. Mira Sonnberg",
-                specialty: ScreenshotLocalization.text(de: "Allgemeinmedizin", en: "General medicine"),
-                street: "Auenweg 5",
-                city: "Wien",
-                state: "Wien",
-                postalCode: "1070",
-                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
-                sourceURL: "https://example.com/app-store-screenshots"
-            ),
-            DoctorDirectoryEntry(
-                id: "screenshot-doctor-noah",
-                name: "Dr. Jonas Erlach",
-                specialty: ScreenshotLocalization.text(de: "Schmerzambulanz", en: "Pain clinic"),
-                street: "Parkring 8",
-                city: "Graz",
-                state: "Steiermark",
-                postalCode: "8010",
-                sourceLabel: ScreenshotLocalization.text(de: "Musterverzeichnis für App-Store-Screenshots", en: "Sample directory for App Store screenshots"),
-                sourceURL: "https://example.com/app-store-screenshots"
             )
         ]
     }

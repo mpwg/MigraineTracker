@@ -42,7 +42,6 @@ Diese Punkte sind zunächst bewusst ausgeschlossen:
 - `iPad`
 - `Englisch` oder weitere Lokalisierungen
 - `Cloud-Sync` oder eigenes Backend
-- `Arzttermine`
 - komplexe Diagnose- oder Therapieempfehlungen
 - Community- oder Social-Features
 - umfangreiche KI-Auswertung
@@ -53,11 +52,11 @@ Diese Punkte sind zunächst bewusst ausgeschlossen:
 
 - Menschen mit wiederkehrenden Kopfschmerzen
 - Menschen mit Migräne
-- Personen, die Arzttermine mit strukturierten Tagebuchdaten vorbereiten möchten
+- Personen, die ihre Beschwerden mit strukturierten Tagebuchdaten nachvollziehen möchten
 
 ## Kernproblem
 
-Viele Betroffene dokumentieren Symptome unregelmäßig oder gar nicht, weil vorhandene Lösungen zu komplex wirken. Gleichzeitig fehlen bei Arztterminen oft konkrete Daten zu Intensität, Dauer, Medikamenten und möglichen Auslösern.
+Viele Betroffene dokumentieren Symptome unregelmäßig oder gar nicht, weil vorhandene Lösungen zu komplex wirken. Gleichzeitig fehlen oft konkrete Daten zu Intensität, Dauer, Medikamenten und möglichen Auslösern.
 
 ## Wertversprechen
 
@@ -306,7 +305,7 @@ Die App wird als kompakte iPhone-App mit klar getrennten Verantwortlichkeiten au
 - Medikamente sind pro Episode sichtbar
 - zusätzliche Kontextdaten liefern erkennbaren Mehrwert, ohne den Erfassungsflow unnötig zu verlangsamen
 - Wetterdaten werden zuverlässig gespeichert, wenn verfügbar
-- ein nutzbarer Bericht für Arzttermine kann erzeugt werden
+- ein nutzbarer Bericht kann erzeugt werden
 
 ## Definition of Done für die erste Submission
 
@@ -320,7 +319,7 @@ Die erste MVP ist fertig, wenn alle Punkte erfüllt sind:
 - das Tagebuch ist in einer verständlichen Listen- oder Kalenderansicht sichtbar
 - ein PDF-Bericht für einen wählbaren Zeitraum kann lokal erzeugt und geteilt werden
 - die App funktioniert vollständig ohne Account, Backend oder Synchronisation
-- weder `Apple Health` noch `Arzttermine` sind Voraussetzung für die Kernnutzung
+- `Apple Health` ist keine Voraussetzung für die Kernnutzung
 
 ## Nächste Umsetzungsschritte
 

@@ -193,52 +193,6 @@ struct CoreArchitectureTests {
         #expect(summary.conflictCount == 1)
     }
 
-    @Test
-    func saveDoctorUseCaseRejectsMissingName() async {
-        let repository = DoctorRepositoryMock()
-        let useCase = SaveDoctorUseCase(repository: repository)
-
-        await #expect(throws: DoctorSaveError.missingName) {
-            try await useCase.execute(.makeNew())
-        }
-    }
-
-    @Test
-    func saveAppointmentUseCaseSchedulesReminderForSavedAppointment() async throws {
-        let appointmentRepository = AppointmentRepositoryMock()
-        let doctorRepository = DoctorRepositoryMock()
-        let notificationService = NotificationServiceMock()
-        let doctor = makeDoctor()
-        doctorRepository.loadedDoctor = doctor
-
-        let draft = AppointmentDraft.makeNew(doctor: doctor)
-
-        let savedID = try await SaveAppointmentUseCase(
-            appointmentRepository: appointmentRepository,
-            doctorRepository: doctorRepository,
-            notificationService: notificationService
-        ).execute(draft)
-
-        #expect(savedID == appointmentRepository.savedAppointmentID)
-        #expect(notificationService.scheduledAppointment?.id == appointmentRepository.savedAppointmentID)
-        #expect(appointmentRepository.lastReminderUpdate?.status == .scheduled)
-        #expect(appointmentRepository.lastReminderUpdate?.requestID == "request-1")
-    }
-
-    @Test
-    func deleteAppointmentUseCaseRemovesPendingNotification() async throws {
-        let appointmentRepository = AppointmentRepositoryMock()
-        let notificationService = NotificationServiceMock()
-        appointmentRepository.loadedAppointment = makeAppointment(notificationRequestID: "existing-request")
-
-        try await DeleteAppointmentUseCase(
-            appointmentRepository: appointmentRepository,
-            notificationService: notificationService
-        ).execute(id: appointmentRepository.loadedAppointment!.id)
-
-        #expect(notificationService.removedRequestIDs == ["existing-request"])
-        #expect(appointmentRepository.deletedIDs == [appointmentRepository.loadedAppointment!.id])
-    }
 }
 
 private final class EpisodeRepositoryMock: EpisodeRepository, @unchecked Sendable {
@@ -305,89 +259,6 @@ private final class SyncServiceMock: SyncService {
     func resolveConflictUsingRemote(_ conflict: SyncConflict) async {}
 }
 
-private final class DoctorRepositoryMock: DoctorRepository, @unchecked Sendable {
-    var doctors: [DoctorRecord] = []
-    var loadedDoctor: DoctorRecord?
-    var lastSavedDraft: DoctorDraft?
-    var savedDoctorID = UUID()
-    var deletedIDs: [UUID] = []
-
-    func fetchAll() throws -> [DoctorRecord] { doctors }
-    func load(id: UUID) throws -> DoctorRecord? { loadedDoctor }
-    func save(draft: DoctorDraft) throws -> UUID {
-        lastSavedDraft = draft
-        return draft.id ?? savedDoctorID
-    }
-    func softDelete(id: UUID) throws {
-        deletedIDs.append(id)
-    }
-}
-
-private final class AppointmentRepositoryMock: AppointmentRepository, @unchecked Sendable {
-    var appointments: [AppointmentRecord] = []
-    var loadedAppointment: AppointmentRecord?
-    var lastSavedDraft: AppointmentDraft?
-    var savedAppointmentID = UUID()
-    var lastReminderUpdate: (id: UUID, status: AppointmentReminderStatus, requestID: String?)?
-    var deletedIDs: [UUID] = []
-
-    func fetchUpcoming(limit: Int?) throws -> [AppointmentRecord] { appointments }
-    func fetchUpcoming(for doctorID: UUID) throws -> [AppointmentRecord] { appointments.filter { $0.doctorID == doctorID } }
-    func load(id: UUID) throws -> AppointmentRecord? {
-        if let loadedAppointment, loadedAppointment.id == id {
-            return loadedAppointment
-        }
-
-        if id == savedAppointmentID, let lastSavedDraft {
-            return AppointmentRecord(
-                id: savedAppointmentID,
-                doctorID: lastSavedDraft.doctorID,
-                createdAt: .now,
-                updatedAt: .now,
-                deletedAt: nil,
-                scheduledAt: lastSavedDraft.scheduledAt,
-                endsAt: lastSavedDraft.endsAtEnabled ? lastSavedDraft.endsAt : nil,
-                practiceName: lastSavedDraft.practiceName,
-                addressText: lastSavedDraft.addressText,
-                note: lastSavedDraft.note,
-                reminderEnabled: lastSavedDraft.reminderEnabled,
-                reminderLeadTimeMinutes: lastSavedDraft.reminderLeadTimeMinutes,
-                reminderStatus: .authorized,
-                notificationRequestID: nil
-            )
-        }
-
-        return nil
-    }
-    func save(draft: AppointmentDraft) throws -> UUID {
-        lastSavedDraft = draft
-        return draft.id ?? savedAppointmentID
-    }
-    func updateReminder(id: UUID, status: AppointmentReminderStatus, requestID: String?) throws {
-        lastReminderUpdate = (id, status, requestID)
-    }
-    func softDelete(id: UUID) throws {
-        deletedIDs.append(id)
-    }
-}
-
-private final class NotificationServiceMock: NotificationService {
-    var scheduledAppointment: AppointmentRecord?
-    var scheduledDoctor: DoctorRecord?
-    var removedRequestIDs: [String] = []
-    var result = ReminderSchedulingResult(status: .scheduled, requestID: "request-1")
-
-    func scheduleAppointmentReminder(for appointment: AppointmentRecord, doctor: DoctorRecord) async -> ReminderSchedulingResult {
-        scheduledAppointment = appointment
-        scheduledDoctor = doctor
-        return result
-    }
-
-    func removePendingNotification(requestID: String) async {
-        removedRequestIDs.append(requestID)
-    }
-}
-
 private func makeEpisode(id: UUID, startedAt: Date, intensity: Int, deletedAt: Date? = nil) -> EpisodeRecord {
     EpisodeRecord(
         id: id,
@@ -434,44 +305,5 @@ private func sampleEnvelope() -> SyncDocumentEnvelope {
                 weatherSnapshot: nil
             )
         )
-    )
-}
-
-private func makeDoctor(id: UUID = UUID()) -> DoctorRecord {
-    DoctorRecord(
-        id: id,
-        createdAt: .now,
-        updatedAt: .now,
-        deletedAt: nil,
-        name: "Dr. Test",
-        specialty: "Neurologie",
-        street: "Teststraße 1",
-        city: "Wien",
-        state: "Wien",
-        postalCode: "1010",
-        phone: "",
-        email: "",
-        notes: "",
-        source: .manual,
-        appointments: []
-    )
-}
-
-private func makeAppointment(id: UUID = UUID(), notificationRequestID: String?) -> AppointmentRecord {
-    AppointmentRecord(
-        id: id,
-        doctorID: UUID(),
-        createdAt: .now,
-        updatedAt: .now,
-        deletedAt: nil,
-        scheduledAt: .now.addingTimeInterval(3_600),
-        endsAt: nil,
-        practiceName: "Ordination",
-        addressText: "Teststraße 1",
-        note: "",
-        reminderEnabled: true,
-        reminderLeadTimeMinutes: 24 * 60,
-        reminderStatus: .scheduled,
-        notificationRequestID: notificationRequestID
     )
 }

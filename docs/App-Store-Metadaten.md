@@ -30,7 +30,7 @@ https://symiapp.com/privacy
 - Sprache: nur Deutsch
 - Speicherung: nur lokal auf dem Gerät
 - Kein Account, kein Backend, keine Synchronisation
-- Kein Apple Health, keine Arzttermine im MVP
+- Kein Apple Health im MVP
 
 ## Screenshot-Plan für deutsches iPhone-Listing
 
@@ -45,17 +45,12 @@ Benötigte Screenshots vorbereiten:
 Wichtige Vorgabe für alle Store-Screenshots:
 
 - ausschließlich anonymisierte Demo-Inhalte verwenden
-- nur Musternamen wie `Dr. Anna Muster` oder `Dr. Lea Beispiel` zeigen
-- nur Beispieldaten und Beispieltermine zeigen, niemals reale Gesundheitsdaten
-- keine Screens mit echter Ärzteliste aus der ÖGK-Suche verwenden
+- nur Beispieldaten zeigen, niemals reale Gesundheitsdaten
 
 ## Screenshot-Demo-Modus
 
 Für reproduzierbare App-Store-Screenshots kann die App mit `APP_STORE_SCREENSHOTS=1` oder `FASTLANE_SNAPSHOT=1` gestartet werden. Dann verwendet sie einen separaten Demo-Store mit:
 
-- anonymisierten Ärztinnen und Ärzten
-- anonymisiertem Arztverzeichnis für den Such- und Auswahl-Flow
-- Musterterminen
 - beispielhaften Migräne- und Kopfschmerz-Einträgen
 - Beispielmedikamenten statt realer Präparate
 - vorbefüllten Daten im Screen `Neuer Eintrag`

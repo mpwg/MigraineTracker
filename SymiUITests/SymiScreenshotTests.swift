@@ -23,11 +23,7 @@ final class SymiScreenshotTests: XCTestCase {
             .init(route: "history", germanSnapshotName: "03-erkenne-deine-muster", englishSnapshotName: "03-recognize-patterns"),
             .init(route: "episode-detail", germanSnapshotName: "04-alles-im-blick", englishSnapshotName: "04-everything-in-view"),
             .init(route: "privacy-info", germanSnapshotName: "05-deine-daten-gehoeren-dir", englishSnapshotName: "05-your-data-belongs-to-you"),
-            .init(route: "export", germanSnapshotName: "06-export", englishSnapshotName: "06-export"),
-            .init(route: "doctors", germanSnapshotName: "07-aerzteliste", englishSnapshotName: "07-doctors"),
-            .init(route: "doctor-detail", germanSnapshotName: "08-arztdetail", englishSnapshotName: "08-doctor-detail"),
-            .init(route: "doctor-add", germanSnapshotName: "09-arzt-hinzufuegen", englishSnapshotName: "09-add-doctor"),
-            .init(route: "appointment-flow", germanSnapshotName: "10-termin-flow", englishSnapshotName: "10-appointment-flow")
+            .init(route: "export", germanSnapshotName: "06-export", englishSnapshotName: "06-export")
         ]
 
         for screen in screens {
