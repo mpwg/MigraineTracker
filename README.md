@@ -58,6 +58,7 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 ### 4. Optionale Synchronisation
 
 - iCloud-Sync aktivieren oder deaktivieren
+- Sync bewusst manuell über `Jetzt synchronisieren` auslösen; CloudKit-Subscriptions werden derzeit nicht angelegt
 - Konflikte einsehen und auflösen
 - Cloud-Daten und Sync-Protokoll prüfen
 
@@ -71,7 +72,7 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 - Wetterdaten über `Apple Weather` mit `WeatherKit`
 - optionale Apple-Health-Integration mit versionsabhängigen HealthKit-Datentypen
 - PDF-Erzeugung lokal auf dem Gerät
-- optionale iCloud-Synchronisation getrennt von der lokalen Kernnutzung
+- optionale, manuell ausgelöste iCloud-Synchronisation getrennt von der lokalen Kernnutzung
 
 Interne technische Kennungen wie `Symi`, Bundle-ID, Scheme und iCloud-Container bestehen derzeit aus Migrations- und Release-Gründen weiter, obwohl die sichtbare Produktmarke auf `Symi` umgestellt ist.
 

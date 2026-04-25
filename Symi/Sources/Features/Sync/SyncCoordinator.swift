@@ -20,12 +20,18 @@ final class SyncCoordinator {
     private var provider: (any SyncProvider)?
     private let zoneID = SyncConfiguration.zoneID
 
-    init(modelContainer: ModelContainer, appLogStore: AppLogStore, autostart: Bool = true) {
+    init(
+        modelContainer: ModelContainer,
+        appLogStore: AppLogStore,
+        stateStore: SyncStateStore = SyncStateStore(),
+        deviceID: String? = nil,
+        autostart: Bool = true
+    ) {
         self.modelContainer = modelContainer
-        self.stateStore = SyncStateStore()
+        self.stateStore = stateStore
         self.appLogStore = appLogStore
         self.repository = LocalSyncRepository(modelContainer: modelContainer)
-        self.deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        self.deviceID = deviceID ?? UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
 
         guard autostart else {
             return
@@ -144,7 +150,11 @@ final class SyncCoordinator {
     func resolveConflictUsingRemote(_ conflict: SyncConflict) async {
         do {
             try repository.apply(remote: conflict.remote)
-            await stateStore.saveShadow(SyncShadow(envelope: conflict.remote), for: conflict.documentID)
+            let recordSystemFields = await stateStore.shadow(for: conflict.documentID)?.recordSystemFields
+            await stateStore.saveShadow(
+                SyncShadow(envelope: conflict.remote, recordSystemFields: recordSystemFields),
+                for: conflict.documentID
+            )
             await stateStore.removeConflict(documentID: conflict.documentID)
             conflicts = await stateStore.conflicts()
             await log(level: .info, operation: "coordinator.resolveConflictUsingRemote", message: "Cloud-Version eines Konflikts wurde übernommen.", metadata: [
@@ -207,11 +217,26 @@ final class SyncCoordinator {
 
         let shadow = await stateStore.shadow(for: envelope.documentID)
         await log(level: .debug, operation: "coordinator.recordForUpload", message: "Lokales Dokument wird für Upload codiert.", metadata: metadata(for: envelope, shadow: shadow))
-        return CloudKitRecordCodec.record(
+        var systemFieldsFallbackReason: CloudKitRecordSystemFieldsFallbackReason?
+        let record = CloudKitRecordCodec.record(
             for: envelope,
             zoneID: zoneID,
-            existingSystemFields: shadow?.recordSystemFields
+            existingSystemFields: shadow?.recordSystemFields,
+            systemFieldsFallback: { reason in
+                systemFieldsFallbackReason = reason
+            }
         )
+
+        if let systemFieldsFallbackReason {
+            await log(level: .warning, operation: "coordinator.recordForUpload.systemFieldsFallback", message: "Gespeicherte CloudKit-Systemfelder konnten nicht genutzt werden; Upload wird mit frischem Record vorbereitet.", metadata: [
+                "documentID": envelope.documentID,
+                "entityType": envelope.entityType.rawValue,
+                "recordID": recordID.recordName,
+                "reason": systemFieldsFallbackReason.rawValue
+            ])
+        }
+
+        return record
     }
 
     private func handleProviderEvent(_ event: SyncProviderEvent) async {
@@ -269,7 +294,7 @@ final class SyncCoordinator {
         status = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)
     }
 
-    private func applyRemoteRecord(_ record: CKRecord) async {
+    func applyRemoteRecord(_ record: CKRecord) async {
         guard let remoteEnvelope = CloudKitRecordCodec.envelope(from: record) else {
             await log(level: .warning, operation: "coordinator.applyRemoteRecord.decodeFailed", message: "Remote-Record konnte nicht decodiert werden.", metadata: [
                 "recordID": record.recordID.recordName
@@ -297,16 +322,19 @@ final class SyncCoordinator {
                     remote: remoteEnvelope
                 )
 
-                try repository.apply(remote: merge.merged)
-                await stateStore.saveShadow(
-                    SyncShadow(envelope: remoteEnvelope, recordSystemFields: CloudKitRecordCodec.systemFields(for: record)),
-                    for: remoteEnvelope.documentID
-                )
-
                 if merge.conflicts.isEmpty {
+                    try repository.apply(remote: merge.merged)
+                    await stateStore.saveShadow(
+                        SyncShadow(envelope: merge.merged, recordSystemFields: CloudKitRecordCodec.systemFields(for: record)),
+                        for: remoteEnvelope.documentID
+                    )
                     await stateStore.removeConflict(documentID: remoteEnvelope.documentID)
-                    await log(level: .info, operation: "coordinator.applyRemoteRecord.merged", message: "Remote-Record wurde konfliktfrei gemergt.", metadata: metadata(for: remoteEnvelope, shadow: shadow))
+                    await log(level: .info, operation: "coordinator.applyRemoteRecord.merged", message: "Remote-Record wurde konfliktfrei gemergt.", metadata: metadata(for: merge.merged, shadow: shadow))
                 } else {
+                    await stateStore.saveShadow(
+                        SyncShadow(envelope: remoteEnvelope, recordSystemFields: CloudKitRecordCodec.systemFields(for: record)),
+                        for: remoteEnvelope.documentID
+                    )
                     await stateStore.saveConflict(
                         SyncConflict(
                             documentID: remoteEnvelope.documentID,
@@ -317,7 +345,7 @@ final class SyncCoordinator {
                             conflictingFields: merge.conflicts
                         )
                     )
-                    await log(level: .warning, operation: "coordinator.applyRemoteRecord.conflict", message: "Beim Mergen wurde ein Konflikt erkannt.", metadata: [
+                    await log(level: .warning, operation: "coordinator.applyRemoteRecord.conflict", message: "Beim Mergen wurde ein Konflikt erkannt. Der lokale Stand bleibt bis zur Entscheidung unverändert.", metadata: [
                         "documentID": remoteEnvelope.documentID,
                         "entityType": remoteEnvelope.entityType.rawValue,
                         "fields": merge.conflicts.joined(separator: ",")
@@ -464,8 +492,12 @@ final class SyncCoordinator {
             effectiveState = baseState
         }
 
-        let localCount = (try? repository.allEnvelopes(deviceID: deviceID).count) ?? 0
-        let unsyncedCount = max(localCount - shadows.count, 0) + conflictList.count
+        let localEnvelopes = (try? repository.allEnvelopes(deviceID: deviceID)) ?? []
+        let conflictIDs = Set(conflictList.map(\.documentID))
+        let unsyncedCount = localEnvelopes
+            .filter { !conflictIDs.contains($0.documentID) }
+            .filter { shadows[$0.documentID]?.envelope != $0 }
+            .count + conflictList.count
 
         return SyncStatusSnapshot(
             state: effectiveState,

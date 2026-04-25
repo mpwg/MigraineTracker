@@ -4,7 +4,6 @@ import Foundation
 enum SyncConfiguration {
     static let containerIdentifier = "iCloud.eu.mpwg.MigraineTracker"
     static let zoneName = "MigraineTrackerSync"
-    static let subscriptionID = "MigraineTrackerSyncSubscription"
     static let recordType = "SyncDocument"
 
     static let zoneID = CKRecordZone.ID(
@@ -29,12 +28,12 @@ actor SyncStateStore {
     private let decoder = JSONDecoder()
     private var state: PersistedSyncState
 
-    init(fileManager: FileManager = .default) {
+    init(fileManager: FileManager = .default, baseDirectoryURL: URL? = nil) {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         decoder.dateDecodingStrategy = .iso8601
         encoder.dateEncodingStrategy = .iso8601
 
-        let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let baseURL = baseDirectoryURL ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         let directory = baseURL.appendingPathComponent("Symi", isDirectory: true)
         try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
