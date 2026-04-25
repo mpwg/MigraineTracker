@@ -3,23 +3,143 @@ import Sentry
 import TelemetryDeck
 
 import SwiftData
-import CoreData
 import OSLog
 
 @main
 struct SymiApp: App {
     private static let logger = Logger(subsystem: "Symi", category: "Persistence")
-    private let modelContainer: ModelContainer
-    private let appContainer: AppContainer
-    private let appLogStore: AppLogStore
     private let launchConfiguration: AppLaunchConfiguration
-    private let screenshotSeed: ScreenshotSeed?
-    @State private var syncCoordinator: SyncCoordinator
+    private let initialStartupState: AppStartupState
 
     init() {
         let launchConfiguration = AppLaunchConfiguration.current
         self.launchConfiguration = launchConfiguration
 
+        Self.configureTelemetry(for: launchConfiguration)
+        self.initialStartupState = Self.makeInitialStartupState(launchConfiguration: launchConfiguration)
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            AppRootView(
+                launchConfiguration: launchConfiguration,
+                initialStartupState: initialStartupState
+            )
+        }
+    }
+
+    @MainActor
+    static func makeContainer(schema: Schema, configuration: ModelConfiguration) throws -> ModelContainer {
+        try makeContainer(schema: schema, configuration: configuration) {
+            try ModelContainer(
+                for: schema,
+                migrationPlan: SymiMigrationPlan.self,
+                configurations: [configuration]
+            )
+        }
+    }
+
+    @MainActor
+    static func makeContainer(
+        schema: Schema,
+        configuration: ModelConfiguration,
+        loadContainer: () throws -> ModelContainer
+    ) throws -> ModelContainer {
+        do {
+            logger.debug("Versuche ModelContainer für lokalen Store zu laden.")
+            return try loadContainer()
+        } catch {
+            let context = PersistentStoreRecoveryService.recoveryContext(for: error, storeURL: configuration.url)
+            logger.error(
+                "ModelContainer konnte nicht geladen werden. Recovery wird vorbereitet. Grund: \(context.reason.rawValue, privacy: .public), Fehler: \(context.errorSummary, privacy: .public)"
+            )
+            throw PersistentStoreLoadError.recoveryRequired(context)
+        }
+    }
+
+    @MainActor
+    static func makeAppRuntimeEnvironment(
+        launchConfiguration: AppLaunchConfiguration,
+        storeURL overrideStoreURL: URL? = nil
+    ) throws -> AppRuntimeEnvironment {
+        let schema = Schema(versionedSchema: SymiSchemaV5.self)
+        let storeURL = overrideStoreURL ?? (launchConfiguration.isRunningTests ? unitTestStoreURL() : defaultStoreURL())
+        let configuration = ModelConfiguration(
+            "default",
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
+
+        let container = try makeContainer(schema: schema, configuration: configuration)
+        let appLogStore = AppLogStore()
+        let syncCoordinator = SyncCoordinator(
+            modelContainer: container,
+            appLogStore: appLogStore,
+            autostart: !launchConfiguration.isRunningTests
+        )
+        let appContainer = AppContainer(
+            modelContainer: container,
+            syncCoordinator: syncCoordinator,
+            appLogStore: appLogStore
+        )
+
+        return AppRuntimeEnvironment(
+            modelContainer: container,
+            appContainer: appContainer,
+            appLogStore: appLogStore,
+            syncCoordinator: syncCoordinator,
+            screenshotSeed: nil
+        )
+    }
+
+    @MainActor
+    private static func makeInitialStartupState(launchConfiguration: AppLaunchConfiguration) -> AppStartupState {
+        do {
+            if launchConfiguration.isScreenshotMode {
+                let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)
+                return .app(
+                    AppRuntimeEnvironment(
+                        modelContainer: environment.0,
+                        appContainer: environment.1,
+                        appLogStore: environment.2,
+                        syncCoordinator: environment.3,
+                        screenshotSeed: environment.4
+                    )
+                )
+            }
+
+            return .app(try makeAppRuntimeEnvironment(launchConfiguration: launchConfiguration))
+        } catch PersistentStoreLoadError.recoveryRequired(let context) {
+            do {
+                return .recovery(
+                    StoreRecoveryEnvironment(
+                        context: context,
+                        fallbackContainer: try makeRecoveryContainer()
+                    )
+                )
+            } catch {
+                fatalError("Recovery-Container konnte nicht erstellt werden: \(error)")
+            }
+        } catch {
+            fatalError("App-Start konnte nicht vorbereitet werden: \(error)")
+        }
+    }
+
+    @MainActor
+    private static func makeRecoveryContainer() throws -> ModelContainer {
+        let schema = Schema(versionedSchema: SymiSchemaV5.self)
+        let configuration = ModelConfiguration(
+            "recovery",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+
+        return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+    private static func configureTelemetry(for launchConfiguration: AppLaunchConfiguration) {
         if !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests, let sentryDSN = Self.sentryDSN {
             SentrySDK.start { options in
                 options.dsn = sentryDSN
@@ -40,115 +160,10 @@ struct SymiApp: App {
         } else {
             Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
         }
+
         if !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests, let telemetryAppID = Self.telemetryAppID {
             TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
         }
-        do {
-            if launchConfiguration.isScreenshotMode {
-                let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)
-                self.modelContainer = environment.0
-                self.appContainer = environment.1
-                self.appLogStore = environment.2
-                self.screenshotSeed = environment.4
-                _syncCoordinator = State(initialValue: environment.3)
-            } else {
-                let schema = Schema(versionedSchema: SymiSchemaV5.self)
-                let storeURL = launchConfiguration.isRunningTests ? Self.unitTestStoreURL() : Self.defaultStoreURL()
-                let configuration = ModelConfiguration(
-                    "default",
-                    schema: schema,
-                    url: storeURL,
-                    cloudKitDatabase: .none
-                )
-
-                let container = try Self.makeContainer(schema: schema, configuration: configuration)
-                self.modelContainer = container
-                let appLogStore = AppLogStore()
-                self.appLogStore = appLogStore
-                let syncCoordinator = SyncCoordinator(
-                    modelContainer: container,
-                    appLogStore: appLogStore,
-                    autostart: !launchConfiguration.isRunningTests
-                )
-                _syncCoordinator = State(initialValue: syncCoordinator)
-                self.appContainer = AppContainer(
-                    modelContainer: container,
-                    syncCoordinator: syncCoordinator,
-                    appLogStore: appLogStore
-                )
-                self.screenshotSeed = nil
-            }
-        } catch {
-            fatalError("ModelContainer konnte nicht erstellt werden: \(error)")
-        }
-    }
-
-    var body: some Scene {
-        WindowGroup {
-            if launchConfiguration.isScreenshotMode, let screenshotSeed {
-                ScreenshotRootView(
-                    appContainer: appContainer,
-                    configuration: launchConfiguration,
-                    seed: screenshotSeed
-                )
-            } else {
-                AppShellView(appContainer: appContainer)
-            }
-        }
-        .modelContainer(modelContainer)
-    }
-
-    private static func makeContainer(schema: Schema, configuration: ModelConfiguration) throws -> ModelContainer {
-        do {
-            logger.debug("Versuche ModelContainer für Store unter \(configuration.url.path, privacy: .public) zu laden.")
-            return try ModelContainer(
-                for: schema,
-                migrationPlan: SymiMigrationPlan.self,
-                configurations: [configuration]
-            )
-        } catch {
-            let errorDescription = String(describing: error)
-            logger.error("Erster Ladeversuch des ModelContainer fehlgeschlagen: \(errorDescription, privacy: .public)")
-
-            guard isUnknownModelVersionError(error) else {
-                logger.error("Fehler wurde nicht als Reset-Fall erkannt. Beschreibung: \(errorDescription, privacy: .public)")
-                throw error
-            }
-
-            logger.warning("Unbekannte Modellversion erkannt. SwiftData-Store wird vollständig zurückgesetzt: \(configuration.url.path, privacy: .public)")
-            try resetPersistentStore(at: configuration.url)
-            logger.notice("SwiftData-Store wurde zurückgesetzt. Erneuter Aufbau des ModelContainer startet.")
-
-            return try ModelContainer(
-                for: schema,
-                migrationPlan: SymiMigrationPlan.self,
-                configurations: [configuration]
-            )
-        }
-    }
-
-    private static func isUnknownModelVersionError(_ error: Error) -> Bool {
-        let nsError = error as NSError
-        let description = String(describing: error).lowercased()
-        let localizedDescription = nsError.localizedDescription.lowercased()
-
-        if nsError.domain == NSCocoaErrorDomain && nsError.code == 134504 {
-            return true
-        }
-
-        if description.contains("loadissuemodelcontainer") {
-            return true
-        }
-
-        if description.contains("unknown model version") || localizedDescription.contains("unknown model version") {
-            return true
-        }
-
-        if description.contains("134504") || localizedDescription.contains("134504") {
-            return true
-        }
-
-        return false
     }
 
     private static func defaultStoreURL() -> URL {
@@ -184,14 +199,88 @@ struct SymiApp: App {
 
         return trimmed
     }
+}
 
-    private static func resetPersistentStore(at url: URL) throws {
-        let directoryURL = url.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+@MainActor
+enum AppStartupState {
+    case app(AppRuntimeEnvironment)
+    case recovery(StoreRecoveryEnvironment)
+}
 
-        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: NSManagedObjectModel())
-        logger.notice("Zerstöre Persistent Store unter \(url.path, privacy: .public)")
-        try coordinator.destroyPersistentStore(at: url, type: .sqlite)
-        logger.notice("Persistent Store unter \(url.path, privacy: .public) wurde per Core Data API zerstört.")
+@MainActor
+final class AppRuntimeEnvironment {
+    let modelContainer: ModelContainer
+    let appContainer: AppContainer
+    let appLogStore: AppLogStore
+    let syncCoordinator: SyncCoordinator
+    let screenshotSeed: ScreenshotSeed?
+
+    init(
+        modelContainer: ModelContainer,
+        appContainer: AppContainer,
+        appLogStore: AppLogStore,
+        syncCoordinator: SyncCoordinator,
+        screenshotSeed: ScreenshotSeed?
+    ) {
+        self.modelContainer = modelContainer
+        self.appContainer = appContainer
+        self.appLogStore = appLogStore
+        self.syncCoordinator = syncCoordinator
+        self.screenshotSeed = screenshotSeed
+    }
+}
+
+@MainActor
+struct StoreRecoveryEnvironment {
+    let context: PersistentStoreRecoveryContext
+    let fallbackContainer: ModelContainer
+}
+
+private struct AppRootView: View {
+    let launchConfiguration: AppLaunchConfiguration
+    @State private var startupState: AppStartupState
+
+    init(launchConfiguration: AppLaunchConfiguration, initialStartupState: AppStartupState) {
+        self.launchConfiguration = launchConfiguration
+        _startupState = State(initialValue: initialStartupState)
+    }
+
+    var body: some View {
+        switch startupState {
+        case .app(let environment):
+            appContent(environment: environment)
+                .modelContainer(environment.modelContainer)
+        case .recovery(let environment):
+            StoreRecoveryView(
+                context: environment.context,
+                prepareStoreBackup: {
+                    try PersistentStoreRecoveryService.copyStoreFilesForSharing(from: environment.context.storeURL)
+                },
+                startEmptyStore: {
+                    try PersistentStoreRecoveryService.removeStoreFilesAfterUserConfirmation(at: environment.context.storeURL)
+                    return try SymiApp.makeAppRuntimeEnvironment(
+                        launchConfiguration: launchConfiguration,
+                        storeURL: environment.context.storeURL
+                    )
+                },
+                didRecover: { recoveredEnvironment in
+                    startupState = .app(recoveredEnvironment)
+                }
+            )
+            .modelContainer(environment.fallbackContainer)
+        }
+    }
+
+    @ViewBuilder
+    private func appContent(environment: AppRuntimeEnvironment) -> some View {
+        if launchConfiguration.isScreenshotMode, let screenshotSeed = environment.screenshotSeed {
+            ScreenshotRootView(
+                appContainer: environment.appContainer,
+                configuration: launchConfiguration,
+                seed: screenshotSeed
+            )
+        } else {
+            AppShellView(appContainer: environment.appContainer)
+        }
     }
 }
