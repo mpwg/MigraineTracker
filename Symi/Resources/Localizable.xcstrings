@@ -650,7 +650,7 @@
         }
       }
     },
-    "Das Backup enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen.": {},
+    "Das Backup enthält alle Einträge, eigene Medikamentenvorlagen, Wetter-Snapshots und gespeicherten Apple-Health-Kontext, inklusive Papierkorb-Einträgen.": {},
     "Das Projekt steht unter der GNU GPL v3.": {
       "localizations": {
         "en": {
