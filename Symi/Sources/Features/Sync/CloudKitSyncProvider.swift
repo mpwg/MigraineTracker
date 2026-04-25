@@ -269,9 +269,19 @@ enum CloudKitRecordCodec {
         return decoder
     }()
 
-    static func record(for envelope: SyncDocumentEnvelope, zoneID: CKRecordZone.ID, existingSystemFields: Data?) -> CKRecord? {
+    static func record(
+        for envelope: SyncDocumentEnvelope,
+        zoneID: CKRecordZone.ID,
+        existingSystemFields: Data?,
+        systemFieldsFallback: ((CloudKitRecordSystemFieldsFallbackReason) -> Void)? = nil
+    ) -> CKRecord? {
         let recordID = CKRecord.ID(recordName: envelope.documentID, zoneID: zoneID)
-        let record = existingRecord(for: recordID, systemFields: existingSystemFields) ?? CKRecord(
+        let restoredRecord = existingRecord(for: recordID, systemFields: existingSystemFields)
+        if let fallbackReason = restoredRecord.fallbackReason {
+            systemFieldsFallback?(fallbackReason)
+        }
+
+        let record = restoredRecord.record ?? CKRecord(
             recordType: SyncConfiguration.recordType,
             recordID: recordID
         )
@@ -310,19 +320,39 @@ enum CloudKitRecordCodec {
         return archiver.encodedData
     }
 
-    private static func existingRecord(for recordID: CKRecord.ID, systemFields: Data?) -> CKRecord? {
+    private static func existingRecord(
+        for recordID: CKRecord.ID,
+        systemFields: Data?
+    ) -> (record: CKRecord?, fallbackReason: CloudKitRecordSystemFieldsFallbackReason?) {
         guard let systemFields else {
-            return nil
+            return (nil, nil)
         }
 
-        let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: systemFields)
-        unarchiver?.requiresSecureCoding = true
-        let record = CKRecord(coder: unarchiver!)
-        unarchiver?.finishDecoding()
+        let unarchiver: NSKeyedUnarchiver
+        do {
+            unarchiver = try NSKeyedUnarchiver(forReadingFrom: systemFields)
+        } catch {
+            return (nil, .undecodableArchive)
+        }
+
+        unarchiver.requiresSecureCoding = true
+        let record = CKRecord(coder: unarchiver)
+        unarchiver.finishDecoding()
+
         guard let record else {
-            return nil
+            return (nil, .missingRecord)
         }
 
-        return record.recordID == recordID ? record : CKRecord(recordType: SyncConfiguration.recordType, recordID: recordID)
+        guard record.recordID == recordID else {
+            return (nil, .recordIDMismatch)
+        }
+
+        return (record, nil)
     }
+}
+
+enum CloudKitRecordSystemFieldsFallbackReason: String, Equatable, Sendable {
+    case undecodableArchive
+    case missingRecord
+    case recordIDMismatch
 }
