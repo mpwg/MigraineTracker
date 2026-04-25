@@ -76,7 +76,7 @@ struct DataTransferSnapshot: @preconcurrency Codable, Sendable {
         return snapshot
     }
 
-    nonisolated func merge(into context: ModelContext) throws {
+    nonisolated func merge(into context: ModelContext, healthContextStore: HealthContextStore) throws {
         let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
         let episodesByID = Dictionary(uniqueKeysWithValues: existingEpisodes.map { ($0.id, $0) })
 
@@ -104,6 +104,13 @@ struct DataTransferSnapshot: @preconcurrency Codable, Sendable {
         }
 
         try context.save()
+        try mergeEpisodeSidecars(into: healthContextStore)
+    }
+
+    private nonisolated func mergeEpisodeSidecars(into healthContextStore: HealthContextStore) throws {
+        for payload in episodes {
+            try payload.applySidecars(to: healthContextStore)
+        }
     }
 
     private nonisolated static func fileDateString(from date: Date) -> String {
@@ -116,7 +123,7 @@ struct DataTransferSnapshot: @preconcurrency Codable, Sendable {
     }
 }
 
-struct EpisodePayload: @preconcurrency Codable, Sendable {
+struct EpisodePayload: Codable, Sendable {
     let id: UUID
     let startedAt: Date
     let endedAt: Date?
@@ -134,6 +141,27 @@ struct EpisodePayload: @preconcurrency Codable, Sendable {
     let medications: [MedicationEntryPayload]
     let weatherSnapshot: WeatherSnapshotPayload?
     let healthContext: HealthContextSnapshotData?
+    private let shouldImportHealthContext: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case startedAt
+        case endedAt
+        case updatedAt
+        case deletedAt
+        case type
+        case intensity
+        case painLocation
+        case painCharacter
+        case notes
+        case symptoms
+        case triggers
+        case functionalImpact
+        case menstruationStatus
+        case medications
+        case weatherSnapshot
+        case healthContext
+    }
 
     nonisolated init(episode: Episode, healthContext: HealthContextRecord? = nil) {
         self.id = episode.id
@@ -153,6 +181,55 @@ struct EpisodePayload: @preconcurrency Codable, Sendable {
         self.medications = episode.medications.map(MedicationEntryPayload.init)
         self.weatherSnapshot = episode.weatherSnapshot.map(WeatherSnapshotPayload.init)
         self.healthContext = healthContext.map(HealthContextSnapshotData.init)
+        self.shouldImportHealthContext = healthContext != nil
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.startedAt = try container.decode(Date.self, forKey: .startedAt)
+        self.endedAt = try container.decodeIfPresent(Date.self, forKey: .endedAt)
+        self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        self.deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+        self.type = try container.decode(EpisodeType.self, forKey: .type)
+        self.intensity = try container.decode(Int.self, forKey: .intensity)
+        self.painLocation = try container.decode(String.self, forKey: .painLocation)
+        self.painCharacter = try container.decode(String.self, forKey: .painCharacter)
+        self.notes = try container.decode(String.self, forKey: .notes)
+        self.symptoms = try container.decode([String].self, forKey: .symptoms)
+        self.triggers = try container.decode([String].self, forKey: .triggers)
+        self.functionalImpact = try container.decode(String.self, forKey: .functionalImpact)
+        self.menstruationStatus = try container.decode(MenstruationStatus.self, forKey: .menstruationStatus)
+        self.medications = try container.decode([MedicationEntryPayload].self, forKey: .medications)
+        self.weatherSnapshot = try container.decodeIfPresent(WeatherSnapshotPayload.self, forKey: .weatherSnapshot)
+        self.shouldImportHealthContext = container.contains(.healthContext)
+        self.healthContext = try container.decodeIfPresent(HealthContextSnapshotData.self, forKey: .healthContext)
+    }
+
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(startedAt, forKey: .startedAt)
+        try container.encodeIfPresent(endedAt, forKey: .endedAt)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(deletedAt, forKey: .deletedAt)
+        try container.encode(type, forKey: .type)
+        try container.encode(intensity, forKey: .intensity)
+        try container.encode(painLocation, forKey: .painLocation)
+        try container.encode(painCharacter, forKey: .painCharacter)
+        try container.encode(notes, forKey: .notes)
+        try container.encode(symptoms, forKey: .symptoms)
+        try container.encode(triggers, forKey: .triggers)
+        try container.encode(functionalImpact, forKey: .functionalImpact)
+        try container.encode(menstruationStatus, forKey: .menstruationStatus)
+        try container.encode(medications, forKey: .medications)
+        try container.encodeIfPresent(weatherSnapshot, forKey: .weatherSnapshot)
+
+        if let healthContext {
+            try container.encode(healthContext, forKey: .healthContext)
+        } else if shouldImportHealthContext {
+            try container.encodeNil(forKey: .healthContext)
+        }
     }
 
     nonisolated func makeModel() -> Episode {
@@ -219,6 +296,14 @@ struct EpisodePayload: @preconcurrency Codable, Sendable {
             context.delete(existingWeatherSnapshot)
             episode.weatherSnapshot = nil
         }
+    }
+
+    nonisolated func applySidecars(to healthContextStore: HealthContextStore) throws {
+        guard shouldImportHealthContext else {
+            return
+        }
+
+        try healthContextStore.save(healthContext, for: id)
     }
 }
 

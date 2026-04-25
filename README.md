@@ -53,7 +53,7 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 ### 3. Export und Sicherung
 
 - PDF-Bericht für einen Zeitraum erzeugen und teilen
-- JSON5-Backup erzeugen oder importieren
+- JSON5-Backup erzeugen oder importieren; enthalten sind Einträge, Medikamente, Wetter-Snapshots und gespeicherter Apple-Health-Kontext
 
 ### 4. Optionale Synchronisation
 

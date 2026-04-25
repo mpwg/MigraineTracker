@@ -110,7 +110,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, @unchecked Sendable {
         }
 
         try context.save()
-        healthContextStore.save(healthContext, for: target.id)
+        try healthContextStore.save(healthContext, for: target.id)
         return target.id
     }
 
@@ -301,7 +301,7 @@ final class SwiftDataExportRepository: ExportRepository, @unchecked Sendable {
     nonisolated func importBackup(from url: URL) throws {
         let snapshot = try DataTransferSnapshot.load(from: url)
         let context = writeContext()
-        try snapshot.merge(into: context)
+        try snapshot.merge(into: context, healthContextStore: healthContextStore)
     }
 
     nonisolated private func readContext() -> ModelContext {

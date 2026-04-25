@@ -14,19 +14,19 @@ final class HealthContextStore: @unchecked Sendable {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    nonisolated func save(_ snapshot: HealthContextSnapshotData?, for episodeID: UUID) {
+    nonisolated func save(_ snapshot: HealthContextSnapshotData?, for episodeID: UUID) throws {
         let url = fileURL(for: episodeID)
 
         guard let snapshot else {
-            try? FileManager.default.removeItem(at: url)
+            if FileManager.default.fileExists(atPath: url.path) {
+                try FileManager.default.removeItem(at: url)
+            }
             return
         }
 
-        do {
-            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-            let data = try encoder.encode(snapshot)
-            try data.write(to: url, options: .atomic)
-        } catch {}
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let data = try encoder.encode(snapshot)
+        try data.write(to: url, options: .atomic)
     }
 
     nonisolated func load(for episodeID: UUID) -> HealthContextRecord? {

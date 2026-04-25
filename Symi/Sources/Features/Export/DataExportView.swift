@@ -60,7 +60,7 @@ struct DataExportView: View {
             }
 
             Section("Backup") {
-                Text("Das Backup enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen.")
+                Text("Das Backup enthält alle Einträge, eigene Medikamentenvorlagen, Wetter-Snapshots und gespeicherten Apple-Health-Kontext, inklusive Papierkorb-Einträgen.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
