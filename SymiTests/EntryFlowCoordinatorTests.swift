@@ -169,7 +169,26 @@ struct EntryFlowCoordinatorTests {
 
         #expect(coordinator.isCancelled)
         #expect(coordinator.path.isEmpty)
-        #expect(coordinator.draft.intensity == 5)
+        #expect(coordinator.draft.intensity == 4)
+    }
+
+    @Test
+    func reviewSaveAllowsMissingTriggersAndWeatherData() async throws {
+        let repository = EntryFlowEpisodeRepositoryMock()
+        let coordinator = makeCoordinator(repository: repository)
+        coordinator.draft.intensity = 4
+
+        coordinator.continueToNextStep()
+        coordinator.skipCurrentStep()
+        coordinator.skipCurrentStep()
+        coordinator.skipCurrentStep()
+        coordinator.saveFromReview()
+        try await waitForSaveResult(on: coordinator)
+
+        #expect(repository.saveCount == 1)
+        #expect(repository.lastSavedDraft?.selectedTriggers.isEmpty == true)
+        #expect(repository.lastWeatherSnapshot == nil)
+        #expect(coordinator.saveResult == .saved(repository.savedID))
     }
 
     private func makeCoordinator(

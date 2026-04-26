@@ -280,7 +280,11 @@ struct ScreenshotRootView: View {
 
 private struct ScreenshotWeatherService: WeatherService {
     func fetchWeather(for date: Date, location: CLLocation) async throws -> WeatherSnapshotData? {
-        WeatherSnapshotData(
+        if ProcessInfo.processInfo.arguments.contains("-mt_disable_weather") {
+            return nil
+        }
+
+        return WeatherSnapshotData(
             recordedAt: date,
             condition: "Leichter Regen",
             temperature: 16.3,
