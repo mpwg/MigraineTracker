@@ -78,7 +78,9 @@ final class AppContainer {
             initialStartedAt: initialStartedAt,
             episodeRepository: episodeRepository,
             medicationRepository: medicationCatalogRepository,
-            continuousMedicationRepository: continuousMedicationRepository
+            continuousMedicationRepository: continuousMedicationRepository,
+            weatherContextService: episodeWeatherContextService,
+            healthService: healthService
         )
     }
 

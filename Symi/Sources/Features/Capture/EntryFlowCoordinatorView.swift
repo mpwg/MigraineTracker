@@ -527,25 +527,56 @@ private struct EntryReviewStepView: View {
     let coordinator: EntryFlowCoordinator
 
     var body: some View {
+        @Bindable var coordinator = coordinator
+
         Form {
             EntryStepHeader(step: .review, currentIndex: coordinator.currentStepIndex)
 
-            Section("Zusammenfassung") {
-                EntryReviewRow(title: "Kopfschmerz", value: "\(coordinator.draft.type.rawValue), \(coordinator.draft.intensity)/10") {
-                    coordinator.edit(.headache)
-                }
+            Section {
+                VStack(alignment: .leading, spacing: 14) {
+                    EntryReviewSummarySection(
+                        step: .headache,
+                        lines: headacheSummary,
+                        onEdit: { coordinator.edit(.headache) }
+                    )
 
-                EntryReviewRow(title: "Medikation", value: medicationSummary) {
-                    coordinator.edit(.medication)
-                }
+                    if shouldShowMedicationSummary {
+                        EntryReviewSummarySection(
+                            step: .medication,
+                            lines: medicationSummary,
+                            onEdit: { coordinator.edit(.medication) }
+                        )
+                    }
 
-                EntryReviewRow(title: "Auslöser", value: listSummary(coordinator.draft.selectedTriggers)) {
-                    coordinator.edit(.triggers)
-                }
+                    if !coordinator.draft.selectedTriggers.isEmpty {
+                        EntryReviewSummarySection(
+                            step: .triggers,
+                            lines: triggerSummary,
+                            onEdit: { coordinator.edit(.triggers) }
+                        )
+                    }
 
-                EntryReviewRow(title: "Notiz", value: coordinator.draft.notes.isEmpty ? "Keine Notiz" : coordinator.draft.notes) {
-                    coordinator.edit(.note)
+                    if let weatherSummary {
+                        EntryReviewSummarySection(
+                            step: .triggers,
+                            title: "Wetterkontext",
+                            lines: weatherSummary,
+                            onEdit: { coordinator.edit(.triggers) }
+                        )
+                    }
+
+                    if shouldShowNoteSummary {
+                        EntryReviewSummarySection(
+                            step: .note,
+                            title: "Notiz und Gefühl",
+                            lines: noteSummary,
+                            onEdit: { coordinator.edit(.note) }
+                        )
+                    }
                 }
+                .padding(.vertical, 4)
+            } footer: {
+                Text("Dein Eintrag hilft dir, Muster besser zu erkennen.")
             }
 
             Section {
@@ -557,35 +588,123 @@ private struct EntryReviewStepView: View {
                     }
                 }
                 .disabled(coordinator.isSaving)
+
+                Button("Bearbeiten") {
+                    coordinator.edit(.headache)
+                }
+                .disabled(coordinator.isSaving)
             }
         }
         .navigationTitle("Eintrag prüfen")
         .brandGroupedScreen()
+        .task {
+            await coordinator.refreshWeatherIfNeeded()
+        }
     }
 
-    private var medicationSummary: String {
+    private var headacheSummary: [String] {
+        let draft = coordinator.draft
+        return [
+            "Intensität \(draft.normalizedIntensity)/10 · \(intensityLabel(for: draft.normalizedIntensity))",
+            draft.resolvedPainLocation.isEmpty ? "Ort nicht angegeben" : "Ort: \(draft.resolvedPainLocation)",
+            "Zeitpunkt: \(draft.startedAt.formatted(date: .abbreviated, time: .shortened))"
+        ]
+    }
+
+    private var shouldShowMedicationSummary: Bool {
+        !coordinator.medicationController.selectedMedications.isEmpty ||
+        !coordinator.draft.continuousMedicationChecks.isEmpty
+    }
+
+    private var medicationSummary: [String] {
         let selected = coordinator.medicationController.selectedMedications
         let continuous = coordinator.draft.continuousMedicationChecks
-        guard !selected.isEmpty || !continuous.isEmpty else {
-            return "Keine Medikation"
-        }
 
         let continuousSummary = continuous.map {
-            "\($0.name): \($0.wasTaken ? "genommen" : "nicht genommen")"
+            let detail = $0.detailText.isEmpty ? "" : " · \($0.detailText)"
+            return "\($0.name)\(detail): \($0.wasTaken ? "genommen" : "nicht genommen")"
         }
         let acuteSummary = selected.map { medication in
-            medication.quantity > 1 ? "\(medication.name) x\(medication.quantity)" : medication.name
+            var parts = [medication.name]
+            if !medication.dosage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                parts.append(medication.dosage)
+            }
+            if medication.quantity > 1 {
+                parts.append("x\(medication.quantity)")
+            }
+            parts.append("Zeitpunkt: \(coordinator.draft.startedAt.formatted(date: .omitted, time: .shortened))")
+            return parts.joined(separator: " · ")
         }
 
-        return (continuousSummary + acuteSummary).joined(separator: ", ")
+        return continuousSummary + acuteSummary
     }
 
-    private func listSummary(_ values: Set<String>) -> String {
-        guard !values.isEmpty else {
-            return "Nichts ausgewählt"
+    private var triggerSummary: [String] {
+        coordinator.draft.selectedTriggers.sorted()
+    }
+
+    private var weatherSummary: [String]? {
+        switch coordinator.weatherLoadState {
+        case .loaded(let weather):
+            var lines = [weather.condition]
+            if let temperature = weather.temperature {
+                lines.append("Temperatur \(temperature.formatted(.number.precision(.fractionLength(1)))) °C")
+            }
+            if let pressure = weather.pressure {
+                lines.append("Luftdruck \(pressure.formatted(.number.precision(.fractionLength(0)))) hPa")
+            }
+            if let humidity = weather.humidity {
+                lines.append("Luftfeuchte \(humidity.formatted(.number.precision(.fractionLength(0)))) %")
+            }
+            if let precipitation = weather.precipitation {
+                lines.append("Niederschlag \(precipitation.formatted(.number.precision(.fractionLength(1)))) mm")
+            }
+            return lines
+        case .loading:
+            return ["Wetter wird gerade geladen."]
+        case .idle, .unavailable:
+            return nil
+        }
+    }
+
+    private var shouldShowNoteSummary: Bool {
+        !noteSummary.isEmpty
+    }
+
+    private var noteSummary: [String] {
+        let draft = coordinator.draft
+        var lines: [String] = []
+        let notes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        let feeling = draft.painCharacter.trimmingCharacters(in: .whitespacesAndNewlines)
+        let impact = draft.functionalImpact.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !notes.isEmpty {
+            lines.append(notes)
+        }
+        if !feeling.isEmpty {
+            lines.append("Gefühl: \(feeling)")
+        }
+        if !impact.isEmpty {
+            lines.append("Einschränkung: \(impact)")
+        }
+        if draft.menstruationStatus != .unknown {
+            lines.append("Regel: \(draft.menstruationStatus.rawValue)")
         }
 
-        return values.sorted().joined(separator: ", ")
+        return lines
+    }
+
+    private func intensityLabel(for intensity: Int) -> String {
+        switch intensity {
+        case 1 ... 3:
+            "Leicht"
+        case 4 ... 6:
+            "Mittel"
+        case 7 ... 8:
+            "Stark"
+        default:
+            "Sehr stark"
+        }
     }
 }
 
@@ -644,27 +763,62 @@ private struct EntryStepActions: View {
     }
 }
 
-private struct EntryReviewRow: View {
-    let title: String
-    let value: String
+private struct EntryReviewSummarySection: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let step: EntryFlowStep
+    let title: String?
+    let lines: [String]
     let onEdit: () -> Void
 
+    init(
+        step: EntryFlowStep,
+        title: String? = nil,
+        lines: [String],
+        onEdit: @escaping () -> Void
+    ) {
+        self.step = step
+        self.title = title
+        self.lines = lines
+        self.onEdit = onEdit
+    }
+
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
+        let metadata = NewEntryStepCatalog.metadata(for: step.catalogID)
+
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                StepIcon(metadata)
+                    .frame(width: 36, height: 36)
+
+                Text(title ?? metadata.title)
                     .font(.subheadline.weight(.semibold))
-                Text(value)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(3)
+
+                Spacer(minLength: 8)
+
+                Button("Bearbeiten", action: onEdit)
+                    .font(.caption.weight(.semibold))
             }
 
-            Spacer(minLength: 12)
-
-            Button("Bearbeiten", action: onEdit)
-                .font(.subheadline.weight(.semibold))
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(lines, id: \.self) { line in
+                    Text(line)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.leading, 46)
         }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(metadata.colorToken.softFill(for: colorScheme))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(metadata.colorToken.border(for: colorScheme), lineWidth: 1)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

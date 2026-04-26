@@ -21,7 +21,7 @@ struct NewEntryDesignSystemTests {
             .medication: ("Medikation", "Was hast du genommen?", "pills.fill", .sageTeal),
             .triggers: ("Auslöser", "Was könnte eine Rolle gespielt haben?", "brain.head.profile", .blue),
             .note: ("Notiz", "Was fällt dir auf?", "note.text", .warmAmber),
-            .review: ("Eintrag prüfen", "Kurz ansehen und speichern.", "checkmark.seal.fill", .purple)
+            .review: ("Eintrag prüfen", "Alles bereit zum Speichern.", "checkmark.seal.fill", .purple)
         ]
 
         for step in NewEntryStepCatalog.steps {
