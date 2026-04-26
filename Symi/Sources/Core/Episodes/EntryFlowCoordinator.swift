@@ -73,7 +73,7 @@ final class EntryFlowCoordinator {
         "Kiefer-/Aufbissschmerz",
         "Pochen, Pulsieren"
     ]
-    let triggerOptions = ["Stress", "Schlafmangel", "Alkohol", "Menstruation", "Bildschirmzeit"]
+    let triggerOptions = ["Wetter", "Stress", "Erhöhte Arbeitsbelastung", "Regel", "Schlafdauer", "Sport", "Ernährung", "Bildschirmzeit", "Bewegung", "Flüssigkeit"]
     let painLocationOptions = ["Stirn", "Schläfen", "Nacken", "Einseitig", "Überall"]
     let medicationController: EpisodeMedicationSelectionController
 

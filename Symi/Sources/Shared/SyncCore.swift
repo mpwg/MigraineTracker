@@ -235,6 +235,28 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
     public nonisolated var precipitation: Double?
     public nonisolated var weatherCode: Int?
     public nonisolated var source: String
+    public nonisolated var dayRangeStart: Date?
+    public nonisolated var dayRangeEnd: Date?
+    public nonisolated var contextRangeStart: Date?
+    public nonisolated var contextRangeEnd: Date?
+    public nonisolated var contextPoints: [WeatherContextPointData]
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case recordedAt
+        case temperature
+        case condition
+        case humidity
+        case pressure
+        case precipitation
+        case weatherCode
+        case source
+        case dayRangeStart
+        case dayRangeEnd
+        case contextRangeStart
+        case contextRangeEnd
+        case contextPoints
+    }
 
     public nonisolated init(
         id: String,
@@ -245,7 +267,12 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
         pressure: Double?,
         precipitation: Double?,
         weatherCode: Int?,
-        source: String
+        source: String,
+        dayRangeStart: Date? = nil,
+        dayRangeEnd: Date? = nil,
+        contextRangeStart: Date? = nil,
+        contextRangeEnd: Date? = nil,
+        contextPoints: [WeatherContextPointData] = []
     ) {
         self.id = id
         self.recordedAt = recordedAt
@@ -256,6 +283,29 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
         self.precipitation = precipitation
         self.weatherCode = weatherCode
         self.source = source
+        self.dayRangeStart = dayRangeStart
+        self.dayRangeEnd = dayRangeEnd
+        self.contextRangeStart = contextRangeStart
+        self.contextRangeEnd = contextRangeEnd
+        self.contextPoints = contextPoints
+    }
+
+    public nonisolated init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.recordedAt = try container.decode(Date.self, forKey: .recordedAt)
+        self.temperature = try container.decodeIfPresent(Double.self, forKey: .temperature)
+        self.condition = try container.decode(String.self, forKey: .condition)
+        self.humidity = try container.decodeIfPresent(Double.self, forKey: .humidity)
+        self.pressure = try container.decodeIfPresent(Double.self, forKey: .pressure)
+        self.precipitation = try container.decodeIfPresent(Double.self, forKey: .precipitation)
+        self.weatherCode = try container.decodeIfPresent(Int.self, forKey: .weatherCode)
+        self.source = try container.decode(String.self, forKey: .source)
+        self.dayRangeStart = try container.decodeIfPresent(Date.self, forKey: .dayRangeStart)
+        self.dayRangeEnd = try container.decodeIfPresent(Date.self, forKey: .dayRangeEnd)
+        self.contextRangeStart = try container.decodeIfPresent(Date.self, forKey: .contextRangeStart)
+        self.contextRangeEnd = try container.decodeIfPresent(Date.self, forKey: .contextRangeEnd)
+        self.contextPoints = try container.decodeIfPresent([WeatherContextPointData].self, forKey: .contextPoints) ?? []
     }
 
     public nonisolated static func == (lhs: SyncWeatherSnapshotPayload, rhs: SyncWeatherSnapshotPayload) -> Bool {
@@ -267,7 +317,12 @@ public struct SyncWeatherSnapshotPayload: Codable, Equatable, Sendable {
             lhs.pressure == rhs.pressure &&
             lhs.precipitation == rhs.precipitation &&
             lhs.weatherCode == rhs.weatherCode &&
-            lhs.source == rhs.source
+            lhs.source == rhs.source &&
+            lhs.dayRangeStart == rhs.dayRangeStart &&
+            lhs.dayRangeEnd == rhs.dayRangeEnd &&
+            lhs.contextRangeStart == rhs.contextRangeStart &&
+            lhs.contextRangeEnd == rhs.contextRangeEnd &&
+            lhs.contextPoints == rhs.contextPoints
     }
 }
 
@@ -561,7 +616,12 @@ public enum SyncMergeEngine {
                 pressure: mergedValue(field: "weather.pressure", base: base.pressure, local: local.pressure, remote: remote.pressure, conflicts: &conflicts).value,
                 precipitation: mergedValue(field: "weather.precipitation", base: base.precipitation, local: local.precipitation, remote: remote.precipitation, conflicts: &conflicts).value,
                 weatherCode: mergedValue(field: "weather.weatherCode", base: base.weatherCode, local: local.weatherCode, remote: remote.weatherCode, conflicts: &conflicts).value,
-                source: mergedValue(field: "weather.source", base: base.source, local: local.source, remote: remote.source, conflicts: &conflicts).value
+                source: mergedValue(field: "weather.source", base: base.source, local: local.source, remote: remote.source, conflicts: &conflicts).value,
+                dayRangeStart: mergedValue(field: "weather.dayRangeStart", base: base.dayRangeStart, local: local.dayRangeStart, remote: remote.dayRangeStart, conflicts: &conflicts).value,
+                dayRangeEnd: mergedValue(field: "weather.dayRangeEnd", base: base.dayRangeEnd, local: local.dayRangeEnd, remote: remote.dayRangeEnd, conflicts: &conflicts).value,
+                contextRangeStart: mergedValue(field: "weather.contextRangeStart", base: base.contextRangeStart, local: local.contextRangeStart, remote: remote.contextRangeStart, conflicts: &conflicts).value,
+                contextRangeEnd: mergedValue(field: "weather.contextRangeEnd", base: base.contextRangeEnd, local: local.contextRangeEnd, remote: remote.contextRangeEnd, conflicts: &conflicts).value,
+                contextPoints: mergedValue(field: "weather.contextPoints", base: base.contextPoints, local: local.contextPoints, remote: remote.contextPoints, conflicts: &conflicts).value
             )
         case let (nil, local?, nil):
             return local

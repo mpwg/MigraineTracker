@@ -177,6 +177,18 @@ nonisolated enum PDFExportWriter {
             if !weather.source.isEmpty {
                 parts.append(formatted("Quelle: %@", weather.source))
             }
+            if let start = weather.contextRangeStart, let end = weather.contextRangeEnd {
+                parts.append(
+                    formatted(
+                        "Kontext: %@ bis %@",
+                        start.formatted(date: .numeric, time: .shortened),
+                        end.formatted(date: .numeric, time: .shortened)
+                    )
+                )
+            }
+            if !weather.contextPoints.isEmpty {
+                parts.append(formatted("%lld stündliche Kontextwerte", Int64(weather.contextPoints.count)))
+            }
 
             if !parts.isEmpty {
                 lines.append(formatted("Wetter: %@", parts.joined(separator: ", ")))

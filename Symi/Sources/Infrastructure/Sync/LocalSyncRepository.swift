@@ -98,6 +98,11 @@ struct LocalSyncRepository {
                 precipitation: weather.precipitation,
                 weatherCode: weather.weatherCode,
                 source: weather.source,
+                dayRangeStart: weather.dayRangeStart,
+                dayRangeEnd: weather.dayRangeEnd,
+                contextRangeStart: weather.contextRangeStart,
+                contextRangeEnd: weather.contextRangeEnd,
+                contextPointsStorage: WeatherSnapshot.encodeContextPoints(weather.contextPoints),
                 episode: target
             )
         }
@@ -191,7 +196,12 @@ extension Episode {
                             pressure: $0.pressure,
                             precipitation: $0.precipitation,
                             weatherCode: $0.weatherCode,
-                            source: $0.source
+                            source: $0.source,
+                            dayRangeStart: $0.dayRangeStart,
+                            dayRangeEnd: $0.dayRangeEnd,
+                            contextRangeStart: $0.contextRangeStart,
+                            contextRangeEnd: $0.contextRangeEnd,
+                            contextPoints: $0.contextPoints
                         )
                     }
                 )

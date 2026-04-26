@@ -241,7 +241,49 @@ extension WeatherSnapshot {
             precipitation: snapshot.precipitation,
             weatherCode: snapshot.weatherCode,
             source: snapshot.source,
+            dayRangeStart: snapshot.dayRangeStart,
+            dayRangeEnd: snapshot.dayRangeEnd,
+            contextRangeStart: snapshot.contextRangeStart,
+            contextRangeEnd: snapshot.contextRangeEnd,
+            contextPointsStorage: Self.encodeContextPoints(snapshot.contextPoints),
             episode: episode
         )
+    }
+}
+
+extension WeatherSnapshot {
+    var contextPoints: [WeatherContextPointData] {
+        get { Self.decodeContextPoints(contextPointsStorage) }
+        set { contextPointsStorage = Self.encodeContextPoints(newValue) }
+    }
+
+    static func encodeContextPoints(_ points: [WeatherContextPointData]) -> String {
+        guard !points.isEmpty, let data = try? JSONEncoder.weatherContextEncoder.encode(points) else {
+            return ""
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    private static func decodeContextPoints(_ storage: String) -> [WeatherContextPointData] {
+        guard !storage.isEmpty, let data = storage.data(using: .utf8) else {
+            return []
+        }
+        return (try? JSONDecoder.weatherContextDecoder.decode([WeatherContextPointData].self, from: data)) ?? []
+    }
+}
+
+private extension JSONEncoder {
+    nonisolated static var weatherContextEncoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }
+}
+
+private extension JSONDecoder {
+    nonisolated static var weatherContextDecoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
     }
 }

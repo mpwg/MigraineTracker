@@ -363,7 +363,12 @@ private extension WeatherRecord {
             pressure: snapshot.pressure,
             precipitation: snapshot.precipitation,
             weatherCode: snapshot.weatherCode,
-            source: snapshot.source
+            source: snapshot.source,
+            dayRangeStart: snapshot.dayRangeStart,
+            dayRangeEnd: snapshot.dayRangeEnd,
+            contextRangeStart: snapshot.contextRangeStart,
+            contextRangeEnd: snapshot.contextRangeEnd,
+            contextPoints: snapshot.contextPoints
         )
     }
 }

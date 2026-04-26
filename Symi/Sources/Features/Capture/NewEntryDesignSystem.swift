@@ -46,7 +46,7 @@ enum NewEntryStepCatalog {
         NewEntryStepMetadata(
             id: .triggers,
             title: "Auslöser",
-            subline: "Was könnte mitspielen?",
+            subline: "Was könnte eine Rolle gespielt haben?",
             symbolName: "brain.head.profile",
             colorToken: .blue,
             status: nil

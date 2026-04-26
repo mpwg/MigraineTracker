@@ -39,7 +39,8 @@ struct EpisodeEditorView: View {
                 colorToken: NewEntryStepCatalog.metadata(for: .headache).colorToken
             )
             EpisodeTagSection(
-                title: "Was könnte mitspielen?",
+                title: "Was könnte eine Rolle gespielt haben?",
+                footer: "Du kannst mehrere auswählen. Wetter als Auslöser bleibt getrennt vom automatisch gespeicherten Wetterkontext.",
                 options: controller.triggerOptions,
                 selection: $controller.draft.selectedTriggers,
                 colorToken: NewEntryStepCatalog.metadata(for: .triggers).colorToken
@@ -207,12 +208,13 @@ private struct EpisodeTimingSection: View {
 
 private struct EpisodeTagSection: View {
     let title: String
+    var footer: String?
     let options: [String]
     @Binding var selection: Set<String>
     let colorToken: NewEntryStepColorToken
 
     var body: some View {
-        Section(title) {
+        Section {
             MultiSelectGrid(
                 options: options,
                 selection: $selection,
@@ -220,6 +222,12 @@ private struct EpisodeTagSection: View {
                 accessibilityPrefix: title
             )
             .formAlignedRow()
+        } header: {
+            Text(title)
+        } footer: {
+            if let footer {
+                Text(footer)
+            }
         }
     }
 }
@@ -276,7 +284,7 @@ private struct EpisodeWeatherSection: View {
         } header: {
             Text("Wetter")
         } footer: {
-            Text("Das Wetter wird mit deinem ungefähren Standort über Apple Weather geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
+            Text("Das Wetter wird als Kontext mit deinem ungefähren Standort über Apple Weather geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
         }
     }
 }
