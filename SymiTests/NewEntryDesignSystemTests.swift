@@ -18,9 +18,9 @@ struct NewEntryDesignSystemTests {
     func stepCatalogDefinesGermanCopySymbolsAndColorTokens() {
         let expected: [NewEntryStepID: (String, String, String, NewEntryStepColorToken)] = [
             .headache: ("Kopfschmerz", "Wie stark ist es gerade?", "waveform.path.ecg", .coral),
-            .medication: ("Medikation", "Was hast du genommen?", "pills.fill", .sageTeal),
+            .medication: ("Medikation", "Hast du etwas genommen?", "pills.fill", .sageTeal),
             .triggers: ("Auslöser", "Was könnte eine Rolle gespielt haben?", "brain.head.profile", .blue),
-            .note: ("Notiz", "Was fällt dir auf?", "note.text", .warmAmber),
+            .note: ("Notiz", "Was möchtest du festhalten?", "note.text", .warmAmber),
             .review: ("Eintrag prüfen", "Alles bereit zum Speichern.", "checkmark.seal.fill", .purple)
         ]
 

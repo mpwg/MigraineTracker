@@ -386,7 +386,7 @@ struct EpisodeDraft: Equatable, Sendable {
         return EpisodeDraft(
             id: nil,
             type: .unclear,
-            intensity: 5,
+            intensity: 4,
             startedAt: startedAt,
             endedAtEnabled: false,
             endedAt: startedAt,

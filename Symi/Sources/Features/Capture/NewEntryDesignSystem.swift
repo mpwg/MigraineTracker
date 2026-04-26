@@ -38,7 +38,7 @@ enum NewEntryStepCatalog {
         NewEntryStepMetadata(
             id: .medication,
             title: "Medikation",
-            subline: "Was hast du genommen?",
+            subline: "Hast du etwas genommen?",
             symbolName: "pills.fill",
             colorToken: .sageTeal,
             status: nil
@@ -54,7 +54,7 @@ enum NewEntryStepCatalog {
         NewEntryStepMetadata(
             id: .note,
             title: "Notiz",
-            subline: "Was fällt dir auf?",
+            subline: "Was möchtest du festhalten?",
             symbolName: "note.text",
             colorToken: .warmAmber,
             status: nil
