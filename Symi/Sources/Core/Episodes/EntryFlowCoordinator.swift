@@ -112,16 +112,21 @@ final class EntryFlowCoordinator {
     var path: [EntryFlowStep] = []
     var isSaving = false
     var saveResult: EntryFlowSaveResult?
+    var weatherLoadState: WeatherLoadState = .idle
     private(set) var isCancelled = false
 
     private let initialStartedAt: Date?
     private let saveEpisodeUseCase: SaveEpisodeUseCase
+    private let weatherContextService: any EpisodeWeatherContextProviding
+    private let healthService: any HealthService
 
     init(
         initialStartedAt: Date? = nil,
         episodeRepository: EpisodeRepository,
         medicationRepository: MedicationCatalogRepository,
         continuousMedicationRepository: ContinuousMedicationRepository,
+        weatherContextService: any EpisodeWeatherContextProviding,
+        healthService: any HealthService,
         autoloadMedications: Bool = true
     ) {
         self.initialStartedAt = initialStartedAt
@@ -135,6 +140,8 @@ final class EntryFlowCoordinator {
             autoload: autoloadMedications
         )
         self.saveEpisodeUseCase = SaveEpisodeUseCase(repository: episodeRepository)
+        self.weatherContextService = weatherContextService
+        self.healthService = healthService
     }
 
     var currentStep: EntryFlowStep {
@@ -198,6 +205,7 @@ final class EntryFlowCoordinator {
         path = []
         draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
         medicationController.resetSelections()
+        weatherLoadState = .idle
         saveResult = nil
         isSaving = false
     }
@@ -212,6 +220,20 @@ final class EntryFlowCoordinator {
 
     func selectStartedAtPreset(_ preset: EntryStartedAtPreset, calendar: Calendar = .current) {
         draft.startedAt = preset.date(relativeTo: .now, calendar: calendar)
+        weatherLoadState = .idle
+    }
+
+    func refreshWeatherIfNeeded() async {
+        guard weatherLoadState == .idle else {
+            return
+        }
+
+        weatherLoadState = .loading
+        weatherLoadState = await weatherContextService.loadWeather(
+            for: draft.startedAt,
+            originalStartedAt: nil,
+            originalSnapshot: nil
+        )
     }
 
     private var nextStep: EntryFlowStep? {
@@ -242,12 +264,27 @@ final class EntryFlowCoordinator {
         }
     }
 
+    private func makeDraftForSave() -> EpisodeDraft {
+        var draftForSave = draft
+        draftForSave.type = .headache
+        draftForSave.intensity = draftForSave.normalizedIntensity
+        draftForSave.painLocation = draftForSave.resolvedPainLocation
+        draftForSave.medications = medicationController.medications
+
+        if currentStep == .medication, draftForSave.continuousMedicationChecks.isEmpty {
+            draftForSave.continuousMedicationChecks = continuousMedicationController.makeDefaultChecks()
+        }
+
+        return draftForSave
+    }
+
     private func save(resetAfterSave: Bool) {
         guard !isSaving else {
             return
         }
 
-        applyStepSideEffects()
+        let draftForSave = makeDraftForSave()
+        draft = draftForSave
         saveResult = nil
         isSaving = true
 
@@ -255,7 +292,14 @@ final class EntryFlowCoordinator {
             defer { isSaving = false }
 
             do {
-                let savedID = try await saveEpisodeUseCase.execute(draft, weatherSnapshot: nil, healthContext: nil)
+                let weatherSnapshot = try await weatherSnapshotForSave(startedAt: draftForSave.startedAt)
+                let healthContext = await healthContextForSave(draft: draftForSave)
+                let savedID = try await saveEpisodeUseCase.execute(
+                    draftForSave,
+                    weatherSnapshot: weatherSnapshot,
+                    healthContext: healthContext
+                )
+                await writeHealthSampleIfNeeded(episodeID: savedID, draft: draftForSave)
                 saveResult = .saved(savedID)
 
                 if resetAfterSave {
@@ -263,8 +307,50 @@ final class EntryFlowCoordinator {
                     isCancelled = false
                 }
             } catch {
-                saveResult = .failed(error.localizedDescription)
+                saveResult = .failed(saveFailureMessage(for: error))
             }
         }
+    }
+
+    private func weatherSnapshotForSave(startedAt: Date) async throws -> WeatherSnapshotData? {
+        let resolution = try await weatherContextService.snapshotForSave(
+            startedAt: startedAt,
+            currentState: weatherLoadState,
+            originalStartedAt: nil,
+            originalSnapshot: nil
+        )
+        weatherLoadState = resolution.state
+        return resolution.snapshot
+    }
+
+    private func healthContextForSave(draft: EpisodeDraft) async -> HealthContextSnapshotData? {
+        do {
+            return try await healthService.contextSnapshot(for: draft)
+        } catch {
+            return nil
+        }
+    }
+
+    private func writeHealthSampleIfNeeded(episodeID: UUID, draft: EpisodeDraft) async {
+        do {
+            try await healthService.writeEpisode(id: episodeID, draft: draft)
+        } catch {}
+    }
+
+    private func saveFailureMessage(for error: Error) -> String {
+        if let episodeError = error as? EpisodeSaveError {
+            switch episodeError {
+            case .invalidDateRange:
+                return "Bitte prüfe Beginn und Ende deines Eintrags."
+            case .futureDate:
+                return "Bitte wähle einen Zeitpunkt, der nicht in der Zukunft liegt."
+            }
+        }
+
+        if let localizedError = error as? LocalizedError, let description = localizedError.errorDescription {
+            return description
+        }
+
+        return "Der Eintrag konnte gerade nicht gespeichert werden. Bitte versuche es noch einmal."
     }
 }

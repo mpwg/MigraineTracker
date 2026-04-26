@@ -62,7 +62,7 @@ enum NewEntryStepCatalog {
         NewEntryStepMetadata(
             id: .review,
             title: "Eintrag prüfen",
-            subline: "Kurz ansehen und speichern.",
+            subline: "Alles bereit zum Speichern.",
             symbolName: "checkmark.seal.fill",
             colorToken: .purple,
             status: nil
