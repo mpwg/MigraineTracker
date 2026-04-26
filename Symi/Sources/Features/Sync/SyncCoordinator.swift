@@ -2,8 +2,6 @@ import CloudKit
 import Foundation
 import Observation
 import SwiftData
-import SwiftUI
-import UIKit
 
 @MainActor
 @Observable
@@ -31,7 +29,7 @@ final class SyncCoordinator {
         self.stateStore = stateStore
         self.appLogStore = appLogStore
         self.repository = LocalSyncRepository(modelContainer: modelContainer)
-        self.deviceID = deviceID ?? UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        self.deviceID = deviceID ?? Self.persistedDeviceID()
 
         guard autostart else {
             return
@@ -40,6 +38,19 @@ final class SyncCoordinator {
         Task {
             await loadPersistedState()
         }
+    }
+
+    private static func persistedDeviceID() -> String {
+        let key = "SyncCoordinator.deviceID"
+        let defaults = UserDefaults.standard
+
+        if let existingID = defaults.string(forKey: key), !existingID.isEmpty {
+            return existingID
+        }
+
+        let newID = UUID().uuidString
+        defaults.set(newID, forKey: key)
+        return newID
     }
 
     func loadPersistedState() async {

@@ -2,8 +2,8 @@ import CoreGraphics
 import CoreImage
 import CoreText
 import Foundation
+import ImageIO
 import PDFKit
-import UIKit
 
 nonisolated enum PDFExportWriter {
     static func write(summary: ExportPeriodSummary, mode: PDFReportMode = .detailed) throws -> URL {
@@ -275,7 +275,18 @@ nonisolated enum PDFExportWriter {
     }
 
     private static func brandLogo() -> CGImage? {
-        UIImage(named: "BrandLogo")?.cgImage ?? UIImage(named: "AppIcon")?.cgImage
+        loadBundleImage(named: "PDFBrandLogo", extension: "webp")
+            ?? loadBundleImage(named: "Icon_1024", extension: "png")
+    }
+
+    private static func loadBundleImage(named name: String, extension fileExtension: String) -> CGImage? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: fileExtension),
+              let source = CGImageSourceCreateWithURL(url as CFURL, nil)
+        else {
+            return nil
+        }
+
+        return CGImageSourceCreateImageAtIndex(source, 0, nil)
     }
 
     private static func appStoreQRCode() -> CGImage? {

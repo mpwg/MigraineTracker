@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct EpisodeEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -462,10 +461,7 @@ private struct WeatherStatusContent: View {
                         .foregroundStyle(.secondary)
 
                     Button("Einstellungen öffnen") {
-                        guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
-                            return
-                        }
-                        openURL(settingsURL)
+                        openURL(AppSettingsURL.url)
                     }
                     .buttonStyle(SymiSecondaryButtonStyle())
                 }
@@ -487,6 +483,10 @@ private struct WeatherStatusContent: View {
         message.localizedCaseInsensitiveContains("standort")
             || message.localizedCaseInsensitiveContains("freigabe")
     }
+}
+
+private enum AppSettingsURL {
+    static let url = URL(string: "app-settings:")!
 }
 
 private struct IntensityPicker: View {

@@ -1,7 +1,6 @@
 import CoreLocation
 import SwiftData
 import SwiftUI
-import UIKit
 
 struct AppLaunchConfiguration {
     let isScreenshotMode: Bool
@@ -242,9 +241,6 @@ struct ScreenshotRootView: View {
 
     var body: some View {
         rootView
-            .task {
-                configureMacCatalystWindowIfNeeded()
-            }
     }
 
     @ViewBuilder
@@ -282,17 +278,6 @@ struct ScreenshotRootView: View {
         }
     }
 
-    private func configureMacCatalystWindowIfNeeded() {
-        #if targetEnvironment(macCatalyst)
-        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
-            return
-        }
-
-        let size = CGSize(width: 1280, height: 800)
-        scene.sizeRestrictions?.minimumSize = size
-        scene.sizeRestrictions?.maximumSize = size
-        #endif
-    }
 }
 
 private struct ScreenshotWeatherService: WeatherService {
