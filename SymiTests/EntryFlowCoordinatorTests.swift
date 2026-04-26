@@ -10,6 +10,16 @@ struct EntryFlowCoordinatorTests {
     }
 
     @Test
+    func triggerCatalogContainsRequiredContextOptions() {
+        let coordinator = makeCoordinator()
+        let requiredTriggers = ["Wetter", "Stress", "Erhöhte Arbeitsbelastung", "Regel", "Schlafdauer", "Sport"]
+
+        for trigger in requiredTriggers {
+            #expect(coordinator.triggerOptions.contains(trigger))
+        }
+    }
+
+    @Test
     func draftSurvivesForwardAndBackNavigation() {
         let coordinator = makeCoordinator()
         coordinator.draft.intensity = 8

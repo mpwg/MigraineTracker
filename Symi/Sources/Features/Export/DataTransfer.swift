@@ -358,7 +358,7 @@ struct MedicationEntryPayload: @preconcurrency Codable, Sendable {
     }
 }
 
-struct WeatherSnapshotPayload: @preconcurrency Codable, Sendable {
+struct WeatherSnapshotPayload: Codable, Sendable {
     let id: UUID
     let recordedAt: Date
     let temperature: Double?
@@ -368,6 +368,28 @@ struct WeatherSnapshotPayload: @preconcurrency Codable, Sendable {
     let precipitation: Double?
     let weatherCode: Int?
     let source: String
+    let dayRangeStart: Date?
+    let dayRangeEnd: Date?
+    let contextRangeStart: Date?
+    let contextRangeEnd: Date?
+    let contextPoints: [WeatherContextPointData]
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case recordedAt
+        case temperature
+        case condition
+        case humidity
+        case pressure
+        case precipitation
+        case weatherCode
+        case source
+        case dayRangeStart
+        case dayRangeEnd
+        case contextRangeStart
+        case contextRangeEnd
+        case contextPoints
+    }
 
     nonisolated init(snapshot: WeatherSnapshot) {
         self.id = snapshot.id
@@ -379,6 +401,29 @@ struct WeatherSnapshotPayload: @preconcurrency Codable, Sendable {
         self.precipitation = snapshot.precipitation
         self.weatherCode = snapshot.weatherCode
         self.source = snapshot.source
+        self.dayRangeStart = snapshot.dayRangeStart
+        self.dayRangeEnd = snapshot.dayRangeEnd
+        self.contextRangeStart = snapshot.contextRangeStart
+        self.contextRangeEnd = snapshot.contextRangeEnd
+        self.contextPoints = snapshot.contextPoints
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.recordedAt = try container.decode(Date.self, forKey: .recordedAt)
+        self.temperature = try container.decodeIfPresent(Double.self, forKey: .temperature)
+        self.condition = try container.decode(String.self, forKey: .condition)
+        self.humidity = try container.decodeIfPresent(Double.self, forKey: .humidity)
+        self.pressure = try container.decodeIfPresent(Double.self, forKey: .pressure)
+        self.precipitation = try container.decodeIfPresent(Double.self, forKey: .precipitation)
+        self.weatherCode = try container.decodeIfPresent(Int.self, forKey: .weatherCode)
+        self.source = try container.decode(String.self, forKey: .source)
+        self.dayRangeStart = try container.decodeIfPresent(Date.self, forKey: .dayRangeStart)
+        self.dayRangeEnd = try container.decodeIfPresent(Date.self, forKey: .dayRangeEnd)
+        self.contextRangeStart = try container.decodeIfPresent(Date.self, forKey: .contextRangeStart)
+        self.contextRangeEnd = try container.decodeIfPresent(Date.self, forKey: .contextRangeEnd)
+        self.contextPoints = try container.decodeIfPresent([WeatherContextPointData].self, forKey: .contextPoints) ?? []
     }
 
     nonisolated func makeModel(for episode: Episode) -> WeatherSnapshot {
@@ -392,6 +437,11 @@ struct WeatherSnapshotPayload: @preconcurrency Codable, Sendable {
             precipitation: precipitation,
             weatherCode: weatherCode,
             source: source,
+            dayRangeStart: dayRangeStart,
+            dayRangeEnd: dayRangeEnd,
+            contextRangeStart: contextRangeStart,
+            contextRangeEnd: contextRangeEnd,
+            contextPointsStorage: WeatherSnapshot.encodeContextPoints(contextPoints),
             episode: episode
         )
     }
@@ -405,6 +455,11 @@ struct WeatherSnapshotPayload: @preconcurrency Codable, Sendable {
         snapshot.precipitation = precipitation
         snapshot.weatherCode = weatherCode
         snapshot.source = source
+        snapshot.dayRangeStart = dayRangeStart
+        snapshot.dayRangeEnd = dayRangeEnd
+        snapshot.contextRangeStart = contextRangeStart
+        snapshot.contextRangeEnd = contextRangeEnd
+        snapshot.contextPoints = contextPoints
         snapshot.episode = episode
     }
 }

@@ -39,16 +39,21 @@ nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
                 effectiveness: $0.effectiveness.rawValue
             )
         }
-        self.weather = episode.weatherSnapshot.map {
-            WeatherLine(
-                condition: $0.condition,
-                temperature: $0.temperature,
-                humidity: $0.humidity,
-                pressure: $0.pressure,
-                precipitation: $0.precipitation,
-                weatherCode: $0.weatherCode,
-                source: $0.source
+        if let weatherSnapshot = episode.weatherSnapshot {
+            self.weather = WeatherLine(
+                condition: weatherSnapshot.condition,
+                temperature: weatherSnapshot.temperature,
+                humidity: weatherSnapshot.humidity,
+                pressure: weatherSnapshot.pressure,
+                precipitation: weatherSnapshot.precipitation,
+                weatherCode: weatherSnapshot.weatherCode,
+                source: weatherSnapshot.source,
+                contextRangeStart: weatherSnapshot.contextRangeStart,
+                contextRangeEnd: weatherSnapshot.contextRangeEnd,
+                contextPoints: weatherSnapshot.contextPoints
             )
+        } else {
+            self.weather = nil
         }
         self.healthContext = healthContext.map(HealthLine.init)
     }
@@ -70,6 +75,9 @@ nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
         let precipitation: Double?
         let weatherCode: Int?
         let source: String
+        let contextRangeStart: Date?
+        let contextRangeEnd: Date?
+        let contextPoints: [WeatherContextPointData]
     }
 
     nonisolated struct HealthLine: Sendable {

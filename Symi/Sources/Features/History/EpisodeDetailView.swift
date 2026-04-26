@@ -182,6 +182,12 @@ struct EpisodeDetailView: View {
                         if !weatherSnapshot.source.isEmpty {
                             detailRow("Quelle", weatherSnapshot.source)
                         }
+                        if let contextRange = weatherContextRangeText(for: weatherSnapshot) {
+                            detailRow("Kontextzeitraum", contextRange)
+                        }
+                        if !weatherSnapshot.contextPoints.isEmpty {
+                            detailRow("Kontextwerte", "\(weatherSnapshot.contextPoints.count) stündliche Werte")
+                        }
                         detailRow("Erfasst", weatherSnapshot.recordedAt.formatted(date: .abbreviated, time: .shortened))
                         WeatherAttributionView()
                             .padding(.vertical, 4)
@@ -284,6 +290,12 @@ struct EpisodeDetailView: View {
                             }
                             if let precipitation = weatherSnapshot.precipitation {
                                 detailValue("Niederschlag", precipitation.formatted(.number.precision(.fractionLength(1))) + " mm")
+                            }
+                            if let contextRange = weatherContextRangeText(for: weatherSnapshot) {
+                                detailValue("Kontextzeitraum", contextRange)
+                            }
+                            if !weatherSnapshot.contextPoints.isEmpty {
+                                detailValue("Kontextwerte", "\(weatherSnapshot.contextPoints.count) stündliche Werte")
                             }
                             detailValue("Erfasst", weatherSnapshot.recordedAt.formatted(date: .abbreviated, time: .shortened))
                             WeatherAttributionView()
@@ -400,6 +412,14 @@ struct EpisodeDetailView: View {
         }
 
         return "\(medication.category.rawValue) · \(medication.dosage)"
+    }
+
+    private func weatherContextRangeText(for weather: WeatherRecord) -> String? {
+        guard let start = weather.contextRangeStart, let end = weather.contextRangeEnd else {
+            return nil
+        }
+
+        return "\(start.formatted(date: .abbreviated, time: .shortened)) bis \(end.formatted(date: .abbreviated, time: .shortened))"
     }
 
     private func deleteEpisode() {

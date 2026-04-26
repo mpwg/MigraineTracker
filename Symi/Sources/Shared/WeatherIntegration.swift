@@ -12,6 +12,11 @@ struct WeatherSnapshotData: Equatable, Sendable {
     let precipitation: Double?
     let weatherCode: Int?
     let source: String
+    let dayRangeStart: Date?
+    let dayRangeEnd: Date?
+    let contextRangeStart: Date?
+    let contextRangeEnd: Date?
+    let contextPoints: [WeatherContextPointData]
 
     init(
         recordedAt: Date,
@@ -21,7 +26,12 @@ struct WeatherSnapshotData: Equatable, Sendable {
         pressure: Double?,
         precipitation: Double?,
         weatherCode: Int?,
-        source: String
+        source: String,
+        dayRangeStart: Date? = nil,
+        dayRangeEnd: Date? = nil,
+        contextRangeStart: Date? = nil,
+        contextRangeEnd: Date? = nil,
+        contextPoints: [WeatherContextPointData] = []
     ) {
         self.recordedAt = recordedAt
         self.condition = condition
@@ -31,6 +41,11 @@ struct WeatherSnapshotData: Equatable, Sendable {
         self.precipitation = precipitation
         self.weatherCode = weatherCode
         self.source = source
+        self.dayRangeStart = dayRangeStart
+        self.dayRangeEnd = dayRangeEnd
+        self.contextRangeStart = contextRangeStart
+        self.contextRangeEnd = contextRangeEnd
+        self.contextPoints = contextPoints
     }
 
     init(record: WeatherRecord) {
@@ -42,8 +57,41 @@ struct WeatherSnapshotData: Equatable, Sendable {
             pressure: record.pressure,
             precipitation: record.precipitation,
             weatherCode: record.weatherCode,
-            source: record.source
+            source: record.source,
+            dayRangeStart: record.dayRangeStart,
+            dayRangeEnd: record.dayRangeEnd,
+            contextRangeStart: record.contextRangeStart,
+            contextRangeEnd: record.contextRangeEnd,
+            contextPoints: record.contextPoints
         )
+    }
+}
+
+nonisolated public struct WeatherContextPointData: Codable, Equatable, Sendable {
+    public let recordedAt: Date
+    public let condition: String
+    public let temperature: Double?
+    public let humidity: Double?
+    public let pressure: Double?
+    public let precipitation: Double?
+    public let weatherCode: Int?
+
+    public init(
+        recordedAt: Date,
+        condition: String,
+        temperature: Double?,
+        humidity: Double?,
+        pressure: Double?,
+        precipitation: Double?,
+        weatherCode: Int?
+    ) {
+        self.recordedAt = recordedAt
+        self.condition = condition
+        self.temperature = temperature
+        self.humidity = humidity
+        self.pressure = pressure
+        self.precipitation = precipitation
+        self.weatherCode = weatherCode
     }
 }
 
@@ -140,6 +188,10 @@ final class SystemLocationService: NSObject, LocationService, CLLocationManagerD
     }
 
     func requestApproximateLocation() async throws -> CLLocation {
+        guard continuation == nil else {
+            throw LocationServiceError.unableToDetermineLocation
+        }
+
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
 
@@ -220,12 +272,13 @@ struct AppleWeatherKitWeatherService: WeatherService {
                 return nil
             }
 
-            let interval = hourlyInterval(containing: date)
+            let dayInterval = dayInterval(containing: date)
+            let contextInterval = contextInterval(around: dayInterval)
             let hourlyForecast: Forecast<HourWeather>
             do {
                 hourlyForecast = try await service.weather(
                     for: location,
-                    including: .hourly(startDate: interval.start, endDate: interval.end)
+                    including: .hourly(startDate: contextInterval.start, endDate: contextInterval.end)
                 )
             } catch {
                 if isWeatherKitAuthenticationError(error) {
@@ -240,6 +293,18 @@ struct AppleWeatherKitWeatherService: WeatherService {
                 throw WeatherServiceError.noMatchingHour
             }
 
+            let contextPoints = hourlyForecast.forecast.map { hour in
+                WeatherContextPointData(
+                    recordedAt: hour.date,
+                    condition: WeatherConditionMapper.description(for: hour.condition),
+                    temperature: hour.temperature.converted(to: .celsius).value,
+                    humidity: hour.humidity * 100,
+                    pressure: hour.pressure.converted(to: .hectopascals).value,
+                    precipitation: hour.precipitationAmount.converted(to: .millimeters).value,
+                    weatherCode: nil
+                )
+            }
+
             return WeatherSnapshotData(
                 recordedAt: matchedHour.date,
                 condition: WeatherConditionMapper.description(for: matchedHour.condition),
@@ -248,16 +313,28 @@ struct AppleWeatherKitWeatherService: WeatherService {
                 pressure: matchedHour.pressure.converted(to: .hectopascals).value,
                 precipitation: matchedHour.precipitationAmount.converted(to: .millimeters).value,
                 weatherCode: nil,
-                source: WeatherAttribution.providerName
+                source: WeatherAttribution.providerName,
+                dayRangeStart: dayInterval.start,
+                dayRangeEnd: dayInterval.end,
+                contextRangeStart: contextInterval.start,
+                contextRangeEnd: contextInterval.end,
+                contextPoints: contextPoints
             )
         }
     }
 
-    private func hourlyInterval(containing date: Date) -> DateInterval {
+    private func dayInterval(containing date: Date) -> DateInterval {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? date.addingTimeInterval(86_400)
         return DateInterval(start: startOfDay, end: endOfDay)
+    }
+
+    private func contextInterval(around dayInterval: DateInterval) -> DateInterval {
+        DateInterval(
+            start: dayInterval.start.addingTimeInterval(-43_200),
+            end: dayInterval.end.addingTimeInterval(43_200)
+        )
     }
 
     private func isWeatherKitAuthenticationError(_ error: any Error) -> Bool {

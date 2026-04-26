@@ -340,7 +340,7 @@ final class EpisodeEditorController {
         "Kiefer-/Aufbissschmerz",
         "Pochen, Pulsieren"
     ]
-    let triggerOptions = ["Stress", "Schlafmangel", "Alkohol", "Menstruation", "Bildschirmzeit"]
+    let triggerOptions = ["Wetter", "Stress", "Erhöhte Arbeitsbelastung", "Regel", "Schlafdauer", "Sport", "Ernährung", "Bildschirmzeit", "Bewegung", "Flüssigkeit"]
     let medicationController: EpisodeMedicationSelectionController
 
     var draft: EpisodeDraft

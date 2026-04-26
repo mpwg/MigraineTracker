@@ -19,7 +19,7 @@ struct NewEntryDesignSystemTests {
         let expected: [NewEntryStepID: (String, String, String, NewEntryStepColorToken)] = [
             .headache: ("Kopfschmerz", "Wie stark ist es gerade?", "waveform.path.ecg", .coral),
             .medication: ("Medikation", "Was hast du genommen?", "pills.fill", .sageTeal),
-            .triggers: ("Auslöser", "Was könnte mitspielen?", "brain.head.profile", .blue),
+            .triggers: ("Auslöser", "Was könnte eine Rolle gespielt haben?", "brain.head.profile", .blue),
             .note: ("Notiz", "Was fällt dir auf?", "note.text", .warmAmber),
             .review: ("Eintrag prüfen", "Kurz ansehen und speichern.", "checkmark.seal.fill", .purple)
         ]

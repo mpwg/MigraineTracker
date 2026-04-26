@@ -39,6 +39,7 @@ struct DataTransferHealthContextTests {
         #expect(importedEpisode.medications.count == 1)
         #expect(importedEpisode.medications.first?.name == "Sumatriptan")
         #expect(importedEpisode.weatherSnapshot?.condition == "Regen")
+        #expect(importedEpisode.weatherSnapshot?.contextPoints.count == 1)
         #expect(targetHealthStore.load(for: episodeID) == HealthContextRecord(snapshot: healthContext))
     }
 
@@ -178,6 +179,21 @@ private func seedEpisode(id: UUID, notes: String = "Migräne nach Wetterwechsel"
         precipitation: 1.4,
         weatherCode: 63,
         source: "Apple Weather",
+        dayRangeStart: Calendar.current.startOfDay(for: startedAt),
+        dayRangeEnd: Calendar.current.startOfDay(for: startedAt).addingTimeInterval(86_400),
+        contextRangeStart: Calendar.current.startOfDay(for: startedAt).addingTimeInterval(-43_200),
+        contextRangeEnd: Calendar.current.startOfDay(for: startedAt).addingTimeInterval(129_600),
+        contextPointsStorage: WeatherSnapshot.encodeContextPoints([
+            WeatherContextPointData(
+                recordedAt: startedAt,
+                condition: "Regen",
+                temperature: 18.5,
+                humidity: 72,
+                pressure: 1004,
+                precipitation: 1.4,
+                weatherCode: 63
+            )
+        ]),
         episode: episode
     )
     context.insert(episode)

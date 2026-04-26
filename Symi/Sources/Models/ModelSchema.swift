@@ -1048,6 +1048,11 @@ enum SymiSchemaV5: VersionedSchema {
         var precipitation: Double?
         var weatherCode: Int?
         var source: String
+        var dayRangeStart: Date?
+        var dayRangeEnd: Date?
+        var contextRangeStart: Date?
+        var contextRangeEnd: Date?
+        var contextPointsStorage: String
         var episode: Episode?
 
         init(
@@ -1060,6 +1065,11 @@ enum SymiSchemaV5: VersionedSchema {
             precipitation: Double? = nil,
             weatherCode: Int? = nil,
             source: String = "",
+            dayRangeStart: Date? = nil,
+            dayRangeEnd: Date? = nil,
+            contextRangeStart: Date? = nil,
+            contextRangeEnd: Date? = nil,
+            contextPointsStorage: String = "",
             episode: Episode? = nil
         ) {
             self.id = id
@@ -1071,6 +1081,11 @@ enum SymiSchemaV5: VersionedSchema {
             self.precipitation = precipitation
             self.weatherCode = weatherCode
             self.source = source
+            self.dayRangeStart = dayRangeStart
+            self.dayRangeEnd = dayRangeEnd
+            self.contextRangeStart = contextRangeStart
+            self.contextRangeEnd = contextRangeEnd
+            self.contextPointsStorage = contextPointsStorage
             self.episode = episode
         }
     }

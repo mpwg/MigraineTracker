@@ -324,13 +324,17 @@ private struct EntryTriggersStepView: View {
         Form {
             EntryStepHeader(step: .triggers, currentIndex: coordinator.currentStepIndex)
 
-            Section("Was könnte mitspielen?") {
+            Section {
                 MultiSelectGrid(
                     options: coordinator.triggerOptions,
                     selection: $coordinator.draft.selectedTriggers,
                     colorToken: NewEntryStepCatalog.metadata(for: .triggers).colorToken,
                     accessibilityPrefix: "Auslöser"
                 )
+            } header: {
+                Text("Was könnte eine Rolle gespielt haben?")
+            } footer: {
+                Text("Du kannst mehrere auswählen. Wetter als Auslöser bleibt getrennt vom automatisch gespeicherten Wetterkontext.")
             }
 
             EntryStepActions(

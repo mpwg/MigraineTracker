@@ -9,9 +9,48 @@ struct WeatherRecord: Equatable, Sendable {
     nonisolated let precipitation: Double?
     nonisolated let weatherCode: Int?
     nonisolated let source: String
+    nonisolated let dayRangeStart: Date?
+    nonisolated let dayRangeEnd: Date?
+    nonisolated let contextRangeStart: Date?
+    nonisolated let contextRangeEnd: Date?
+    nonisolated let contextPoints: [WeatherContextPointData]
+
+    nonisolated init(
+        recordedAt: Date,
+        condition: String,
+        temperature: Double?,
+        humidity: Double?,
+        pressure: Double?,
+        precipitation: Double?,
+        weatherCode: Int?,
+        source: String,
+        dayRangeStart: Date? = nil,
+        dayRangeEnd: Date? = nil,
+        contextRangeStart: Date? = nil,
+        contextRangeEnd: Date? = nil,
+        contextPoints: [WeatherContextPointData] = []
+    ) {
+        self.recordedAt = recordedAt
+        self.condition = condition
+        self.temperature = temperature
+        self.humidity = humidity
+        self.pressure = pressure
+        self.precipitation = precipitation
+        self.weatherCode = weatherCode
+        self.source = source
+        self.dayRangeStart = dayRangeStart
+        self.dayRangeEnd = dayRangeEnd
+        self.contextRangeStart = contextRangeStart
+        self.contextRangeEnd = contextRangeEnd
+        self.contextPoints = contextPoints
+    }
 
     nonisolated var isLegacySnapshot: Bool {
         source.localizedCaseInsensitiveContains("legacy") || source.localizedCaseInsensitiveContains("manuell")
+    }
+
+    nonisolated var hasExtendedContext: Bool {
+        contextRangeStart != nil || contextRangeEnd != nil || !contextPoints.isEmpty
     }
 }
 
