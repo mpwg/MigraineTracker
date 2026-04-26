@@ -278,7 +278,7 @@ private func makeSyncTestStack() throws -> (
     coordinator: SyncCoordinator,
     repository: LocalSyncRepository
 ) {
-    let schema = Schema(versionedSchema: SymiSchemaV5.self)
+    let schema = Schema(versionedSchema: SymiSchemaV6.self)
     let configuration = ModelConfiguration(
         "sync-tests-\(UUID().uuidString)",
         schema: schema,

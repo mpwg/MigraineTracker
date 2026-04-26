@@ -51,7 +51,8 @@ extension Episode {
         triggers: [String] = [],
         functionalImpact: String = "",
         menstruationStatus: MenstruationStatus = .unknown,
-        medications: [MedicationEntry] = []
+        medications: [MedicationEntry] = [],
+        continuousMedicationChecks: [ContinuousMedicationCheck] = []
     ) {
         self.init(
             id: id,
@@ -68,7 +69,8 @@ extension Episode {
             triggersStorage: triggers.joined(separator: "|"),
             functionalImpact: functionalImpact,
             menstruationStatusRaw: menstruationStatus.rawValue,
-            medications: medications
+            medications: medications,
+            continuousMedicationChecks: continuousMedicationChecks
         )
     }
 
@@ -120,6 +122,28 @@ extension Episode {
             .split(separator: "|")
             .map { String($0) }
             .filter { !$0.isEmpty }
+    }
+}
+
+extension ContinuousMedication {
+    var isActive: Bool {
+        endDate == nil || (endDate ?? .distantPast) >= Calendar.current.startOfDay(for: .now)
+    }
+
+    var detailText: String {
+        [dosage, frequency]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+
+    func markUpdated(at date: Date = .now) {
+        updatedAt = date
+    }
+
+    func end(on date: Date = .now) {
+        endDate = date
+        updatedAt = date
     }
 }
 

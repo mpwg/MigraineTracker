@@ -243,24 +243,70 @@ private struct EntryMedicationStepView: View {
     let coordinator: EntryFlowCoordinator
 
     var body: some View {
+        @Bindable var coordinator = coordinator
         @Bindable var medicationController = coordinator.medicationController
 
         Form {
             EntryStepHeader(step: .medication, currentIndex: coordinator.currentStepIndex)
 
-            Section("Medikamente") {
-                TextField("Medikament nach Namen filtern", text: $medicationController.searchText)
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled()
+            Section {
+                Text("Hast du etwas genommen?")
+                    .font(.headline)
+                Text("Übersichtlich. Schnell. Kontextbewusst.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
 
-                MedicationDefinitionGroupList(controller: coordinator.medicationController)
-                SelectedMedicationsSection(controller: coordinator.medicationController)
+            if !coordinator.draft.continuousMedicationChecks.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Dauermedikation", systemImage: "pills.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppTheme.symiPetrol)
 
-                Button {
-                    medicationController.presentEditor(for: nil)
-                } label: {
-                    Label("Eigenes Medikament hinzufügen", systemImage: "plus")
+                        Text("Bestätige deine regelmäßige Medikation für heute.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        ForEach($coordinator.draft.continuousMedicationChecks) { $check in
+                            ContinuousMedicationCheckRow(check: $check)
+                        }
+
+                        Text("Du kannst dies jederzeit in den Einstellungen anpassen.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Heute genommen?")
                 }
+            }
+
+            Section {
+                MedicationQuickSelectionGrid(
+                    controller: coordinator.medicationController,
+                    hasContinuousMedication: !coordinator.draft.continuousMedicationChecks.isEmpty
+                )
+
+                DisclosureGroup("Weitere Medikamente") {
+                    TextField("Medikament nach Namen filtern", text: $medicationController.searchText)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+
+                    MedicationDefinitionGroupList(controller: coordinator.medicationController)
+
+                    Button {
+                        medicationController.presentEditor(for: nil)
+                    } label: {
+                        Label("Eigenes Medikament hinzufügen", systemImage: "plus")
+                    }
+                }
+
+                SelectedMedicationsSection(controller: coordinator.medicationController)
+            } header: {
+                Text(coordinator.draft.continuousMedicationChecks.isEmpty ? "Zusätzlich etwas genommen?" : "Zusätzlich etwas genommen?")
+            } footer: {
+                Text("Dosierung ist optional und kann über Medikamentenvorlagen oder eigene Medikamente gespeichert werden.")
             }
 
             EntryStepActions(
@@ -275,6 +321,12 @@ private struct EntryMedicationStepView: View {
         }
         .navigationTitle("Medikation")
         .brandGroupedScreen()
+        .task {
+            await coordinator.continuousMedicationController.reload(for: coordinator.draft.startedAt)
+            if coordinator.draft.continuousMedicationChecks.isEmpty {
+                coordinator.draft.continuousMedicationChecks = coordinator.continuousMedicationController.makeDefaultChecks()
+            }
+        }
         .sheet(item: $medicationController.customMedicationEditor) { editorState in
             NavigationStack {
                 CustomMedicationEditorSheet(
@@ -311,6 +363,74 @@ private struct EntryMedicationStepView: View {
             }
         } message: { definition in
             Text("\(definition.name) wird aus SwiftData entfernt.")
+        }
+    }
+}
+
+private struct ContinuousMedicationCheckRow: View {
+    @Binding var check: ContinuousMedicationCheckDraft
+
+    var body: some View {
+        Toggle(isOn: $check.wasTaken) {
+            HStack(spacing: 12) {
+                Image(systemName: "pills")
+                    .foregroundStyle(AppTheme.symiPetrol)
+                    .frame(width: 28, height: 28)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(check.name)
+                        .font(.subheadline.weight(.semibold))
+                    if !check.detailText.isEmpty {
+                        Text(check.detailText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .toggleStyle(.button)
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .accessibilityLabel("\(check.name) heute genommen")
+    }
+}
+
+private struct MedicationQuickSelectionGrid: View {
+    let controller: EpisodeMedicationSelectionController
+    let hasContinuousMedication: Bool
+
+    private let options: [(String, MedicationCategory, String)] = [
+        ("Ibuprofen", .nsar, "400 mg"),
+        ("Triptan", .triptan, ""),
+        ("Paracetamol", .paracetamol, "500 mg"),
+        ("Andere", .other, "")
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 10)], spacing: 10) {
+            ForEach(options, id: \.0) { option in
+                Button {
+                    controller.toggleMedicationSelection(
+                        named: option.0,
+                        fallbackCategory: option.1,
+                        fallbackDosage: option.2
+                    )
+                } label: {
+                    Label(option.0, systemImage: controller.isMedicationNameSelected(option.0) ? "checkmark.circle.fill" : "circle")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.bordered)
+                .tint(controller.isMedicationNameSelected(option.0) ? AppTheme.symiPetrol : .secondary)
+            }
+
+            Button {
+                controller.resetSelections()
+            } label: {
+                Label(hasContinuousMedication ? "Keine weitere Medikation" : "Keine Medikation", systemImage: "slash.circle")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.bordered)
         }
     }
 }
@@ -445,13 +565,19 @@ private struct EntryReviewStepView: View {
 
     private var medicationSummary: String {
         let selected = coordinator.medicationController.selectedMedications
-        guard !selected.isEmpty else {
+        let continuous = coordinator.draft.continuousMedicationChecks
+        guard !selected.isEmpty || !continuous.isEmpty else {
             return "Keine Medikation"
         }
 
-        return selected.map { medication in
+        let continuousSummary = continuous.map {
+            "\($0.name): \($0.wasTaken ? "genommen" : "nicht genommen")"
+        }
+        let acuteSummary = selected.map { medication in
             medication.quantity > 1 ? "\(medication.name) x\(medication.quantity)" : medication.name
-        }.joined(separator: ", ")
+        }
+
+        return (continuousSummary + acuteSummary).joined(separator: ", ")
     }
 
     private func listSummary(_ values: Set<String>) -> String {

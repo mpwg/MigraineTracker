@@ -95,6 +95,12 @@ struct SettingsView: View {
 
             Section("Allgemein") {
                 NavigationLink {
+                    ContinuousMedicationSettingsView(controller: controller)
+                } label: {
+                    Label("Dauermedikation", systemImage: "pills")
+                }
+
+                NavigationLink {
                     DataExportView(appContainer: appContainer)
                 } label: {
                     Label("Daten und Backup", systemImage: "square.and.arrow.up")
@@ -231,6 +237,201 @@ struct SettingsView: View {
         #else
         .topBarLeading
         #endif
+    }
+}
+
+private struct ContinuousMedicationSettingsView: View {
+    @Bindable var controller: SettingsController
+
+    var body: some View {
+        List {
+            Section {
+                Button {
+                    controller.presentContinuousMedicationEditor(for: nil)
+                } label: {
+                    Label("Dauermedikation hinzufügen", systemImage: "plus")
+                }
+            } footer: {
+                Text("Dauermedikationen sind ein eigener Verlaufskontext und bleiben von Akutmedikation in Einträgen getrennt.")
+            }
+
+            Section("Aktuell") {
+                let active = controller.continuousMedications.filter(\.isActive)
+                if active.isEmpty {
+                    Text("Keine aktive Dauermedikation.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(active) { medication in
+                        ContinuousMedicationSettingsRow(
+                            medication: medication,
+                            onEdit: { controller.presentContinuousMedicationEditor(for: medication) },
+                            onEnd: { controller.endContinuousMedication(id: medication.id) }
+                        )
+                    }
+                }
+            }
+
+            Section("Beendet") {
+                let ended = controller.continuousMedications.filter { !$0.isActive }
+                if ended.isEmpty {
+                    Text("Keine beendete Dauermedikation.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(ended) { medication in
+                        ContinuousMedicationSettingsRow(
+                            medication: medication,
+                            onEdit: { controller.presentContinuousMedicationEditor(for: medication) },
+                            onEnd: nil
+                        )
+                    }
+                }
+            }
+
+            if let message = controller.continuousMedicationMessage {
+                Section {
+                    Text(message)
+                        .foregroundStyle(AppTheme.symiCoral)
+                }
+            }
+        }
+        .navigationTitle("Dauermedikation")
+        .brandGroupedScreen()
+        .sheet(item: $controller.continuousMedicationEditor) { draft in
+            NavigationStack {
+                ContinuousMedicationEditorSheet(
+                    draft: draft,
+                    onCancel: { controller.continuousMedicationEditor = nil },
+                    onSave: { draft in
+                        Task {
+                            await controller.saveContinuousMedication(draft)
+                        }
+                    }
+                )
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .task {
+            controller.load()
+        }
+        .refreshable {
+            controller.load()
+        }
+    }
+}
+
+private struct ContinuousMedicationSettingsRow: View {
+    let medication: ContinuousMedicationRecord
+    let onEdit: () -> Void
+    let onEnd: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(medication.name)
+                        .font(.headline)
+                    if !medication.detailText.isEmpty {
+                        Text(medication.detailText)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Text(medication.isActive ? "Aktiv" : "Beendet")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(medication.isActive ? AppTheme.symiSage : .secondary)
+            }
+
+            Text(dateRangeText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Button("Bearbeiten", action: onEdit)
+                if let onEnd {
+                    Button("Beenden", role: .destructive, action: onEnd)
+                }
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 4)
+        .brandGroupedRow()
+    }
+
+    private var dateRangeText: String {
+        let start = medication.startDate.formatted(date: .abbreviated, time: .omitted)
+        guard let endDate = medication.endDate else {
+            return "Seit \(start)"
+        }
+
+        return "\(start) bis \(endDate.formatted(date: .abbreviated, time: .omitted))"
+    }
+}
+
+private struct ContinuousMedicationEditorSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: ContinuousMedicationDraft
+    @State private var hasEndDate: Bool
+
+    let onCancel: () -> Void
+    let onSave: (ContinuousMedicationDraft) -> Void
+
+    init(
+        draft: ContinuousMedicationDraft,
+        onCancel: @escaping () -> Void,
+        onSave: @escaping (ContinuousMedicationDraft) -> Void
+    ) {
+        _draft = State(initialValue: draft)
+        _hasEndDate = State(initialValue: draft.endDate != nil)
+        self.onCancel = onCancel
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        Form {
+            Section("Medikament") {
+                TextField("Name", text: $draft.name)
+                    .textInputAutocapitalization(.words)
+                TextField("Dosierung, optional", text: $draft.dosage)
+                TextField("Frequenz, optional", text: $draft.frequency)
+            }
+
+            Section("Zeitraum") {
+                DatePicker("Startdatum", selection: $draft.startDate, displayedComponents: .date)
+                Toggle("Enddatum setzen", isOn: $hasEndDate.animation())
+                if hasEndDate {
+                    DatePicker(
+                        "Enddatum",
+                        selection: Binding(
+                            get: { draft.endDate ?? draft.startDate },
+                            set: { draft.endDate = $0 }
+                        ),
+                        displayedComponents: .date
+                    )
+                }
+            }
+        }
+        .navigationTitle(draft.id == nil ? "Dauermedikation" : "Bearbeiten")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Abbrechen") {
+                    onCancel()
+                    dismiss()
+                }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Sichern") {
+                    var normalizedDraft = draft
+                    if !hasEndDate {
+                        normalizedDraft.endDate = nil
+                    }
+                    onSave(normalizedDraft)
+                    dismiss()
+                }
+            }
+        }
     }
 }
 

@@ -62,6 +62,36 @@ enum EntryStartedAtPreset: String, CaseIterable, Identifiable, Sendable {
 
 @MainActor
 @Observable
+final class EntryContinuousMedicationController {
+    private(set) var activeMedications: [ContinuousMedicationRecord] = []
+    private let repository: ContinuousMedicationRepository
+
+    init(repository: ContinuousMedicationRepository, autoload: Bool = true) {
+        self.repository = repository
+
+        guard autoload else {
+            return
+        }
+
+        Task {
+            await reload(for: .now)
+        }
+    }
+
+    func reload(for date: Date) async {
+        let repository = repository
+        activeMedications = await Task.detached(priority: .userInitiated) {
+            (try? repository.fetchActive(on: date)) ?? []
+        }.value
+    }
+
+    func makeDefaultChecks() -> [ContinuousMedicationCheckDraft] {
+        activeMedications.map { ContinuousMedicationCheckDraft(record: $0, wasTaken: true) }
+    }
+}
+
+@MainActor
+@Observable
 final class EntryFlowCoordinator {
     static let steps: [EntryFlowStep] = [.headache, .medication, .triggers, .note, .review]
 
@@ -76,6 +106,7 @@ final class EntryFlowCoordinator {
     let triggerOptions = ["Wetter", "Stress", "Erhöhte Arbeitsbelastung", "Regel", "Schlafdauer", "Sport", "Ernährung", "Bildschirmzeit", "Bewegung", "Flüssigkeit"]
     let painLocationOptions = ["Stirn", "Schläfen", "Nacken", "Einseitig", "Überall"]
     let medicationController: EpisodeMedicationSelectionController
+    let continuousMedicationController: EntryContinuousMedicationController
 
     var draft: EpisodeDraft
     var path: [EntryFlowStep] = []
@@ -90,12 +121,17 @@ final class EntryFlowCoordinator {
         initialStartedAt: Date? = nil,
         episodeRepository: EpisodeRepository,
         medicationRepository: MedicationCatalogRepository,
+        continuousMedicationRepository: ContinuousMedicationRepository,
         autoloadMedications: Bool = true
     ) {
         self.initialStartedAt = initialStartedAt
         self.draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
         self.medicationController = EpisodeMedicationSelectionController(
             medicationRepository: medicationRepository,
+            autoload: autoloadMedications
+        )
+        self.continuousMedicationController = EntryContinuousMedicationController(
+            repository: continuousMedicationRepository,
             autoload: autoloadMedications
         )
         self.saveEpisodeUseCase = SaveEpisodeUseCase(repository: episodeRepository)
@@ -137,6 +173,7 @@ final class EntryFlowCoordinator {
         case .medication:
             medicationController.resetSelections()
             draft.medications = []
+            draft.continuousMedicationChecks = []
         case .triggers:
             draft.selectedTriggers = []
         case .note:
@@ -199,6 +236,9 @@ final class EntryFlowCoordinator {
 
         if currentStep == .medication {
             draft.medications = medicationController.medications
+            if draft.continuousMedicationChecks.isEmpty {
+                draft.continuousMedicationChecks = continuousMedicationController.makeDefaultChecks()
+            }
         }
     }
 

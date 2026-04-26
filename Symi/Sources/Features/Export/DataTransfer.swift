@@ -17,28 +17,54 @@ enum DataTransferError: LocalizedError {
     }
 }
 
-struct DataTransferSnapshot: @preconcurrency Codable, Sendable {
+struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
     let formatVersion: Int
     let exportedAt: Date
     let episodes: [EpisodePayload]
     let customMedicationDefinitions: [MedicationDefinitionPayload]
+    let continuousMedications: [ContinuousMedicationPayload]
+
+    private enum CodingKeys: String, CodingKey {
+        case formatVersion
+        case exportedAt
+        case episodes
+        case customMedicationDefinitions
+        case continuousMedications
+    }
 
     nonisolated init(
         formatVersion: Int = 1,
         exportedAt: Date = .now,
         episodes: [EpisodePayload],
-        customMedicationDefinitions: [MedicationDefinitionPayload]
+        customMedicationDefinitions: [MedicationDefinitionPayload],
+        continuousMedications: [ContinuousMedicationPayload] = []
     ) {
         self.formatVersion = formatVersion
         self.exportedAt = exportedAt
         self.episodes = episodes
         self.customMedicationDefinitions = customMedicationDefinitions
+        self.continuousMedications = continuousMedications
     }
 
-    nonisolated init(episodes: [Episode], customMedicationDefinitions: [MedicationDefinition], healthContextStore: HealthContextStore? = nil) {
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.formatVersion = try container.decode(Int.self, forKey: .formatVersion)
+        self.exportedAt = try container.decode(Date.self, forKey: .exportedAt)
+        self.episodes = try container.decode([EpisodePayload].self, forKey: .episodes)
+        self.customMedicationDefinitions = try container.decode([MedicationDefinitionPayload].self, forKey: .customMedicationDefinitions)
+        self.continuousMedications = try container.decodeIfPresent([ContinuousMedicationPayload].self, forKey: .continuousMedications) ?? []
+    }
+
+    nonisolated init(
+        episodes: [Episode],
+        customMedicationDefinitions: [MedicationDefinition],
+        continuousMedications: [ContinuousMedication] = [],
+        healthContextStore: HealthContextStore? = nil
+    ) {
         self.init(
             episodes: episodes.map { EpisodePayload(episode: $0, healthContext: healthContextStore?.load(for: $0.id)) },
-            customMedicationDefinitions: customMedicationDefinitions.map(MedicationDefinitionPayload.init)
+            customMedicationDefinitions: customMedicationDefinitions.map(MedicationDefinitionPayload.init),
+            continuousMedications: continuousMedications.map(ContinuousMedicationPayload.init)
         )
     }
 
@@ -86,10 +112,20 @@ struct DataTransferSnapshot: @preconcurrency Codable, Sendable {
                 .filter(\.isCustom)
                 .map { ($0.catalogKey, $0) }
         )
+        let existingContinuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
+        let continuousMedicationsByID = Dictionary(uniqueKeysWithValues: existingContinuousMedications.map { ($0.id, $0) })
 
         for payload in customMedicationDefinitions {
             if let definition = customDefinitionsByKey[payload.catalogKey] {
                 payload.apply(to: definition)
+            } else {
+                context.insert(payload.makeModel())
+            }
+        }
+
+        for payload in continuousMedications {
+            if let medication = continuousMedicationsByID[payload.id] {
+                payload.apply(to: medication)
             } else {
                 context.insert(payload.makeModel())
             }
@@ -139,6 +175,7 @@ struct EpisodePayload: Codable, Sendable {
     let functionalImpact: String
     let menstruationStatus: MenstruationStatus
     let medications: [MedicationEntryPayload]
+    let continuousMedicationChecks: [ContinuousMedicationCheckPayload]
     let weatherSnapshot: WeatherSnapshotPayload?
     let healthContext: HealthContextSnapshotData?
     private let shouldImportHealthContext: Bool
@@ -159,6 +196,7 @@ struct EpisodePayload: Codable, Sendable {
         case functionalImpact
         case menstruationStatus
         case medications
+        case continuousMedicationChecks
         case weatherSnapshot
         case healthContext
     }
@@ -179,6 +217,7 @@ struct EpisodePayload: Codable, Sendable {
         self.functionalImpact = episode.functionalImpact
         self.menstruationStatus = episode.menstruationStatus
         self.medications = episode.medications.map(MedicationEntryPayload.init)
+        self.continuousMedicationChecks = episode.continuousMedicationChecks.map(ContinuousMedicationCheckPayload.init)
         self.weatherSnapshot = episode.weatherSnapshot.map(WeatherSnapshotPayload.init)
         self.healthContext = healthContext.map(HealthContextSnapshotData.init)
         self.shouldImportHealthContext = healthContext != nil
@@ -201,6 +240,10 @@ struct EpisodePayload: Codable, Sendable {
         self.functionalImpact = try container.decode(String.self, forKey: .functionalImpact)
         self.menstruationStatus = try container.decode(MenstruationStatus.self, forKey: .menstruationStatus)
         self.medications = try container.decode([MedicationEntryPayload].self, forKey: .medications)
+        self.continuousMedicationChecks = try container.decodeIfPresent(
+            [ContinuousMedicationCheckPayload].self,
+            forKey: .continuousMedicationChecks
+        ) ?? []
         self.weatherSnapshot = try container.decodeIfPresent(WeatherSnapshotPayload.self, forKey: .weatherSnapshot)
         self.shouldImportHealthContext = container.contains(.healthContext)
         self.healthContext = try container.decodeIfPresent(HealthContextSnapshotData.self, forKey: .healthContext)
@@ -223,6 +266,7 @@ struct EpisodePayload: Codable, Sendable {
         try container.encode(functionalImpact, forKey: .functionalImpact)
         try container.encode(menstruationStatus, forKey: .menstruationStatus)
         try container.encode(medications, forKey: .medications)
+        try container.encode(continuousMedicationChecks, forKey: .continuousMedicationChecks)
         try container.encodeIfPresent(weatherSnapshot, forKey: .weatherSnapshot)
 
         if let healthContext {
@@ -251,6 +295,7 @@ struct EpisodePayload: Codable, Sendable {
         )
 
         episode.medications = medications.map { $0.makeModel(for: episode) }
+        episode.continuousMedicationChecks = continuousMedicationChecks.map { $0.makeModel(for: episode) }
         episode.weatherSnapshot = weatherSnapshot?.makeModel(for: episode)
         return episode
     }
@@ -272,15 +317,30 @@ struct EpisodePayload: Codable, Sendable {
 
         let existingMedicationsByID = Dictionary(uniqueKeysWithValues: episode.medications.map { ($0.id, $0) })
         let importedMedicationIDs = Set(medications.map(\.id))
+        let existingChecksByID = Dictionary(uniqueKeysWithValues: episode.continuousMedicationChecks.map { ($0.id, $0) })
+        let importedCheckIDs = Set(continuousMedicationChecks.map(\.id))
 
         for medication in episode.medications where !importedMedicationIDs.contains(medication.id) {
             context.delete(medication)
+        }
+
+        for check in episode.continuousMedicationChecks where !importedCheckIDs.contains(check.id) {
+            context.delete(check)
         }
 
         episode.medications = medications.map { payload in
             if let medication = existingMedicationsByID[payload.id] {
                 payload.apply(to: medication, for: episode)
                 return medication
+            }
+
+            return payload.makeModel(for: episode)
+        }
+
+        episode.continuousMedicationChecks = continuousMedicationChecks.map { payload in
+            if let check = existingChecksByID[payload.id] {
+                payload.apply(to: check, for: episode)
+                return check
             }
 
             return payload.makeModel(for: episode)
@@ -355,6 +415,45 @@ struct MedicationEntryPayload: @preconcurrency Codable, Sendable {
         entry.reliefStartedAt = reliefStartedAt
         entry.isRepeatDose = isRepeatDose
         entry.episode = episode
+    }
+}
+
+struct ContinuousMedicationCheckPayload: Codable, Sendable {
+    let id: UUID
+    let continuousMedicationID: UUID
+    let name: String
+    let dosage: String
+    let frequency: String
+    let wasTaken: Bool
+
+    nonisolated init(check: ContinuousMedicationCheck) {
+        self.id = check.id
+        self.continuousMedicationID = check.continuousMedicationID
+        self.name = check.name
+        self.dosage = check.dosage
+        self.frequency = check.frequency
+        self.wasTaken = check.wasTaken
+    }
+
+    nonisolated func makeModel(for episode: Episode) -> ContinuousMedicationCheck {
+        ContinuousMedicationCheck(
+            id: id,
+            continuousMedicationID: continuousMedicationID,
+            name: name,
+            dosage: dosage,
+            frequency: frequency,
+            wasTaken: wasTaken,
+            episode: episode
+        )
+    }
+
+    nonisolated func apply(to check: ContinuousMedicationCheck, for episode: Episode) {
+        check.continuousMedicationID = continuousMedicationID
+        check.name = name
+        check.dosage = dosage
+        check.frequency = frequency
+        check.wasTaken = wasTaken
+        check.episode = episode
     }
 }
 
@@ -461,6 +560,51 @@ struct WeatherSnapshotPayload: Codable, Sendable {
         snapshot.contextRangeEnd = contextRangeEnd
         snapshot.contextPoints = contextPoints
         snapshot.episode = episode
+    }
+}
+
+struct ContinuousMedicationPayload: Codable, Sendable {
+    let id: UUID
+    let name: String
+    let dosage: String
+    let frequency: String
+    let startDate: Date
+    let endDate: Date?
+    let createdAt: Date
+    let updatedAt: Date
+
+    nonisolated init(medication: ContinuousMedication) {
+        self.id = medication.id
+        self.name = medication.name
+        self.dosage = medication.dosage
+        self.frequency = medication.frequency
+        self.startDate = medication.startDate
+        self.endDate = medication.endDate
+        self.createdAt = medication.createdAt
+        self.updatedAt = medication.updatedAt
+    }
+
+    nonisolated func makeModel() -> ContinuousMedication {
+        ContinuousMedication(
+            id: id,
+            name: name,
+            dosage: dosage,
+            frequency: frequency,
+            startDate: startDate,
+            endDate: endDate,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
+
+    nonisolated func apply(to medication: ContinuousMedication) {
+        medication.name = name
+        medication.dosage = dosage
+        medication.frequency = frequency
+        medication.startDate = startDate
+        medication.endDate = endDate
+        medication.createdAt = createdAt
+        medication.updatedAt = updatedAt
     }
 }
 

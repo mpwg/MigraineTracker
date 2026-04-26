@@ -378,6 +378,7 @@ private func makeEpisode(id: UUID, startedAt: Date, intensity: Int, deletedAt: D
         functionalImpact: "",
         menstruationStatus: .unknown,
         medications: [],
+        continuousMedicationChecks: [],
         weather: nil,
         healthContext: nil
     )

@@ -131,6 +131,12 @@ final class EpisodeMedicationSelectionController {
         selectedMedicationKeys.contains(definition.selectionKey)
     }
 
+    func isMedicationNameSelected(_ name: String) -> Bool {
+        medications.contains {
+            $0.isSelected && $0.name.compare(name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }
+    }
+
     func quantity(for definition: MedicationDefinitionRecord) -> Int {
         guard let index = medicationSelectionIndicesByKey[definition.selectionKey] else {
             return 1
@@ -145,6 +151,34 @@ final class EpisodeMedicationSelectionController {
             medications[index].quantity = max(1, medications[index].quantity)
         } else {
             medications.append(MedicationSelectionDraft(definition: definition))
+        }
+        rebuildCaches()
+    }
+
+    func toggleMedicationSelection(named name: String, fallbackCategory: MedicationCategory = .other, fallbackDosage: String = "") {
+        if let definition = medicationDefinitions.first(where: {
+            $0.name.compare(name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }) {
+            toggleMedicationSelection(for: definition)
+            return
+        }
+
+        let selectionKey = MedicationSelectionDraft.makeSelectionKey(
+            name: name,
+            category: fallbackCategory,
+            dosage: fallbackDosage
+        )
+        if let index = medicationSelectionIndicesByKey[selectionKey] {
+            medications[index].isSelected.toggle()
+        } else {
+            medications.append(
+                MedicationSelectionDraft(
+                    selectionKey: selectionKey,
+                    name: name,
+                    category: fallbackCategory,
+                    dosage: fallbackDosage
+                )
+            )
         }
         rebuildCaches()
     }

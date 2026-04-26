@@ -66,7 +66,7 @@ struct SymiApp: App {
         launchConfiguration: AppLaunchConfiguration,
         storeURL overrideStoreURL: URL? = nil
     ) throws -> AppRuntimeEnvironment {
-        let schema = Schema(versionedSchema: SymiSchemaV5.self)
+        let schema = Schema(versionedSchema: SymiSchemaV6.self)
         let storeURL = overrideStoreURL ?? (launchConfiguration.isRunningTests ? unitTestStoreURL() : defaultStoreURL())
         let configuration = ModelConfiguration(
             "default",
@@ -132,7 +132,7 @@ struct SymiApp: App {
 
     @MainActor
     private static func makeRecoveryContainer() throws -> ModelContainer {
-        let schema = Schema(versionedSchema: SymiSchemaV5.self)
+        let schema = Schema(versionedSchema: SymiSchemaV6.self)
         let configuration = ModelConfiguration(
             "recovery",
             schema: schema,

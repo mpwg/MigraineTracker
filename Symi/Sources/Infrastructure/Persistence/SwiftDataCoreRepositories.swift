@@ -86,6 +86,10 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, @unchecked Sendable {
             context.delete(medication)
         }
 
+        for check in target.continuousMedicationChecks {
+            context.delete(check)
+        }
+
         if let existingWeatherSnapshot = target.weatherSnapshot {
             context.delete(existingWeatherSnapshot)
             target.weatherSnapshot = nil
@@ -101,6 +105,18 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, @unchecked Sendable {
                     quantity: $0.quantity,
                     takenAt: draft.startedAt,
                     effectiveness: .partial,
+                    episode: target
+                )
+            }
+
+        target.continuousMedicationChecks = draft.continuousMedicationChecks
+            .map {
+                ContinuousMedicationCheck(
+                    continuousMedicationID: $0.continuousMedicationID,
+                    name: $0.name,
+                    dosage: $0.dosage,
+                    frequency: $0.frequency,
+                    wasTaken: $0.wasTaken,
                     episode: target
                 )
             }
@@ -154,6 +170,89 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, @unchecked Sendable {
     nonisolated private func fetchEpisode(id: UUID, in context: ModelContext) throws -> Episode? {
         let descriptor = FetchDescriptor<Episode>(
             predicate: #Predicate<Episode> { $0.id == id }
+        )
+        return try context.fetch(descriptor).first
+    }
+}
+
+final class SwiftDataContinuousMedicationRepository: ContinuousMedicationRepository, @unchecked Sendable {
+    private let modelContainer: ModelContainer
+
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
+    nonisolated func fetchAll() throws -> [ContinuousMedicationRecord] {
+        let descriptor = FetchDescriptor<ContinuousMedication>(
+            sortBy: [SortDescriptor(\ContinuousMedication.startDate, order: .reverse), SortDescriptor(\ContinuousMedication.name)]
+        )
+        return try readContext().fetch(descriptor).map(ContinuousMedicationRecord.init)
+    }
+
+    nonisolated func fetchActive(on date: Date) throws -> [ContinuousMedicationRecord] {
+        let dayStart = Calendar.current.startOfDay(for: date)
+        let descriptor = FetchDescriptor<ContinuousMedication>(
+            sortBy: [SortDescriptor(\ContinuousMedication.name)]
+        )
+        return try readContext().fetch(descriptor)
+            .filter { medication in
+                medication.startDate <= dayStart && (medication.endDate == nil || (medication.endDate ?? .distantPast) >= dayStart)
+            }
+            .map(ContinuousMedicationRecord.init)
+    }
+
+    @discardableResult
+    nonisolated func save(_ draft: ContinuousMedicationDraft) throws -> ContinuousMedicationRecord {
+        let context = writeContext()
+        let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDosage = draft.dosage.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFrequency = draft.frequency.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let medication: ContinuousMedication
+        if let id = draft.id, let existing = try fetchMedication(id: id, in: context) {
+            medication = existing
+            medication.name = trimmedName
+            medication.dosage = trimmedDosage
+            medication.frequency = trimmedFrequency
+            medication.startDate = draft.startDate
+            medication.endDate = draft.endDate
+            medication.markUpdated()
+        } else {
+            medication = ContinuousMedication(
+                name: trimmedName,
+                dosage: trimmedDosage,
+                frequency: trimmedFrequency,
+                startDate: draft.startDate,
+                endDate: draft.endDate
+            )
+            context.insert(medication)
+        }
+
+        try context.save()
+        return ContinuousMedicationRecord(medication: medication)
+    }
+
+    nonisolated func delete(id: UUID) throws {
+        let context = writeContext()
+        guard let medication = try fetchMedication(id: id, in: context) else {
+            return
+        }
+
+        context.delete(medication)
+        try context.save()
+    }
+
+    nonisolated private func readContext() -> ModelContext {
+        ModelContext(modelContainer)
+    }
+
+    nonisolated private func writeContext() -> ModelContext {
+        ModelContext(modelContainer)
+    }
+
+    nonisolated private func fetchMedication(id: UUID, in context: ModelContext) throws -> ContinuousMedication? {
+        let descriptor = FetchDescriptor<ContinuousMedication>(
+            predicate: #Predicate<ContinuousMedication> { $0.id == id }
         )
         return try context.fetch(descriptor).first
     }
@@ -290,9 +389,15 @@ final class SwiftDataExportRepository: ExportRepository, @unchecked Sendable {
                 sortBy: [SortDescriptor(\MedicationDefinition.sortOrder)]
             )
         )
+        let continuousMedications = try readContext.fetch(
+            FetchDescriptor<ContinuousMedication>(
+                sortBy: [SortDescriptor(\ContinuousMedication.startDate, order: .reverse), SortDescriptor(\ContinuousMedication.name)]
+            )
+        )
         let snapshot = DataTransferSnapshot(
             episodes: episodes,
             customMedicationDefinitions: definitions,
+            continuousMedications: continuousMedications,
             healthContextStore: healthContextStore
         )
         return try snapshot.writeToTemporaryFile()
@@ -331,8 +436,37 @@ private extension EpisodeRecord {
             functionalImpact: episode.functionalImpact,
             menstruationStatus: episode.menstruationStatus,
             medications: episode.medications.map(MedicationRecord.init),
+            continuousMedicationChecks: episode.continuousMedicationChecks.map(ContinuousMedicationCheckRecord.init),
             weather: episode.weatherSnapshot.map(WeatherRecord.init),
             healthContext: healthContextStore.load(for: episode.id)
+        )
+    }
+}
+
+private extension ContinuousMedicationRecord {
+    nonisolated init(medication: ContinuousMedication) {
+        self.init(
+            id: medication.id,
+            name: medication.name,
+            dosage: medication.dosage,
+            frequency: medication.frequency,
+            startDate: medication.startDate,
+            endDate: medication.endDate,
+            createdAt: medication.createdAt,
+            updatedAt: medication.updatedAt
+        )
+    }
+}
+
+private extension ContinuousMedicationCheckRecord {
+    nonisolated init(check: ContinuousMedicationCheck) {
+        self.init(
+            id: check.id,
+            continuousMedicationID: check.continuousMedicationID,
+            name: check.name,
+            dosage: check.dosage,
+            frequency: check.frequency,
+            wasTaken: check.wasTaken
         )
     }
 }

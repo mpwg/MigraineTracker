@@ -16,6 +16,7 @@ final class AppContainer {
 
     let episodeRepository: EpisodeRepository
     let medicationCatalogRepository: MedicationCatalogRepository
+    let continuousMedicationRepository: ContinuousMedicationRepository
     let exportRepository: ExportRepository
     let syncService: SyncService
     let appLogService: AppLogService
@@ -51,6 +52,7 @@ final class AppContainer {
         )
         self.episodeRepository = SwiftDataEpisodeRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
         self.medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
+        self.continuousMedicationRepository = SwiftDataContinuousMedicationRepository(modelContainer: modelContainer)
         self.exportRepository = SwiftDataExportRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
         self.syncService = SyncServiceAdapter(coordinator: syncCoordinator)
         self.appLogService = appLogStore
@@ -75,7 +77,8 @@ final class AppContainer {
         EntryFlowCoordinator(
             initialStartedAt: initialStartedAt,
             episodeRepository: episodeRepository,
-            medicationRepository: medicationCatalogRepository
+            medicationRepository: medicationCatalogRepository,
+            continuousMedicationRepository: continuousMedicationRepository
         )
     }
 
@@ -87,6 +90,7 @@ final class AppContainer {
         SettingsController(
             episodeRepository: episodeRepository,
             medicationRepository: medicationCatalogRepository,
+            continuousMedicationRepository: continuousMedicationRepository,
             syncService: syncService,
             appLogService: appLogService,
             healthService: healthService

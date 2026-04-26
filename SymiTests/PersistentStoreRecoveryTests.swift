@@ -18,7 +18,7 @@ struct PersistentStoreRecoveryTests {
         try walData.write(to: walURL)
         try shmData.write(to: shmURL)
 
-        let schema = Schema(versionedSchema: SymiSchemaV5.self)
+        let schema = Schema(versionedSchema: SymiSchemaV6.self)
         let configuration = ModelConfiguration(
             "default",
             schema: schema,

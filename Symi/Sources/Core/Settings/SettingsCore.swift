@@ -87,13 +87,17 @@ final class SettingsController {
     private(set) var summary = SettingsSummaryData(activeEpisodeCount: 0, trashCount: 0, conflictCount: 0)
     private(set) var deletedEpisodes: [EpisodeRecord] = []
     private(set) var deletedDefinitions: [MedicationDefinitionRecord] = []
+    private(set) var continuousMedications: [ContinuousMedicationRecord] = []
     private(set) var logEntries: [AppLogEntry] = []
     private(set) var logShareURL: URL?
     private(set) var healthSettingsRevision = 0
     var logFilter: AppLogFilter = .all
+    var continuousMedicationEditor: ContinuousMedicationDraft?
+    var continuousMedicationMessage: String?
 
     private let episodeRepository: EpisodeRepository
     private let medicationRepository: MedicationCatalogRepository
+    private let continuousMedicationRepository: ContinuousMedicationRepository
     private let loadSettingsUseCase: LoadSettingsUseCase
     private let restoreDeletedItemUseCase: RestoreDeletedItemUseCase
     private let syncService: SyncService
@@ -107,12 +111,14 @@ final class SettingsController {
     init(
         episodeRepository: EpisodeRepository,
         medicationRepository: MedicationCatalogRepository,
+        continuousMedicationRepository: ContinuousMedicationRepository,
         syncService: SyncService,
         appLogService: AppLogService,
         healthService: HealthService
     ) {
         self.episodeRepository = episodeRepository
         self.medicationRepository = medicationRepository
+        self.continuousMedicationRepository = continuousMedicationRepository
         self.syncService = syncService
         self.appLogService = appLogService
         self.healthService = healthService
@@ -157,6 +163,7 @@ final class SettingsController {
 
         let episodeRepository = episodeRepository
         let medicationRepository = medicationRepository
+        let continuousMedicationRepository = continuousMedicationRepository
         loadTask = Task { [weak self] in
             guard let self else { return }
             do {
@@ -164,13 +171,15 @@ final class SettingsController {
                 let deleted = try await Task.detached(priority: .userInitiated) {
                     (
                         try episodeRepository.fetchDeleted(),
-                        try medicationRepository.fetchDeletedDefinitions()
+                        try medicationRepository.fetchDeletedDefinitions(),
+                        try continuousMedicationRepository.fetchAll()
                     )
                 }.value
                 guard !Task.isCancelled else { return }
                 summary = loadedSummary
                 deletedEpisodes = deleted.0
                 deletedDefinitions = deleted.1
+                continuousMedications = deleted.2
             } catch is CancellationError {
                 return
             } catch {
@@ -238,6 +247,53 @@ final class SettingsController {
             }
             guard !Task.isCancelled else { return }
             load()
+        }
+    }
+
+    func presentContinuousMedicationEditor(for medication: ContinuousMedicationRecord?) {
+        continuousMedicationEditor = medication.map(ContinuousMedicationDraft.init(record:)) ?? ContinuousMedicationDraft()
+        continuousMedicationMessage = nil
+    }
+
+    func saveContinuousMedication(_ draft: ContinuousMedicationDraft) async {
+        let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            continuousMedicationMessage = "Bitte gib ein Medikament an."
+            return
+        }
+
+        let repository = continuousMedicationRepository
+        var normalizedDraft = draft
+        normalizedDraft.name = trimmedName
+
+        do {
+            _ = try await Task.detached(priority: .userInitiated) {
+                try repository.save(normalizedDraft)
+            }.value
+            continuousMedicationEditor = nil
+            continuousMedicationMessage = nil
+            load()
+        } catch {
+            continuousMedicationMessage = "Dauermedikation konnte nicht gespeichert werden."
+        }
+    }
+
+    func endContinuousMedication(id: UUID) {
+        let repository = continuousMedicationRepository
+        Task { [weak self] in
+            guard let self else { return }
+            guard let medication = continuousMedications.first(where: { $0.id == id }) else { return }
+            var draft = ContinuousMedicationDraft(record: medication)
+            draft.endDate = .now
+
+            do {
+                _ = try await Task.detached(priority: .userInitiated) {
+                    try repository.save(draft)
+                }.value
+                load()
+            } catch {
+                continuousMedicationMessage = "Dauermedikation konnte nicht beendet werden."
+            }
         }
     }
 

@@ -41,6 +41,35 @@ struct EntryFlowCoordinatorTests {
 
         #expect(coordinator.currentStep == .triggers)
         #expect(coordinator.draft.medications.isEmpty)
+        #expect(coordinator.draft.continuousMedicationChecks.isEmpty)
+    }
+
+    @Test
+    func medicationStepStoresContinuousMedicationChecksSeparatelyFromAcuteMedication() async {
+        let repository = EntryFlowContinuousMedicationRepositoryMock(activeMedications: [
+            ContinuousMedicationRecord(
+                id: UUID(),
+                name: "Metoprolol",
+                dosage: "50 mg",
+                frequency: "täglich",
+                startDate: .now,
+                endDate: nil,
+                createdAt: .now,
+                updatedAt: .now
+            )
+        ])
+        let coordinator = makeCoordinator(continuousMedicationRepository: repository)
+        await coordinator.continuousMedicationController.reload(for: .now)
+        coordinator.draft.continuousMedicationChecks = coordinator.continuousMedicationController.makeDefaultChecks()
+        coordinator.draft.continuousMedicationChecks[0].wasTaken = false
+
+        coordinator.continueToNextStep()
+        coordinator.continueToNextStep()
+
+        #expect(coordinator.draft.continuousMedicationChecks.count == 1)
+        #expect(coordinator.draft.continuousMedicationChecks[0].name == "Metoprolol")
+        #expect(coordinator.draft.continuousMedicationChecks[0].wasTaken == false)
+        #expect(coordinator.draft.medications.isEmpty)
     }
 
     @Test
@@ -115,11 +144,13 @@ struct EntryFlowCoordinatorTests {
 
     private func makeCoordinator(
         repository: EntryFlowEpisodeRepositoryMock = EntryFlowEpisodeRepositoryMock(),
-        medicationRepository: EntryFlowMedicationRepositoryMock = EntryFlowMedicationRepositoryMock()
+        medicationRepository: EntryFlowMedicationRepositoryMock = EntryFlowMedicationRepositoryMock(),
+        continuousMedicationRepository: EntryFlowContinuousMedicationRepositoryMock = EntryFlowContinuousMedicationRepositoryMock()
     ) -> EntryFlowCoordinator {
         EntryFlowCoordinator(
             episodeRepository: repository,
             medicationRepository: medicationRepository,
+            continuousMedicationRepository: continuousMedicationRepository,
             autoloadMedications: false
         )
     }
@@ -179,4 +210,28 @@ private final class EntryFlowMedicationRepositoryMock: MedicationCatalogReposito
 
     func softDeleteCustomDefinition(catalogKey: String) throws {}
     func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord] { [] }
+}
+
+private final class EntryFlowContinuousMedicationRepositoryMock: ContinuousMedicationRepository, @unchecked Sendable {
+    let activeMedications: [ContinuousMedicationRecord]
+
+    init(activeMedications: [ContinuousMedicationRecord] = []) {
+        self.activeMedications = activeMedications
+    }
+
+    func fetchAll() throws -> [ContinuousMedicationRecord] { [] }
+    func fetchActive(on date: Date) throws -> [ContinuousMedicationRecord] { activeMedications }
+    func save(_ draft: ContinuousMedicationDraft) throws -> ContinuousMedicationRecord {
+        ContinuousMedicationRecord(
+            id: draft.id ?? UUID(),
+            name: draft.name,
+            dosage: draft.dosage,
+            frequency: draft.frequency,
+            startDate: draft.startDate,
+            endDate: draft.endDate,
+            createdAt: .now,
+            updatedAt: .now
+        )
+    }
+    func delete(id: UUID) throws {}
 }

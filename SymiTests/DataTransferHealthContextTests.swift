@@ -12,6 +12,7 @@ struct DataTransferHealthContextTests {
         let sourceContainer = try makeInMemoryContainer()
         let sourceHealthStore = HealthContextStore(baseURL: try makeTemporaryDirectory())
         try seedEpisode(id: episodeID, in: sourceContainer)
+        try seedContinuousMedication(in: sourceContainer)
         try sourceHealthStore.save(healthContext, for: episodeID)
 
         let backupURL = try SwiftDataExportRepository(
@@ -20,6 +21,7 @@ struct DataTransferHealthContextTests {
         ).createBackup()
         let backupText = try String(contentsOf: backupURL, encoding: .utf8)
         #expect(backupText.contains("\"healthContext\""))
+        #expect(backupText.contains("\"continuousMedications\""))
 
         let targetContainer = try makeInMemoryContainer()
         let targetHealthStore = HealthContextStore(baseURL: try makeTemporaryDirectory())
@@ -38,8 +40,11 @@ struct DataTransferHealthContextTests {
         #expect(importedEpisode.id == episodeID)
         #expect(importedEpisode.medications.count == 1)
         #expect(importedEpisode.medications.first?.name == "Sumatriptan")
+        #expect(importedEpisode.continuousMedicationChecks.first?.name == "Metoprolol")
         #expect(importedEpisode.weatherSnapshot?.condition == "Regen")
         #expect(importedEpisode.weatherSnapshot?.contextPoints.count == 1)
+        let importedContinuousMedications = try ModelContext(targetContainer).fetch(FetchDescriptor<ContinuousMedication>())
+        #expect(importedContinuousMedications.first?.name == "Metoprolol")
         #expect(targetHealthStore.load(for: episodeID) == HealthContextRecord(snapshot: healthContext))
     }
 
@@ -129,7 +134,7 @@ struct DataTransferHealthContextTests {
 }
 
 private func makeInMemoryContainer() throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV5.self)
+    let schema = Schema(versionedSchema: SymiSchemaV6.self)
     let configuration = ModelConfiguration(
         "test-\(UUID().uuidString)",
         schema: schema,
@@ -169,6 +174,16 @@ private func seedEpisode(id: UUID, notes: String = "Migräne nach Wetterwechsel"
         episode: episode
     )
     episode.medications = [medication]
+    episode.continuousMedicationChecks = [
+        ContinuousMedicationCheck(
+            continuousMedicationID: UUID(uuidString: "10000000-0000-0000-0000-000000000001")!,
+            name: "Metoprolol",
+            dosage: "50 mg",
+            frequency: "täglich",
+            wasTaken: true,
+            episode: episode
+        )
+    ]
     episode.weatherSnapshot = WeatherSnapshot(
         id: UUID(),
         recordedAt: startedAt,
@@ -197,6 +212,21 @@ private func seedEpisode(id: UUID, notes: String = "Migräne nach Wetterwechsel"
         episode: episode
     )
     context.insert(episode)
+    try context.save()
+}
+
+private func seedContinuousMedication(in container: ModelContainer) throws {
+    let context = ModelContext(container)
+    context.insert(
+        ContinuousMedication(
+            id: UUID(uuidString: "10000000-0000-0000-0000-000000000001")!,
+            name: "Metoprolol",
+            dosage: "50 mg",
+            frequency: "täglich",
+            startDate: Date(timeIntervalSince1970: 1_699_000_000),
+            endDate: nil
+        )
+    )
     try context.save()
 }
 

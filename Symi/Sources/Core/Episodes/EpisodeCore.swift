@@ -66,6 +66,48 @@ struct MedicationRecord: Identifiable, Equatable, Sendable {
     nonisolated let isRepeatDose: Bool
 }
 
+struct ContinuousMedicationRecord: Identifiable, Equatable, Sendable {
+    nonisolated let id: UUID
+    nonisolated let name: String
+    nonisolated let dosage: String
+    nonisolated let frequency: String
+    nonisolated let startDate: Date
+    nonisolated let endDate: Date?
+    nonisolated let createdAt: Date
+    nonisolated let updatedAt: Date
+
+    nonisolated var isActive: Bool {
+        guard let endDate else {
+            return true
+        }
+
+        return endDate >= Calendar.current.startOfDay(for: .now)
+    }
+
+    nonisolated var detailText: String {
+        [dosage, frequency]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+}
+
+struct ContinuousMedicationCheckRecord: Identifiable, Equatable, Sendable {
+    nonisolated let id: UUID
+    nonisolated let continuousMedicationID: UUID
+    nonisolated let name: String
+    nonisolated let dosage: String
+    nonisolated let frequency: String
+    nonisolated let wasTaken: Bool
+
+    nonisolated var detailText: String {
+        [dosage, frequency]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+}
+
 struct EpisodeRecord: Identifiable, Equatable, Sendable {
     nonisolated let id: UUID
     nonisolated let startedAt: Date
@@ -82,6 +124,7 @@ struct EpisodeRecord: Identifiable, Equatable, Sendable {
     nonisolated let functionalImpact: String
     nonisolated let menstruationStatus: MenstruationStatus
     nonisolated let medications: [MedicationRecord]
+    nonisolated let continuousMedicationChecks: [ContinuousMedicationCheckRecord]
     nonisolated let weather: WeatherRecord?
     nonisolated let healthContext: HealthContextRecord?
 
@@ -91,6 +134,88 @@ struct EpisodeRecord: Identifiable, Equatable, Sendable {
 
     nonisolated var dayPart: EpisodeDayPart {
         EpisodeDayPart(date: startedAt)
+    }
+}
+
+struct ContinuousMedicationDraft: Identifiable, Equatable, Sendable {
+    nonisolated var id: UUID?
+    nonisolated var name: String
+    nonisolated var dosage: String
+    nonisolated var frequency: String
+    nonisolated var startDate: Date
+    nonisolated var endDate: Date?
+
+    nonisolated var stableID: UUID {
+        id ?? UUID()
+    }
+
+    nonisolated init(
+        id: UUID? = nil,
+        name: String = "",
+        dosage: String = "",
+        frequency: String = "",
+        startDate: Date = .now,
+        endDate: Date? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.dosage = dosage
+        self.frequency = frequency
+        self.startDate = startDate
+        self.endDate = endDate
+    }
+
+    nonisolated init(record: ContinuousMedicationRecord) {
+        self.init(
+            id: record.id,
+            name: record.name,
+            dosage: record.dosage,
+            frequency: record.frequency,
+            startDate: record.startDate,
+            endDate: record.endDate
+        )
+    }
+}
+
+struct ContinuousMedicationCheckDraft: Identifiable, Equatable, Sendable {
+    nonisolated let id: UUID
+    nonisolated let continuousMedicationID: UUID
+    nonisolated var name: String
+    nonisolated var dosage: String
+    nonisolated var frequency: String
+    nonisolated var wasTaken: Bool
+
+    nonisolated init(
+        id: UUID = UUID(),
+        continuousMedicationID: UUID,
+        name: String,
+        dosage: String = "",
+        frequency: String = "",
+        wasTaken: Bool = true
+    ) {
+        self.id = id
+        self.continuousMedicationID = continuousMedicationID
+        self.name = name
+        self.dosage = dosage
+        self.frequency = frequency
+        self.wasTaken = wasTaken
+    }
+
+    nonisolated init(record: ContinuousMedicationRecord, wasTaken: Bool = true) {
+        self.init(
+            continuousMedicationID: record.id,
+            name: record.name,
+            dosage: record.dosage,
+            frequency: record.frequency,
+            wasTaken: wasTaken
+        )
+    }
+
+    nonisolated var detailText: String {
+        [dosage, frequency]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
     }
 }
 
@@ -254,6 +379,7 @@ struct EpisodeDraft: Equatable, Sendable {
     nonisolated var selectedSymptoms: Set<String>
     nonisolated var selectedTriggers: Set<String>
     nonisolated var medications: [MedicationSelectionDraft]
+    nonisolated var continuousMedicationChecks: [ContinuousMedicationCheckDraft] = []
 
     nonisolated static func makeNew(initialStartedAt: Date? = nil) -> EpisodeDraft {
         let startedAt = initialStartedAt ?? .now
@@ -272,7 +398,8 @@ struct EpisodeDraft: Equatable, Sendable {
             menstruationStatus: .unknown,
             selectedSymptoms: [],
             selectedTriggers: [],
-            medications: []
+            medications: [],
+            continuousMedicationChecks: []
         )
     }
 
@@ -292,7 +419,17 @@ struct EpisodeDraft: Equatable, Sendable {
             menstruationStatus: record.menstruationStatus,
             selectedSymptoms: Set(record.symptoms),
             selectedTriggers: Set(record.triggers),
-            medications: record.medications.map(MedicationSelectionDraft.init(record:))
+            medications: record.medications.map(MedicationSelectionDraft.init(record:)),
+            continuousMedicationChecks: record.continuousMedicationChecks.map {
+                ContinuousMedicationCheckDraft(
+                    id: $0.id,
+                    continuousMedicationID: $0.continuousMedicationID,
+                    name: $0.name,
+                    dosage: $0.dosage,
+                    frequency: $0.frequency,
+                    wasTaken: $0.wasTaken
+                )
+            }
         )
     }
 
@@ -349,6 +486,14 @@ protocol MedicationCatalogRepository: Sendable {
     nonisolated func saveCustomDefinition(_ draft: CustomMedicationDefinitionDraft) throws -> MedicationDefinitionRecord
     nonisolated func softDeleteCustomDefinition(catalogKey: String) throws
     nonisolated func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord]
+}
+
+protocol ContinuousMedicationRepository: Sendable {
+    nonisolated func fetchAll() throws -> [ContinuousMedicationRecord]
+    nonisolated func fetchActive(on date: Date) throws -> [ContinuousMedicationRecord]
+    @discardableResult
+    nonisolated func save(_ draft: ContinuousMedicationDraft) throws -> ContinuousMedicationRecord
+    nonisolated func delete(id: UUID) throws
 }
 
 struct SaveEpisodeUseCase {
