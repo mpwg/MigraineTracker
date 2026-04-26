@@ -33,8 +33,18 @@ struct EpisodeEditorView: View {
 
             EpisodeScaleSection(draft: $controller.draft)
             EpisodeTimingSection(draft: $controller.draft)
-            EpisodeTagSection(title: "Was spürst du?", options: controller.symptomOptions, selection: $controller.draft.selectedSymptoms)
-            EpisodeTagSection(title: "Was könnte mitspielen?", options: controller.triggerOptions, selection: $controller.draft.selectedTriggers)
+            EpisodeTagSection(
+                title: "Was spürst du?",
+                options: controller.symptomOptions,
+                selection: $controller.draft.selectedSymptoms,
+                colorToken: NewEntryStepCatalog.metadata(for: .headache).colorToken
+            )
+            EpisodeTagSection(
+                title: "Was könnte mitspielen?",
+                options: controller.triggerOptions,
+                selection: $controller.draft.selectedTriggers,
+                colorToken: NewEntryStepCatalog.metadata(for: .triggers).colorToken
+            )
             EpisodeNotesSection(draft: $controller.draft)
             EpisodeOptionalDetailsSection(draft: $controller.draft)
             EpisodeWeatherSection(state: controller.weatherLoadState)
@@ -200,50 +210,17 @@ private struct EpisodeTagSection: View {
     let title: String
     let options: [String]
     @Binding var selection: Set<String>
+    let colorToken: NewEntryStepColorToken
 
     var body: some View {
         Section(title) {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 10)], spacing: 10) {
-                ForEach(options, id: \.self) { option in
-                    let isSelected = selection.contains(option)
-
-                    Button {
-                        toggle(option)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                .imageScale(.medium)
-                            Text(option)
-                                .font(.subheadline.weight(.medium))
-                                .multilineTextAlignment(.leading)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .background(isSelected ? AppTheme.selectedFill : AppTheme.secondaryFill)
-                        .foregroundStyle(isSelected ? AppTheme.ocean : Color.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(isSelected ? AppTheme.ocean.opacity(0.28) : Color.white.opacity(0.45), lineWidth: 1)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(title): \(option)")
-                    .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
-                    .accessibilityAddTraits(isSelected ? .isSelected : [])
-                }
-            }
+            MultiSelectGrid(
+                options: options,
+                selection: $selection,
+                colorToken: colorToken,
+                accessibilityPrefix: title
+            )
             .formAlignedRow()
-        }
-    }
-
-    private func toggle(_ option: String) {
-        if selection.contains(option) {
-            selection.remove(option)
-        } else {
-            selection.insert(option)
         }
     }
 }
@@ -423,9 +400,10 @@ private struct EpisodeSaveSection: View {
 
     var body: some View {
         Section {
-            Button(mode == .create ? "Eintrag speichern" : "Änderungen speichern", action: onSave)
+            PrimaryButton(action: onSave) {
+                Text(mode == .create ? "Eintrag speichern" : "Änderungen speichern")
+            }
                 .disabled(isSaving)
-                .buttonStyle(SymiPrimaryButtonStyle())
                 .formAlignedRow()
         }
     }
