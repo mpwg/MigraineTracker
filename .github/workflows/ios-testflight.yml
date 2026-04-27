@@ -1,18 +1,16 @@
 name: TestFlight Release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Symi/**'
-      - 'Symi.xcodeproj/**'
-      - 'fastlane/**'
-      - '!fastlane/screenshots/**'
-      - 'Gemfile'
-      - 'Gemfile.lock'
-      - '.ruby-version'
-      - '.github/workflows/ios-testflight.yml'
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Optionale Buildnummer. Leer lassen für automatische fastlane-Buildnummer."
+        required: false
+        type: string
+
+concurrency:
+  group: testflight-release
+  cancel-in-progress: false
 
 jobs:
   upload-to-testflight:
@@ -31,9 +29,15 @@ jobs:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      BUILD_NUMBER: ${{ inputs.build_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.4'
 
       - name: Release-Secrets validieren
         run: |
@@ -60,11 +64,6 @@ jobs:
             exit 1
           fi
         shell: bash
-
-      - name: Xcode 26.4 auswählen
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '26.4'
 
       - name: Xcode-Version ausgeben
         run: |

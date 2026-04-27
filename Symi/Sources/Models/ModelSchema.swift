@@ -1052,7 +1052,7 @@ enum SymiSchemaV5: VersionedSchema {
         var dayRangeEnd: Date?
         var contextRangeStart: Date?
         var contextRangeEnd: Date?
-        var contextPointsStorage: String
+        var contextPointsStorage: String = ""
         var episode: Episode?
 
         init(
@@ -1328,7 +1328,7 @@ enum SymiSchemaV6: VersionedSchema {
         var dayRangeEnd: Date?
         var contextRangeStart: Date?
         var contextRangeEnd: Date?
-        var contextPointsStorage: String
+        var contextPointsStorage: String = ""
         var episode: Episode?
 
         init(
