@@ -42,7 +42,7 @@ struct HomeView: View {
     private var compactDashboard: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: SymiSpacing.zero) {
-                HomeHeaderView(month: displayedMonth)
+                HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
                 HomeMonthCalendarView(
@@ -63,9 +63,7 @@ struct HomeView: View {
                 HomePatternPreviewSection(data: patternPreviewData) {
                     HomeInsightsView(data: patternPreviewData)
                 }
-                .padding(.bottom, SymiSpacing.xxxl)
-
-                HomeTrustSection()
+                .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.vertical, SymiSpacing.xl)
@@ -76,7 +74,7 @@ struct HomeView: View {
     private var regularDashboard: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: SymiSpacing.zero) {
-                HomeHeaderView(month: displayedMonth)
+                HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
                 HomeMonthCalendarView(
@@ -97,9 +95,7 @@ struct HomeView: View {
                 HomePatternPreviewSection(data: patternPreviewData) {
                     HomeInsightsView(data: patternPreviewData)
                 }
-                .padding(.bottom, SymiSpacing.xxxl)
-
-                HomeTrustSection()
+                .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
             .padding(SymiSpacing.xxxl)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
@@ -193,7 +189,7 @@ private struct HomeMonthCalendarView: View {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme).opacity(SymiOpacity.heroSecondaryText))
+                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme).opacity(SymiOpacity.disabledContent))
                         .frame(maxWidth: .infinity, minHeight: SymiSize.homeCalendarWeekdayHeight)
                         .accessibilityHidden(true)
                 }
@@ -292,16 +288,16 @@ private struct HomeCalendarDayCell: View {
                 if entries.isEmpty {
                     Circle()
                         .fill(Color.clear)
-                        .frame(width: SymiSize.calendarDot, height: SymiSize.calendarDot)
+                        .frame(width: calendarDotSize, height: calendarDotSize)
                 } else {
                     HStack(spacing: SymiSpacing.micro) {
                         ForEach(Array(entries.prefix(3).enumerated()), id: \.element.id) { _, entry in
                             Circle()
                                 .fill(dotColor(for: entry))
-                                .frame(width: SymiSize.calendarDot, height: SymiSize.calendarDot)
+                                .frame(width: calendarDotSize, height: calendarDotSize)
                         }
                     }
-                    .frame(height: SymiSize.calendarDot)
+                    .frame(height: calendarDotSize)
                 }
             }
             .frame(maxWidth: .infinity, minHeight: calendarDayMinHeight)
@@ -318,11 +314,11 @@ private struct HomeCalendarDayCell: View {
     private func dotColor(for entry: EpisodeRecord) -> Color {
         switch entry.intensity {
         case 8 ... 10:
-            AppTheme.coral(for: colorScheme).opacity(SymiOpacity.heroSecondaryWave)
+            AppTheme.coral(for: colorScheme).opacity(SymiOpacity.secondaryActionText)
         case 5 ... 7:
-            AppTheme.sage(for: colorScheme).opacity(SymiOpacity.heroSecondaryWave)
+            AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryActionText)
         default:
-            AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.secondaryActionText)
+            AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.disabledContent)
         }
     }
 
@@ -335,7 +331,7 @@ private struct HomeCalendarDayCell: View {
             return AppTheme.petrol(for: colorScheme)
         }
 
-        return AppTheme.textSecondary(for: colorScheme).opacity(SymiOpacity.heroSecondaryText)
+        return AppTheme.textPrimary(for: colorScheme).opacity(0.6)
     }
 
     private var dayNumberFont: Font {
@@ -348,6 +344,10 @@ private struct HomeCalendarDayCell: View {
 
     private var calendarDayMinHeight: CGFloat {
         dynamicTypeSize.isAccessibilitySize ? SymiSize.calendarDayMinHeight + SymiSize.homeCalendarDayAccessibilityGrowth : SymiSize.calendarDayMinHeight - SymiSpacing.xs
+    }
+
+    private var calendarDotSize: CGFloat {
+        max(4, SymiSize.calendarDot - 2)
     }
 
     private var accessibilityLabel: String {
@@ -372,21 +372,14 @@ private struct HomeCalendarDayCell: View {
 }
 
 private struct HomeHeaderView: View {
-    let month: Date
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-            Text(ProductBranding.displayName)
-                .font(.largeTitle.weight(.bold))
-                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
-                .accessibilityAddTraits(.isHeader)
-
-            Text(month.formatted(.dateTime.month(.wide).year()))
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        Text(ProductBranding.displayName)
+            .font(.largeTitle.weight(.bold))
+            .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+            .accessibilityAddTraits(.isHeader)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -401,7 +394,7 @@ private struct PrimaryEntryButton: View {
                 Image(systemName: "plus")
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(AppTheme.symiOnAccent)
-                    .frame(width: 46, height: 46)
+                    .frame(width: 48, height: 48)
                     .background(AppTheme.coral(for: colorScheme), in: Circle())
                     .accessibilityHidden(true)
 
@@ -633,26 +626,6 @@ struct AdaptiveDashboardCard<Content: View>: View {
     }
 }
 
-private struct HomeTrustSection: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-            Label("Deine Daten gehören dir.", systemImage: "lock")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(SymiOpacity.strongText))
-
-            Text("Symi bleibt lokal nutzbar. Sync und Export passieren nur, wenn du sie aktiv nutzt.")
-                .font(.footnote)
-                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.top, SymiSpacing.xs)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityIdentifier("home-trust-section")
-    }
-}
-
 private struct HomePrimaryActionButtonStyle: ButtonStyle {
     let colorScheme: ColorScheme
 
@@ -661,10 +634,10 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
             .background(buttonBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.backgroundAccent : SymiOpacity.softFill),
-                radius: 18,
+                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.clearAccent : 0.14),
+                radius: 14,
                 x: SymiShadow.cardXOffset,
-                y: 8
+                y: 6
             )
             .animation(.spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
     }
@@ -672,8 +645,8 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
     private var buttonBackground: LinearGradient {
         LinearGradient(
             colors: [
-                AppTheme.petrol(for: colorScheme),
-                AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.heroSecondaryText),
+                SymiColors.primaryPetrol.color,
+                SymiColorValue(hex: 0x134A4B).color,
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
