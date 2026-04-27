@@ -18,6 +18,7 @@ final class AppContainer {
     let medicationCatalogRepository: MedicationCatalogRepository
     let continuousMedicationRepository: ContinuousMedicationRepository
     let exportRepository: ExportRepository
+    let insightEngine: InsightEngine
     let syncService: SyncService
     let appLogService: AppLogService
 
@@ -54,6 +55,7 @@ final class AppContainer {
         self.medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
         self.continuousMedicationRepository = SwiftDataContinuousMedicationRepository(modelContainer: modelContainer)
         self.exportRepository = SwiftDataExportRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
+        self.insightEngine = InsightEngine()
         self.syncService = SyncServiceAdapter(coordinator: syncCoordinator)
         self.appLogService = appLogStore
     }

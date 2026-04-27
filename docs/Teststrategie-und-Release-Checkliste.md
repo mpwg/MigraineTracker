@@ -34,6 +34,7 @@ Die automatisierten Tests decken aktuell folgende Kernlogik ab:
 
 - Wetter-Snapshots für echte API-Daten und Zukunftsvalidierung
 - Export-Metriken für Durchschnittsintensität und Medikamentenliste
+- Insight Engine für Mindestdaten, Ausschlüsse, Durchschnitt, Trigger-/Wochentag-Thresholds, Trend und Hero-Sortierung
 
 Damit sind die fehleranfälligen, nicht-visuellen Regeln des MVP reproduzierbar abgesichert, ohne das iPhone-UI unnötig kompliziert zu machen.
 

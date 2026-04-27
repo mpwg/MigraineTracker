@@ -533,14 +533,38 @@ struct HomePatternPreviewData: Equatable {
         totalPainEpisodeCount >= Self.minimumEpisodeCount
     }
 
-    static let minimumEpisodeCount = 3
+    static let minimumEpisodeCount = InsightEngine.minimumQualifiedEpisodeCount
+
+    init(totalPainEpisodeCount: Int, cards: [HomePatternPreviewCard]) {
+        self.totalPainEpisodeCount = totalPainEpisodeCount
+        self.cards = cards
+    }
+
+    init(result: InsightResult) {
+        totalPainEpisodeCount = result.totalQualifiedEpisodeCount
+        cards = result.insights.map(HomePatternPreviewCard.init)
+    }
 }
 
 struct HomePatternPreviewCard: Identifiable, Equatable {
     enum Kind: String, Equatable {
-        case frequentDay
-        case weatherSymptoms
-        case menstruationCycle
+        case weekdayPattern
+        case triggerCorrelation
+        case averageIntensity
+        case trend
+
+        init(category: InsightCategory) {
+            switch category {
+            case .weekdayPattern:
+                self = .weekdayPattern
+            case .triggerCorrelation:
+                self = .triggerCorrelation
+            case .averageIntensity:
+                self = .averageIntensity
+            case .trend:
+                self = .trend
+            }
+        }
     }
 
     let kind: Kind
@@ -551,6 +575,31 @@ struct HomePatternPreviewCard: Identifiable, Equatable {
     let isWide: Bool
 
     var id: String { kind.rawValue }
+
+    init(
+        kind: Kind,
+        title: String,
+        value: String,
+        detail: String,
+        systemImage: String,
+        isWide: Bool
+    ) {
+        self.kind = kind
+        self.title = title
+        self.value = value
+        self.detail = detail
+        self.systemImage = systemImage
+        self.isWide = isWide
+    }
+
+    init(insight: Insight) {
+        kind = Kind(category: insight.category)
+        title = insight.category.displayTitle
+        value = insight.title
+        detail = insight.description
+        systemImage = insight.systemImage ?? insight.category.fallbackSystemImage
+        isWide = insight.category == .trend
+    }
 }
 
 struct LoadHomeOverviewUseCase {
@@ -574,105 +623,29 @@ struct LoadHomeOverviewUseCase {
 
 struct LoadHomePatternPreviewUseCase {
     let repository: EpisodeRepository
+    let insightEngine: InsightEngine
 
     func execute() async throws -> HomePatternPreviewData {
+        let result = try await LoadInsightResultUseCase(
+            repository: repository,
+            insightEngine: insightEngine
+        ).execute()
+
+        return HomePatternPreviewData(result: result)
+    }
+}
+
+struct LoadInsightResultUseCase {
+    let repository: EpisodeRepository
+    let insightEngine: InsightEngine
+
+    func execute() async throws -> InsightResult {
         let repository = repository
         let episodes = try await Task.detached(priority: .userInitiated) {
             try repository.fetchRecent()
         }.value
-        return HomePatternPreviewBuilder.build(from: episodes)
-    }
-}
 
-enum HomePatternPreviewBuilder {
-    static func build(from episodes: [EpisodeRecord], calendar: Calendar = .current) -> HomePatternPreviewData {
-        let painEpisodes = episodes.filter { episode in
-            episode.type == .headache || episode.type == .migraine
-        }
-
-        guard painEpisodes.count >= HomePatternPreviewData.minimumEpisodeCount else {
-            return HomePatternPreviewData(totalPainEpisodeCount: painEpisodes.count, cards: [])
-        }
-
-        let cards = [
-            frequentDayCard(from: painEpisodes, calendar: calendar),
-            weatherSymptomsCard(from: painEpisodes),
-            menstruationCycleCard(from: painEpisodes)
-        ]
-        .compactMap { $0 }
-        .prefix(3)
-
-        return HomePatternPreviewData(totalPainEpisodeCount: painEpisodes.count, cards: Array(cards))
-    }
-
-    private static func frequentDayCard(from episodes: [EpisodeRecord], calendar: Calendar) -> HomePatternPreviewCard? {
-        let grouped = Dictionary(grouping: episodes) { calendar.component(.weekday, from: $0.startedAt) }
-        guard
-            let match = grouped.max(by: { lhs, rhs in lhs.value.count < rhs.value.count }),
-            match.value.count >= 2
-        else {
-            return nil
-        }
-
-        return HomePatternPreviewCard(
-            kind: .frequentDay,
-            title: "Häufigster Tag",
-            value: weekdayName(for: match.key, calendar: calendar),
-            detail: "An diesem Wochentag liegen in deinen bisherigen Einträgen etwas mehr Notizen.",
-            systemImage: "calendar",
-            isWide: false
-        )
-    }
-
-    private static func weatherSymptomsCard(from episodes: [EpisodeRecord]) -> HomePatternPreviewCard? {
-        let episodesWithWeatherAndSymptoms = episodes.filter { $0.weather != nil && !$0.symptoms.isEmpty }
-        guard episodesWithWeatherAndSymptoms.count >= HomePatternPreviewData.minimumEpisodeCount else {
-            return nil
-        }
-
-        let symptoms = episodesWithWeatherAndSymptoms.flatMap(\.symptoms)
-        guard let symptom = mostCommonValue(in: symptoms) else {
-            return nil
-        }
-
-        return HomePatternPreviewCard(
-            kind: .weatherSymptoms,
-            title: "Wetter & Symptome",
-            value: symptom,
-            detail: "Bei Einträgen mit Wetterkontext wurde dieses Symptom öfter notiert.",
-            systemImage: "cloud.sun",
-            isWide: false
-        )
-    }
-
-    private static func menstruationCycleCard(from episodes: [EpisodeRecord]) -> HomePatternPreviewCard? {
-        let cycleEpisodes = episodes.filter { $0.menstruationStatus == .active || $0.menstruationStatus == .expected }
-        guard cycleEpisodes.count >= 2 else {
-            return nil
-        }
-
-        return HomePatternPreviewCard(
-            kind: .menstruationCycle,
-            title: "Menstruationszyklus",
-            value: "\(cycleEpisodes.count) Einträge",
-            detail: "Bei einigen Einträgen ist Zykluskontext hinterlegt. Das ist nur ein vorsichtiger Hinweis.",
-            systemImage: "drop",
-            isWide: true
-        )
-    }
-
-    private static func mostCommonValue(in values: [String]) -> String? {
-        Dictionary(grouping: values.filter { !$0.isEmpty }, by: { $0 })
-            .max { lhs, rhs in lhs.value.count < rhs.value.count }?
-            .key
-    }
-
-    private static func weekdayName(for weekday: Int, calendar: Calendar) -> String {
-        let symbols = calendar.weekdaySymbols
-        guard symbols.indices.contains(weekday - 1) else {
-            return "Ein Wochentag"
-        }
-        return symbols[weekday - 1]
+        return insightEngine.evaluate(episodes: episodes)
     }
 }
 
