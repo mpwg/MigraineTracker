@@ -144,18 +144,18 @@ private struct HomeMonthCalendarView: View {
     private let calendar = Calendar.current
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            HStack(alignment: .center, spacing: SymiSpacing.md) {
+        VStack(alignment: .leading, spacing: SymiSpacing.compact) {
+            HStack(alignment: .center, spacing: SymiSpacing.xs) {
                 Text(month.formatted(.dateTime.month(.wide).year()))
-                    .font(.headline.weight(.semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .lineLimit(1)
                     .minimumScaleFactor(SymiTypography.compactScaleFactor)
                     .accessibilityAddTraits(.isHeader)
 
-                Spacer(minLength: SymiSpacing.sm)
+                Spacer(minLength: SymiSpacing.xs)
 
-                HStack(spacing: SymiSpacing.sm) {
+                HStack(spacing: SymiSpacing.xs) {
                     calendarNavigationButton(systemImage: "chevron.left", label: "Vorheriger Monat", action: onPrevious)
                     calendarNavigationButton(systemImage: "chevron.right", label: "Nächster Monat", action: onNext)
                 }
@@ -252,6 +252,7 @@ private struct HomeCalendarDayCell: View {
                 Circle()
                     .fill(Color.clear)
                     .frame(width: calendarDotSize, height: calendarDotSize)
+                    .frame(maxWidth: .infinity, minHeight: calendarDotRowHeight, alignment: .center)
             } else {
                 HStack(spacing: SymiSpacing.micro) {
                     ForEach(Array(entries.prefix(3).enumerated()), id: \.element.id) { _, entry in
@@ -260,7 +261,7 @@ private struct HomeCalendarDayCell: View {
                             .frame(width: calendarDotSize, height: calendarDotSize)
                     }
                 }
-                .frame(height: calendarDotSize)
+                .frame(maxWidth: .infinity, minHeight: calendarDotRowHeight, alignment: .center)
             }
         }
         .frame(maxWidth: .infinity, minHeight: calendarDayMinHeight)
@@ -304,6 +305,10 @@ private struct HomeCalendarDayCell: View {
         max(6, SymiSize.calendarDot - 2)
     }
 
+    private var calendarDotRowHeight: CGFloat {
+        calendarDotSize
+    }
+
     private var accessibilityLabel: String {
         let dateText = date.formatted(date: .complete, time: .omitted)
         let stateText = isToday ? "heute" : "Kalendertag"
@@ -319,14 +324,14 @@ private struct HomeCalendarDayCell: View {
 }
 
 private struct HomeHeaderView: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        Text(ProductBranding.displayName)
-            .font(.largeTitle.weight(.bold))
-            .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
-            .accessibilityAddTraits(.isHeader)
+        Image("HomeBrandLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 140, height: 68, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel(ProductBranding.displayName)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -403,10 +408,9 @@ private struct HomePatternPreviewSection<Destination: View>: View {
             }
 
             if data.hasEnoughData, !data.cards.isEmpty {
-                LazyVGrid(columns: columns, alignment: .leading, spacing: SymiSpacing.md) {
+                VStack(alignment: .leading, spacing: SymiSpacing.md) {
                     ForEach(Array(data.cards.prefix(2))) { card in
                         HomePatternCard(card: card)
-                            .gridCellColumns(card.isWide ? 2 : 1)
                     }
                 }
             } else {
@@ -415,13 +419,6 @@ private struct HomePatternPreviewSection<Destination: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityIdentifier("home-patterns-section")
-    }
-
-    private var columns: [GridItem] {
-        [
-            GridItem(.flexible(minimum: 140), spacing: SymiSpacing.md, alignment: .top),
-            GridItem(.flexible(minimum: 140), spacing: SymiSpacing.md, alignment: .top),
-        ]
     }
 }
 
@@ -589,10 +586,10 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
             .background(buttonBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.clearAccent : 0.14),
-                radius: 14,
+                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? 0.05 : 0.10),
+                radius: 16,
                 x: SymiShadow.cardXOffset,
-                y: 6
+                y: 5
             )
             .animation(.spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
     }
