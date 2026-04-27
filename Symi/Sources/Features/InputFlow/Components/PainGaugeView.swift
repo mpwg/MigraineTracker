@@ -5,19 +5,25 @@ struct PainGaugeView: View {
 
     let range: ClosedRange<Int>
     let theme: InputFlowStepTheme
+    let accent: Color?
+    let isCard: Bool
 
     init(
         value: Binding<Int>,
         range: ClosedRange<Int> = 1 ... 10,
-        theme: InputFlowStepTheme = .pain
+        theme: InputFlowStepTheme = .pain,
+        accent: Color? = nil,
+        isCard: Bool = true
     ) {
         _value = value
         self.range = range
         self.theme = theme
+        self.accent = accent
+        self.isCard = isCard
     }
 
     var body: some View {
-        PainGaugeCard(value: $value, range: range, theme: theme)
+        PainGaugeCard(value: $value, range: range, theme: theme, accent: accent, isCard: isCard)
     }
 }
 
@@ -28,78 +34,92 @@ private struct PainGaugeCard: View {
 
     let range: ClosedRange<Int>
     let theme: InputFlowStepTheme
+    let accent: Color?
+    let isCard: Bool
 
     var body: some View {
-        InputFlowCard(theme: theme, isHighlighted: true) {
-            VStack(spacing: SymiSpacing.md) {
-                ZStack(alignment: .center) {
-                    PainGaugeArc()
-                        .stroke(
-                            SymiColors.subtleSeparator(for: colorScheme),
-                            style: StrokeStyle(lineWidth: SymiStroke.painGaugeArc, lineCap: .round)
-                        )
-                        .frame(width: SymiSize.painGaugeWidth, height: SymiSize.painGaugeHeight)
-                        .accessibilityHidden(true)
-
-                    PainGaugeArc()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    SymiColors.sage.color,
-                                    SymiColors.noteAmberDark.color,
-                                    SymiColors.coral.color
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ),
-                            style: StrokeStyle(lineWidth: SymiStroke.painGaugeArc, lineCap: .round)
-                        )
-                        .frame(width: SymiSize.painGaugeWidth, height: SymiSize.painGaugeHeight)
-                        .accessibilityHidden(true)
-
-                    VStack(spacing: SymiSpacing.zero) {
-                        Text("\(normalizedValue)")
-                            .font(SymiTypography.painGaugeMetric)
-                            .monospacedDigit()
-                            .foregroundStyle(AppTheme.symiPetrol)
-                            .minimumScaleFactor(SymiTypography.gaugeScaleFactor)
-
-                        Text("/10")
-                            .font(SymiTypography.painGaugeUnit)
-                            .foregroundStyle(AppTheme.symiTextSecondary)
-
-                        Text(intensityLabel)
-                            .font(SymiTypography.painGaugeLabel)
-                            .foregroundStyle(theme.accent)
-                            .padding(.top, SymiSpacing.micro)
-                            .minimumScaleFactor(SymiTypography.buttonScaleFactor)
-                    }
-                    .padding(.top, SymiSpacing.xxl)
+        Group {
+            if isCard {
+                InputFlowCard(theme: theme, isHighlighted: true) {
+                    gaugeContent
                 }
-                .frame(maxWidth: .infinity)
-
-                VStack(spacing: SymiSpacing.compact) {
-                    PainGaugeSlider(
-                        value: $value,
-                        range: range,
-                        theme: theme
-                    )
-                    .accessibilityLabel("Kopfschmerzstärke")
-                    .accessibilityValue("\(normalizedValue) von 10, \(intensityLabel.lowercased())")
-                    .accessibilityIdentifier("entry-intensity-slider")
-
-                    HStack {
-                        Text("\(range.lowerBound)")
-                        Spacer()
-                        Text("\(range.upperBound)")
-                    }
-                    .font(SymiTypography.caption.monospacedDigit())
-                    .foregroundStyle(AppTheme.symiTextSecondary)
-                }
+            } else {
+                gaugeContent
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("entry-intensity-card")
+        .animation(.snappy, value: normalizedValue)
+    }
+
+    private var gaugeContent: some View {
+        VStack(spacing: SymiSpacing.md) {
+            ZStack(alignment: .center) {
+                PainGaugeArc()
+                    .stroke(
+                        SymiColors.subtleSeparator(for: colorScheme),
+                        style: StrokeStyle(lineWidth: SymiStroke.painGaugeArc, lineCap: .round)
+                    )
+                    .frame(width: SymiSize.painGaugeWidth, height: SymiSize.painGaugeHeight)
+                    .accessibilityHidden(true)
+
+                PainGaugeArc()
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                SymiColors.sage.color,
+                                SymiColors.noteAmberDark.color,
+                                SymiColors.coral.color
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        style: StrokeStyle(lineWidth: SymiStroke.painGaugeArc, lineCap: .round)
+                    )
+                    .frame(width: SymiSize.painGaugeWidth, height: SymiSize.painGaugeHeight)
+                    .accessibilityHidden(true)
+
+                VStack(spacing: SymiSpacing.zero) {
+                    Text("\(normalizedValue)")
+                        .font(SymiTypography.painGaugeMetric)
+                        .monospacedDigit()
+                        .foregroundStyle(AppTheme.symiPetrol)
+                        .minimumScaleFactor(SymiTypography.gaugeScaleFactor)
+
+                    Text("/10")
+                        .font(SymiTypography.painGaugeUnit)
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+
+                    Text(intensityLabel)
+                        .font(SymiTypography.painGaugeLabel)
+                        .foregroundStyle(accentColor)
+                        .padding(.top, SymiSpacing.micro)
+                        .minimumScaleFactor(SymiTypography.buttonScaleFactor)
+                }
+                .padding(.top, SymiSpacing.xxl)
+            }
+            .frame(maxWidth: .infinity)
+
+            VStack(spacing: SymiSpacing.compact) {
+                PainGaugeSlider(
+                    value: $value,
+                    range: range,
+                    theme: theme,
+                    accent: accentColor
+                )
+                .accessibilityLabel("Kopfschmerzstärke")
+                .accessibilityValue("\(normalizedValue) von 10, \(intensityLabel.lowercased())")
+                .accessibilityIdentifier("entry-intensity-slider")
+
+                HStack {
+                    Text("\(range.lowerBound)")
+                    Spacer()
+                    Text("\(range.upperBound)")
+                }
+                .font(SymiTypography.caption.monospacedDigit())
+                .foregroundStyle(AppTheme.symiTextSecondary)
+            }
+        }
     }
 
     private var normalizedValue: Int {
@@ -118,6 +138,10 @@ private struct PainGaugeCard: View {
             "Sehr stark"
         }
     }
+
+    private var accentColor: Color {
+        accent ?? theme.accent(for: colorScheme)
+    }
 }
 
 private struct PainGaugeSlider: View {
@@ -128,6 +152,7 @@ private struct PainGaugeSlider: View {
 
     let range: ClosedRange<Int>
     let theme: InputFlowStepTheme
+    let accent: Color
 
     var body: some View {
         GeometryReader { proxy in
@@ -141,7 +166,7 @@ private struct PainGaugeSlider: View {
                     .frame(height: SymiSize.painSliderTrackHeight)
 
                 Capsule()
-                    .fill(AppTheme.symiCoral)
+                    .fill(accent)
                     .frame(width: filledWidth, height: SymiSize.painSliderTrackHeight)
 
                 Circle()

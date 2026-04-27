@@ -24,68 +24,82 @@ struct EpisodeEditorView: View {
     var body: some View {
         @Bindable var controller = controller
         @Bindable var medicationController = controller.medicationController
+        let accent = intensityAccent(Double(controller.draft.normalizedIntensity))
 
         ZStack {
             InputFlowBackground()
                 .ignoresSafeArea()
 
-            VStack(spacing: SymiSpacing.zero) {
-                EditEntryHeader(
-                    subtitle: "\(controller.draft.type.rawValue) · \(controller.draft.normalizedIntensity)/10",
-                    showsDismissButton: showsDismissButton,
-                    onDismiss: { dismiss() }
-                )
+            ScrollViewReader { proxy in
+                VStack(spacing: SymiSpacing.zero) {
+                    EditEntryHeader(
+                        subtitle: "\(controller.draft.type.rawValue) · \(controller.draft.normalizedIntensity)/10",
+                        showsDismissButton: showsDismissButton,
+                        accent: accent,
+                        onNavigate: { target in
+                            withAnimation(.snappy) {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
+                        },
+                        onDismiss: { dismiss() }
+                    )
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: SymiSpacing.flowSectionSpacing) {
-                        if let validationMessage = controller.validationMessage {
-                            EditValidationCard(message: validationMessage)
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 26) {
+                            if let validationMessage = controller.validationMessage {
+                                EditValidationCard(message: validationMessage)
+                            }
+
+                            SectionCard("Intensität", theme: .pain, prominence: .dominant) {
+                                IntensitySelectorView(value: $controller.draft.intensity, isCard: false)
+                            }
+                            .id(EditEntrySection.intensity)
+
+                            SectionCard("Symptome", subtitle: "Was spürst du?", theme: .pain) {
+                                SymptomCardGrid(
+                                    options: controller.symptomOptions,
+                                    selection: $controller.draft.selectedSymptoms,
+                                    accent: accent
+                                )
+                            }
+                            .id(EditEntrySection.symptoms)
+
+                            SectionCard("Schmerzort", theme: .pain) {
+                                PainLocationSelectorView(selection: $controller.draft.selectedPainLocations, accent: accent)
+                            }
+
+                            SectionCard("Tagesbereich", subtitle: "Schnellauswahl zuerst, Details bei Bedarf.", theme: .pain) {
+                                DayPartInlineSelectorView(startedAt: $controller.draft.startedAt, accent: accent)
+                            }
+
+                            SectionCard("Auslöser", subtitle: "Du kannst mehrere auswählen.", theme: .trigger) {
+                                TriggerSelectionGrid(
+                                    options: controller.triggerOptions,
+                                    selection: $controller.draft.selectedTriggers,
+                                    accent: accent
+                                )
+                            }
+
+                            SectionCard("Medikation", theme: .medication) {
+                                MedicationFlowInlineView(controller: controller.medicationController, accent: accent)
+                            }
+                            .id(EditEntrySection.medication)
+
+                            SectionCard("Notiz", theme: .note) {
+                                EntryNoteCard(notes: $controller.draft.notes)
+                            }
+
+                            EditSecondaryDetailsCard(draft: $controller.draft, weatherState: controller.weatherLoadState)
                         }
-
-                        SectionCard("Intensität", theme: .pain) {
-                            IntensitySelectorView(value: $controller.draft.intensity)
-                        }
-
-                        SectionCard("Symptome", subtitle: "Was spürst du?", theme: .pain) {
-                            SymptomCardGrid(
-                                options: controller.symptomOptions,
-                                selection: $controller.draft.selectedSymptoms
-                            )
-                        }
-
-                        SectionCard("Schmerzort", theme: .pain) {
-                            PainLocationSelectorView(selection: $controller.draft.selectedPainLocations)
-                        }
-
-                        SectionCard("Tagesbereich", subtitle: "Schnellauswahl zuerst, Details bei Bedarf.", theme: .pain) {
-                            DayPartInlineSelectorView(startedAt: $controller.draft.startedAt)
-                        }
-
-                        SectionCard("Auslöser", subtitle: "Du kannst mehrere auswählen.", theme: .trigger) {
-                            TriggerSelectionGrid(
-                                options: controller.triggerOptions,
-                                selection: $controller.draft.selectedTriggers
-                            )
-                        }
-
-                        SectionCard("Medikation", theme: .medication) {
-                            MedicationFlowInlineView(controller: controller.medicationController)
-                        }
-
-                        SectionCard("Notiz", theme: .note) {
-                            EntryNoteCard(notes: $controller.draft.notes)
-                        }
-
-                        EditSecondaryDetailsCard(draft: $controller.draft, weatherState: controller.weatherLoadState)
+                        .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
+                        .padding(.top, SymiSpacing.lg)
+                        .padding(.bottom, 120)
+                        .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
+                        .frame(maxWidth: .infinity)
                     }
-                    .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
-                    .padding(.top, SymiSpacing.md)
-                    .padding(.bottom, SymiSpacing.xxl)
-                    .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
-                    .frame(maxWidth: .infinity)
+                    .scrollIndicators(.hidden)
+                    .scrollDismissesKeyboard(.interactively)
                 }
-                .scrollIndicators(.hidden)
-                .scrollDismissesKeyboard(.interactively)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -102,6 +116,7 @@ struct EpisodeEditorView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .tint(AppTheme.symiPetrol)
+        .animation(.snappy, value: controller.draft.normalizedIntensity)
         .alert("Eintrag gespeichert", isPresented: $controller.saveMessageVisible) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -161,41 +176,86 @@ struct EpisodeEditorView: View {
 
 }
 
+private enum EditEntrySection: Hashable {
+    case intensity
+    case symptoms
+    case medication
+}
+
 private struct EditEntryHeader: View {
     let subtitle: String
     let showsDismissButton: Bool
+    let accent: Color
+    let onNavigate: (EditEntrySection) -> Void
     let onDismiss: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: SymiSpacing.md) {
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                Text("Eintrag bearbeiten")
-                    .font(SymiTypography.flowTitle)
-                    .foregroundStyle(AppTheme.symiTextPrimary)
-
-                Text(subtitle)
-                    .font(SymiTypography.caption)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
-            }
-
-            Spacer()
-
-            if showsDismissButton {
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
+        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+            HStack(alignment: .center, spacing: SymiSpacing.md) {
+                VStack(alignment: .leading, spacing: SymiSpacing.micro) {
+                    Text("Eintrag bearbeiten")
                         .font(.headline.weight(.semibold))
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+
+                    Text(subtitle)
+                        .font(SymiTypography.caption)
                         .foregroundStyle(AppTheme.symiTextSecondary)
-                        .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Abbrechen")
+
+                Spacer()
+
+                if showsDismissButton {
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(AppTheme.symiTextSecondary)
+                            .frame(width: SymiSize.flowHeaderControlHeight, height: SymiSize.flowHeaderControlHeight)
+                    }
+                    .buttonStyle(PressScaleButtonStyle())
+                    .accessibilityLabel("Abbrechen")
+                }
             }
+
+            ScrollView(.horizontal) {
+                HStack(spacing: SymiSpacing.xs) {
+                    navigationChip("Intensität", target: .intensity)
+                    navigationChip("Symptome", target: .symptoms)
+                    navigationChip("Medikation", target: .medication)
+                }
+                .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
+            }
+            .scrollIndicators(.hidden)
+            .padding(.horizontal, -SymiSpacing.flowHorizontalPadding)
         }
         .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
-        .padding(.vertical, SymiSpacing.md)
+        .padding(.top, SymiSpacing.sm)
+        .padding(.bottom, SymiSpacing.xs)
         .frame(maxWidth: SymiSpacing.flowMaxContentWidth)
         .frame(maxWidth: .infinity)
-        .background(InputFlowBackground().opacity(SymiOpacity.footerBackground).ignoresSafeArea())
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(accent.opacity(0.16))
+                .frame(height: SymiStroke.hairline)
+        }
+    }
+
+    private func navigationChip(_ title: String, target: EditEntrySection) -> some View {
+        Button {
+            onNavigate(target)
+        } label: {
+            Text(title)
+                .font(SymiTypography.flowPillLabel)
+                .foregroundStyle(accent)
+                .padding(.horizontal, SymiSpacing.md)
+                .padding(.vertical, SymiSpacing.compact)
+                .background(accent.opacity(0.12), in: Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(accent.opacity(0.22), lineWidth: SymiStroke.hairline)
+                }
+        }
+        .buttonStyle(PressScaleButtonStyle())
     }
 }
 

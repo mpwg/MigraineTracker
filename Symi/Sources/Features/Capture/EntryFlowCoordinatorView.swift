@@ -153,11 +153,17 @@ private struct EntryHeadacheStepView: View {
             IntensitySelectorView(value: $coordinator.draft.intensity)
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
-                PainLocationSelectorView(selection: $coordinator.draft.selectedPainLocations)
+                PainLocationSelectorView(
+                    selection: $coordinator.draft.selectedPainLocations,
+                    accent: intensityAccent(Double(coordinator.draft.normalizedIntensity))
+                )
             }
 
             InputFlowFieldGroup(title: "Tagesbereich") {
-                DayPartInlineSelectorView(startedAt: $coordinator.draft.startedAt)
+                DayPartInlineSelectorView(
+                    startedAt: $coordinator.draft.startedAt,
+                    accent: intensityAccent(Double(coordinator.draft.normalizedIntensity))
+                )
             }
         } footer: {
             EntryFlowFooter(
@@ -209,7 +215,10 @@ private struct EntryMedicationStepView: View {
             onCancel: onCancel
         ) {
             InputFlowFieldGroup(title: "Welche Medikation?") {
-                MedicationFlowInlineView(controller: medicationController)
+                MedicationFlowInlineView(
+                    controller: medicationController,
+                    accent: intensityAccent(Double(coordinator.draft.normalizedIntensity))
+                )
             }
 
             if !coordinator.draft.continuousMedicationChecks.isEmpty {
@@ -291,7 +300,11 @@ private struct EntryTriggersStepView: View {
             onCancel: onCancel
         ) {
             InputFlowFieldGroup(title: "Wähle alle passenden aus.") {
-                TriggerSelectionGrid(options: triggerOptions, selection: $coordinator.draft.selectedTriggers)
+                TriggerSelectionGrid(
+                    options: triggerOptions,
+                    selection: $coordinator.draft.selectedTriggers,
+                    accent: intensityAccent(Double(coordinator.draft.normalizedIntensity))
+                )
             }
 
             EntryInfoBanner(text: "Du kannst mehrere auswählen.")
