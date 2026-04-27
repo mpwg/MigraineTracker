@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "schmerz_linke_schlaefe.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -142,7 +142,13 @@ private struct EntryHeadacheStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedStartedAtPreset: EntryStartedAtPreset = .now
-    private let visiblePainLocations = ["Stirn", "Schläfen", "Nacken", "Einseitig"]
+    private let visiblePainLocations: [EntryPainLocationOption] = [
+        .init(title: "Stirn", imageName: "PainLocationForehead"),
+        .init(title: "Schläfen", imageName: "PainLocationTemples"),
+        // .init(title: "Nacken", imageName: "PainLocationNeck"),
+        .init(title: "Einseitig", imageName: "PainLocationLeftTemple"),
+        .init(title: "Überall", imageName: "PainLocationCrown")
+    ]
 
     var body: some View {
         @Bindable var coordinator = coordinator
@@ -157,15 +163,14 @@ private struct EntryHeadacheStepView: View {
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
                 HeadacheLocationGrid {
-                    ForEach(visiblePainLocations, id: \.self) { location in
-                        SelectionTile(
-                            title: location,
-                            systemImage: painLocationSymbol(for: location),
-                            isSelected: coordinator.draft.selectedPainLocations.contains(location),
+                    ForEach(visiblePainLocations) { location in
+                        PainLocationSelectionTile(
+                            option: location,
+                            isSelected: coordinator.draft.selectedPainLocations.contains(location.title),
                             theme: .pain,
-                            accessibilityIdentifier: "entry-location-\(location)"
+                            accessibilityIdentifier: "entry-location-\(location.title)"
                         ) {
-                            toggle(location, in: &coordinator.draft.selectedPainLocations)
+                            toggle(location.title, in: &coordinator.draft.selectedPainLocations)
                         }
                     }
                 }
@@ -218,21 +223,6 @@ private struct EntryHeadacheStepView: View {
         }
     }
 
-    private func painLocationSymbol(for location: String) -> String {
-        switch location {
-        case "Stirn":
-            "head.profile"
-        case "Schläfen":
-            "person.crop.circle.badge.exclamationmark"
-        case "Nacken":
-            "person.crop.circle"
-        case "Einseitig":
-            "face.dashed"
-        default:
-            "circle"
-        }
-    }
-
     private func seedDefaultPainLocationIfNeeded(coordinator: EntryFlowCoordinator) {
         guard !coordinator.hasSeededDefaultPainLocation else {
             return
@@ -253,6 +243,81 @@ private struct EntryHeadacheStepView: View {
         } else {
             selection.insert(option)
         }
+    }
+}
+
+private struct EntryPainLocationOption: Identifiable, Hashable {
+    let title: String
+    let imageName: String
+
+    var id: String { title }
+}
+
+private struct PainLocationSelectionTile: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let option: EntryPainLocationOption
+    let isSelected: Bool
+    let theme: InputFlowStepTheme
+    let accessibilityIdentifier: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: SymiSpacing.xs) {
+                Image(option.imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: SymiSize.headacheLocationImageHeight)
+                    .accessibilityHidden(true)
+
+                Text(option.title)
+                    .font(SymiTypography.flowTileLabel)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, SymiSpacing.xs)
+            .padding(.vertical, SymiSpacing.xs)
+            .frame(maxWidth: .infinity, minHeight: SymiSize.headacheLocationTileMinHeight)
+            .background(tileBackground, in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
+                    .stroke(borderColor, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+            }
+            .overlay(alignment: .topTrailing) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(theme.accent(for: colorScheme))
+                        .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
+                        .padding(.top, SymiSpacing.sm)
+                        .padding(.trailing, SymiSpacing.sm)
+                        .accessibilityHidden(true)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(option.title)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
+        .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private var tileBackground: Color {
+        isSelected ? theme.selectedFill(for: colorScheme) : SymiColors.elevatedCard(for: colorScheme)
+    }
+
+    private var borderColor: Color {
+        if isSelected {
+            return theme.border(for: colorScheme).opacity(SymiOpacity.selectedStroke)
+        }
+
+        return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
     }
 }
 

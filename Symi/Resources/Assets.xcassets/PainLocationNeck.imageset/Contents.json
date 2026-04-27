@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "schmerz_nacken.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -81,8 +81,9 @@ nonisolated enum SymiSize {
     static let inputSelectionTileMinHeight: CGFloat = 78
     static let inputSelectionIconWidth: CGFloat = 34
     static let inputSelectionIconHeight: CGFloat = 30
+    static let headacheLocationImageHeight: CGFloat = 64
     static let headacheLocationIconHeight: CGFloat = 26
-    static let headacheLocationTileMinHeight: CGFloat = 78
+    static let headacheLocationTileMinHeight: CGFloat = 112
     static let headachePresetMinHeight: CGFloat = 50
     static let headacheOptionGridMinWidth: CGFloat = 58
     static let headacheOptionGridColumnCount: Int = 4
