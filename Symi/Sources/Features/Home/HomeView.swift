@@ -53,6 +53,9 @@ struct HomeView: View {
                 }
                 .padding(.bottom, SymiSpacing.lg)
 
+                HomeAllEntriesLink(appContainer: appContainer)
+                    .padding(.bottom, SymiSpacing.lg)
+
                 HomeMonthCalendarView(
                     month: displayedMonth,
                     episodesByDay: calendarMonthData.episodesByDay,
@@ -92,6 +95,9 @@ struct HomeView: View {
                     onPrevious: showPreviousMonth,
                     onNext: showNextMonth
                 )
+                    .padding(.bottom, SymiSpacing.lg)
+
+                HomeAllEntriesLink(appContainer: appContainer)
                     .padding(.bottom, SymiSpacing.lg)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
@@ -386,6 +392,46 @@ private struct PrimaryEntryButton: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Neuer Eintrag")
         .accessibilityHint("Startet einen neuen Eintrag.")
+    }
+}
+
+private struct HomeAllEntriesLink: View {
+    let appContainer: AppContainer
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        NavigationLink {
+            HistoryView(appContainer: appContainer)
+        } label: {
+            HStack(spacing: SymiSpacing.sm) {
+                Image(systemName: "list.bullet.rectangle")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                    .accessibilityHidden(true)
+
+                Text("Alle Einträge")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                    .lineLimit(1)
+                    .minimumScaleFactor(SymiTypography.buttonScaleFactor)
+
+                Spacer(minLength: SymiSpacing.xs)
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, SymiSpacing.md)
+            .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
+            .background(
+                AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface),
+                in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home-all-entries")
+        .accessibilityHint("Öffnet die Liste aller Einträge.")
     }
 }
 

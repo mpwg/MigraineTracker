@@ -30,7 +30,12 @@ final class HomeRedesignUITests: XCTestCase {
         XCTAssertMinimumTouchTarget(quickEntry)
         XCTAssertTrue(accessibilityElement(containing: "Neuer Eintrag", in: app).exists)
         XCTAssertFalse(app.sliders["home-feeling-slider"].exists)
-        XCTAssertFalse(app.descendants(matching: .any)["home-all-entries"].exists)
+
+        let allEntries = app.descendants(matching: .any)["home-all-entries"]
+        scrollUntilVisible(allEntries, in: app)
+        XCTAssertTrue(allEntries.exists)
+        XCTAssertMinimumTouchTarget(allEntries)
+        XCTAssertTrue(accessibilityElement(containing: "Alle Einträge", in: app).exists)
 
         scrollUntilVisible(app.descendants(matching: .any)["home-patterns-section"], in: app)
         XCTAssertTrue(app.descendants(matching: .any)["home-patterns-section"].exists)
