@@ -30,7 +30,7 @@ struct EpisodeDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 24) {
                 EntryDetailHeader(
                     title: headerTitle,
                     onBack: { dismiss() },
@@ -42,7 +42,9 @@ struct EpisodeDetailView: View {
 
                     EntryDetailContextCard(episode: episode)
 
-                    EntryDetailTriggerSection(triggers: episode.triggers)
+                    if episode.hasVisibleTriggers {
+                        EntryDetailTriggerSection(triggers: episode.triggers)
+                    }
 
                     EntryDetailMedicationCard(episode: episode)
 
@@ -53,9 +55,21 @@ struct EpisodeDetailView: View {
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.top, 18)
-            .padding(.bottom, 34)
+            .padding(.bottom, 76)
         }
         .background(SymiColors.warmBackground.color.ignoresSafeArea())
+        .overlay(alignment: .top) {
+            LinearGradient(
+                colors: [
+                    SymiColors.warmBackground.color,
+                    SymiColors.warmBackground.color.opacity(0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 16)
+            .allowsHitTesting(false)
+        }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
@@ -156,27 +170,25 @@ private struct EntryDetailHeader: View {
 private struct EntryDetailHeroCard: View {
     let episode: EpisodeRecord
 
-    private var intensityColor: Color {
-        JournalEntryContext.intensityColor(for: episode.intensity)
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 26) {
             HStack(alignment: .top, spacing: SymiSpacing.lg) {
-                VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                VStack(alignment: .leading, spacing: 7) {
                     Text("Intensität")
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(SymiColors.textSecondary.color)
 
-                    Text(JournalEntryContext.intensityLabel(for: episode.intensity))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .foregroundStyle(SymiColors.textPrimary.color)
-                        .minimumScaleFactor(SymiTypography.compactScaleFactor)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(JournalEntryContext.intensityLabel(for: episode.intensity))
+                            .font(.system(size: 44, weight: .bold, design: .rounded))
+                            .foregroundStyle(SymiColors.textPrimary.color)
+                            .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
-                    Text("\(episode.intensity)/10")
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
-                        .foregroundStyle(SymiColors.textSecondary.color)
-                        .monospacedDigit()
+                        Text("\(episode.intensity)/10")
+                            .font(.system(.title2, design: .rounded).weight(.semibold))
+                            .foregroundStyle(SymiColors.textSecondary.color)
+                            .monospacedDigit()
+                    }
                 }
 
                 Spacer(minLength: SymiSpacing.md)
@@ -195,16 +207,16 @@ private struct EntryDetailHeroCard: View {
         }
         .padding(26)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(Color.white.opacity(0.82), lineWidth: SymiStroke.hairline)
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .stroke(Color.white.opacity(0.76), lineWidth: SymiStroke.hairline)
         )
         .shadow(
-            color: SymiColors.primaryPetrol.color.opacity(0.06),
-            radius: 24,
+            color: SymiColors.primaryPetrol.color.opacity(0.045),
+            radius: 28,
             x: SymiShadow.journalCardXOffset,
-            y: 12
+            y: 14
         )
     }
 
@@ -226,11 +238,11 @@ private struct EntryDetailFaceBadge: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color(red: 0.95, green: 0.91, blue: 0.84))
+                .fill(Color(red: 0.96, green: 0.91, blue: 0.82))
 
             CalmFaceIcon()
-                .stroke(SymiColors.textPrimary.color.opacity(0.70), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
-                .frame(width: 30, height: 30)
+                .stroke(SymiColors.primaryPetrol.color.opacity(0.62), style: StrokeStyle(lineWidth: 2.05, lineCap: .round, lineJoin: .round))
+                .frame(width: 31, height: 31)
         }
         .frame(width: 58, height: 58)
         .accessibilityHidden(true)
@@ -254,7 +266,7 @@ private struct CalmFaceIcon: Shape {
         path.move(to: CGPoint(x: width * 0.36, y: height * 0.63))
         path.addQuadCurve(
             to: CGPoint(x: width * 0.64, y: height * 0.63),
-            control: CGPoint(x: width * 0.50, y: height * 0.70)
+            control: CGPoint(x: width * 0.50, y: height * 0.67)
         )
 
         return path
@@ -270,23 +282,30 @@ private struct EntryDetailProgressBar: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.primary.opacity(0.08))
+                    .fill(Color.primary.opacity(0.095))
 
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [
-                                Color(red: 0.78, green: 0.54, blue: 0.27),
-                                SymiColors.sage.color.opacity(0.88)
-                            ],
+                            gradient: Gradient(stops: [
+                                .init(color: SymiColors.noteAmber.color.opacity(0.98), location: 0),
+                                .init(color: Color(red: 0.78, green: 0.64, blue: 0.43), location: 0.46),
+                                .init(color: SymiColors.sage.color.opacity(0.98), location: 1)
+                            ]),
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
+                    .overlay(alignment: .top) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.18))
+                            .frame(height: 2)
+                            .padding(.horizontal, 1)
+                    }
                     .frame(width: proxy.size.width * clampedValue)
             }
         }
-        .frame(height: 8)
+        .frame(height: 11)
     }
 }
 
@@ -296,32 +315,26 @@ private struct EntryDetailContextCard: View {
     private var rows: [EntryDetailContextRowModel] {
         [
             EntryDetailContextRowModel(systemImage: "clock", title: JournalEntryContext.timeOfDay(for: episode.startedAt)),
-            EntryDetailContextRowModel(systemImage: "head.profile", title: painLocationText),
-            EntryDetailContextRowModel(systemImage: "note.text", title: noteText, isMultiline: true)
+            EntryDetailContextRowModel(systemImage: "brain.head.profile", title: painLocationText, hierarchy: .secondary),
+            EntryDetailContextRowModel(systemImage: "note.text", title: noteText, hierarchy: .tertiary)
         ]
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(rows) { row in
                 EntryDetailContextRow(row: row)
-
-                if index < rows.count - 1 {
-                    Divider()
-                        .overlay(Color.primary.opacity(0.06))
-                        .padding(.leading, 48)
-                }
             }
         }
         .padding(.horizontal, 22)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.78), lineWidth: SymiStroke.hairline)
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(Color.white.opacity(0.72), lineWidth: SymiStroke.hairline)
         )
-        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.035), radius: 16, x: 0, y: 8)
+        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.026), radius: 20, x: 0, y: 10)
     }
 
     private var painLocationText: String {
@@ -338,21 +351,30 @@ private struct EntryDetailContextRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            Image(systemName: row.systemImage)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .foregroundStyle(SymiColors.primaryPetrol.color.opacity(0.72))
-                .frame(width: 32, height: 32)
-                .background(SymiColors.sage.color.opacity(0.16), in: Circle())
+            EntryDetailContextIcon(systemImage: row.systemImage)
 
             Text(row.title)
-                .font(.system(.body, design: .rounded).weight(.medium))
-                .foregroundStyle(SymiColors.textPrimary.color)
-                .lineLimit(row.isMultiline ? nil : 2)
+                .font(row.hierarchy.font)
+                .foregroundStyle(row.hierarchy.color)
+                .lineLimit(row.hierarchy.lineLimit)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 18)
+        .padding(.vertical, 20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+}
+
+private struct EntryDetailContextIcon: View {
+    let systemImage: String
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .symbolRenderingMode(.monochrome)
+            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .foregroundStyle(SymiColors.primaryPetrol.color.opacity(0.64))
+            .frame(width: 32, height: 32)
+            .background(SymiColors.sage.color.opacity(0.16), in: Circle())
     }
 }
 
@@ -365,17 +387,19 @@ private struct EntryDetailTriggerSection: View {
                 .font(.system(.headline, design: .rounded).weight(.semibold))
                 .foregroundStyle(SymiColors.textPrimary.color)
 
-            if visibleTriggers.isEmpty {
-                Text("Keine Auslöser dokumentiert.")
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundStyle(SymiColors.textSecondary.color)
-            } else {
-                LazyVGrid(columns: columns, alignment: .leading, spacing: 9) {
-                    ForEach(visibleTriggers, id: \.self) { trigger in
-                        EntryDetailTriggerChip(title: trigger)
-                    }
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+                ForEach(visibleTriggers, id: \.self) { trigger in
+                    EntryDetailTriggerChip(title: trigger)
                 }
             }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(0.72), lineWidth: SymiStroke.hairline)
+            )
+            .shadow(color: SymiColors.primaryPetrol.color.opacity(0.024), radius: 18, x: 0, y: 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -400,7 +424,7 @@ private struct EntryDetailTriggerChip: View {
             .minimumScaleFactor(SymiTypography.tightChipScaleFactor)
             .padding(.horizontal, 15)
             .padding(.vertical, 9)
-            .background(SymiColors.sage.color.opacity(0.26), in: Capsule())
+            .background(SymiColors.sage.color.opacity(0.22), in: Capsule())
     }
 }
 
@@ -420,16 +444,16 @@ private struct EntryDetailMedicationCard: View {
         }
         .padding(22)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(SymiColors.onAccent.color, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.78), lineWidth: SymiStroke.hairline)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.72), lineWidth: SymiStroke.hairline)
         )
-        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.03), radius: 14, x: 0, y: 6)
+        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.024), radius: 18, x: 0, y: 8)
     }
 
     private var medicationText: String {
-        JournalEntryContext.medicationDetail(for: episode) ?? "Keine Medikation dokumentiert."
+        JournalEntryContext.medicationDetail(for: episode) ?? "Keine Medikation"
     }
 }
 
@@ -439,10 +463,20 @@ private struct EntryDetailDeleteAction: View {
     var body: some View {
         Button("Löschen", role: .destructive, action: onDelete)
             .font(.system(.body, design: .rounded).weight(.semibold))
-            .foregroundStyle(SymiColors.intensityStrong.color)
+            .foregroundStyle(SymiColors.intensityStrong.color.opacity(0.84))
             .frame(maxWidth: .infinity, minHeight: 54)
-            .buttonStyle(.plain)
+            .buttonStyle(EntryDetailDestructiveTextButtonStyle())
             .padding(.top, 2)
+            .padding(.bottom, 38)
+    }
+}
+
+private struct EntryDetailDestructiveTextButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.62 : 1)
+            .scaleEffect(configuration.isPressed ? 0.992 : 1)
+            .animation(.easeOut(duration: SymiAnimation.quickDuration), value: configuration.isPressed)
     }
 }
 
@@ -465,7 +499,50 @@ private struct EntryDetailContextRowModel: Identifiable {
     let id = UUID()
     let systemImage: String
     let title: String
-    var isMultiline = false
+    var hierarchy: EntryDetailContextHierarchy = .primary
+}
+
+private enum EntryDetailContextHierarchy {
+    case primary
+    case secondary
+    case tertiary
+
+    var font: Font {
+        switch self {
+        case .primary:
+            .system(.title3, design: .rounded).weight(.semibold)
+        case .secondary:
+            .system(.body, design: .rounded).weight(.medium)
+        case .tertiary:
+            .system(.subheadline, design: .rounded).weight(.medium)
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .primary:
+            SymiColors.textPrimary.color
+        case .secondary:
+            SymiColors.textPrimary.color.opacity(0.84)
+        case .tertiary:
+            SymiColors.textSecondary.color
+        }
+    }
+
+    var lineLimit: Int {
+        switch self {
+        case .primary, .secondary:
+            1
+        case .tertiary:
+            2
+        }
+    }
+}
+
+private extension EpisodeRecord {
+    var hasVisibleTriggers: Bool {
+        triggers.contains { !$0.trimmed.isEmpty }
+    }
 }
 
 private extension String {
