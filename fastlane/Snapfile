@@ -1,7 +1,7 @@
 project("./Symi.xcodeproj")
 scheme("SymiScreenshots")
 test_target_name("SymiUITests")
-ios_version(ENV.fetch("SCREENSHOT_IOS_VERSION", "26.4"))
+ios_version(ENV["SCREENSHOT_IOS_VERSION"]) unless ENV["SCREENSHOT_IOS_VERSION"].to_s.empty?
 languages(["de-DE", "en-US"])
 clear_previous_screenshots(true)
 skip_open_summary(true)

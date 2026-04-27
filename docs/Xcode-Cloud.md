@@ -42,6 +42,7 @@ Aus dem Projekt bestätigt:
 - `Release` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Production`
 
 Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `match` Distribution-Zertifikate und Provisioning Profiles in ein temporäres Keychain und bauen anschließend reproduzierbar mit manuellem Distribution-Signing.
+Die GitHub-Workflows wählen für Swift-Builds explizit Xcode 26.4 aus.
 
 ## Zuständigkeiten
 
@@ -49,13 +50,14 @@ Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `ma
 
 - `pull_request` auf `main`
 - `push` auf `main`
-- Build des Shared Scheme `Symi`
-- Ausführung von `SymiTests`
-- Upload des `xcresult` als Artifact
+- Xcode 26.4 für Swift-Builds, Tests und Release-Archive
+- schnelles PR-Gate aus SwiftLint und Catalyst-Unit-Tests
+- iPhone-Simulator-Tests und UI-Smoke bei relevanten Änderungen, auf `main` oder per manuellem Start
+- Upload von `xcresult`-Bundles nur bei Fehlern
 
 Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distribution:
 
-- `main` zu `TestFlight`
+- manueller Start zu `TestFlight`
 - Git-Tags `vX.Y.Z` zum `App Store`
 - Distribution-Signing über `fastlane match`
 
@@ -64,24 +66,26 @@ Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distributi
 Dieser Workflow liefert schnelles Entwickler-Feedback.
 
 - Name: `iOS CI`
-- Startbedingung: `pull_request` auf `main` und `push` auf `main`
+- Startbedingung: `pull_request` auf `main`, `push` auf `main` und manueller Start
 - Scheme: `Symi`
 - Aktionen:
-  - Build
-  - Tests
-  - Upload des `xcresult`
+  - SwiftLint/Design-Token-Regeln
+  - Unit-Tests auf `Mac Catalyst`
+  - Unit-Tests auf einem `iPhone 17`-Simulator bei Persistence-, Migration-, Backup- oder Import-Änderungen sowie auf `main`
+  - fokussierter UI-Smoke auf einem `iPhone 17`-Simulator bei Home-, Capture- oder UI-Test-Änderungen sowie auf `main`
+  - Upload der jeweiligen `xcresult`-Bundles nur bei Fehlern
 
 ## Workflow 2: TestFlight Release
 
-Dieser Workflow ist für Beta-Verteilung auf Basis eines erfolgreichen `main`-Pushs zuständig.
+Dieser Workflow ist für bewusst ausgelöste Beta-Verteilung zuständig.
 
 - Name: `TestFlight Release`
-- Startbedingung: `push` auf `main`
+- Startbedingung: manueller Start über `workflow_dispatch`
 - Scheme: `Symi`
 - Aktionen:
   - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
   - `match(type: "appstore")`
-  - nächste Buildnummer über `latest_testflight_build_number` und `GITHUB_RUN_ID` bestimmen
+  - optionale manuelle Buildnummer übernehmen oder automatisch bestimmen
   - `build_app(export_method: "app-store")`
   - Upload nach `TestFlight` mit `pilot`
 
@@ -123,7 +127,7 @@ Das Repo enthält die Release-Logik jetzt vollständig in `fastlane/Fastfile`.
 
 1. Änderungen nach `main` mergen
 2. `GitHub Actions` führt `iOS CI` aus
-3. `GitHub Actions` startet `TestFlight Release`
+3. Workflow `TestFlight Release` in GitHub Actions manuell starten
 4. `fastlane` synchronisiert Distribution-Signing mit `match`
 5. `fastlane pilot` lädt die signierte IPA nach `TestFlight`
 
@@ -151,7 +155,8 @@ git push origin v1.2.0
 Die GitHub-Actions-Einrichtung gilt als korrekt, wenn:
 
 - `GitHub Actions` bei `pull_request` und `push` auf `main` erfolgreich läuft
-- ein Push auf `main` den Workflow `TestFlight Release` startet
-- der erfolgreiche `main`-Lauf einen `TestFlight`-Build erzeugt
+- `iOS CI` das schnelle PR-Gate aus SwiftLint und Catalyst-Unit-Tests ausführt
+- `iOS CI` iPhone- und UI-Gates bei relevanten Änderungen oder auf `main` ausführt
+- ein manueller Start von `TestFlight Release` einen `TestFlight`-Build erzeugt
 - ein Tag wie `v1.2.0` ausschließlich den Workflow `App Store Release` startet
 - der Tag-Workflow Screenshots und ein veröffentlichbares Archiv in App Store Connect hochlädt, aber die Version nicht automatisch einreicht

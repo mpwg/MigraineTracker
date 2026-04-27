@@ -15,6 +15,7 @@ LOCAL_SECRETS_PATH = File.join(REPO_ROOT, "Symi/Configs/LocalSecrets.xcconfig")
 SCREENSHOT_SCHEME = "SymiScreenshots"
 SCREENSHOT_TEST_TARGET = "SymiUITests"
 SCREENSHOT_TEST_IDENTIFIER = "SymiUITests/SymiScreenshotTests/testCaptureMainStoreScreens"
+SCREENSHOT_SEED_TEST_IDENTIFIER = "SymiUITests/SymiScreenshotTests/testDefaultSeedShowsScaleFirstNewEntryFlow"
 SCREENSHOT_LANGUAGES = [
   { language: "de-DE", locale: "de_DE" },
   { language: "en-US", locale: "en_US" }
@@ -30,7 +31,7 @@ MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
 
 def screenshot_ios_version
   configured_version = ENV["SCREENSHOT_IOS_VERSION"].to_s.strip
-  configured_version.empty? ? "26.4" : configured_version
+  configured_version.empty? ? nil : configured_version
 end
 
 def include_mac_screenshots?
@@ -68,7 +69,6 @@ def clear_screenshot_cache!
 end
 
 def resolve_simulator_for_capture(device_name, requested_version = screenshot_ios_version)
-  version_prefix = "#{requested_version}."
   candidates = SimCtl.list_devices.where(name: device_name).select(&:available?)
   candidates.sort_by! do |device|
     runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : "0"
@@ -76,11 +76,15 @@ def resolve_simulator_for_capture(device_name, requested_version = screenshot_io
   end
   candidates.reverse!
 
-  exact_match = candidates.find do |device|
-    runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
-    runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+  unless requested_version.to_s.empty?
+    version_prefix = "#{requested_version}."
+    exact_match = candidates.find do |device|
+      runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
+      runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+    end
+    return exact_match if exact_match
   end
-  return exact_match if exact_match
+
   return candidates.first if candidates.first
 
   UI.user_error!("Kein Simulator mit Namen '#{device_name}' für Screenshot-Läufe gefunden.")
@@ -105,6 +109,15 @@ def clear_ios_status_bar!(device)
 end
 
 def run_screenshot_test!(destination:, result_bundle_path:, language:)
+  run_ui_test!(
+    destination: destination,
+    result_bundle_path: result_bundle_path,
+    language: language,
+    test_identifier: SCREENSHOT_TEST_IDENTIFIER
+  )
+end
+
+def run_ui_test!(destination:, result_bundle_path:, language:, test_identifier:)
   FileUtils.rm_rf(result_bundle_path)
   FileUtils.mkdir_p(File.dirname(result_bundle_path))
 
@@ -117,7 +130,7 @@ def run_screenshot_test!(destination:, result_bundle_path:, language:)
       "-derivedDataPath", derived_data_path.shellescape,
       "-resultBundlePath", result_bundle_path.shellescape,
       "-destination", destination.shellescape,
-      "-only-testing:#{SCREENSHOT_TEST_IDENTIFIER.shellescape}"
+      "-only-testing:#{test_identifier.shellescape}"
     ].join(" ")
 
     sh(
@@ -163,7 +176,7 @@ def apply_snapshot_destination_patch!
              "iOS"
            end
 
-      requested_version = ::Snapshot.config[:ios_version] || ::Snapshot::LatestOsVersion.version(os)
+      requested_version = ::Snapshot.config[:ios_version]
       destinations = devices.map do |device_name|
         simulator = migraine_tracker_resolve_simulator(device_name, requested_version)
         "-destination 'platform=#{os} Simulator,id=#{simulator.udid}'"
@@ -175,7 +188,6 @@ def apply_snapshot_destination_patch!
     private
 
     def migraine_tracker_resolve_simulator(device_name, requested_version)
-      version_prefix = "#{requested_version}."
       candidates = SimCtl.list_devices.where(name: device_name).select(&:available?)
       candidates.sort_by! do |device|
         runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : "0"
@@ -183,11 +195,14 @@ def apply_snapshot_destination_patch!
       end
       candidates.reverse!
 
-      exact_match = candidates.find do |device|
-        runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
-        runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+      unless requested_version.to_s.empty?
+        version_prefix = "#{requested_version}."
+        exact_match = candidates.find do |device|
+          runtime_version = device.runtime.respond_to?(:version) ? device.runtime.version.to_s : ""
+          runtime_version == requested_version || runtime_version.start_with?(version_prefix)
+        end
+        return exact_match if exact_match
       end
-      return exact_match if exact_match
 
       fallback = candidates.first
       return fallback if fallback
@@ -375,6 +390,24 @@ def capture_all_screenshots!
   end
 end
 
+def validate_screenshot_seed!
+  language_config = SCREENSHOT_LANGUAGES.first
+  language = language_config.fetch(:language)
+  locale = language_config.fetch(:locale)
+  device_name = IOS_SCREENSHOT_DEVICES.first
+  device = resolve_simulator_for_capture(device_name)
+
+  FileUtils.mkdir_p(SCREENSHOT_ROOT)
+  write_snapshot_configuration_files!(language: language, locale: locale)
+  prepare_ios_simulator!(device, override_status_bar: false)
+  run_ui_test!(
+    destination: "platform=iOS Simulator,id=#{device.udid}",
+    result_bundle_path: screenshot_result_bundle_path(File.join(SCREENSHOT_ROOT, "seed-check"), device_name, language: language),
+    language: language,
+    test_identifier: SCREENSHOT_SEED_TEST_IDENTIFIER
+  )
+end
+
 def upload_screenshot_sets!(api_key:, version:)
   SCREENSHOT_LANGUAGES.each do |language_config|
     language = language_config.fetch(:language)
@@ -431,6 +464,11 @@ platform :ios do
   desc "Erzeugt App-Store-Screenshots für iPhone"
   lane :sync_screenshots do
     capture_all_screenshots!
+  end
+
+  desc "Validiert den Screenshot-Seed und den Skala-zuerst-Flow ohne vollständige Screenshot-Erzeugung"
+  lane :validate_screenshot_seed do
+    validate_screenshot_seed!
   end
 
   desc "Erzeugt und lädt iPhone-Screenshots nach App Store Connect hoch"

@@ -56,6 +56,24 @@ final class SymiScreenshotTests: XCTestCase {
         assert(true)
     }
 
+    func testDefaultSeedShowsScaleFirstNewEntryFlow() throws {
+        let app = XCUIApplication()
+        setupSnapshot(app, waitForAnimations: false)
+        app.launchArguments += [
+            "-mt_screenshot_screen",
+            "new-entry",
+            "-mt_screenshot_seed",
+            "default",
+            "-mt_disable_weather"
+        ]
+        app.launch()
+
+        XCTAssertTrue(app.descendants(matching: .any)["entry-flow-step-headache"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.descendants(matching: .any)["entry-intensity-card"].exists)
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Wie stark ist es gerade?")).firstMatch.exists)
+        XCTAssertTrue(app.buttons["entry-flow-save-headache-only"].exists)
+    }
+
     private func waitForStableLayout() {
         RunLoop.current.run(until: Date(timeIntervalSinceNow: 1.2))
     }

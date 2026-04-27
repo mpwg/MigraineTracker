@@ -48,6 +48,21 @@ final class HomeRedesignUITests: XCTestCase {
         XCTAssertFalse(app.tabBars.buttons["Heute"].exists)
     }
 
+    func testHomeQuickEntryCanSaveHeadacheOnlyEntry() {
+        let app = launchHome(extraArguments: ["-mt_disable_weather"])
+
+        XCTAssertTrue(app.descendants(matching: .any)["home-calendar"].waitForExistence(timeout: 6))
+        app.descendants(matching: .any)["home-quick-entry"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["entry-flow-step-headache"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.descendants(matching: .any)["entry-intensity-card"].exists)
+        XCTAssertTrue(accessibilityElement(containing: "Wie stark ist es gerade?", in: app).exists)
+
+        app.buttons["entry-flow-save-headache-only"].tap()
+
+        XCTAssertTrue(app.alerts["Eintrag gespeichert"].waitForExistence(timeout: 6))
+    }
+
     private func launchHome(extraArguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [
