@@ -3,6 +3,7 @@ import SwiftUI
 struct EpisodeEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var controller: EpisodeEditorController
+    @State private var activeSection: EditEntrySection = .intensity
 
     private let onSaved: (() -> Void)?
 
@@ -36,8 +37,10 @@ struct EpisodeEditorView: View {
                         subtitle: "\(controller.draft.type.rawValue) · \(intensityLabel(for: controller.draft.normalizedIntensity)) · \(controller.draft.normalizedIntensity)/10",
                         showsDismissButton: showsDismissButton,
                         accent: accent,
+                        selectedSection: activeSection,
                         onNavigate: { target in
                             withAnimation(.snappy) {
+                                activeSection = target
                                 proxy.scrollTo(target, anchor: .top)
                             }
                         },
@@ -198,6 +201,7 @@ private struct EditEntryHeader: View {
     let subtitle: String
     let showsDismissButton: Bool
     let accent: Color
+    let selectedSection: EditEntrySection
     let onNavigate: (EditEntrySection) -> Void
     let onDismiss: () -> Void
 
@@ -230,9 +234,9 @@ private struct EditEntryHeader: View {
 
             ScrollView(.horizontal) {
                 HStack(spacing: SymiSpacing.xs) {
-                    navigationChip("Intensität", target: .intensity)
-                    navigationChip("Symptome", target: .symptoms)
-                    navigationChip("Medikation", target: .medication)
+                    navigationChip("Intensität", target: .intensity, isSelected: selectedSection == .intensity)
+                    navigationChip("Symptome", target: .symptoms, isSelected: selectedSection == .symptoms)
+                    navigationChip("Medikation", target: .medication, isSelected: selectedSection == .medication)
                 }
                 .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
             }
@@ -252,19 +256,23 @@ private struct EditEntryHeader: View {
         }
     }
 
-    private func navigationChip(_ title: String, target: EditEntrySection) -> some View {
+    private func navigationChip(_ title: String, target: EditEntrySection, isSelected: Bool) -> some View {
         Button {
             onNavigate(target)
         } label: {
             Text(title)
                 .font(SymiTypography.flowPillLabel)
-                .foregroundStyle(accent)
+                .foregroundStyle(isSelected ? accent : AppTheme.symiTextSecondary)
                 .padding(.horizontal, SymiSpacing.sm)
                 .padding(.vertical, SymiSpacing.micro)
-                .overlay {
-                    Capsule()
-                        .stroke(accent.opacity(SymiOpacity.editNavigationChipBorder), lineWidth: SymiStroke.hairline)
-                }
+                .modifier(
+                    SelectionStyleModifier(
+                        isSelected: isSelected,
+                        accent: accent,
+                        cornerRadius: SymiRadius.flowPill,
+                        shape: .capsule
+                    )
+                )
         }
         .buttonStyle(PressScaleButtonStyle())
     }

@@ -109,7 +109,7 @@ struct SectionCardStyle: ViewModifier {
     }
 
     private var shadowColor: Color {
-        AppTheme.symiPetrol.opacity(shadowOpacity)
+        Color.black.opacity(shadowOpacity)
     }
 
     private var shadowRadius: CGFloat {
@@ -358,13 +358,16 @@ struct MedicationFlowInlineView: View {
 
     var body: some View {
         @Bindable var controller = controller
+        let hasMedicationSelection = !controller.selectedMedications.isEmpty
 
         VStack(alignment: .leading, spacing: SymiSpacing.lg) {
             InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
                 ForEach(medicationOptions) { option in
+                    let isSelected = controller.isMedicationNameSelected(option.title)
+
                     MedicationExpandableCard(
                         option: option,
-                        isSelected: controller.isMedicationNameSelected(option.title),
+                        isSelected: isSelected,
                         isExpanded: expandedMedicationID == option.id,
                         selectedDosage: $selectedDosage,
                         selectedTakenAt: $selectedTakenAt,
@@ -376,12 +379,13 @@ struct MedicationFlowInlineView: View {
                             controller.updateDosage(forMedicationNamed: option.title, dosage: dosage == "Andere" ? "" : dosage)
                         }
                     )
+                    .opacity(focusOpacity(isSelected: isSelected, hasMedicationSelection: hasMedicationSelection))
                 }
 
                 UnifiedSelectionTile(
                     title: "Keine Medikation",
                     systemImage: "slash.circle",
-                    isSelected: controller.selectedMedications.isEmpty,
+                    isSelected: !hasMedicationSelection,
                     accent: accent,
                     accessibilityIdentifier: "entry-medication-none"
                 ) {
@@ -390,6 +394,7 @@ struct MedicationFlowInlineView: View {
                         controller.resetSelections()
                     }
                 }
+                .opacity(focusOpacity(isSelected: !hasMedicationSelection, hasMedicationSelection: hasMedicationSelection))
             }
 
             if !controller.selectedMedications.isEmpty {
@@ -428,6 +433,10 @@ struct MedicationFlowInlineView: View {
             }
             expandedMedicationID = option.id
         }
+    }
+
+    private func focusOpacity(isSelected: Bool, hasMedicationSelection: Bool) -> Double {
+        hasMedicationSelection && !isSelected ? SymiOpacity.medicationInactiveFocus : SymiOpacity.opaque
     }
 }
 
@@ -564,6 +573,7 @@ private struct PainLocationCard: View {
             .padding(.vertical, SymiSpacing.xs)
             .frame(maxWidth: .infinity, minHeight: SymiSize.headacheLocationTileMinHeight)
             .modifier(SelectionStyleModifier(isSelected: isSelected, accent: accent))
+            .animation(.easeInOut(duration: SymiAnimation.selectionDuration), value: isSelected)
             .overlay(alignment: .topTrailing) {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
@@ -623,6 +633,7 @@ struct UnifiedSelectionTile: View {
             .padding(.vertical, SymiSpacing.xs)
             .frame(maxWidth: .infinity, minHeight: SymiSize.inputSelectionTileMinHeight)
             .modifier(SelectionStyleModifier(isSelected: isSelected, accent: accent))
+            .animation(.easeInOut(duration: SymiAnimation.selectionDuration), value: isSelected)
             .overlay(alignment: .topTrailing) {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
@@ -675,6 +686,7 @@ struct MedicationExpandableCard: View {
                     Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity, minHeight: SymiSize.inputSelectionTileMinHeight, alignment: .leading)
+                .animation(.easeInOut(duration: SymiAnimation.selectionDuration), value: isSelected)
             }
             .buttonStyle(PressScaleButtonStyle())
 
@@ -693,6 +705,8 @@ struct MedicationExpandableCard: View {
         .padding(.horizontal, SymiSpacing.md)
         .padding(.vertical, SymiSpacing.sm)
         .modifier(SelectionStyleModifier(isSelected: isSelected, accent: accent))
+        .animation(.easeInOut(duration: SymiAnimation.selectionDuration), value: isSelected)
+        .animation(.snappy, value: isExpanded)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("entry-medication-\(option.title)")
     }
@@ -752,6 +766,7 @@ struct AccentPillOption: View {
             .padding(.vertical, SymiSpacing.pillVerticalPadding)
             .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight)
             .modifier(SelectionStyleModifier(isSelected: isSelected, accent: accent, cornerRadius: SymiRadius.flowPill, shape: .capsule))
+            .animation(.easeInOut(duration: SymiAnimation.selectionDuration), value: isSelected)
         }
         .buttonStyle(PressScaleButtonStyle())
         .accessibilityLabel(title)
@@ -796,10 +811,16 @@ struct SelectionStyleModifier: ViewModifier {
         switch shape {
         case .roundedRectangle:
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(isSelected ? accent.opacity(SymiOpacity.selectionBorder) : neutralBorder, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+                .stroke(
+                    isSelected ? selectedBorder : neutralBorder,
+                    lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline
+                )
         case .capsule:
             Capsule()
-                .stroke(isSelected ? accent.opacity(SymiOpacity.selectionBorder) : neutralBorder, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+                .stroke(
+                    isSelected ? selectedBorder : neutralBorder,
+                    lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline
+                )
         }
     }
 
@@ -816,13 +837,17 @@ struct SelectionStyleModifier: ViewModifier {
     private var selectedFillOpacity: Double {
         colorScheme == .dark ? SymiOpacity.selectionFillDark : SymiOpacity.selectionFillLight
     }
+
+    private var selectedBorder: Color {
+        accent.opacity(SymiOpacity.selectionBorder)
+    }
 }
 
 struct PressScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.25), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? SymiOpacity.pressScale : SymiOpacity.opaque)
+            .animation(.spring(response: SymiAnimation.pressResponse), value: configuration.isPressed)
     }
 }
 

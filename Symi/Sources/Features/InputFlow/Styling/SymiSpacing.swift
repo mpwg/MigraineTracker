@@ -99,10 +99,10 @@ enum SymiShadow {
     static let journalCardRadius: CGFloat = 16
     static let journalCardXOffset: CGFloat = 0
     static let journalCardYOffset: CGFloat = 8
-    static let sectionCardDominantRadius: CGFloat = 18
-    static let sectionCardStandardRadius: CGFloat = 6
-    static let sectionCardDominantYOffset: CGFloat = 9
-    static let sectionCardStandardYOffset: CGFloat = 3
+    static let sectionCardDominantRadius: CGFloat = 8
+    static let sectionCardStandardRadius: CGFloat = 8
+    static let sectionCardDominantYOffset: CGFloat = 2
+    static let sectionCardStandardYOffset: CGFloat = 2
 }
 
 nonisolated enum SymiSize {
@@ -223,6 +223,7 @@ nonisolated enum SymiStroke {
 nonisolated enum SymiAnimation {
     static let quickDuration: TimeInterval = 0.18
     static let selectionDuration: TimeInterval = 0.20
+    static let pressResponse: TimeInterval = 0.20
 }
 
 nonisolated enum SymiOpacity {
@@ -312,12 +313,14 @@ nonisolated enum SymiOpacity {
     static let sectionCardStandardLightFill: Double = 0.72
     static let sectionCardDominantBorder: Double = 0.42
     static let sectionCardStandardBorder: Double = 0.28
-    static let sectionCardDominantShadow: Double = 0.11
-    static let sectionCardStandardShadow: Double = 0.032
-    static let selectionFillDark: Double = 0.26
-    static let selectionFillLight: Double = 0.16
-    static let selectionBorder: Double = 0.82
+    static let sectionCardDominantShadow: Double = 0.04
+    static let sectionCardStandardShadow: Double = 0.04
+    static let selectionFillDark: Double = 0.08
+    static let selectionFillLight: Double = 0.06
+    static let selectionBorder: Double = 1
     static let selectionNeutralDarkFill: Double = 0.74
     static let selectionNeutralLightFill: Double = 0.76
     static let selectionNeutralBorder: Double = 0.55
+    static let medicationInactiveFocus: Double = 0.60
+    static let pressScale: Double = 0.96
 }
