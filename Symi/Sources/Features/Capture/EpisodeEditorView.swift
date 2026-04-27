@@ -25,44 +25,83 @@ struct EpisodeEditorView: View {
         @Bindable var controller = controller
         @Bindable var medicationController = controller.medicationController
 
-        Form {
-            if let validationMessage = controller.validationMessage {
-                EpisodeValidationMessageSection(message: validationMessage)
-            }
+        ZStack {
+            InputFlowBackground()
+                .ignoresSafeArea()
 
-            EpisodeScaleSection(draft: $controller.draft)
-            EpisodeTimingSection(draft: $controller.draft)
-            EpisodeTagSection(
-                title: "Was spürst du?",
-                options: controller.symptomOptions,
-                selection: $controller.draft.selectedSymptoms,
-                colorToken: NewEntryStepCatalog.metadata(for: .headache).colorToken
-            )
-            EpisodeTagSection(
-                title: "Was könnte eine Rolle gespielt haben?",
-                footer: "Du kannst mehrere auswählen. Wetter als Auslöser bleibt getrennt vom automatisch gespeicherten Wetterkontext.",
-                options: controller.triggerOptions,
-                selection: $controller.draft.selectedTriggers,
-                colorToken: NewEntryStepCatalog.metadata(for: .triggers).colorToken
-            )
-            EpisodeNotesSection(draft: $controller.draft)
-            EpisodeOptionalDetailsSection(draft: $controller.draft)
-            EpisodeWeatherSection(state: controller.weatherLoadState)
-            EpisodeMedicationSection(controller: controller.medicationController)
-            EpisodeSaveSection(mode: controller.mode, isSaving: controller.isSaving, onSave: save)
-        }
-        .navigationTitle(controller.mode == .create ? "Eintragen" : "Eintrag bearbeiten")
-        .brandGroupedScreen()
-        .toolbar {
-            if showsDismissButton {
-                ToolbarItem(placement: dismissButtonPlacement) {
-                    Button("Abbrechen") {
-                        dismiss()
+            VStack(spacing: SymiSpacing.zero) {
+                EditEntryHeader(
+                    subtitle: "\(controller.draft.type.rawValue) · \(controller.draft.normalizedIntensity)/10",
+                    showsDismissButton: showsDismissButton,
+                    onDismiss: { dismiss() }
+                )
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: SymiSpacing.flowSectionSpacing) {
+                        if let validationMessage = controller.validationMessage {
+                            EditValidationCard(message: validationMessage)
+                        }
+
+                        SectionCard("Intensität", theme: .pain) {
+                            IntensitySelectorView(value: $controller.draft.intensity)
+                        }
+
+                        SectionCard("Symptome", subtitle: "Was spürst du?", theme: .pain) {
+                            SymptomCardGrid(
+                                options: controller.symptomOptions,
+                                selection: $controller.draft.selectedSymptoms
+                            )
+                        }
+
+                        SectionCard("Schmerzort", theme: .pain) {
+                            PainLocationSelectorView(selection: $controller.draft.selectedPainLocations)
+                        }
+
+                        SectionCard("Tagesbereich", subtitle: "Schnellauswahl zuerst, Details bei Bedarf.", theme: .pain) {
+                            DayPartInlineSelectorView(startedAt: $controller.draft.startedAt)
+                        }
+
+                        SectionCard("Auslöser", subtitle: "Du kannst mehrere auswählen.", theme: .trigger) {
+                            TriggerSelectionGrid(
+                                options: controller.triggerOptions,
+                                selection: $controller.draft.selectedTriggers
+                            )
+                        }
+
+                        SectionCard("Medikation", theme: .medication) {
+                            MedicationFlowInlineView(controller: controller.medicationController)
+                        }
+
+                        SectionCard("Notiz", theme: .note) {
+                            EntryNoteCard(notes: $controller.draft.notes)
+                        }
+
+                        EditSecondaryDetailsCard(draft: $controller.draft, weatherState: controller.weatherLoadState)
                     }
+                    .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
+                    .padding(.top, SymiSpacing.md)
+                    .padding(.bottom, SymiSpacing.xxl)
+                    .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
+                    .frame(maxWidth: .infinity)
                 }
+                .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
             }
         }
-        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom) {
+            StickyBottomBar {
+                InputFlowPrimaryButton(
+                    title: controller.mode == .create ? "Eintrag speichern" : "Speichern",
+                    systemImage: "checkmark",
+                    isLoading: controller.isSaving,
+                    isDisabled: controller.isSaving,
+                    accessibilityIdentifier: "edit-entry-save",
+                    action: save
+                )
+            }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .tint(AppTheme.symiPetrol)
         .alert("Eintrag gespeichert", isPresented: $controller.saveMessageVisible) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -120,255 +159,99 @@ struct EpisodeEditorView: View {
         onSaved != nil || controller.mode == .edit
     }
 
-    private var dismissButtonPlacement: ToolbarItemPlacement {
-        #if targetEnvironment(macCatalyst)
-        .topBarTrailing
-        #else
-        .topBarLeading
-        #endif
+}
+
+private struct EditEntryHeader: View {
+    let subtitle: String
+    let showsDismissButton: Bool
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text("Eintrag bearbeiten")
+                    .font(SymiTypography.flowTitle)
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+
+                Text(subtitle)
+                    .font(SymiTypography.caption)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+            }
+
+            Spacer()
+
+            if showsDismissButton {
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+                        .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Abbrechen")
+            }
+        }
+        .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
+        .padding(.vertical, SymiSpacing.md)
+        .frame(maxWidth: SymiSpacing.flowMaxContentWidth)
+        .frame(maxWidth: .infinity)
+        .background(InputFlowBackground().opacity(SymiOpacity.footerBackground).ignoresSafeArea())
     }
 }
 
-private struct FormAlignedRowModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content.brandGroupedRow()
-    }
-}
+private struct EditValidationCard: View {
+    @Environment(\.colorScheme) private var colorScheme
 
-private extension View {
-    func formAlignedRow() -> some View {
-        modifier(FormAlignedRowModifier())
-    }
-}
-
-private struct EpisodeValidationMessageSection: View {
     let message: String
 
     var body: some View {
-        Section {
-            Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.symiCoral)
-                .accessibilityLabel("Hinweis: \(message)")
-                .formAlignedRow()
-        }
-    }
-}
-
-private struct EpisodeScaleSection: View {
-    @Binding var draft: EpisodeDraft
-
-    var body: some View {
-        Section {
-            Picker("Typ", selection: $draft.type) {
-                ForEach(EpisodeType.allCases) { episodeType in
-                    Text(episodeType.rawValue).tag(episodeType)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                HStack {
-                    Text("Intensität")
-                    Spacer()
-                    Text("\(draft.normalizedIntensity)/10")
-                        .font(.headline)
-                        .monospacedDigit()
-                }
-
-                IntensityPicker(value: Binding(
-                    get: { Double(draft.normalizedIntensity) },
-                    set: { draft.intensity = Int($0) }
-                ))
-            }
-            .formAlignedRow()
-        } header: {
-            Text("Skala")
-        } footer: {
-            Text("Wenige Angaben reichen. Alles Weitere bleibt optional.")
-        }
-    }
-}
-
-private struct EpisodeTimingSection: View {
-    @Binding var draft: EpisodeDraft
-
-    var body: some View {
-        Section("Tagesbereich") {
-            DatePicker(
-                "Beginn",
-                selection: $draft.startedAt,
-                in: ...Date.now,
-                displayedComponents: [.date, .hourAndMinute]
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(AppTheme.symiCoral)
+            .padding(SymiSpacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                InputFlowStepTheme.pain.selectedFill(for: colorScheme),
+                in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
             )
-            .formAlignedRow()
-        }
+            .accessibilityLabel("Hinweis: \(message)")
     }
 }
 
-private struct EpisodeTagSection: View {
-    let title: String
-    var footer: String?
-    let options: [String]
-    @Binding var selection: Set<String>
-    let colorToken: NewEntryStepColorToken
-
-    var body: some View {
-        Section {
-            MultiSelectGrid(
-                options: options,
-                selection: $selection,
-                colorToken: colorToken,
-                accessibilityPrefix: title
-            )
-            .formAlignedRow()
-        } header: {
-            Text(title)
-        } footer: {
-            if let footer {
-                Text(footer)
-            }
-        }
-    }
-}
-
-private struct EpisodeNotesSection: View {
+private struct EditSecondaryDetailsCard: View {
     @Binding var draft: EpisodeDraft
+    let weatherState: WeatherLoadState
 
     var body: some View {
-        Section("Notiz") {
-            TextField("Kurz notieren, was auffällt", text: $draft.notes, axis: .vertical)
-                .lineLimit(2 ... 5)
-                .formAlignedRow()
-        }
-    }
-}
+        SectionCard("Weitere Details", subtitle: "Optional und eingeklappt.", theme: .note) {
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+                    TextField("Schmerzcharakter", text: $draft.painCharacter)
+                    TextField("Funktionelle Einschränkung", text: $draft.functionalImpact)
 
-private struct EpisodeOptionalDetailsSection: View {
-    @Binding var draft: EpisodeDraft
-
-    var body: some View {
-        Section("Optionale Details") {
-            DisclosureGroup("Weitere Angaben") {
-                TextField("Schmerzlokalisation", text: $draft.painLocation)
-                TextField("Schmerzcharakter", text: $draft.painCharacter)
-                TextField("Funktionelle Einschränkung", text: $draft.functionalImpact)
-
-                Picker("Menstruationsstatus", selection: $draft.menstruationStatus) {
-                    ForEach(MenstruationStatus.allCases) { status in
-                        Text(status.rawValue).tag(status)
+                    Picker("Menstruationsstatus", selection: $draft.menstruationStatus) {
+                        ForEach(MenstruationStatus.allCases) { status in
+                            Text(status.rawValue).tag(status)
+                        }
                     }
+
+                    Toggle("Ende angeben", isOn: $draft.endedAtEnabled.animation())
+                    if draft.endedAtEnabled {
+                        DatePicker(
+                            "Ende",
+                            selection: $draft.endedAt,
+                            in: draft.startedAt...,
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                    }
+
+                    WeatherStatusContent(state: weatherState)
                 }
-
-                Toggle("Ende angeben", isOn: $draft.endedAtEnabled.animation())
-                if draft.endedAtEnabled {
-                    DatePicker(
-                        "Ende",
-                        selection: $draft.endedAt,
-                        in: draft.startedAt...,
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                }
-            }
-        }
-    }
-}
-
-private struct EpisodeWeatherSection: View {
-    let state: WeatherLoadState
-
-    var body: some View {
-        Section {
-            WeatherStatusContent(state: state)
-                .formAlignedRow()
-        } header: {
-            Text("Wetter")
-        } footer: {
-            Text("Das Wetter wird als Kontext mit deinem ungefähren Standort über Apple Weather geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt.")
-        }
-    }
-}
-
-private struct EpisodeMedicationSection: View {
-    let controller: EpisodeMedicationSelectionController
-
-    var body: some View {
-        @Bindable var controller = controller
-
-        Section("Medikamente") {
-            TextField("Medikament nach Namen filtern", text: $controller.searchText)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-
-            MedicationDefinitionGroupList(controller: controller)
-            SelectedMedicationsSection(controller: controller)
-
-            Button {
-                controller.presentEditor(for: nil)
+                .padding(.top, SymiSpacing.sm)
             } label: {
-                Label("Eigenes Medikament hinzufügen", systemImage: "plus")
-            }
-            .formAlignedRow()
-        }
-    }
-}
-
-struct MedicationDefinitionGroupList: View {
-    let controller: EpisodeMedicationSelectionController
-
-    var body: some View {
-        if controller.filteredMedicationGroups.isEmpty {
-            ContentUnavailableView(
-                "Kein Medikament gefunden",
-                systemImage: "magnifyingglass",
-                description: Text("Passe den Suchbegriff an oder füge ein eigenes Medikament hinzu.")
-            )
-        } else {
-            VStack(alignment: .leading, spacing: SymiSpacing.lg) {
-                ForEach(controller.filteredMedicationGroups) { group in
-                    MedicationDefinitionGroupView(group: group, controller: controller)
-                }
-            }
-            .padding(.vertical, SymiSpacing.xxs)
-            .formAlignedRow()
-        }
-    }
-}
-
-private struct MedicationDefinitionGroupView: View {
-    let group: EpisodeEditorMedicationGroup
-    let controller: EpisodeMedicationSelectionController
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            Text(group.title)
-                .font(.headline)
-
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: SymiSize.medicationGridMinWidth), spacing: SymiSpacing.md, alignment: .top)],
-                alignment: .leading,
-                spacing: SymiSpacing.md
-            ) {
-                ForEach(group.items) { definition in
-                    MedicationDefinitionRow(
-                        definition: definition,
-                        isSelected: controller.isMedicationSelected(definition),
-                        quantity: controller.quantity(for: definition),
-                        onToggle: { controller.toggleMedicationSelection(for: definition) },
-                        onDecrease: { controller.decrementMedicationQuantity(for: definition) },
-                        onIncrease: { controller.incrementMedicationQuantity(for: definition) },
-                        onEdit: definition.isCustom ? { controller.presentEditor(for: definition) } : nil,
-                        onDelete: definition.isCustom ? { controller.pendingMedicationDeletion = definition } : nil
-                    )
-                }
-            }
-            .padding(SymiSpacing.md)
-            .brandCard()
-
-            if let footer = group.footer {
-                Text(footer)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Text("Details anzeigen")
+                    .font(SymiTypography.flowPillLabel)
+                    .foregroundStyle(AppTheme.symiPetrol)
             }
         }
     }
@@ -382,7 +265,6 @@ struct SelectedMedicationsSection: View {
             Text("Nur ergänzen, wenn du heute etwas genommen hast.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .formAlignedRow()
         } else {
             VStack(alignment: .leading, spacing: SymiSpacing.xs) {
                 Text("Ausgewählt")
@@ -395,23 +277,6 @@ struct SelectedMedicationsSection: View {
                     }
                 }
             }
-            .formAlignedRow()
-        }
-    }
-}
-
-private struct EpisodeSaveSection: View {
-    let mode: EpisodeEditorMode
-    let isSaving: Bool
-    let onSave: () -> Void
-
-    var body: some View {
-        Section {
-            PrimaryButton(action: onSave) {
-                Text(mode == .create ? "Eintrag speichern" : "Änderungen speichern")
-            }
-                .disabled(isSaving)
-                .formAlignedRow()
         }
     }
 }
@@ -495,133 +360,6 @@ private struct WeatherStatusContent: View {
 
 private enum AppSettingsURL {
     static let url = URL(string: "app-settings:")!
-}
-
-struct IntensityPicker: View {
-    @Binding var value: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            Slider(value: $value, in: 1 ... 10, step: 1)
-                .tint(AppTheme.symiCoral)
-                .accessibilityLabel("Intensität")
-                .accessibilityValue("\(Int(value)) von 10")
-
-            HStack {
-                Text("ruhig")
-                Spacer()
-                Text("stark")
-            }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(AppTheme.symiTextSecondary)
-        }
-    }
-}
-
-private struct MedicationDefinitionRow: View {
-    let definition: MedicationDefinitionRecord
-    let isSelected: Bool
-    let quantity: Int
-    let onToggle: () -> Void
-    let onDecrease: () -> Void
-    let onIncrease: () -> Void
-    let onEdit: (() -> Void)?
-    let onDelete: (() -> Void)?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            Button(action: onToggle) {
-                HStack(alignment: .center, spacing: SymiSpacing.md) {
-                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .imageScale(.large)
-                        .foregroundStyle(isSelected ? AppTheme.ocean : .primary)
-                        .frame(width: SymiSize.productInfoIconWidth, alignment: .center)
-
-                    VStack(alignment: .leading, spacing: SymiSpacing.chevronTopPadding) {
-                        Text(definition.name)
-                            .font(.headline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-
-                        if !definition.suggestedDosage.isEmpty {
-                            Text(definition.suggestedDosage)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    Spacer(minLength: 0)
-                }
-            }
-            .buttonStyle(.plain)
-
-            if isSelected {
-                HStack(spacing: SymiSpacing.sm) {
-                    Text("Anzahl")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Button(action: onDecrease) {
-                        Image(systemName: "minus.circle")
-                            .imageScale(.large)
-                    }
-                    .buttonStyle(.plain)
-
-                    Text("\(quantity)")
-                        .font(.headline.monospacedDigit())
-                        .frame(minWidth: SymiSize.medicationQuantityMinWidth)
-
-                    Button(action: onIncrease) {
-                        Image(systemName: "plus.circle")
-                            .imageScale(.large)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(.horizontal, SymiSpacing.lg)
-        .padding(.vertical, SymiSpacing.secondaryButtonVerticalPadding)
-        .frame(
-            maxWidth: .infinity,
-            minHeight: isSelected ? SymiSize.selectedMedicationRowMinHeight : SymiSize.medicationRowMinHeight,
-            alignment: .leading
-        )
-        .background(isSelected ? AppTheme.selectedFill : AppTheme.secondaryFill)
-        .clipShape(RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
-                .stroke(
-                    isSelected ? AppTheme.ocean.opacity(SymiOpacity.selectedStroke) : AppTheme.symiOnAccent.opacity(SymiOpacity.outline),
-                    lineWidth: SymiStroke.hairline
-                )
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityHint(isSelected ? "Medikament ausgewählt. Passe die Anzahl an." : "Wählt dieses Medikament aus.")
-        .contextMenu {
-            if let onEdit {
-                Button("Bearbeiten", systemImage: "pencil", action: onEdit)
-            }
-
-            if let onDelete {
-                Button("Löschen", systemImage: "trash", role: .destructive, action: onDelete)
-            }
-        }
-    }
-
-    private var accessibilityLabel: String {
-        if isSelected {
-            return "\(definition.name), ausgewählt, Anzahl \(quantity)"
-        }
-
-        if definition.suggestedDosage.isEmpty {
-            return definition.name
-        }
-
-        return "\(definition.name), \(definition.suggestedDosage)"
-    }
 }
 
 struct CustomMedicationEditorSheet: View {

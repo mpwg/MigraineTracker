@@ -213,6 +213,14 @@ final class EpisodeMedicationSelectionController {
         rebuildCaches()
     }
 
+    func updateDosageForSelectedMedications(_ dosage: String) {
+        let trimmedDosage = dosage.trimmingCharacters(in: .whitespacesAndNewlines)
+        for index in medications.indices where medications[index].isSelected {
+            medications[index].dosage = trimmedDosage
+        }
+        rebuildCaches()
+    }
+
     func presentEditor(for definition: MedicationDefinitionRecord?) {
         customMedicationEditor = CustomMedicationEditorSheetState(definition: definition)
     }

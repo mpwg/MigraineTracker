@@ -141,15 +141,6 @@ private struct EntryHeadacheStepView: View {
     let onBack: () -> Void
     let onCancel: () -> Void
 
-    @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
-    private let visiblePainLocations: [EntryPainLocationOption] = [
-        .init(title: "Stirn", imageName: "PainLocationForehead"),
-        .init(title: "Schläfen", imageName: "PainLocationTemples"),
-        // .init(title: "Nacken", imageName: "PainLocationNeck"),
-        .init(title: "Einseitig", imageName: "PainLocationLeftTemple"),
-        .init(title: "Überall", imageName: "PainLocationCrown")
-    ]
-
     var body: some View {
         @Bindable var coordinator = coordinator
 
@@ -159,38 +150,14 @@ private struct EntryHeadacheStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            PainGaugeView(value: $coordinator.draft.intensity)
+            IntensitySelectorView(value: $coordinator.draft.intensity)
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
-                HeadacheLocationGrid {
-                    ForEach(visiblePainLocations) { location in
-                        PainLocationSelectionTile(
-                            option: location,
-                            isSelected: coordinator.draft.selectedPainLocations.contains(location.title),
-                            theme: .pain,
-                            accessibilityIdentifier: "entry-location-\(location.title)"
-                        ) {
-                            toggle(location.title, in: &coordinator.draft.selectedPainLocations)
-                        }
-                    }
-                }
+                PainLocationSelectorView(selection: $coordinator.draft.selectedPainLocations)
             }
 
             InputFlowFieldGroup(title: "Tagesbereich") {
-                HeadacheDayPartGrid {
-                    ForEach(EntryDayPartPreset.allCases) { preset in
-                        InputFlowSelectionTile(
-                            title: preset.title,
-                            systemImage: preset.symbolName,
-                            isSelected: selectedDayPartPreset == preset,
-                            theme: .pain,
-                            accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
-                        ) {
-                            selectedDayPartPreset = preset
-                            coordinator.selectDayPartPreset(preset)
-                        }
-                    }
-                }
+                DayPartInlineSelectorView(startedAt: $coordinator.draft.startedAt)
             }
         } footer: {
             EntryFlowFooter(
@@ -207,7 +174,6 @@ private struct EntryHeadacheStepView: View {
         .onAppear {
             coordinator.draft.type = .headache
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
-            selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
         }
     }
@@ -225,171 +191,12 @@ private struct EntryHeadacheStepView: View {
 
         coordinator.draft.selectedPainLocations = ["Schläfen"]
     }
-
-    private func toggle(_ option: String, in selection: inout Set<String>) {
-        if selection.contains(option) {
-            selection.remove(option)
-        } else {
-            selection.insert(option)
-        }
-    }
-}
-
-private extension EntryDayPartPreset {
-    init(dayPart: EpisodeDayPart) {
-        switch dayPart {
-        case .morgens:
-            self = .morgens
-        case .mittags:
-            self = .mittags
-        case .abends:
-            self = .abends
-        case .nacht:
-            self = .nacht
-        }
-    }
-}
-
-private struct EntryPainLocationOption: Identifiable, Hashable {
-    let title: String
-    let imageName: String
-
-    var id: String { title }
-}
-
-private struct PainLocationSelectionTile: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let option: EntryPainLocationOption
-    let isSelected: Bool
-    let theme: InputFlowStepTheme
-    let accessibilityIdentifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: SymiSpacing.xs) {
-                Image(option.imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: SymiSize.headacheLocationImageHeight)
-                    .accessibilityHidden(true)
-
-                Text(option.title)
-                    .font(SymiTypography.flowTileLabel)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(AppTheme.symiTextPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, SymiSpacing.xs)
-            .padding(.vertical, SymiSpacing.xs)
-            .frame(maxWidth: .infinity, minHeight: SymiSize.headacheLocationTileMinHeight)
-            .background(tileBackground, in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
-                    .stroke(borderColor, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
-            }
-            .overlay(alignment: .topTrailing) {
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(theme.accent(for: colorScheme))
-                        .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
-                        .padding(.top, SymiSpacing.sm)
-                        .padding(.trailing, SymiSpacing.sm)
-                        .accessibilityHidden(true)
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(option.title)
-        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
-        .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityIdentifier(accessibilityIdentifier)
-    }
-
-    private var tileBackground: Color {
-        isSelected ? theme.selectedFill(for: colorScheme) : SymiColors.elevatedCard(for: colorScheme)
-    }
-
-    private var borderColor: Color {
-        if isSelected {
-            return theme.border(for: colorScheme).opacity(SymiOpacity.selectedStroke)
-        }
-
-        return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
-    }
-}
-private struct HeadacheLocationGrid<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        LazyVGrid(
-            columns: Array(
-                repeating: GridItem(
-                    .flexible(minimum: SymiSize.headacheOptionGridMinWidth),
-                    spacing: SymiSpacing.xs,
-                    alignment: .top
-                ),
-                count: SymiSize.headacheOptionGridColumnCount
-            ),
-            alignment: .leading,
-            spacing: SymiSpacing.xs
-        ) {
-            content
-        }
-    }
-}
-
-private struct HeadacheDayPartGrid<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        LazyVGrid(
-            columns: Array(
-                repeating: GridItem(
-                    .flexible(minimum: SymiSize.headacheOptionGridMinWidth),
-                    spacing: SymiSpacing.xs,
-                    alignment: .top
-                ),
-                count: SymiSize.headacheOptionGridColumnCount
-            ),
-            alignment: .leading,
-            spacing: SymiSpacing.xs
-        ) {
-            content
-        }
-    }
 }
 
 private struct EntryMedicationStepView: View {
     let coordinator: EntryFlowCoordinator
     let onBack: () -> Void
     let onCancel: () -> Void
-
-    @State private var selectedDosage = "400 mg"
-    @State private var selectedTakenAt = "Jetzt"
-
-    private let medicationOptions: [EntryMedicationOption] = [
-        EntryMedicationOption(title: "Ibuprofen", symbolName: "pills", category: .nsar, defaultDosage: "400 mg"),
-        EntryMedicationOption(title: "Triptan", symbolName: "capsule", category: .triptan, defaultDosage: ""),
-        EntryMedicationOption(title: "Paracetamol", symbolName: "syringe", category: .paracetamol, defaultDosage: "500 mg"),
-        EntryMedicationOption(title: "Andere", symbolName: "ellipsis", category: .other, defaultDosage: "")
-    ]
-    private let dosageOptions = ["200 mg", "400 mg", "600 mg", "Andere"]
-    private let takenAtOptions = ["Jetzt", "Vor 1 Std.", "Vor 2 Std.", "Anderer Zeitpunkt"]
 
     var body: some View {
         @Bindable var coordinator = coordinator
@@ -402,61 +209,7 @@ private struct EntryMedicationStepView: View {
             onCancel: onCancel
         ) {
             InputFlowFieldGroup(title: "Welche Medikation?") {
-                VStack(spacing: SymiSpacing.tileSpacing) {
-                    InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
-                        ForEach(medicationOptions) { option in
-                            InputFlowSelectionTile(
-                                title: option.title,
-                                systemImage: option.symbolName,
-                                isSelected: medicationController.isMedicationNameSelected(option.title),
-                                theme: .medication,
-                                accessibilityIdentifier: "entry-medication-\(option.title)"
-                            ) {
-                                selectMedication(option, controller: medicationController)
-                            }
-                        }
-                    }
-
-                    InputFlowSelectionTile(
-                        title: coordinator.draft.continuousMedicationChecks.isEmpty ? "Keine Medikation" : "Keine weitere Medikation",
-                        systemImage: "slash.circle",
-                        isSelected: medicationController.selectedMedications.isEmpty,
-                        theme: .medication,
-                        accessibilityIdentifier: "entry-medication-none"
-                    ) {
-                        medicationController.resetSelections()
-                    }
-                }
-            }
-
-            InputFlowFieldGroup(title: "Dosierung") {
-                InputFlowPillGrid {
-                    ForEach(dosageOptions, id: \.self) { dosage in
-                        InputFlowPillOption(
-                            title: dosage,
-                            isSelected: selectedDosage == dosage,
-                            theme: .medication,
-                            accessibilityIdentifier: "entry-dosage-\(dosage)"
-                        ) {
-                            selectedDosage = dosage
-                        }
-                    }
-                }
-            }
-
-            InputFlowFieldGroup(title: "Wann hast du es eingenommen?") {
-                InputFlowPillGrid {
-                    ForEach(takenAtOptions, id: \.self) { option in
-                        InputFlowPillOption(
-                            title: option,
-                            isSelected: selectedTakenAt == option,
-                            theme: .medication,
-                            accessibilityIdentifier: "entry-medication-time-\(option)"
-                        ) {
-                            selectedTakenAt = option
-                        }
-                    }
-                }
+                MedicationFlowInlineView(controller: medicationController)
             }
 
             if !coordinator.draft.continuousMedicationChecks.isEmpty {
@@ -519,19 +272,6 @@ private struct EntryMedicationStepView: View {
         }
     }
 
-    private func selectMedication(_ option: EntryMedicationOption, controller: EpisodeMedicationSelectionController) {
-        if option.title == "Andere" {
-            controller.presentEditor(for: nil)
-            return
-        }
-
-        let dosage = selectedDosage == "Andere" ? option.defaultDosage : selectedDosage
-        controller.toggleMedicationSelection(
-            named: option.title,
-            fallbackCategory: option.category,
-            fallbackDosage: dosage
-        )
-    }
 }
 
 private struct EntryTriggersStepView: View {
@@ -539,16 +279,7 @@ private struct EntryTriggersStepView: View {
     let onBack: () -> Void
     let onCancel: () -> Void
 
-    private let triggerOptions: [EntryTriggerOption] = [
-        EntryTriggerOption(title: "Stress", symbolName: "brain.head.profile"),
-        EntryTriggerOption(title: "Wetter", symbolName: "cloud.sun"),
-        EntryTriggerOption(title: "Schlaf", symbolName: "moon"),
-        EntryTriggerOption(title: "Ernährung", symbolName: "fork.knife.circle"),
-        EntryTriggerOption(title: "Bildschirmzeit", symbolName: "ipad.landscape.and.iphone"),
-        EntryTriggerOption(title: "Zyklus", symbolName: "drop"),
-        EntryTriggerOption(title: "Bewegung", symbolName: "figure.run"),
-        EntryTriggerOption(title: "Flüssigkeit", symbolName: "waterbottle")
-    ]
+    private let triggerOptions = ["Stress", "Wetter", "Schlaf", "Ernährung", "Bildschirmzeit", "Zyklus", "Bewegung", "Flüssigkeit"]
 
     var body: some View {
         @Bindable var coordinator = coordinator
@@ -560,19 +291,7 @@ private struct EntryTriggersStepView: View {
             onCancel: onCancel
         ) {
             InputFlowFieldGroup(title: "Wähle alle passenden aus.") {
-                InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
-                    ForEach(triggerOptions) { option in
-                        InputFlowSelectionTile(
-                            title: option.title,
-                            systemImage: option.symbolName,
-                            isSelected: coordinator.draft.selectedTriggers.contains(option.title),
-                            theme: .trigger,
-                            accessibilityIdentifier: "entry-trigger-\(option.title)"
-                        ) {
-                            toggle(option.title, in: &coordinator.draft.selectedTriggers)
-                        }
-                    }
-                }
+                TriggerSelectionGrid(options: triggerOptions, selection: $coordinator.draft.selectedTriggers)
             }
 
             EntryInfoBanner(text: "Du kannst mehrere auswählen.")
@@ -590,13 +309,6 @@ private struct EntryTriggersStepView: View {
         }
     }
 
-    private func toggle(_ option: String, in selection: inout Set<String>) {
-        if selection.contains(option) {
-            selection.remove(option)
-        } else {
-            selection.insert(option)
-        }
-    }
 }
 
 private struct EntryNoteStepView: View {
@@ -936,55 +648,6 @@ private struct EntryInfoBanner: View {
     }
 }
 
-private struct EntryNoteCard: View {
-    @Binding var notes: String
-
-    private let limit = 500
-
-    var body: some View {
-        InputFlowCard(theme: .note, isHighlighted: true) {
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $notes)
-                    .font(.callout)
-                    .scrollContentBackground(.hidden)
-                    .padding(.horizontal, SymiSpacing.xxs)
-                    .padding(.vertical, SymiSpacing.xxs)
-                    .frame(minHeight: SymiSize.noteEditorMinHeight)
-                    .onChange(of: notes) { _, newValue in
-                        if newValue.count > limit {
-                            notes = String(newValue.prefix(limit))
-                        }
-                    }
-                    .accessibilityLabel("Notiz")
-                    .accessibilityIdentifier("entry-note-text")
-
-                if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-                        Text("Was hat geholfen?")
-                        Text("Was war heute anders?")
-                    }
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, SymiSpacing.sm)
-                    .padding(.vertical, SymiSpacing.sm)
-                    .allowsHitTesting(false)
-                }
-
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text("\(notes.count)/\(limit)")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .padding(SymiSpacing.xs)
-                    }
-                }
-            }
-        }
-    }
-}
-
 private struct EntryTodayLinkCard: View {
     @Binding var isOn: Bool
 
@@ -1086,22 +749,6 @@ private struct EntryPatternHint: View {
         )
         .accessibilityIdentifier("entry-review-pattern-hint")
     }
-}
-
-private struct EntryMedicationOption: Identifiable {
-    let title: String
-    let symbolName: String
-    let category: MedicationCategory
-    let defaultDosage: String
-
-    var id: String { title }
-}
-
-private struct EntryTriggerOption: Identifiable {
-    let title: String
-    let symbolName: String
-
-    var id: String { title }
 }
 
 private struct EntryFeelingOption: Identifiable {
