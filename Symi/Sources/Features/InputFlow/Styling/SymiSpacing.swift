@@ -14,6 +14,7 @@ nonisolated enum SymiSpacing {
     static let screenTopInset: CGFloat = 12
     static let groupedHorizontalInset: CGFloat = 20
     static let dashboardSpacing: CGFloat = 20
+    static let insightsContentSpacing: CGFloat = 22
     static let wideContentMaxWidth: CGFloat = 1180
     static let readableContentMaxWidth: CGFloat = 760
     static let flowHorizontalPadding: CGFloat = 20
@@ -40,13 +41,19 @@ nonisolated enum SymiSpacing {
     static let heroWaveSecondaryOffsetY: CGFloat = 24
     static let heroWaveAccentOffsetX: CGFloat = -8
     static let heroWaveAccentOffsetY: CGFloat = 28
+    static let homeLiquidBackgroundPrimaryOffsetX: CGFloat = -160
+    static let homeLiquidBackgroundPrimaryOffsetY: CGFloat = -260
+    static let homeLiquidBackgroundSecondaryOffsetX: CGFloat = 170
+    static let homeLiquidBackgroundSecondaryOffsetY: CGFloat = 260
 }
 
 nonisolated enum SymiRadius {
     static let card: CGFloat = 20
     static let button: CGFloat = 18
     static let chip: CGFloat = 12
+    static let homeActionButton: CGFloat = 22
     static let heroCard: CGFloat = 24
+    static let glassSheetPanel: CGFloat = 32
     static let flowCard: CGFloat = 18
     static let flowTile: CGFloat = 14
     static let flowPill: CGFloat = 12
@@ -75,6 +82,8 @@ enum SymiShadow {
 nonisolated enum SymiSize {
     static let accessibilityMarker: CGFloat = 1
     static let minInteractiveHeight: CGFloat = 44
+    static let homeBrandLogoWidth: CGFloat = 140
+    static let homeBrandLogoHeight: CGFloat = 68
     static let flowHeaderControlHeight: CGFloat = 34
     static let primaryButtonHeight: CGFloat = 48
     static let progressIndicator: CGFloat = 22
@@ -118,6 +127,11 @@ nonisolated enum SymiSize {
     static let homeCalendarAccessibilityGrowth: CGFloat = 10
     static let homeCalendarDayAccessibilityGrowth: CGFloat = 14
     static let quickEntryIcon: CGFloat = 58
+    static let homeQuickEntryIcon: CGFloat = 48
+    static let homeQuickEntryButtonMinHeight: CGFloat = 68
+    static let homePainScaleSelectedSegmentHeight: CGFloat = 12
+    static let homePainScaleSegmentHeight: CGFloat = 8
+    static let homePainScaleBarHeight: CGFloat = 16
     static let quickEntryMinHeight: CGFloat = 108
     static let homePatternIcon: CGFloat = 34
     static let homePatternWideMinHeight: CGFloat = 138
@@ -125,6 +139,14 @@ nonisolated enum SymiSize {
     static let homePatternAccessibilityHeightGrowth: CGFloat = 54
     static let homePatternEmptyIcon: CGFloat = 38
     static let trendChartHeight: CGFloat = 88
+    static let insightHeroIcon: CGFloat = 42
+    static let insightTrendStripHeight: CGFloat = 142
+    static let insightDotPatternHeight: CGFloat = 78
+    static let insightAverageTrackHeight: CGFloat = 7
+    static let insightCardHeaderIcon: CGFloat = 28
+    static let insightShareTrackHeight: CGFloat = 6
+    static let insightTrendPoint: CGFloat = 7
+    static let insightPatternDot: CGFloat = 9
     static let reviewStepIcon: CGFloat = 44
     static let reviewSummaryIcon: CGFloat = 42
     static let productInfoIconWidth: CGFloat = 28
@@ -136,6 +158,8 @@ nonisolated enum SymiSize {
     static let heroWaveAccentHeight: CGFloat = 34
     static let painGaugeWidth: CGFloat = 218
     static let painGaugeHeight: CGFloat = 148
+    static let homeLiquidBackgroundPrimaryBlur: CGFloat = 70
+    static let homeLiquidBackgroundSecondaryBlur: CGFloat = 86
     static let emptyStateMinHeight: CGFloat = 360
     static let defaultWindowWidth: CGFloat = 1280
     static let defaultWindowHeight: CGFloat = 800
@@ -196,4 +220,19 @@ nonisolated enum SymiOpacity {
     static let footerBackground: Double = 0.96
     static let opaque: Double = 1
     static let elevatedShadow: Double = 1.2
+    static let calendarHighIntensityDot: Double = 0.72
+    static let calendarMediumIntensityDot: Double = 0.72
+    static let calendarLowIntensityDot: Double = 0.62
+    static let calendarInactiveDayText: Double = 0.60
+    static let glassBorderDarkMultiplier: Double = 0.22
+    static let glassProminentShadow: Double = 0.08
+    static let glassRegularShadow: Double = 0.045
+    static let glassTintDark: Double = 0.18
+    static let glassTintLight: Double = 0.26
+    static let homeActionShadowLight: Double = 0.10
+    static let homeActionShadowDark: Double = 0.05
+    static let homeBackgroundPrimaryLight: Double = 0.16
+    static let homeBackgroundPrimaryDark: Double = 0.08
+    static let homeBackgroundSecondaryLight: Double = 0.10
+    static let homeBackgroundSecondaryDark: Double = 0.05
 }

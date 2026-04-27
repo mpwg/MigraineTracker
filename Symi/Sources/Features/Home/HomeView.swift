@@ -44,6 +44,14 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
+                HomePainScaleCard(episode: latestTodayEpisode)
+                    .padding(.bottom, SymiSpacing.lg)
+
+                PrimaryEntryButton {
+                    isPresentingEpisodeEditor = true
+                }
+                .padding(.bottom, SymiSpacing.lg)
+
                 HomeMonthCalendarView(
                     month: displayedMonth,
                     episodesByDay: calendarMonthData.episodesByDay,
@@ -51,11 +59,6 @@ struct HomeView: View {
                     onNext: showNextMonth
                 )
                 .padding(.bottom, SymiSpacing.lg)
-
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
-                }
-                .padding(.bottom, SymiSpacing.md)
 
                 HomeAllEntriesLink(appContainer: appContainer)
                     .padding(.bottom, SymiSpacing.xxxl)
@@ -77,6 +80,14 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
+                HomePainScaleCard(episode: latestTodayEpisode)
+                    .padding(.bottom, SymiSpacing.lg)
+
+                PrimaryEntryButton {
+                    isPresentingEpisodeEditor = true
+                }
+                .padding(.bottom, SymiSpacing.lg)
+
                 HomeMonthCalendarView(
                     month: displayedMonth,
                     episodesByDay: calendarMonthData.episodesByDay,
@@ -84,11 +95,6 @@ struct HomeView: View {
                     onNext: showNextMonth
                 )
                 .padding(.bottom, SymiSpacing.lg)
-
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
-                }
-                .padding(.bottom, SymiSpacing.md)
 
                 HomeAllEntriesLink(appContainer: appContainer)
                     .padding(.bottom, SymiSpacing.xxxl)
@@ -139,6 +145,11 @@ struct HomeView: View {
         }
 
         displayedMonth = newMonth
+    }
+
+    private var latestTodayEpisode: EpisodeRecord? {
+        let today = Calendar.current.startOfDay(for: .now)
+        return calendarMonthData.episodesByDay[today]?.max { $0.startedAt < $1.startedAt }
     }
 }
 
@@ -282,11 +293,11 @@ private struct HomeCalendarDayCell: View {
     private func dotColor(for entry: EpisodeRecord) -> Color {
         switch entry.intensity {
         case 8 ... 10:
-            AppTheme.coral(for: colorScheme).opacity(0.72)
+            AppTheme.coral(for: colorScheme).opacity(SymiOpacity.calendarHighIntensityDot)
         case 5 ... 7:
-            AppTheme.sage(for: colorScheme).opacity(0.72)
+            AppTheme.sage(for: colorScheme).opacity(SymiOpacity.calendarMediumIntensityDot)
         default:
-            AppTheme.petrol(for: colorScheme).opacity(0.62)
+            AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.calendarLowIntensityDot)
         }
     }
 
@@ -295,7 +306,7 @@ private struct HomeCalendarDayCell: View {
             return AppTheme.symiOnAccent
         }
 
-        return AppTheme.textPrimary(for: colorScheme).opacity(0.6)
+        return AppTheme.textPrimary(for: colorScheme).opacity(SymiOpacity.calendarInactiveDayText)
     }
 
     private var dayNumberFont: Font {
@@ -337,7 +348,7 @@ private struct HomeHeaderView: View {
         Image("HomeBrandLogo")
             .resizable()
             .scaledToFit()
-            .frame(width: 140, height: 68, alignment: .leading)
+            .frame(width: SymiSize.homeBrandLogoWidth, height: SymiSize.homeBrandLogoHeight, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityLabel(ProductBranding.displayName)
             .accessibilityAddTraits(.isHeader)
@@ -354,12 +365,12 @@ private struct PrimaryEntryButton: View {
                 Image(systemName: "plus")
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(AppTheme.symiOnAccent)
-                    .frame(width: 48, height: 48)
+                    .frame(width: SymiSize.homeQuickEntryIcon, height: SymiSize.homeQuickEntryIcon)
                     .background(AppTheme.coral(for: colorScheme), in: Circle())
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                    Text("Eintrag erstellen")
+                    Text("Neuer Eintrag")
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(AppTheme.symiOnAccent)
                         .lineLimit(1)
@@ -375,15 +386,131 @@ private struct PrimaryEntryButton: View {
                 Spacer(minLength: SymiSpacing.xs)
             }
             .padding(.horizontal, SymiSpacing.lg)
-            .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: SymiSize.homeQuickEntryButtonMinHeight, alignment: .leading)
         }
         .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
         .keyboardShortcut("n", modifiers: .command)
         .hoverEffect(.highlight)
         .accessibilityIdentifier("home-quick-entry")
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Eintrag erstellen")
+        .accessibilityLabel("Neuer Eintrag")
         .accessibilityHint("Startet einen neuen Eintrag.")
+    }
+}
+
+private struct HomePainScaleCard: View {
+    let episode: EpisodeRecord?
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        GlassCard(level: .prominent) {
+            VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Schmerzskala")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                        .accessibilityAddTraits(.isHeader)
+
+                    Spacer(minLength: SymiSpacing.sm)
+
+                    Text(dayPartText)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                        .padding(.horizontal, SymiSpacing.md)
+                        .padding(.vertical, SymiSpacing.compact)
+                        .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill), in: Capsule())
+                }
+
+                HStack(alignment: .lastTextBaseline, spacing: SymiSpacing.sm) {
+                    Text(scoreText)
+                        .font(SymiTypography.homePainScaleMetric)
+                        .monospacedDigit()
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                        .minimumScaleFactor(SymiTypography.gaugeScaleFactor)
+
+                    Text("/10")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+
+                    Spacer(minLength: SymiSpacing.xs)
+                }
+
+                HomeScaleBar(value: episode?.intensity)
+
+                Text(detailText)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityIdentifier("home-pain-scale-card")
+    }
+
+    private var scoreText: String {
+        guard let episode else {
+            return "-"
+        }
+
+        return "\(min(max(episode.intensity, 1), 10))"
+    }
+
+    private var dayPartText: String {
+        episode?.dayPart.label ?? EpisodeDayPart(date: .now).label
+    }
+
+    private var detailText: String {
+        guard let episode else {
+            return "Starte mit der Skala und erfasse nur Tage, an denen du Schmerzen festhalten möchtest."
+        }
+
+        let location = episode.painLocation.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !location.isEmpty else {
+            return "Letzter Eintrag heute, \(episode.startedAt.formatted(date: .omitted, time: .shortened))."
+        }
+
+        return "\(location) · letzter Eintrag heute, \(episode.startedAt.formatted(date: .omitted, time: .shortened))."
+    }
+
+    private var accessibilityLabel: String {
+        guard let episode else {
+            return "Schmerzskala, noch kein Eintrag heute."
+        }
+
+        return "Schmerzskala, letzter Eintrag heute \(episode.intensity) von 10, \(dayPartText)."
+    }
+}
+
+private struct HomeScaleBar: View {
+    let value: Int?
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: SymiSpacing.compact) {
+            ForEach(1 ... 10, id: \.self) { step in
+                Capsule()
+                    .fill(fill(for: step))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: step == value ? SymiSize.homePainScaleSelectedSegmentHeight : SymiSize.homePainScaleSegmentHeight)
+            }
+        }
+        .frame(height: SymiSize.homePainScaleBarHeight)
+        .accessibilityHidden(true)
+    }
+
+    private func fill(for step: Int) -> Color {
+        guard let value else {
+            return AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface)
+        }
+
+        if step <= min(max(value, 1), 10) {
+            return step >= 7 ? AppTheme.coral(for: colorScheme) : AppTheme.petrol(for: colorScheme)
+        }
+
+        return AppTheme.sage(for: colorScheme).opacity(SymiOpacity.softFill)
     }
 }
 
@@ -630,7 +757,7 @@ private struct HomeInsightsContent: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: SymiSpacing.insightsContentSpacing) {
             InsightsHeader()
 
             InsightsPeriodFilter(selectedPeriod: $selectedPeriod)
@@ -707,7 +834,7 @@ private struct InsightsHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.xs) {
             Text("Insights")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(SymiTypography.largeRoundedTitle)
                 .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                 .accessibilityAddTraits(.isHeader)
 
@@ -763,7 +890,7 @@ private struct InsightHeroCard: View {
                 Image(systemName: insight.systemImage ?? insight.category.fallbackSystemImage)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                    .frame(width: 42, height: 42)
+                    .frame(width: SymiSize.insightHeroIcon, height: SymiSize.insightHeroIcon)
                     .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill), in: Circle())
                     .accessibilityHidden(true)
 
@@ -774,7 +901,7 @@ private struct InsightHeroCard: View {
                         .textCase(.uppercase)
 
                     Text(insight.title)
-                        .font(.system(size: 23, weight: .bold, design: .rounded))
+                        .font(SymiTypography.insightHeroTitle)
                         .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -787,11 +914,11 @@ private struct InsightHeroCard: View {
 
             if trendPoints.count >= 2 {
                 InsightTrendStrip(points: trendPoints)
-                    .frame(height: 142)
+                    .frame(height: SymiSize.insightTrendStripHeight)
                     .accessibilityLabel("Ruhiger Verlauf der dokumentierten Stärke")
             } else {
                 InsightDotPattern(entryCount: entryCount)
-                    .frame(height: 78)
+                    .frame(height: SymiSize.insightDotPatternHeight)
                     .accessibilityLabel("\(entryCount) Einträge im gewählten Zeitraum")
             }
         }
@@ -813,7 +940,7 @@ private struct AverageIntensityInsightCard: View {
             InsightCardHeader(title: "Durchschnittliche Stärke", systemImage: "gauge.medium", tint: AppTheme.sage(for: colorScheme))
 
             Text("\(formattedAverage) / 10")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(SymiTypography.insightMetric)
                 .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
 
             Text(intensityDescription)
@@ -830,7 +957,7 @@ private struct AverageIntensityInsightCard: View {
                         .frame(width: geometry.size.width * min(max(averageIntensity / 10, 0), 1))
                 }
             }
-            .frame(height: 7)
+            .frame(height: SymiSize.insightAverageTrackHeight)
             .accessibilityHidden(true)
         }
         .padding(SymiSpacing.xl)
@@ -911,7 +1038,7 @@ private struct InsightCardHeader: View {
             Image(systemName: systemImage)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(tint)
-                .frame(width: 28, height: 28)
+                .frame(width: SymiSize.insightCardHeaderIcon, height: SymiSize.insightCardHeaderIcon)
                 .background(tint.opacity(SymiOpacity.clearAccent), in: Circle())
                 .accessibilityHidden(true)
 
@@ -952,7 +1079,7 @@ private struct InsightFrequencyRow: View {
                             .frame(width: geometry.size.width * min(max(summary.share, 0), 1))
                     }
             }
-            .frame(height: 6)
+            .frame(height: SymiSize.insightShareTrackHeight)
             .accessibilityHidden(true)
         }
     }
@@ -971,7 +1098,7 @@ private struct InsightTrendStrip: View {
                 TrendLineShape(values: points.map(\.averageIntensity))
                     .stroke(
                         AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.heroPrimaryWave),
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                        style: StrokeStyle(lineWidth: SymiStroke.trendLine, lineCap: .round, lineJoin: .round)
                     )
                     .padding(.horizontal, SymiSpacing.md)
                     .padding(.vertical, SymiSpacing.xl)
@@ -979,7 +1106,7 @@ private struct InsightTrendStrip: View {
                 ForEach(Array(points.enumerated()), id: \.element.day) { index, point in
                     Circle()
                         .fill(AppTheme.coral(for: colorScheme).opacity(SymiOpacity.heroAccentWave))
-                        .frame(width: 7, height: 7)
+                        .frame(width: SymiSize.insightTrendPoint, height: SymiSize.insightTrendPoint)
                         .position(dotPosition(for: index, value: point.averageIntensity, in: geometry.size))
                 }
             }
@@ -1035,7 +1162,7 @@ private struct InsightDotPattern: View {
             ForEach(0 ..< visibleDotCount, id: \.self) { index in
                 Circle()
                     .fill(index.isMultiple(of: 2) ? AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill) : AppTheme.coral(for: colorScheme).opacity(SymiOpacity.faintSurface))
-                    .frame(width: 9, height: 9)
+                    .frame(width: SymiSize.insightPatternDot, height: SymiSize.insightPatternDot)
             }
         }
         .frame(maxWidth: .infinity)
@@ -1071,19 +1198,21 @@ struct AdaptiveDashboardCard<Content: View>: View {
 }
 
 private struct HomePrimaryActionButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let colorScheme: ColorScheme
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .background(buttonBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .background(buttonBackground, in: RoundedRectangle(cornerRadius: SymiRadius.homeActionButton, style: .continuous))
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? 0.05 : 0.10),
+                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.homeActionShadowDark : SymiOpacity.homeActionShadowLight),
                 radius: 16,
                 x: SymiShadow.cardXOffset,
                 y: 5
             )
-            .animation(.spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
     }
 
     private var buttonBackground: LinearGradient {
@@ -1105,44 +1234,27 @@ private struct HomeScreenModifier: ViewModifier {
         content
             .tint(AppTheme.petrol(for: colorScheme))
             .scrollContentBackground(.hidden)
-            .background(AppTheme.warmBackground(for: colorScheme).ignoresSafeArea())
+            .background {
+                ZStack {
+                    AppTheme.appBackground(for: colorScheme)
+                    AppTheme.sage(for: colorScheme)
+                        .opacity(colorScheme == .dark ? SymiOpacity.homeBackgroundPrimaryDark : SymiOpacity.homeBackgroundPrimaryLight)
+                        .blur(radius: SymiSize.homeLiquidBackgroundPrimaryBlur)
+                        .offset(x: SymiSpacing.homeLiquidBackgroundPrimaryOffsetX, y: SymiSpacing.homeLiquidBackgroundPrimaryOffsetY)
+                    AppTheme.coral(for: colorScheme)
+                        .opacity(colorScheme == .dark ? SymiOpacity.homeBackgroundSecondaryDark : SymiOpacity.homeBackgroundSecondaryLight)
+                        .blur(radius: SymiSize.homeLiquidBackgroundSecondaryBlur)
+                        .offset(x: SymiSpacing.homeLiquidBackgroundSecondaryOffsetX, y: SymiSpacing.homeLiquidBackgroundSecondaryOffsetY)
+                }
+                .ignoresSafeArea()
+            }
     }
 }
 
 private struct HomeSurfaceModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-
     func body(content: Content) -> some View {
         content
-            .background(cardBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? 0.02 : 0.05),
-                radius: colorScheme == .dark ? 3 : 10,
-                x: SymiShadow.cardXOffset,
-                y: colorScheme == .dark ? 1 : 4
-            )
-    }
-
-    private var cardBackground: LinearGradient {
-        if colorScheme == .dark {
-            return LinearGradient(
-                colors: [
-                    AppTheme.cardBackground(for: colorScheme),
-                    AppTheme.sage(for: colorScheme).opacity(SymiOpacity.hairline),
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        return LinearGradient(
-            colors: [
-                Color.white,
-                AppTheme.sage(for: colorScheme).opacity(0.03),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+            .symiGlass(.regular, cornerRadius: SymiRadius.homeActionButton)
     }
 }
 
