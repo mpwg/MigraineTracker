@@ -101,6 +101,9 @@
         }
       }
     },
+    "%@ entfernen" : {
+
+    },
     "%@ heute genommen" : {
 
     },
@@ -294,6 +297,9 @@
           }
         }
       }
+    },
+    "Ab" : {
+
     },
     "Abbrechen" : {
       "localizations" : {
@@ -1589,9 +1595,6 @@
         }
       }
     },
-    "Filter zurücksetzen" : {
-
-    },
     "Flow-Schritt %@" : {
 
     },
@@ -1639,9 +1642,6 @@
           }
         }
       }
-    },
-    "Gefiltert" : {
-
     },
     "Gesundheit" : {
       "localizations" : {
@@ -2379,9 +2379,6 @@
       }
     },
     "Notizen durchsuchen" : {
-
-    },
-    "Notizen vorhanden" : {
 
     },
     "NSAR" : {

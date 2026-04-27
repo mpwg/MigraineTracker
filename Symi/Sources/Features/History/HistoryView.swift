@@ -3,7 +3,6 @@ import SwiftUI
 struct HistoryView: View {
     let appContainer: AppContainer
     @State private var controller: HistoryController
-    @State private var selectedCategory: JournalCategory = .all
     @State private var searchText = ""
     @State private var isSearchVisible = false
     @State private var isFilterSheetPresented = false
@@ -24,6 +23,9 @@ struct HistoryView: View {
                 .padding(.horizontal, SymiSpacing.xxl)
                 .padding(.top, SymiSpacing.xl)
 
+                JournalActiveFilters(filters: $filters)
+                    .padding(.horizontal, SymiSpacing.xxl)
+
                 if isSearchVisible {
                     JournalSearchField(text: $searchText)
                         .padding(.horizontal, SymiSpacing.xxl)
@@ -41,8 +43,7 @@ struct HistoryView: View {
                     .padding(.bottom, SymiSpacing.xxxl)
                 } header: {
                     JournalFilterBar(
-                        selectedCategory: $selectedCategory,
-                        filters: filters
+                        filters: $filters
                     )
                     .padding(.horizontal, SymiSpacing.xxl)
                     .padding(.vertical, SymiSpacing.sm)
@@ -124,8 +125,7 @@ struct HistoryView: View {
 
     private var filteredEpisodes: [EpisodeRecord] {
         controller.allEpisodes.filter { episode in
-            selectedCategory.matches(episode) &&
-                filters.matches(episode) &&
+            filters.matches(episode) &&
                 matchesSearch(episode)
         }
     }
@@ -174,60 +174,20 @@ private enum JournalPalette {
     static let shadow = Color.primary.opacity(SymiOpacity.journalShadow)
 }
 
-private enum JournalCategory: String, CaseIterable, Identifiable {
-    case all = "Alle"
-    case pain = "Schmerz"
-    case mood = "Stimmung"
-    case medication = "Medikation"
-    case notes = "Notizen"
-
-    var id: String { rawValue }
-
-    func matches(_ episode: EpisodeRecord) -> Bool {
-        switch self {
-        case .all:
-            true
-        case .pain:
-            episode.type == .migraine || episode.type == .headache || episode.intensity > 0
-        case .mood:
-            !episode.painCharacter.trimmed.isEmpty || !episode.functionalImpact.trimmed.isEmpty
-        case .medication:
-            !episode.medications.isEmpty || !episode.continuousMedicationChecks.isEmpty
-        case .notes:
-            !episode.notes.trimmed.isEmpty
-        }
-    }
-}
-
 private enum JournalDateRange: String, CaseIterable, Identifiable {
     case all = "Alle"
+    case today = "Heute"
     case sevenDays = "7 Tage"
     case thirtyDays = "30 Tage"
-    case ninetyDays = "90 Tage"
+    case custom = "Custom"
 
     var id: String { rawValue }
-
-    var startDate: Date? {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-
-        switch self {
-        case .all:
-            return nil
-        case .sevenDays:
-            return calendar.date(byAdding: .day, value: -7, to: today)
-        case .thirtyDays:
-            return calendar.date(byAdding: .day, value: -30, to: today)
-        case .ninetyDays:
-            return calendar.date(byAdding: .day, value: -90, to: today)
-        }
-    }
 }
 
 private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
     case all = "Alle"
-    case light = "Leicht+"
-    case medium = "Mittel+"
+    case light = "Leicht"
+    case medium = "Mittel"
     case strong = "Stark"
 
     var id: String { rawValue }
@@ -237,27 +197,32 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
         case .all:
             true
         case .light:
-            intensity >= 1
+            (1 ... 3).contains(intensity)
         case .medium:
-            intensity >= 4
+            (4 ... 6).contains(intensity)
         case .strong:
-            intensity >= 7
+            (7 ... 10).contains(intensity)
         }
     }
 }
 
 private struct JournalFilters: Equatable {
     var dateRange: JournalDateRange = .all
+    var customStartDate = Calendar.current.startOfDay(for: .now)
     var intensity: JournalIntensityFilter = .all
     var requiresNotes = false
     var requiresMedication = false
 
     var hasActiveFilters: Bool {
-        dateRange != .all || intensity != .all || requiresNotes || requiresMedication
+        dateRange != .all || hasActivePrimaryFilters
+    }
+
+    var hasActivePrimaryFilters: Bool {
+        intensity != .all || requiresNotes || requiresMedication
     }
 
     func matches(_ episode: EpisodeRecord) -> Bool {
-        if let startDate = dateRange.startDate, episode.startedAt < startDate {
+        guard matchesDateRange(episode.startedAt) else {
             return false
         }
 
@@ -274,6 +239,31 @@ private struct JournalFilters: Equatable {
         }
 
         return true
+    }
+
+    private func matchesDateRange(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let day = calendar.startOfDay(for: date)
+
+        switch dateRange {
+        case .all:
+            return true
+        case .today:
+            return day == today
+        case .sevenDays:
+            guard let startDate = calendar.date(byAdding: .day, value: -7, to: today) else {
+                return true
+            }
+            return date >= startDate
+        case .thirtyDays:
+            guard let startDate = calendar.date(byAdding: .day, value: -30, to: today) else {
+                return true
+            }
+            return date >= startDate
+        case .custom:
+            return date >= calendar.startOfDay(for: customStartDate)
+        }
     }
 }
 
@@ -345,29 +335,77 @@ private struct JournalSearchField: View {
     }
 }
 
+private struct JournalActiveFilters: View {
+    @Binding var filters: JournalFilters
+
+    var body: some View {
+        if filters.hasActiveFilters {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: SymiSpacing.xs) {
+                    if filters.dateRange != .all {
+                        JournalRemovableChip(title: dateRangeTitle) {
+                            filters.dateRange = .all
+                        }
+                    }
+
+                    if filters.intensity != .all {
+                        JournalRemovableChip(title: filters.intensity.rawValue) {
+                            filters.intensity = .all
+                        }
+                    }
+
+                    if filters.requiresNotes {
+                        JournalRemovableChip(title: "Mit Notizen") {
+                            filters.requiresNotes = false
+                        }
+                    }
+
+                    if filters.requiresMedication {
+                        JournalRemovableChip(title: "Medikation") {
+                            filters.requiresMedication = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var dateRangeTitle: String {
+        if filters.dateRange == .custom {
+            return filters.customStartDate.formatted(date: .abbreviated, time: .omitted)
+        }
+
+        return filters.dateRange.rawValue
+    }
+}
+
 private struct JournalFilterBar: View {
-    @Binding var selectedCategory: JournalCategory
-    let filters: JournalFilters
+    @Binding var filters: JournalFilters
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: SymiSpacing.xs) {
-                ForEach(JournalCategory.allCases) { category in
+                ForEach(JournalIntensityFilter.allCases) { intensity in
                     JournalChip(
-                        title: category.rawValue,
-                        isSelected: selectedCategory == category
+                        title: intensity.rawValue,
+                        isSelected: filters.intensity == intensity
                     ) {
-                        selectedCategory = category
+                        filters.intensity = intensity
                     }
                 }
 
-                if filters.hasActiveFilters {
-                    Text("Gefiltert")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                        .foregroundStyle(JournalPalette.ink)
-                        .padding(.horizontal, SymiSpacing.md)
-                        .frame(minHeight: SymiSize.minInteractiveHeight)
-                        .background(JournalPalette.selectedChipFill, in: Capsule())
+                JournalChip(
+                    title: "Mit Notizen",
+                    isSelected: filters.requiresNotes
+                ) {
+                    filters.requiresNotes.toggle()
+                }
+
+                JournalChip(
+                    title: "Medikation",
+                    isSelected: filters.requiresMedication
+                ) {
+                    filters.requiresMedication.toggle()
                 }
             }
         }
@@ -397,6 +435,34 @@ private struct JournalChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityValue(isSelected ? "Ausgewählt" : "")
+    }
+}
+
+private struct JournalRemovableChip: View {
+    let title: String
+    let onRemove: () -> Void
+
+    var body: some View {
+        Button(action: onRemove) {
+            HStack(spacing: SymiSpacing.compact) {
+                Text(title)
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(JournalPalette.ink)
+            .padding(.horizontal, SymiSpacing.md)
+            .frame(minHeight: SymiSize.journalActiveFilterChipMinHeight)
+            .background(JournalPalette.selectedChipFill, in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(JournalPalette.accent.opacity(SymiOpacity.journalSelectedStroke), lineWidth: SymiStroke.hairline)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title) entfernen")
     }
 }
 
@@ -450,14 +516,14 @@ private struct JournalEntryCard: View {
     var body: some View {
         HStack(spacing: SymiSpacing.md) {
             RoundedRectangle(cornerRadius: SymiRadius.journalAccentBar, style: .continuous)
-                .fill(JournalPalette.accent)
+                .fill(intensityColor)
                 .frame(width: SymiSize.journalAccentBarWidth)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.sm) {
                     Text(intensityTitle)
                         .font(.system(.headline, design: .rounded).weight(.bold))
-                        .foregroundStyle(JournalPalette.ink)
+                        .foregroundStyle(intensityColor)
                         .lineLimit(1)
                         .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
@@ -497,6 +563,10 @@ private struct JournalEntryCard: View {
     }
 
     private var intensityTitle: String {
+        "\(intensityLabel) • \(episode.intensity)/10"
+    }
+
+    private var intensityLabel: String {
         switch episode.intensity {
         case 1 ... 3:
             "Leicht"
@@ -506,6 +576,19 @@ private struct JournalEntryCard: View {
             "Stark"
         default:
             "Nicht bewertet"
+        }
+    }
+
+    private var intensityColor: Color {
+        switch episode.intensity {
+        case 1 ... 3:
+            return SymiColors.intensityLight.color
+        case 4 ... 6:
+            return SymiColors.intensityMedium.color
+        case 7 ... 10:
+            return SymiColors.intensityStrong.color
+        default:
+            return JournalPalette.ink
         }
     }
 
@@ -551,29 +634,21 @@ private struct JournalFilterSheet: View {
         NavigationStack {
             Form {
                 Section("Zeitraum") {
-                    Picker("Zeitraum", selection: $filters.dateRange) {
-                        ForEach(JournalDateRange.allCases) { range in
-                            Text(range.rawValue).tag(range)
+                    ForEach(JournalDateRange.allCases) { range in
+                        JournalDateRangeRow(
+                            title: range.rawValue,
+                            isSelected: filters.dateRange == range
+                        ) {
+                            filters.dateRange = range
                         }
                     }
-                }
 
-                Section("Intensität") {
-                    Picker("Intensität", selection: $filters.intensity) {
-                        ForEach(JournalIntensityFilter.allCases) { intensity in
-                            Text(intensity.rawValue).tag(intensity)
-                        }
-                    }
-                }
-
-                Section {
-                    Toggle("Notizen vorhanden", isOn: $filters.requiresNotes)
-                    Toggle("Medikation", isOn: $filters.requiresMedication)
-                }
-
-                Section {
-                    Button("Filter zurücksetzen") {
-                        filters = JournalFilters()
+                    if filters.dateRange == .custom {
+                        DatePicker(
+                            "Ab",
+                            selection: $filters.customStartDate,
+                            displayedComponents: [.date]
+                        )
                     }
                 }
             }
@@ -587,6 +662,33 @@ private struct JournalFilterSheet: View {
                 }
             }
         }
+    }
+}
+
+private struct JournalDateRangeRow: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: SymiSpacing.md) {
+                Text(title)
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .foregroundStyle(JournalPalette.ink)
+
+                Spacer(minLength: SymiSpacing.md)
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(JournalPalette.accent)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "")
     }
 }
 

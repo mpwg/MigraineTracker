@@ -175,6 +175,7 @@ nonisolated enum SymiSize {
     static let weatherFooterLogoMinHeight: CGFloat = 32
     static let weatherFooterLogoMaxHeight: CGFloat = 56
     static let journalAccentBarWidth: CGFloat = 4
+    static let journalActiveFilterChipMinHeight: CGFloat = 34
     static let journalEntryCardMinHeight: CGFloat = 76
     static let journalEmptyStateMinHeight: CGFloat = 180
 }
