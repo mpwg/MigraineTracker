@@ -113,6 +113,7 @@ final class EntryFlowCoordinator {
     var isSaving = false
     var saveResult: EntryFlowSaveResult?
     var weatherLoadState: WeatherLoadState = .idle
+    var hasSeededDefaultPainLocation = false
     private(set) var isCancelled = false
 
     private let initialStartedAt: Date?
@@ -206,6 +207,7 @@ final class EntryFlowCoordinator {
         draft = EpisodeDraft.makeNew(initialStartedAt: initialStartedAt)
         medicationController.resetSelections()
         weatherLoadState = .idle
+        hasSeededDefaultPainLocation = false
         saveResult = nil
         isSaving = false
     }

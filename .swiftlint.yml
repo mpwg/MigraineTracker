@@ -14,6 +14,7 @@ only_rules:
   - no_magic_opacity
   - no_magic_font_size
   - no_magic_minimum_scale_factor
+  - no_magic_minimum_column_width
 
 excluded:
   - Symi/Sources/Features/InputFlow/Styling/SymiColors.swift
@@ -92,4 +93,10 @@ custom_rules:
     name: "Keine rohen Minimum-Scale-Faktoren"
     regex: '\.minimumScaleFactor\(\d+(?:\.\d+)?\)'
     message: "Nutze SymiTypography-Tokens statt roher Minimum-Scale-Faktoren."
+    severity: warning
+
+  no_magic_minimum_column_width:
+    name: "Keine rohen Minimum-Spaltenbreiten"
+    regex: 'minimumColumnWidth:\s*\d+(?:\.\d+)?'
+    message: "Nutze SymiSize-Tokens statt roher minimumColumnWidth-Werte."
     severity: warning

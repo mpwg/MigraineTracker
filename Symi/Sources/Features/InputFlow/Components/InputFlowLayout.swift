@@ -10,10 +10,10 @@ struct InputFlowFieldGroup<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
             Text(title)
                 .font(SymiTypography.flowSectionTitle)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppTheme.symiTextSecondary)
 
             content
         }

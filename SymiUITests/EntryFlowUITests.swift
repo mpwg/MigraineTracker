@@ -12,7 +12,6 @@ final class EntryFlowUITests: XCTestCase {
         XCTAssertTrue(step("headache", in: app).waitForExistence(timeout: 6))
         assertHeadacheStepMatchesReference(in: app)
         attachScreenshot(named: "entry-flow-01-headache", app: app)
-        app.buttons["entry-location-Schläfen"].tap()
         app.buttons["entry-flow-next"].tap()
 
         XCTAssertTrue(step("medication", in: app).waitForExistence(timeout: 3))
@@ -82,7 +81,6 @@ final class EntryFlowUITests: XCTestCase {
 
         XCTAssertTrue(step("headache", in: app).waitForExistence(timeout: 6))
         let templeButton = app.buttons["entry-location-Schläfen"]
-        templeButton.tap()
         app.buttons["entry-flow-next"].tap()
 
         XCTAssertTrue(step("medication", in: app).waitForExistence(timeout: 3))
@@ -96,14 +94,13 @@ final class EntryFlowUITests: XCTestCase {
         let app = launchEntryFlow()
 
         XCTAssertTrue(step("headache", in: app).waitForExistence(timeout: 6))
-        app.buttons["entry-location-Schläfen"].tap()
         app.buttons["entry-flow-next"].tap()
 
         XCTAssertTrue(step("medication", in: app).waitForExistence(timeout: 3))
         app.buttons["entry-flow-cancel"].tap()
 
         XCTAssertTrue(step("headache", in: app).waitForExistence(timeout: 3))
-        XCTAssertEqual(app.buttons["entry-location-Schläfen"].value as? String, "Nicht ausgewählt")
+        XCTAssertEqual(app.buttons["entry-location-Schläfen"].value as? String, "Ausgewählt")
     }
 
     func testAccessibilitySizeDarkModeAndTouchTargets() {
@@ -149,6 +146,7 @@ final class EntryFlowUITests: XCTestCase {
         XCTAssertVisibleText("Wo spürst du den Schmerz?", in: app)
         XCTAssertVisibleText("Wann tritt es auf?", in: app)
         XCTAssertTrue(app.buttons["entry-location-Schläfen"].exists)
+        XCTAssertEqual(app.buttons["entry-location-Schläfen"].value as? String, "Ausgewählt")
         XCTAssertTrue(app.buttons["entry-started-at-now"].exists)
         XCTAssertTrue(app.buttons["entry-flow-next"].exists)
         XCTAssertTrue(app.buttons["entry-flow-save-headache-only"].exists)

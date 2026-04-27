@@ -26,17 +26,17 @@ struct InputFlowHeader: View {
     var body: some View {
         let metadata = InputFlowStepCatalog.metadata(for: step)
 
-        VStack(alignment: .leading, spacing: SymiSpacing.flowHeaderControlSpacing) {
+        VStack(alignment: .leading, spacing: SymiSpacing.xs) {
             HStack {
                 Button(action: onBack) {
                     Image(systemName: "chevron.left")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
-                        .background(.thinMaterial, in: Circle())
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+                        .frame(width: SymiSize.flowHeaderControlHeight, height: SymiSize.flowHeaderControlHeight)
+                        .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
                         .overlay {
                             Circle()
-                                .stroke(Color.primary.opacity(SymiOpacity.hairline), lineWidth: SymiStroke.hairline)
+                                .stroke(SymiColors.subtleSeparator(for: colorScheme), lineWidth: SymiStroke.hairline)
                         }
                 }
                 .accessibilityLabel("Zurück")
@@ -45,14 +45,14 @@ struct InputFlowHeader: View {
                 Spacer()
 
                 Button("Abbrechen", action: onCancel)
-                    .font(.callout.weight(.medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppTheme.symiPetrol)
-                    .frame(minHeight: SymiSize.minInteractiveHeight)
+                    .frame(minHeight: SymiSize.flowHeaderControlHeight)
                     .accessibilityIdentifier("entry-flow-cancel")
             }
 
             VStack(alignment: .leading, spacing: SymiSpacing.flowHeaderTitleSpacing) {
-                InputFlowProgressView(
+                InputFlowProgressBar(
                     currentStep: currentStep,
                     totalSteps: totalSteps,
                     theme: metadata.theme
@@ -61,17 +61,18 @@ struct InputFlowHeader: View {
                 Text(metadata.title)
                     .font(SymiTypography.flowTitle)
                     .foregroundStyle(metadata.theme.accent(for: colorScheme))
+                    .padding(.top, SymiSpacing.md)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(metadata.subtitle)
                     .font(SymiTypography.flowSubtitle)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
         .padding(.top, SymiSpacing.flowHeaderTopPadding)
-        .padding(.bottom, SymiSpacing.xs)
+        .padding(.bottom, SymiSpacing.zero)
         .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
         .frame(maxWidth: .infinity)
     }

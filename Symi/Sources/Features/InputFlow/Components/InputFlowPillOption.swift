@@ -28,10 +28,13 @@ struct InputFlowPillOption: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: SymiSpacing.compact) {
+            HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.xs) {
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.caption.weight(.bold))
+                        .font(.caption2.weight(.bold))
+                        .alignmentGuide(.firstTextBaseline) { dimensions in
+                            dimensions[VerticalAlignment.center]
+                        }
                         .accessibilityHidden(true)
                 }
 
@@ -42,10 +45,14 @@ struct InputFlowPillOption: View {
                     .minimumScaleFactor(SymiTypography.compactScaleFactor)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .foregroundStyle(isSelected ? theme.accent(for: colorScheme) : .primary)
+            .foregroundStyle(isSelected ? theme.accent(for: colorScheme) : AppTheme.symiTextPrimary)
             .padding(.horizontal, SymiSpacing.md)
             .padding(.vertical, SymiSpacing.pillVerticalPadding)
-            .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight)
+            .frame(
+                maxWidth: .infinity,
+                minHeight: SymiSize.minInteractiveHeight,
+                maxHeight: SymiSize.minInteractiveHeight
+            )
             .background(backgroundColor, in: Capsule())
             .overlay {
                 Capsule()
@@ -71,9 +78,11 @@ struct InputFlowPillOption: View {
 
     private var borderColor: Color {
         if isSelected {
-            return theme.border(for: colorScheme)
+            return theme.border(for: colorScheme).opacity(SymiOpacity.selectedStroke)
         }
 
-        return SymiColors.subtleSeparator(for: colorScheme)
+        return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
     }
 }
+
+typealias PillOption = InputFlowPillOption

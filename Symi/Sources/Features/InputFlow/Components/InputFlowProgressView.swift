@@ -1,6 +1,8 @@
 import SwiftUI
 
-struct InputFlowProgressView: View {
+typealias InputFlowProgressView = InputFlowProgressBar
+
+struct InputFlowProgressBar: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let currentStep: Int
@@ -14,27 +16,22 @@ struct InputFlowProgressView: View {
     }
 
     var body: some View {
-        HStack(spacing: SymiSpacing.xl) {
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
             GeometryReader { proxy in
                 let indicatorSize = SymiSize.progressIndicator
+                let trackHeight = SymiSize.progressTrackHeight
                 let trackWidth = max(proxy.size.width - indicatorSize, 1)
                 let xOffset = progressPosition(in: trackWidth)
                 let activeWidth = min(xOffset + indicatorSize / 2, proxy.size.width)
 
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(
-                            Color.primary.opacity(
-                                colorScheme == .dark ? SymiOpacity.progressTrackDark : SymiOpacity.progressTrackLight
-                            )
-                        )
-                        .frame(height: SymiSpacing.xxs)
-                        .offset(y: indicatorSize / 2 - SymiSpacing.micro)
+                        .fill(SymiColors.subtleSeparator(for: colorScheme))
+                        .frame(height: trackHeight)
 
                     Capsule()
                         .fill(theme.accent(for: colorScheme))
-                        .frame(width: activeWidth, height: SymiSpacing.xxs)
-                        .offset(y: indicatorSize / 2 - SymiSpacing.micro)
+                        .frame(width: activeWidth, height: trackHeight)
 
                     Text("\(clampedCurrentStep)")
                         .font(.caption.weight(.bold))
@@ -54,16 +51,19 @@ struct InputFlowProgressView: View {
                                 )
                         }
                         .offset(x: xOffset)
+                        .offset(y: SymiStroke.hairline)
                         .accessibilityHidden(true)
                 }
+                .frame(height: indicatorSize, alignment: .center)
             }
             .frame(height: SymiSize.progressIndicator)
 
             Text("von \(safeTotalSteps)")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.secondary)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(AppTheme.symiPetrol.opacity(SymiOpacity.strongText))
                 .lineLimit(1)
                 .minimumScaleFactor(SymiTypography.compactScaleFactor)
+                .frame(width: SymiSize.progressTotalWidth, height: SymiSize.progressIndicator, alignment: .trailing)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Schritt \(clampedCurrentStep) von \(safeTotalSteps)")

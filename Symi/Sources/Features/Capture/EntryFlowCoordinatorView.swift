@@ -142,7 +142,6 @@ private struct EntryHeadacheStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedStartedAtPreset: EntryStartedAtPreset = .now
-
     private let visiblePainLocations = ["Stirn", "Schläfen", "Nacken", "Einseitig"]
 
     var body: some View {
@@ -157,9 +156,9 @@ private struct EntryHeadacheStepView: View {
             PainGaugeView(value: $coordinator.draft.intensity)
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
-                InputFlowTileGrid(minimumColumnWidth: 68) {
+                HeadacheLocationGrid {
                     ForEach(visiblePainLocations, id: \.self) { location in
-                        InputFlowSelectionTile(
+                        SelectionTile(
                             title: location,
                             systemImage: painLocationSymbol(for: location),
                             isSelected: coordinator.draft.selectedPainLocations.contains(location),
@@ -173,9 +172,9 @@ private struct EntryHeadacheStepView: View {
             }
 
             InputFlowFieldGroup(title: "Wann tritt es auf?") {
-                InputFlowPillGrid {
+                HeadachePresetGrid {
                     ForEach(EntryStartedAtPreset.allCases) { preset in
-                        InputFlowPillOption(
+                        PillOption(
                             title: preset.title,
                             isSelected: selectedStartedAtPreset == preset,
                             theme: .pain,
@@ -215,6 +214,7 @@ private struct EntryHeadacheStepView: View {
         .onAppear {
             coordinator.draft.type = .headache
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
+            seedDefaultPainLocationIfNeeded(coordinator: coordinator)
         }
     }
 
@@ -233,11 +233,75 @@ private struct EntryHeadacheStepView: View {
         }
     }
 
+    private func seedDefaultPainLocationIfNeeded(coordinator: EntryFlowCoordinator) {
+        guard !coordinator.hasSeededDefaultPainLocation else {
+            return
+        }
+
+        coordinator.hasSeededDefaultPainLocation = true
+        guard coordinator.draft.selectedPainLocations.isEmpty,
+              coordinator.draft.painLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+
+        coordinator.draft.selectedPainLocations = ["Schläfen"]
+    }
+
     private func toggle(_ option: String, in selection: inout Set<String>) {
         if selection.contains(option) {
             selection.remove(option)
         } else {
             selection.insert(option)
+        }
+    }
+}
+
+private struct HeadacheLocationGrid<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        LazyVGrid(
+            columns: Array(
+                repeating: GridItem(
+                    .flexible(minimum: SymiSize.headacheOptionGridMinWidth),
+                    spacing: SymiSpacing.xs,
+                    alignment: .top
+                ),
+                count: SymiSize.headacheOptionGridColumnCount
+            ),
+            alignment: .leading,
+            spacing: SymiSpacing.xs
+        ) {
+            content
+        }
+    }
+}
+
+private struct HeadachePresetGrid<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        LazyVGrid(
+            columns: Array(
+                repeating: GridItem(
+                    .flexible(minimum: SymiSize.headacheOptionGridMinWidth),
+                    spacing: SymiSpacing.xs,
+                    alignment: .top
+                ),
+                count: SymiSize.headacheOptionGridColumnCount
+            ),
+            alignment: .leading,
+            spacing: SymiSpacing.xs
+        ) {
+            content
         }
     }
 }
@@ -271,7 +335,7 @@ private struct EntryMedicationStepView: View {
         ) {
             InputFlowFieldGroup(title: "Welche Medikation?") {
                 VStack(spacing: SymiSpacing.tileSpacing) {
-                    InputFlowTileGrid(minimumColumnWidth: 132) {
+                    InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
                         ForEach(medicationOptions) { option in
                             InputFlowSelectionTile(
                                 title: option.title,
@@ -428,7 +492,7 @@ private struct EntryTriggersStepView: View {
             onCancel: onCancel
         ) {
             InputFlowFieldGroup(title: "Wähle alle passenden aus.") {
-                InputFlowTileGrid(minimumColumnWidth: 132) {
+                InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
                     ForEach(triggerOptions) { option in
                         InputFlowSelectionTile(
                             title: option.title,
@@ -493,7 +557,7 @@ private struct EntryNoteStepView: View {
             EntryNoteCard(notes: $coordinator.draft.notes)
 
             InputFlowFieldGroup(title: "Wie fühlst du dich gerade?") {
-                InputFlowTileGrid(minimumColumnWidth: 72) {
+                InputFlowTileGrid(minimumColumnWidth: SymiSize.flowCompactTileGridMinWidth) {
                     ForEach(feelingOptions) { option in
                         InputFlowSelectionTile(
                             title: option.title,
@@ -735,8 +799,8 @@ private struct EntryFlowScreen<Content: View, Footer: View>: View {
                         content
                     }
                     .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
-                    .padding(.top, SymiSpacing.xs)
-                    .padding(.bottom, SymiSpacing.xxxl)
+                    .padding(.top, SymiSpacing.zero)
+                    .padding(.bottom, SymiSpacing.xxl)
                     .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
                     .frame(maxWidth: .infinity)
                 }
@@ -751,7 +815,7 @@ private struct EntryFlowScreen<Content: View, Footer: View>: View {
                 .padding(.bottom, SymiSpacing.flowFooterBottomPadding)
                 .frame(maxWidth: SymiSpacing.flowMaxContentWidth)
                 .frame(maxWidth: .infinity)
-                .background(.regularMaterial)
+                .background(InputFlowBackground().opacity(SymiOpacity.footerBackground).ignoresSafeArea())
         }
         .navigationBarBackButtonHidden(true)
     }
@@ -911,7 +975,7 @@ private struct EntryFlowFooter: View {
     }
 
     var body: some View {
-        VStack(spacing: SymiSpacing.md) {
+        VStack(spacing: SymiSpacing.zero) {
             InputFlowPrimaryButton(
                 title: primaryTitle,
                 systemImage: primarySystemImage,

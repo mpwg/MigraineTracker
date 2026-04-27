@@ -88,10 +88,12 @@ struct InputFlowSecondaryAction: View {
     var body: some View {
         Button(title, action: action)
             .font(SymiTypography.flowSecondaryAction)
-            .foregroundStyle(AppTheme.symiPetrol)
+            .foregroundStyle(AppTheme.symiPetrol.opacity(SymiOpacity.secondaryActionText))
             .frame(minHeight: SymiSize.minInteractiveHeight)
             .disabled(isDisabled)
             .opacity(isDisabled ? SymiOpacity.disabledContent : SymiOpacity.opaque)
             .accessibilityIdentifier(accessibilityIdentifier ?? "input-flow-secondary")
     }
 }
+
+typealias SecondaryAction = InputFlowSecondaryAction

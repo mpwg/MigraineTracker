@@ -35,10 +35,10 @@ struct InputFlowCard<Content: View>: View {
 
     private var borderColor: Color {
         guard isHighlighted, let theme else {
-            return SymiColors.subtleSeparator(for: colorScheme)
+            return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
         }
 
-        return theme.border(for: colorScheme)
+        return theme.border(for: colorScheme).opacity(SymiOpacity.clearStroke)
     }
 
     private var shadowColor: Color {

@@ -17,16 +17,37 @@ struct PainGaugeView: View {
     }
 
     var body: some View {
+        PainGaugeCard(value: $value, range: range, theme: theme)
+    }
+}
+
+private struct PainGaugeCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    @Binding var value: Int
+
+    let range: ClosedRange<Int>
+    let theme: InputFlowStepTheme
+
+    var body: some View {
         InputFlowCard(theme: theme, isHighlighted: true) {
-            VStack(spacing: SymiSpacing.xl) {
+            VStack(spacing: SymiSpacing.md) {
                 ZStack(alignment: .center) {
+                    PainGaugeArc()
+                        .stroke(
+                            SymiColors.subtleSeparator(for: colorScheme),
+                            style: StrokeStyle(lineWidth: SymiStroke.painGaugeArc, lineCap: .round)
+                        )
+                        .frame(width: SymiSize.painGaugeWidth, height: SymiSize.painGaugeHeight)
+                        .accessibilityHidden(true)
+
                     PainGaugeArc()
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    InputFlowStepTheme.medication.accent,
-                                    SymiColors.noteAmber.color,
-                                    InputFlowStepTheme.pain.accent
+                                    SymiColors.sage.color,
+                                    SymiColors.noteAmberDark.color,
+                                    SymiColors.coral.color
                                 ],
                                 startPoint: .leading,
                                 endPoint: .trailing
@@ -36,37 +57,33 @@ struct PainGaugeView: View {
                         .frame(width: SymiSize.painGaugeWidth, height: SymiSize.painGaugeHeight)
                         .accessibilityHidden(true)
 
-                    VStack(spacing: SymiSpacing.xxs) {
+                    VStack(spacing: SymiSpacing.zero) {
                         Text("\(normalizedValue)")
-                            .font(SymiTypography.largeMetric)
+                            .font(SymiTypography.painGaugeMetric)
                             .monospacedDigit()
                             .foregroundStyle(AppTheme.symiPetrol)
                             .minimumScaleFactor(SymiTypography.gaugeScaleFactor)
 
                         Text("/10")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
+                            .font(SymiTypography.painGaugeUnit)
+                            .foregroundStyle(AppTheme.symiTextSecondary)
 
                         Text(intensityLabel)
-                            .font(.title3.weight(.semibold))
+                            .font(SymiTypography.painGaugeLabel)
                             .foregroundStyle(theme.accent)
-                            .padding(.top, SymiSpacing.xs)
+                            .padding(.top, SymiSpacing.micro)
                             .minimumScaleFactor(SymiTypography.buttonScaleFactor)
                     }
                     .padding(.top, SymiSpacing.xxl)
                 }
                 .frame(maxWidth: .infinity)
 
-                VStack(spacing: SymiSpacing.xs) {
-                    Slider(
-                        value: Binding(
-                            get: { Double(normalizedValue) },
-                            set: { value = Int($0.rounded()) }
-                        ),
-                        in: Double(range.lowerBound) ... Double(range.upperBound),
-                        step: 1
+                VStack(spacing: SymiSpacing.compact) {
+                    PainGaugeSlider(
+                        value: $value,
+                        range: range,
+                        theme: theme
                     )
-                    .tint(theme.accent)
                     .accessibilityLabel("Kopfschmerzstärke")
                     .accessibilityValue("\(normalizedValue) von 10, \(intensityLabel.lowercased())")
                     .accessibilityIdentifier("entry-intensity-slider")
@@ -76,8 +93,8 @@ struct PainGaugeView: View {
                         Spacer()
                         Text("\(range.upperBound)")
                     }
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(SymiTypography.caption.monospacedDigit())
+                    .foregroundStyle(AppTheme.symiTextSecondary)
                 }
             }
         }
@@ -105,16 +122,95 @@ struct PainGaugeView: View {
     }
 }
 
+private struct PainGaugeSlider: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    @Binding var value: Int
+
+    let range: ClosedRange<Int>
+    let theme: InputFlowStepTheme
+
+    var body: some View {
+        GeometryReader { proxy in
+            let progress = normalizedProgress
+            let filledWidth = proxy.size.width * progress
+            let thumbX = proxy.size.width * progress
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(SymiColors.subtleSeparator(for: colorScheme))
+                    .frame(height: SymiSize.painSliderTrackHeight)
+
+                Capsule()
+                    .fill(AppTheme.symiCoral)
+                    .frame(width: filledWidth, height: SymiSize.painSliderTrackHeight)
+
+                Circle()
+                    .fill(AppTheme.symiOnAccent)
+                    .frame(width: SymiSize.painSliderThumbSize, height: SymiSize.painSliderThumbSize)
+                    .shadow(
+                        color: AppTheme.symiPetrol.opacity(SymiOpacity.sliderThumbShadow),
+                        radius: SymiShadow.sliderThumbRadius,
+                        y: SymiShadow.sliderThumbYOffset
+                    )
+                    .offset(x: thumbOffset(for: thumbX, width: proxy.size.width))
+            }
+            .frame(height: SymiSize.painSliderTouchHeight)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: SymiSpacing.zero)
+                    .onChanged { gesture in
+                        updateValue(for: gesture.location.x, width: proxy.size.width)
+                    }
+            )
+            .animation(.snappy, value: value)
+        }
+        .frame(height: SymiSize.painSliderTouchHeight)
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment:
+                value = min(value + 1, range.upperBound)
+            case .decrement:
+                value = max(value - 1, range.lowerBound)
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    private var normalizedProgress: CGFloat {
+        let span = max(range.upperBound - range.lowerBound, 1)
+        let clampedValue = min(max(value, range.lowerBound), range.upperBound)
+        return CGFloat(clampedValue - range.lowerBound) / CGFloat(span)
+    }
+
+    private func thumbOffset(for xPosition: CGFloat, width: CGFloat) -> CGFloat {
+        let halfThumb = SymiSize.painSliderThumbSize / 2
+        return min(max(xPosition - halfThumb, 0), max(width - SymiSize.painSliderThumbSize, 0))
+    }
+
+    private func updateValue(for xPosition: CGFloat, width: CGFloat) {
+        guard width > 0 else {
+            return
+        }
+
+        let clampedX = min(max(xPosition, 0), width)
+        let progress = clampedX / width
+        let span = range.upperBound - range.lowerBound
+        value = range.lowerBound + Int((CGFloat(span) * progress).rounded())
+    }
+}
+
 private struct PainGaugeArc: Shape {
     func path(in rect: CGRect) -> Path {
-        let radius = min(rect.width / 2, rect.height) - SymiSpacing.xs
-        let center = CGPoint(x: rect.midX, y: rect.maxY - SymiSpacing.xs)
+        let radius = min(rect.width / 2, rect.height) - SymiSpacing.sm
+        let center = CGPoint(x: rect.midX, y: rect.maxY - SymiSpacing.xxxl)
         var path = Path()
         path.addArc(
             center: center,
             radius: radius,
-            startAngle: .degrees(200),
-            endAngle: .degrees(340),
+            startAngle: .degrees(205),
+            endAngle: .degrees(335),
             clockwise: false
         )
         return path
