@@ -14,49 +14,84 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: SymiSpacing.lg, pinnedViews: [.sectionHeaders]) {
-                JournalHeader(
-                    isSearchVisible: $isSearchVisible,
-                    onFilter: { isFilterSheetPresented = true }
-                )
-                .padding(.horizontal, SymiSpacing.xxl)
-                .padding(.top, SymiSpacing.xl)
+        List {
+            Section {
+                JournalFilterBar(filters: $filters)
+                    .listRowStyle()
 
-                JournalActiveFilters(filters: $filters)
-                    .padding(.horizontal, SymiSpacing.xxl)
+                if filters.hasActiveFilters {
+                    JournalActiveFilters(filters: $filters)
+                        .listRowStyle()
+                }
 
                 if isSearchVisible {
                     JournalSearchField(text: $searchText)
-                        .padding(.horizontal, SymiSpacing.xxl)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .listRowStyle()
                 }
+            }
 
-                Section {
-                    JournalEntryGroups(
-                        groupedEpisodes: groupedEpisodes,
-                        appContainer: appContainer,
-                        onChanged: { Task { await reloadJournal() } },
-                        onEdit: { controller.editingEpisodeID = $0 },
-                        onDelete: { controller.pendingDeletionID = $0 }
-                    )
-                    .padding(.horizontal, SymiSpacing.xxl)
-                    .padding(.bottom, SymiSpacing.xxxl)
-                } header: {
-                    JournalFilterBar(
-                        filters: $filters
-                    )
-                    .padding(.horizontal, SymiSpacing.xxl)
-                    .padding(.vertical, SymiSpacing.sm)
-                    .background(JournalPalette.background)
+            if groupedEpisodes.isEmpty {
+                JournalEmptyState()
+                    .listRowStyle()
+            } else {
+                ForEach(groupedEpisodes) { group in
+                    Section {
+                        ForEach(group.episodes) { episode in
+                            NavigationLink {
+                                EpisodeDetailView(
+                                    appContainer: appContainer,
+                                    episodeID: episode.id,
+                                    onChanged: { Task { await reloadJournal() } }
+                                )
+                            } label: {
+                                JournalEntryCard(episode: episode)
+                            }
+                            .buttonStyle(JournalEntryButtonStyle())
+                            .listRowStyle(bottomInset: SymiSpacing.sm)
+                            .contextMenu {
+                                Button("Bearbeiten", systemImage: "pencil") {
+                                    controller.editingEpisodeID = episode.id
+                                }
+
+                                Button("Löschen", systemImage: "trash", role: .destructive) {
+                                    controller.pendingDeletionID = episode.id
+                                }
+                            }
+                        }
+                    } header: {
+                        Text(group.day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(JournalPalette.ink)
+                            .textCase(nil)
+                            .padding(.top, SymiSpacing.xl)
+                            .accessibilityAddTraits(.isHeader)
+                    }
                 }
             }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(JournalPalette.background.ignoresSafeArea())
         .tint(JournalPalette.ink)
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle("Alle Einträge")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    isFilterSheetPresented = true
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                }
+                .accessibilityLabel("Filter")
+
+                Button {
+                    isSearchVisible.toggle()
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                .accessibilityLabel("Suche")
+            }
+        }
         .animation(.snappy(duration: SymiAnimation.quickDuration), value: isSearchVisible)
         .refreshable {
             await reloadJournal()
@@ -690,6 +725,21 @@ private struct JournalDateRangeRow: View {
 
 private struct IdentifiedEpisodeID: Identifiable {
     let id: UUID
+}
+
+private extension View {
+    func listRowStyle(bottomInset: CGFloat = SymiSpacing.xs) -> some View {
+        listRowInsets(
+            EdgeInsets(
+                top: SymiSpacing.zero,
+                leading: SymiSpacing.xxl,
+                bottom: bottomInset,
+                trailing: SymiSpacing.xxl
+            )
+        )
+        .listRowSeparator(.hidden)
+        .listRowBackground(JournalPalette.background)
+    }
 }
 
 private extension String {
