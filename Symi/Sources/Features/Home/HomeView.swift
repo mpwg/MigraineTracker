@@ -584,7 +584,7 @@ private struct HomePatternEmptyState: View {
 struct InsightsView: View {
     let appContainer: AppContainer
     @State private var data = InsightResult(totalQualifiedEpisodeCount: 0, insights: [])
-    @State private var selectedPeriod: InsightPeriod = .thirtyDays
+    @State private var selectedPeriod: InsightPeriod = .sevenDays
 
     var body: some View {
         ScrollView {
@@ -598,6 +598,7 @@ struct InsightsView: View {
         }
         .brandScreen()
         .navigationTitle("Insights")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             await reload()
         }
@@ -626,61 +627,154 @@ struct InsightsView: View {
 private struct HomeInsightsContent: View {
     let data: InsightResult
     @Binding var selectedPeriod: InsightPeriod
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
-            Picker("Zeitraum", selection: $selectedPeriod) {
-                ForEach(InsightPeriod.allCases) { period in
-                    Text(period.displayTitle).tag(period)
-                }
-            }
-            .pickerStyle(.segmented)
-            .accessibilityIdentifier("insights-period-picker")
+        VStack(alignment: .leading, spacing: 22) {
+            InsightsHeader()
 
-            Text("Diese Hinweise basieren nur auf deinen bisherigen Schmerz- und Migräneeinträgen. Sie ersetzen keine medizinische Einschätzung.")
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.symiTextSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            InsightsPeriodFilter(selectedPeriod: $selectedPeriod)
+                .accessibilityIdentifier("insights-period-picker")
 
             if data.hasEnoughData, let heroInsight = data.heroInsight {
                 VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                    InsightHeroCard(insight: heroInsight)
+                    InsightHeroCard(
+                        insight: heroInsight,
+                        trendPoints: data.metrics.dailyIntensityTrend,
+                        entryCount: data.totalQualifiedEpisodeCount
+                    )
 
-                    ForEach(data.insights.dropFirst()) { insight in
-                        HomePatternCard(card: HomePatternPreviewCard(insight: insight))
+                    VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                        if let averageIntensity {
+                            AverageIntensityInsightCard(
+                                averageIntensity: averageIntensity,
+                                entryCount: data.totalQualifiedEpisodeCount
+                            )
+                        }
+
+                        if !topTriggers.isEmpty {
+                            FrequencyInsightCard(
+                                title: "Häufige Auslöser",
+                                systemImage: "tag",
+                                summaries: topTriggers,
+                                tint: AppTheme.coral(for: colorScheme),
+                                detail: "in deinen Einträgen auffällig"
+                            )
+                        }
+
+                        if !topMedications.isEmpty {
+                            FrequencyInsightCard(
+                                title: "Medikation",
+                                systemImage: "pills",
+                                summaries: topMedications,
+                                tint: AppTheme.petrol(for: colorScheme),
+                                detail: "in diesem Zeitraum dokumentiert"
+                            )
+                        }
                     }
                 }
             } else {
                 HomePatternEmptyState(recordedCount: data.totalQualifiedEpisodeCount, emptyState: data.emptyState)
             }
-
-            InsightMethodSummary()
         }
+    }
+
+    private var averageIntensity: Double? {
+        let trend = data.metrics.dailyIntensityTrend
+        let entryCount = trend.reduce(0) { $0 + $1.entryCount }
+        guard entryCount > 0 else {
+            return nil
+        }
+
+        let weightedSum = trend.reduce(0) { partialResult, point in
+            partialResult + point.averageIntensity * Double(point.entryCount)
+        }
+        return weightedSum / Double(entryCount)
+    }
+
+    private var topTriggers: [InsightFrequencySummary] {
+        Array(data.metrics.triggerSummaries.prefix(3))
+    }
+
+    private var topMedications: [InsightFrequencySummary] {
+        Array(data.metrics.acuteMedicationSummaries.prefix(3))
+    }
+}
+
+private struct InsightsHeader: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+            Text("Insights")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                .accessibilityAddTraits(.isHeader)
+
+            Text("Deine Muster im Überblick")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+        }
+        .padding(.top, SymiSpacing.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct InsightsPeriodFilter: View {
+    @Binding var selectedPeriod: InsightPeriod
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: SymiSpacing.xs) {
+            ForEach(InsightPeriod.allCases) { period in
+                Button {
+                    selectedPeriod = period
+                } label: {
+                    Text(period.displayTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(selectedPeriod == period ? AppTheme.symiOnAccent : AppTheme.petrol(for: colorScheme))
+                        .lineLimit(1)
+                        .minimumScaleFactor(SymiTypography.tightChipScaleFactor)
+                        .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight)
+                        .background(chipBackground(for: period), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(period.displayTitle)
+                .accessibilityValue(selectedPeriod == period ? "Ausgewählt" : "")
+                .accessibilityIdentifier("insights-period-\(period.rawValue)")
+            }
+        }
+    }
+
+    private func chipBackground(for period: InsightPeriod) -> Color {
+        selectedPeriod == period ? AppTheme.petrol(for: colorScheme) : AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface)
     }
 }
 
 private struct InsightHeroCard: View {
     let insight: Insight
+    let trendPoints: [InsightDailyIntensityPoint]
+    let entryCount: Int
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.md) {
-            HStack(alignment: .center, spacing: SymiSpacing.md) {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            HStack(alignment: .top, spacing: SymiSpacing.md) {
                 Image(systemName: insight.systemImage ?? insight.category.fallbackSystemImage)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(AppTheme.symiOnAccent)
-                    .frame(width: 44, height: 44)
-                    .background(AppTheme.petrol(for: colorScheme), in: Circle())
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                    .frame(width: 42, height: 42)
+                    .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill), in: Circle())
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                    Text("Wichtigster Hinweis")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                    Text("Muster erkannt")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(AppTheme.coral(for: colorScheme))
                         .textCase(.uppercase)
 
                     Text(insight.title)
-                        .font(.title3.weight(.semibold))
+                        .font(.system(size: 23, weight: .bold, design: .rounded))
                         .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -691,12 +785,17 @@ private struct InsightHeroCard: View {
                 .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: SymiSpacing.sm) {
-                InsightScorePill(label: "Confidence", value: insight.confidence)
-                InsightScorePill(label: "Importance", value: insight.importance)
+            if trendPoints.count >= 2 {
+                InsightTrendStrip(points: trendPoints)
+                    .frame(height: 142)
+                    .accessibilityLabel("Ruhiger Verlauf der dokumentierten Stärke")
+            } else {
+                InsightDotPattern(entryCount: entryCount)
+                    .frame(height: 78)
+                    .accessibilityLabel("\(entryCount) Einträge im gewählten Zeitraum")
             }
         }
-        .padding(SymiSpacing.lg)
+        .padding(SymiSpacing.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
         .homeSurface()
         .accessibilityElement(children: .combine)
@@ -704,43 +803,247 @@ private struct InsightHeroCard: View {
     }
 }
 
-private struct InsightScorePill: View {
-    let label: String
-    let value: Double
+private struct AverageIntensityInsightCard: View {
+    let averageIntensity: Double
+    let entryCount: Int
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        Text("\(label) \(percentageText)")
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(AppTheme.petrol(for: colorScheme))
-            .padding(.horizontal, SymiSpacing.sm)
-            .padding(.vertical, SymiSpacing.compact)
-            .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface), in: Capsule())
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            InsightCardHeader(title: "Durchschnittliche Stärke", systemImage: "gauge.medium", tint: AppTheme.sage(for: colorScheme))
+
+            Text("\(formattedAverage) / 10")
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+
+            Text(intensityDescription)
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintTrack))
+
+                    Capsule()
+                        .fill(AppTheme.coral(for: colorScheme).opacity(SymiOpacity.heroPrimaryWave))
+                        .frame(width: geometry.size.width * min(max(averageIntensity / 10, 0), 1))
+                }
+            }
+            .frame(height: 7)
+            .accessibilityHidden(true)
+        }
+        .padding(SymiSpacing.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .homeSurface()
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("insights-card-average")
     }
 
-    private var percentageText: String {
-        "\(Int((value * 100).rounded())) %"
+    private var formattedAverage: String {
+        averageIntensity.formatted(.number.precision(.fractionLength(1)))
+    }
+
+    private var intensityDescription: String {
+        if averageIntensity < 4 {
+            return "meist leicht in \(entryCount) Einträgen"
+        }
+
+        if averageIntensity < 7 {
+            return "meist leicht bis mittel in \(entryCount) Einträgen"
+        }
+
+        return "häufiger stärker in \(entryCount) Einträgen"
     }
 }
 
-private struct InsightMethodSummary: View {
+private struct FrequencyInsightCard: View {
+    let title: String
+    let systemImage: String
+    let summaries: [InsightFrequencySummary]
+    let tint: Color
+    let detail: String
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            Label("So entstehen die Hinweise", systemImage: "function")
-                .font(.headline)
-                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            InsightCardHeader(title: title, systemImage: systemImage, tint: tint)
 
-            Text("Symi wertet nur Migräne- und Kopfschmerz-Einträge aus. Ab \(InsightEngine.minimumQualifiedEpisodeCount) Einträgen entstehen Kandidaten für Wochentag, Trigger, Durchschnitt und Trend. Confidence kombiniert Musterstärke und Datenmenge; Importance kombiniert Relevanz und Intensität. Angezeigt wird erst ab 50 % Confidence und 40 % Importance, sortiert nach dem kombinierten Score.")
-                .font(.footnote)
-                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+            Text(statement)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                ForEach(summaries, id: \.name) { summary in
+                    InsightFrequencyRow(summary: summary, tint: tint)
+                }
+            }
+
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
         }
-        .padding(SymiSpacing.md)
+        .padding(SymiSpacing.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
         .homeSurface()
-        .accessibilityIdentifier("insights-method-summary")
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("insights-card-\(title)")
+    }
+
+    private var statement: String {
+        guard let first = summaries.first else {
+            return ""
+        }
+
+        return "\(first.name) ist am häufigsten dokumentiert"
+    }
+}
+
+private struct InsightCardHeader: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: SymiSpacing.sm) {
+            Image(systemName: systemImage)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(tint)
+                .frame(width: 28, height: 28)
+                .background(tint.opacity(SymiOpacity.clearAccent), in: Circle())
+                .accessibilityHidden(true)
+
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .textCase(.uppercase)
+        }
+    }
+}
+
+private struct InsightFrequencyRow: View {
+    let summary: InsightFrequencySummary
+    let tint: Color
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.compact) {
+            HStack(spacing: SymiSpacing.xs) {
+                Text(summary.name)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                    .lineLimit(1)
+
+                Spacer(minLength: SymiSpacing.xs)
+
+                Text(summary.share.formatted(.percent.precision(.fractionLength(0))))
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+            }
+
+            GeometryReader { geometry in
+                Capsule()
+                    .fill(tint.opacity(SymiOpacity.faintSurface))
+                    .overlay(alignment: .leading) {
+                        Capsule()
+                            .fill(tint.opacity(SymiOpacity.heroPrimaryWave))
+                            .frame(width: geometry.size.width * min(max(summary.share, 0), 1))
+                    }
+            }
+            .frame(height: 6)
+            .accessibilityHidden(true)
+        }
+    }
+}
+
+private struct InsightTrendStrip: View {
+    let points: [InsightDailyIntensityPoint]
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
+                    .fill(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.clearAccent))
+
+                TrendLineShape(values: points.map(\.averageIntensity))
+                    .stroke(
+                        AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.heroPrimaryWave),
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                    )
+                    .padding(.horizontal, SymiSpacing.md)
+                    .padding(.vertical, SymiSpacing.xl)
+
+                ForEach(Array(points.enumerated()), id: \.element.day) { index, point in
+                    Circle()
+                        .fill(AppTheme.coral(for: colorScheme).opacity(SymiOpacity.heroAccentWave))
+                        .frame(width: 7, height: 7)
+                        .position(dotPosition(for: index, value: point.averageIntensity, in: geometry.size))
+                }
+            }
+        }
+    }
+
+    private func dotPosition(for index: Int, value: Double, in size: CGSize) -> CGPoint {
+        let horizontalPadding = SymiSpacing.md
+        let verticalPadding = SymiSpacing.xl
+        let availableWidth = max(size.width - horizontalPadding * 2, 1)
+        let availableHeight = max(size.height - verticalPadding * 2, 1)
+        let denominator = max(points.count - 1, 1)
+        let x = horizontalPadding + availableWidth * CGFloat(index) / CGFloat(denominator)
+        let normalizedValue = min(max(value / 10, 0), 1)
+        let y = verticalPadding + availableHeight * CGFloat(1 - normalizedValue)
+        return CGPoint(x: x, y: y)
+    }
+}
+
+private struct TrendLineShape: Shape {
+    let values: [Double]
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        guard values.count >= 2 else {
+            return path
+        }
+
+        for (index, value) in values.enumerated() {
+            let denominator = max(values.count - 1, 1)
+            let x = rect.minX + rect.width * CGFloat(index) / CGFloat(denominator)
+            let normalizedValue = min(max(value / 10, 0), 1)
+            let y = rect.minY + rect.height * CGFloat(1 - normalizedValue)
+            let point = CGPoint(x: x, y: y)
+
+            if index == 0 {
+                path.move(to: point)
+            } else {
+                path.addLine(to: point)
+            }
+        }
+
+        return path
+    }
+}
+
+private struct InsightDotPattern: View {
+    let entryCount: Int
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: SymiSpacing.md) {
+            ForEach(0 ..< visibleDotCount, id: \.self) { index in
+                Circle()
+                    .fill(index.isMultiple(of: 2) ? AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill) : AppTheme.coral(for: colorScheme).opacity(SymiOpacity.faintSurface))
+                    .frame(width: 9, height: 9)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.clearAccent), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+    }
+
+    private var visibleDotCount: Int {
+        min(max(entryCount, 1), 7)
     }
 }
 
