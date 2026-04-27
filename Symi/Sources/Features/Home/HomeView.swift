@@ -461,7 +461,7 @@ private struct HomePatternPreviewSection<Destination: View>: View {
                     }
                 }
             } else {
-                HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount)
+                HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount, emptyState: data.emptyState)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -522,6 +522,7 @@ private struct HomePatternCard: View {
 
 private struct HomePatternEmptyState: View {
     let recordedCount: Int
+    let emptyState: InsightEmptyState?
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -552,19 +553,27 @@ private struct HomePatternEmptyState: View {
     }
 
     private var emptyStateText: String {
+        if let emptyState {
+            return emptyState.message
+        }
+
         if recordedCount >= HomePatternPreviewData.minimumEpisodeCount {
-            return "Es gibt schon genug Einträge, aber noch keinen wiederkehrenden Hinweis, den wir ruhig anzeigen würden."
+            return "Es gibt schon genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist."
         }
 
         if recordedCount == 0 {
-            return "Wenn du ein paar Schmerz- oder Migräneeinträge erfasst hast, zeigen wir hier vorsichtige Hinweise."
+            return "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise."
         }
 
-        return "\(recordedCount) von \(HomePatternPreviewData.minimumEpisodeCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden."
+        return "\(recordedCount) von \(HomePatternPreviewData.minimumEpisodeCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern."
     }
 
     private var title: String {
-        recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "Noch kein ruhiger Hinweis" : "Noch nicht genug Einträge"
+        if let emptyState {
+            return emptyState.title
+        }
+
+        return recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "Noch kein vorsichtiges Muster sichtbar" : "Noch nicht genug Einträge für Muster"
     }
 
     private var emptyIconSize: CGFloat {
@@ -642,7 +651,7 @@ private struct HomeInsightsContent: View {
                     }
                 }
             } else {
-                HomePatternEmptyState(recordedCount: data.totalQualifiedEpisodeCount)
+                HomePatternEmptyState(recordedCount: data.totalQualifiedEpisodeCount, emptyState: data.emptyState)
             }
 
             InsightMethodSummary()
@@ -804,10 +813,10 @@ private struct HomeSurfaceModifier: ViewModifier {
         content
             .background(cardBackground, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.clearAccent : 0.05),
-                radius: 10,
+                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? 0.02 : 0.05),
+                radius: colorScheme == .dark ? 3 : 10,
                 x: SymiShadow.cardXOffset,
-                y: 4
+                y: colorScheme == .dark ? 1 : 4
             )
     }
 
@@ -816,7 +825,7 @@ private struct HomeSurfaceModifier: ViewModifier {
             return LinearGradient(
                 colors: [
                     AppTheme.cardBackground(for: colorScheme),
-                    AppTheme.sage(for: colorScheme).opacity(SymiOpacity.clearAccent),
+                    AppTheme.sage(for: colorScheme).opacity(SymiOpacity.hairline),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

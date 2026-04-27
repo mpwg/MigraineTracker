@@ -260,7 +260,7 @@ struct CoreArchitectureTests {
         let average = result.insights.first { $0.category == .averageIntensity }
 
         #expect(result.totalQualifiedEpisodeCount == 5)
-        #expect(average?.title == "Durchschnitt 6/10")
+        #expect(average?.title == "Muster erkannt: Durchschnitt 6/10")
     }
 
     @Test
@@ -284,7 +284,7 @@ struct CoreArchitectureTests {
         let result = engine.evaluate(episodes: episodes, calendar: fixedCalendar())
         let average = result.insights.first { $0.category == .averageIntensity }
 
-        #expect(average?.title == "Durchschnitt 6/10")
+        #expect(average?.title == "Muster erkannt: Durchschnitt 6/10")
         #expect(average?.description.contains("6 von 10") == true)
         #expect(average?.confidence ?? 0 >= InsightScorer.confidenceThreshold)
         #expect(abs((average?.importance ?? 0) - 0.6) < 0.001)
@@ -336,8 +336,33 @@ struct CoreArchitectureTests {
         let risingTrend = engine.evaluate(episodes: rising, calendar: fixedCalendar()).insights.first { $0.category == .trend }
         let fallingTrend = engine.evaluate(episodes: falling, calendar: fixedCalendar()).insights.first { $0.category == .trend }
 
-        #expect(risingTrend?.title == "Intensität steigt")
-        #expect(fallingTrend?.title == "Intensität fällt")
+        #expect(risingTrend?.title == "Muster erkannt: häufiger höhere Intensität")
+        #expect(fallingTrend?.title == "Muster erkannt: häufiger niedrigere Intensität")
+    }
+
+    @Test
+    func insightEngineUsesCautiousNonDiagnosticLanguage() {
+        let engine = InsightEngine()
+        let start = fixedDate()
+        let episodes = [
+            makeEpisode(id: UUID(), startedAt: start, intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(7 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(14 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(21 * 86_400), intensity: 8),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(86_400), intensity: 7)
+        ]
+
+        let result = engine.evaluate(episodes: episodes, calendar: fixedCalendar())
+        let combinedInsightText = result.insights
+            .flatMap { [$0.title, $0.description] }
+            .joined(separator: " ")
+
+        #expect(combinedInsightText.contains("Muster erkannt"))
+        #expect(combinedInsightText.contains("häufiger zusammen mit") || combinedInsightText.contains("in deinen Einträgen auffällig"))
+        #expect(combinedInsightText.localizedCaseInsensitiveContains("Diagnose") == false)
+        #expect(combinedInsightText.localizedCaseInsensitiveContains("Ursache") == false)
+        #expect(combinedInsightText.localizedCaseInsensitiveContains("Risiko") == false)
+        #expect(combinedInsightText.localizedCaseInsensitiveContains("du solltest") == false)
     }
 
     @Test

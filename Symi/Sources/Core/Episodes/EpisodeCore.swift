@@ -527,6 +527,7 @@ struct HomeOverviewData: Equatable {
 
 struct HomePatternPreviewData: Equatable {
     let totalPainEpisodeCount: Int
+    let emptyState: InsightEmptyState?
     let cards: [HomePatternPreviewCard]
 
     var hasEnoughData: Bool {
@@ -535,13 +536,15 @@ struct HomePatternPreviewData: Equatable {
 
     static let minimumEpisodeCount = InsightEngine.minimumQualifiedEpisodeCount
 
-    init(totalPainEpisodeCount: Int, cards: [HomePatternPreviewCard]) {
+    init(totalPainEpisodeCount: Int, emptyState: InsightEmptyState? = nil, cards: [HomePatternPreviewCard]) {
         self.totalPainEpisodeCount = totalPainEpisodeCount
+        self.emptyState = emptyState
         self.cards = cards
     }
 
     init(result: InsightResult) {
         totalPainEpisodeCount = result.totalQualifiedEpisodeCount
+        emptyState = result.emptyState
         cards = result.insights.map(HomePatternPreviewCard.init)
     }
 }

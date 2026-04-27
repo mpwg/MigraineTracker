@@ -199,16 +199,16 @@ extension InsightEmptyState {
         if qualifiedEpisodeCount == 0 {
             self = InsightEmptyState(
                 reason: .noQualifiedEntries,
-                title: "Noch keine auswertbaren Einträge",
-                message: "Für diesen Zeitraum liegen keine Migräne- oder Kopfschmerz-Einträge vor.",
+                title: "Noch nicht genug Einträge für Muster",
+                message: "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise.",
                 requiredEntryCount: minimumCount,
                 availableEntryCount: qualifiedEpisodeCount
             )
         } else {
             self = InsightEmptyState(
                 reason: .notEnoughQualifiedEntries(required: minimumCount, available: qualifiedEpisodeCount),
-                title: "Noch nicht genug Einträge",
-                message: "\(qualifiedEpisodeCount) von \(minimumCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden.",
+                title: "Noch nicht genug Einträge für Muster",
+                message: "\(qualifiedEpisodeCount) von \(minimumCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern.",
                 requiredEntryCount: minimumCount,
                 availableEntryCount: qualifiedEpisodeCount
             )
@@ -218,8 +218,8 @@ extension InsightEmptyState {
     static func noVisibleInsights(qualifiedEpisodeCount: Int, minimumCount: Int) -> InsightEmptyState {
         InsightEmptyState(
             reason: .noVisibleInsights,
-            title: "Noch kein stabiler Hinweis",
-            message: "Es gibt genug Einträge, aber noch kein Muster mit ausreichender Confidence und Importance.",
+            title: "Noch kein vorsichtiges Muster sichtbar",
+            message: "Es gibt genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist.",
             requiredEntryCount: minimumCount,
             availableEntryCount: qualifiedEpisodeCount
         )
@@ -840,26 +840,26 @@ enum InsightFormatter {
     private static func title(for candidate: InsightCandidate) -> String {
         switch candidate.payload {
         case .weekday(let weekday, _, _):
-            "Auffälliger \(weekdayName(for: weekday))"
+            "Muster erkannt: \(weekdayName(for: weekday))"
         case .trigger(let name, _, _):
-            "\(name) fällt öfter auf"
+            "\(name) häufiger zusammen mit Einträgen"
         case .averageIntensity(let value, _):
-            "Durchschnitt \(formattedIntensity(value))/10"
+            "Muster erkannt: Durchschnitt \(formattedIntensity(value))/10"
         case .trend(let direction, _, _, _):
-            direction == .rising ? "Intensität steigt" : "Intensität fällt"
+            direction == .rising ? "Muster erkannt: häufiger höhere Intensität" : "Muster erkannt: häufiger niedrigere Intensität"
         }
     }
 
     private static func description(for candidate: InsightCandidate, totalCount: Int) -> String {
         switch candidate.payload {
         case .weekday(let weekday, let count, _):
-            "\(entryCountText(count)) von \(entryCountText(totalCount)) liegen auf \(weekdayName(for: weekday)). Das ist ein Muster in deinen bisherigen Einträgen, keine Vorhersage."
+            "\(entryCountText(count)) von \(entryCountText(totalCount)) liegen auf \(weekdayName(for: weekday)). Das ist in deinen Einträgen auffällig, aber keine Vorhersage."
         case .trigger(let name, let count, _):
-            "\(name) wurde bei \(entryCountText(count)) von \(entryCountText(totalCount)) notiert. Symi wertet das als Häufung, nicht als Ursache."
-        case .averageIntensity(let value, let count):
-            "Die durchschnittliche Intensität deiner \(entryCountText(count)) liegt bei \(formattedIntensity(value)) von 10."
+            "\(name) wurde bei \(entryCountText(count)) von \(entryCountText(totalCount)) notiert. Symi beschreibt nur, was häufiger zusammen mit dokumentierten Einträgen vorkommt."
+        case .averageIntensity(let value, _):
+            "In deinen Einträgen auffällig: Die dokumentierte Intensität liegt im Durchschnitt bei \(formattedIntensity(value)) von 10."
         case .trend(_, let olderAverage, let newerAverage, _):
-            "Neuere Einträge liegen im Durchschnitt bei \(formattedIntensity(newerAverage))/10, ältere bei \(formattedIntensity(olderAverage))/10. Das beschreibt nur den Verlauf deiner dokumentierten Einträge."
+            "Muster erkannt: Neuere Einträge liegen im Durchschnitt bei \(formattedIntensity(newerAverage))/10, ältere bei \(formattedIntensity(olderAverage))/10. Das beschreibt nur den dokumentierten Verlauf."
         }
     }
 
