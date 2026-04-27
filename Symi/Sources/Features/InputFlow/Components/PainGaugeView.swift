@@ -8,7 +8,7 @@ struct PainGaugeView: View {
 
     init(
         value: Binding<Int>,
-        range: ClosedRange<Int> = 0 ... 10,
+        range: ClosedRange<Int> = 1 ... 10,
         theme: InputFlowStepTheme = .pain
     ) {
         _value = value
@@ -108,8 +108,6 @@ private struct PainGaugeCard: View {
 
     private var intensityLabel: String {
         switch normalizedValue {
-        case ...0:
-            "Kein"
         case 1 ... 3:
             "Leicht"
         case 4 ... 6:
@@ -123,6 +121,7 @@ private struct PainGaugeCard: View {
 }
 
 private struct PainGaugeSlider: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
 
     @Binding var value: Int
@@ -163,7 +162,7 @@ private struct PainGaugeSlider: View {
                         updateValue(for: gesture.location.x, width: proxy.size.width)
                     }
             )
-            .animation(.snappy, value: value)
+            .animation(reduceMotion ? nil : .snappy, value: value)
         }
         .frame(height: SymiSize.painSliderTouchHeight)
         .accessibilityAdjustableAction { direction in

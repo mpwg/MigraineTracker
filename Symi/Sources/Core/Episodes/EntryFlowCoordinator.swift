@@ -60,6 +60,61 @@ enum EntryStartedAtPreset: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum EntryDayPartPreset: String, CaseIterable, Identifiable, Sendable {
+    case morgens
+    case mittags
+    case abends
+    case nacht
+
+    var id: String { rawValue }
+
+    var dayPart: EpisodeDayPart {
+        switch self {
+        case .morgens:
+            .morgens
+        case .mittags:
+            .mittags
+        case .abends:
+            .abends
+        case .nacht:
+            .nacht
+        }
+    }
+
+    var title: String {
+        dayPart.label
+    }
+
+    var symbolName: String {
+        switch self {
+        case .morgens:
+            "sunrise.fill"
+        case .mittags:
+            "sun.max.fill"
+        case .abends:
+            "sunset.fill"
+        case .nacht:
+            "moon.stars.fill"
+        }
+    }
+
+    func date(on referenceDate: Date = .now, calendar: Calendar = .current) -> Date {
+        let hour: Int
+        switch self {
+        case .morgens:
+            hour = 8
+        case .mittags:
+            hour = 13
+        case .abends:
+            hour = 19
+        case .nacht:
+            hour = 23
+        }
+
+        return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: referenceDate) ?? referenceDate
+    }
+}
+
 @MainActor
 @Observable
 final class EntryContinuousMedicationController {
@@ -222,6 +277,11 @@ final class EntryFlowCoordinator {
 
     func selectStartedAtPreset(_ preset: EntryStartedAtPreset, calendar: Calendar = .current) {
         draft.startedAt = preset.date(relativeTo: .now, calendar: calendar)
+        weatherLoadState = .idle
+    }
+
+    func selectDayPartPreset(_ preset: EntryDayPartPreset, referenceDate: Date = .now, calendar: Calendar = .current) {
+        draft.startedAt = preset.date(on: referenceDate, calendar: calendar)
         weatherLoadState = .idle
     }
 

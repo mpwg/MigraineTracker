@@ -141,7 +141,7 @@ private struct EntryHeadacheStepView: View {
     let onBack: () -> Void
     let onCancel: () -> Void
 
-    @State private var selectedStartedAtPreset: EntryStartedAtPreset = .now
+    @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
     private let visiblePainLocations: [EntryPainLocationOption] = [
         .init(title: "Stirn", imageName: "PainLocationForehead"),
         .init(title: "Schläfen", imageName: "PainLocationTemples"),
@@ -176,32 +176,20 @@ private struct EntryHeadacheStepView: View {
                 }
             }
 
-            InputFlowFieldGroup(title: "Wann tritt es auf?") {
-                HeadachePresetGrid {
-                    ForEach(EntryStartedAtPreset.allCases) { preset in
-                        PillOption(
+            InputFlowFieldGroup(title: "Tagesbereich") {
+                HeadacheDayPartGrid {
+                    ForEach(EntryDayPartPreset.allCases) { preset in
+                        InputFlowSelectionTile(
                             title: preset.title,
-                            isSelected: selectedStartedAtPreset == preset,
+                            systemImage: preset.symbolName,
+                            isSelected: selectedDayPartPreset == preset,
                             theme: .pain,
-                            accessibilityIdentifier: "entry-started-at-\(preset.rawValue)"
+                            accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
                         ) {
-                            selectedStartedAtPreset = preset
-                            if preset != .custom {
-                                coordinator.selectStartedAtPreset(preset)
-                            }
+                            selectedDayPartPreset = preset
+                            coordinator.selectDayPartPreset(preset)
                         }
                     }
-                }
-
-                if selectedStartedAtPreset == .custom {
-                    DatePicker(
-                        "Beginn",
-                        selection: $coordinator.draft.startedAt,
-                        in: ...Date.now,
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                    .datePickerStyle(.compact)
-                    .accessibilityIdentifier("entry-started-at-custom-picker")
                 }
             }
         } footer: {
@@ -219,6 +207,7 @@ private struct EntryHeadacheStepView: View {
         .onAppear {
             coordinator.draft.type = .headache
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
+            selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
         }
     }
@@ -242,6 +231,21 @@ private struct EntryHeadacheStepView: View {
             selection.remove(option)
         } else {
             selection.insert(option)
+        }
+    }
+}
+
+private extension EntryDayPartPreset {
+    init(dayPart: EpisodeDayPart) {
+        switch dayPart {
+        case .morgens:
+            self = .morgens
+        case .mittags:
+            self = .mittags
+        case .abends:
+            self = .abends
+        case .nacht:
+            self = .nacht
         }
     }
 }
@@ -345,7 +349,7 @@ private struct HeadacheLocationGrid<Content: View>: View {
     }
 }
 
-private struct HeadachePresetGrid<Content: View>: View {
+private struct HeadacheDayPartGrid<Content: View>: View {
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {

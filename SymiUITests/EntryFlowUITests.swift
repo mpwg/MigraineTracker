@@ -144,10 +144,16 @@ final class EntryFlowUITests: XCTestCase {
         XCTAssertVisibleText("Wie stark ist es gerade?", in: app)
         XCTAssertVisibleText("Mittel", in: app)
         XCTAssertVisibleText("Wo spürst du den Schmerz?", in: app)
-        XCTAssertVisibleText("Wann tritt es auf?", in: app)
+        XCTAssertVisibleText("Tagesbereich", in: app)
         XCTAssertTrue(app.buttons["entry-location-Schläfen"].exists)
         XCTAssertEqual(app.buttons["entry-location-Schläfen"].value as? String, "Ausgewählt")
-        XCTAssertTrue(app.buttons["entry-started-at-now"].exists)
+        let dayPartButtons = [
+            app.buttons["entry-daypart-morgens"],
+            app.buttons["entry-daypart-mittags"],
+            app.buttons["entry-daypart-abends"],
+            app.buttons["entry-daypart-nacht"],
+        ]
+        XCTAssertTrue(dayPartButtons.contains { $0.exists })
         XCTAssertTrue(app.buttons["entry-flow-next"].exists)
         XCTAssertTrue(app.buttons["entry-flow-save-headache-only"].exists)
         XCTAssertVisibleText("von 5", in: app)

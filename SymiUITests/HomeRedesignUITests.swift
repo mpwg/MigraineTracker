@@ -16,6 +16,7 @@ final class HomeRedesignUITests: XCTestCase {
 
         let calendar = app.descendants(matching: .any)["home-calendar"]
         XCTAssertTrue(calendar.waitForExistence(timeout: 6))
+        XCTAssertTrue(app.descendants(matching: .any)["home-pain-scale-card"].exists)
         XCTAssertTrue(accessibilityElement(containing: "Monatskalender", in: app).exists)
         XCTAssertTrue(accessibilityElement(containing: "heute", in: app).exists)
         XCTAssertFalse(accessibilityElement(containing: "ausgewählt", in: app).exists)
@@ -26,7 +27,7 @@ final class HomeRedesignUITests: XCTestCase {
         scrollUntilVisible(quickEntry, in: app)
         XCTAssertTrue(quickEntry.exists)
         XCTAssertMinimumTouchTarget(quickEntry)
-        XCTAssertTrue(accessibilityElement(containing: "Eintrag erstellen", in: app).exists)
+        XCTAssertTrue(accessibilityElement(containing: "Neuer Eintrag", in: app).exists)
         XCTAssertFalse(app.sliders["home-feeling-slider"].exists)
 
         let allEntries = app.descendants(matching: .any)["home-all-entries"]
