@@ -68,7 +68,7 @@ private struct PainGaugeCard: View {
                         LinearGradient(
                             colors: [
                                 SymiColors.sage.color,
-                                SymiColors.noteAmberDark.color,
+                                SymiColors.sage.mixed(with: SymiColors.coral, amount: 0.5).color,
                                 SymiColors.coral.color
                             ],
                             startPoint: .leading,

@@ -25,6 +25,8 @@ nonisolated enum SymiSpacing {
     static let flowHeaderTitleSpacing: CGFloat = 4
     static let flowFooterTopPadding: CGFloat = 2
     static let flowFooterBottomPadding: CGFloat = 6
+    static let editEntrySectionSpacing: CGFloat = 28
+    static let editEntryBottomPadding: CGFloat = 120
     static let tileSpacing: CGFloat = 10
     static let pillSpacing: CGFloat = 8
     static let cardPadding: CGFloat = 16
@@ -97,6 +99,10 @@ enum SymiShadow {
     static let journalCardRadius: CGFloat = 16
     static let journalCardXOffset: CGFloat = 0
     static let journalCardYOffset: CGFloat = 8
+    static let sectionCardDominantRadius: CGFloat = 18
+    static let sectionCardStandardRadius: CGFloat = 6
+    static let sectionCardDominantYOffset: CGFloat = 9
+    static let sectionCardStandardYOffset: CGFloat = 3
 }
 
 nonisolated enum SymiSize {
@@ -216,6 +222,7 @@ nonisolated enum SymiStroke {
 
 nonisolated enum SymiAnimation {
     static let quickDuration: TimeInterval = 0.18
+    static let selectionDuration: TimeInterval = 0.20
 }
 
 nonisolated enum SymiOpacity {
@@ -295,4 +302,22 @@ nonisolated enum SymiOpacity {
     static let entryDetailDeleteScale: Double = 0.98
     static let entryDetailSecondaryText: Double = 0.84
     static let entryDetailTertiaryText: Double = 0.82
+    static let editHeaderAccentLine: Double = 0.16
+    static let editNavigationChipBorder: Double = 0.18
+    static let editValidationFillDark: Double = 0.24
+    static let editValidationFillLight: Double = 0.13
+    static let sectionCardDominantDarkFill: Double = 0.94
+    static let sectionCardStandardDarkFill: Double = 0.78
+    static let sectionCardDominantLightFill: Double = 0.92
+    static let sectionCardStandardLightFill: Double = 0.72
+    static let sectionCardDominantBorder: Double = 0.42
+    static let sectionCardStandardBorder: Double = 0.28
+    static let sectionCardDominantShadow: Double = 0.11
+    static let sectionCardStandardShadow: Double = 0.032
+    static let selectionFillDark: Double = 0.26
+    static let selectionFillLight: Double = 0.16
+    static let selectionBorder: Double = 0.82
+    static let selectionNeutralDarkFill: Double = 0.74
+    static let selectionNeutralLightFill: Double = 0.76
+    static let selectionNeutralBorder: Double = 0.55
 }

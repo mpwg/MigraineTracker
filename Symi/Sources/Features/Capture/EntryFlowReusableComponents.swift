@@ -5,13 +5,13 @@ func intensityAccent(_ value: Double) -> Color {
 
     switch clampedValue {
     case 0 ... 3:
-        return SymiColors.intensityLight.color
+        return SymiColors.sage.color
     case 4 ... 6:
-        let progress = (clampedValue - 4) / 2
-        return SymiColors.intensityMedium.mixed(with: SymiColors.coral, amount: progress * 0.55).color
+        return SymiColors.sage.mixed(with: SymiColors.coral, amount: 0.5).color
+    case 7 ... 10:
+        return SymiColors.coral.color
     default:
-        let progress = (clampedValue - 7) / 3
-        return SymiColors.intensityStrong.mixed(with: SymiColors.coral, amount: progress * 0.35).color
+        return SymiColors.sage.color
     }
 }
 
@@ -21,8 +21,6 @@ enum SectionCardProminence {
 }
 
 struct SectionCard<Content: View>: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let title: String
     let subtitle: String?
     let theme: InputFlowStepTheme
@@ -92,26 +90,50 @@ struct SectionCardStyle: ViewModifier {
             }
             .shadow(
                 color: colorScheme == .dark ? .clear : shadowColor,
-                radius: prominence == .dominant ? 18 : 6,
-                x: 0,
-                y: prominence == .dominant ? 9 : 3
+                radius: shadowRadius,
+                x: SymiShadow.cardXOffset,
+                y: shadowYOffset
             )
     }
 
     private var background: Color {
         if colorScheme == .dark {
-            return SymiColors.darkCardBackground.color.opacity(prominence == .dominant ? 0.98 : 0.86)
+            return SymiColors.darkCardBackground.color.opacity(darkBackgroundOpacity)
         }
 
-        return SymiColors.card.color.opacity(prominence == .dominant ? 0.98 : 0.82)
+        return SymiColors.card.color.opacity(lightBackgroundOpacity)
     }
 
     private var borderColor: Color {
-        theme.border(for: colorScheme).opacity(prominence == .dominant ? 0.18 : 0.09)
+        SymiColors.subtleSeparator(for: colorScheme).opacity(borderOpacity)
     }
 
     private var shadowColor: Color {
-        AppTheme.symiPetrol.opacity(prominence == .dominant ? 0.14 : 0.045)
+        AppTheme.symiPetrol.opacity(shadowOpacity)
+    }
+
+    private var shadowRadius: CGFloat {
+        prominence == .dominant ? SymiShadow.sectionCardDominantRadius : SymiShadow.sectionCardStandardRadius
+    }
+
+    private var shadowYOffset: CGFloat {
+        prominence == .dominant ? SymiShadow.sectionCardDominantYOffset : SymiShadow.sectionCardStandardYOffset
+    }
+
+    private var darkBackgroundOpacity: Double {
+        prominence == .dominant ? SymiOpacity.sectionCardDominantDarkFill : SymiOpacity.sectionCardStandardDarkFill
+    }
+
+    private var lightBackgroundOpacity: Double {
+        prominence == .dominant ? SymiOpacity.sectionCardDominantLightFill : SymiOpacity.sectionCardStandardLightFill
+    }
+
+    private var borderOpacity: Double {
+        prominence == .dominant ? SymiOpacity.sectionCardDominantBorder : SymiOpacity.sectionCardStandardBorder
+    }
+
+    private var shadowOpacity: Double {
+        prominence == .dominant ? SymiOpacity.sectionCardDominantShadow : SymiOpacity.sectionCardStandardShadow
     }
 }
 
@@ -258,7 +280,7 @@ struct DayPartInlineSelectorView: View {
             } label: {
                 Text("Exakten Zeitpunkt anpassen")
                     .font(SymiTypography.flowPillLabel)
-                    .foregroundStyle(AppTheme.symiPetrol)
+                    .foregroundStyle(accent)
             }
         }
     }
@@ -355,18 +377,18 @@ struct MedicationFlowInlineView: View {
                         }
                     )
                 }
-            }
 
-            UnifiedSelectionTile(
-                title: controller.selectedMedications.isEmpty ? "Keine Medikation" : "Keine weitere Medikation",
-                systemImage: "slash.circle",
-                isSelected: controller.selectedMedications.isEmpty,
-                accent: accent,
-                accessibilityIdentifier: "entry-medication-none"
-            ) {
-                withAnimation(.snappy) {
-                    expandedMedicationID = nil
-                    controller.resetSelections()
+                UnifiedSelectionTile(
+                    title: "Keine Medikation",
+                    systemImage: "slash.circle",
+                    isSelected: controller.selectedMedications.isEmpty,
+                    accent: accent,
+                    accessibilityIdentifier: "entry-medication-none"
+                ) {
+                    withAnimation(.snappy) {
+                        expandedMedicationID = nil
+                        controller.resetSelections()
+                    }
                 }
             }
 
@@ -555,7 +577,6 @@ private struct PainLocationCard: View {
                 }
             }
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(option.title)
         .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
         .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
@@ -652,10 +673,6 @@ struct MedicationExpandableCard: View {
                         .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
                     Spacer(minLength: 0)
-
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(isSelected ? accent : AppTheme.symiTextSecondary)
                 }
                 .frame(maxWidth: .infinity, minHeight: SymiSize.inputSelectionTileMinHeight, alignment: .leading)
             }
@@ -670,6 +687,7 @@ struct MedicationExpandableCard: View {
                     chipGroup(title: "Einnahme", options: takenAtOptions, selection: $selectedTakenAt)
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
+                .clipped()
             }
         }
         .padding(.horizontal, SymiSpacing.md)
@@ -758,7 +776,7 @@ struct SelectionStyleModifier: ViewModifier {
         content
             .background(background)
             .overlay(border)
-            .animation(.snappy, value: isSelected)
+            .animation(.easeInOut(duration: SymiAnimation.selectionDuration), value: isSelected)
     }
 
     @ViewBuilder
@@ -766,10 +784,10 @@ struct SelectionStyleModifier: ViewModifier {
         switch shape {
         case .roundedRectangle:
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(isSelected ? accent.opacity(colorScheme == .dark ? 0.26 : 0.16) : neutralBackground)
+                .fill(isSelected ? accent.opacity(selectedFillOpacity) : neutralBackground)
         case .capsule:
             Capsule()
-                .fill(isSelected ? accent.opacity(colorScheme == .dark ? 0.26 : 0.16) : neutralBackground)
+                .fill(isSelected ? accent.opacity(selectedFillOpacity) : neutralBackground)
         }
     }
 
@@ -778,19 +796,25 @@ struct SelectionStyleModifier: ViewModifier {
         switch shape {
         case .roundedRectangle:
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(isSelected ? accent.opacity(0.82) : neutralBorder, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+                .stroke(isSelected ? accent.opacity(SymiOpacity.selectionBorder) : neutralBorder, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
         case .capsule:
             Capsule()
-                .stroke(isSelected ? accent.opacity(0.82) : neutralBorder, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+                .stroke(isSelected ? accent.opacity(SymiOpacity.selectionBorder) : neutralBorder, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
         }
     }
 
     private var neutralBackground: Color {
-        colorScheme == .dark ? SymiColors.darkCardBackground.color.opacity(0.74) : SymiColors.card.color.opacity(0.76)
+        colorScheme == .dark
+            ? SymiColors.darkCardBackground.color.opacity(SymiOpacity.selectionNeutralDarkFill)
+            : SymiColors.card.color.opacity(SymiOpacity.selectionNeutralLightFill)
     }
 
     private var neutralBorder: Color {
-        SymiColors.subtleSeparator(for: colorScheme).opacity(0.55)
+        SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.selectionNeutralBorder)
+    }
+
+    private var selectedFillOpacity: Double {
+        colorScheme == .dark ? SymiOpacity.selectionFillDark : SymiOpacity.selectionFillLight
     }
 }
 
@@ -798,7 +822,7 @@ struct PressScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.snappy(duration: SymiAnimation.quickDuration), value: configuration.isPressed)
+            .animation(.spring(response: 0.25), value: configuration.isPressed)
     }
 }
 

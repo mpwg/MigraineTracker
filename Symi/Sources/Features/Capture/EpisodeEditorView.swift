@@ -33,7 +33,7 @@ struct EpisodeEditorView: View {
             ScrollViewReader { proxy in
                 VStack(spacing: SymiSpacing.zero) {
                     EditEntryHeader(
-                        subtitle: "\(controller.draft.type.rawValue) · \(controller.draft.normalizedIntensity)/10",
+                        subtitle: "\(controller.draft.type.rawValue) · \(intensityLabel(for: controller.draft.normalizedIntensity)) · \(controller.draft.normalizedIntensity)/10",
                         showsDismissButton: showsDismissButton,
                         accent: accent,
                         onNavigate: { target in
@@ -45,9 +45,9 @@ struct EpisodeEditorView: View {
                     )
 
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 26) {
+                        VStack(alignment: .leading, spacing: SymiSpacing.editEntrySectionSpacing) {
                             if let validationMessage = controller.validationMessage {
-                                EditValidationCard(message: validationMessage)
+                                EditValidationCard(message: validationMessage, accent: accent)
                             }
 
                             SectionCard("Intensität", theme: .pain, prominence: .dominant) {
@@ -93,7 +93,7 @@ struct EpisodeEditorView: View {
                         }
                         .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
                         .padding(.top, SymiSpacing.lg)
-                        .padding(.bottom, 120)
+                        .padding(.bottom, SymiSpacing.editEntryBottomPadding)
                         .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
                         .frame(maxWidth: .infinity)
                     }
@@ -174,6 +174,18 @@ struct EpisodeEditorView: View {
         onSaved != nil || controller.mode == .edit
     }
 
+    private func intensityLabel(for intensity: Int) -> String {
+        switch intensity {
+        case 1 ... 3:
+            "Leicht"
+        case 4 ... 6:
+            "Mittel"
+        case 7 ... 8:
+            "Stark"
+        default:
+            "Sehr stark"
+        }
+    }
 }
 
 private enum EditEntrySection: Hashable {
@@ -228,14 +240,14 @@ private struct EditEntryHeader: View {
             .padding(.horizontal, -SymiSpacing.flowHorizontalPadding)
         }
         .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
-        .padding(.top, SymiSpacing.sm)
-        .padding(.bottom, SymiSpacing.xs)
+        .padding(.top, SymiSpacing.xs)
+        .padding(.bottom, SymiSpacing.compact)
         .frame(maxWidth: SymiSpacing.flowMaxContentWidth)
         .frame(maxWidth: .infinity)
         .background(.ultraThinMaterial)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(accent.opacity(0.16))
+                .fill(accent.opacity(SymiOpacity.editHeaderAccentLine))
                 .frame(height: SymiStroke.hairline)
         }
     }
@@ -247,12 +259,11 @@ private struct EditEntryHeader: View {
             Text(title)
                 .font(SymiTypography.flowPillLabel)
                 .foregroundStyle(accent)
-                .padding(.horizontal, SymiSpacing.md)
-                .padding(.vertical, SymiSpacing.compact)
-                .background(accent.opacity(0.12), in: Capsule())
+                .padding(.horizontal, SymiSpacing.sm)
+                .padding(.vertical, SymiSpacing.micro)
                 .overlay {
                     Capsule()
-                        .stroke(accent.opacity(0.22), lineWidth: SymiStroke.hairline)
+                        .stroke(accent.opacity(SymiOpacity.editNavigationChipBorder), lineWidth: SymiStroke.hairline)
                 }
         }
         .buttonStyle(PressScaleButtonStyle())
@@ -263,15 +274,16 @@ private struct EditValidationCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let message: String
+    let accent: Color
 
     var body: some View {
         Label(message, systemImage: "exclamationmark.triangle.fill")
             .font(.subheadline.weight(.medium))
-            .foregroundStyle(AppTheme.symiCoral)
+            .foregroundStyle(accent)
             .padding(SymiSpacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                InputFlowStepTheme.pain.selectedFill(for: colorScheme),
+                accent.opacity(colorScheme == .dark ? SymiOpacity.editValidationFillDark : SymiOpacity.editValidationFillLight),
                 in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
             )
             .accessibilityLabel("Hinweis: \(message)")
@@ -311,7 +323,7 @@ private struct EditSecondaryDetailsCard: View {
             } label: {
                 Text("Details anzeigen")
                     .font(SymiTypography.flowPillLabel)
-                    .foregroundStyle(AppTheme.symiPetrol)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
             }
         }
     }
