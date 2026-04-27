@@ -55,10 +55,13 @@ struct HomeView: View {
                 PrimaryEntryButton {
                     isPresentingEpisodeEditor = true
                 }
-                .padding(.bottom, SymiSpacing.xxxl)
+                .padding(.bottom, SymiSpacing.md)
+
+                HomeAllEntriesLink(appContainer: appContainer)
+                    .padding(.bottom, SymiSpacing.xxxl)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
-                    HomeInsightsView(data: patternPreviewData)
+                    InsightsView(appContainer: appContainer)
                 }
                 .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
@@ -85,10 +88,13 @@ struct HomeView: View {
                 PrimaryEntryButton {
                     isPresentingEpisodeEditor = true
                 }
-                .padding(.bottom, SymiSpacing.xxxl)
+                .padding(.bottom, SymiSpacing.md)
+
+                HomeAllEntriesLink(appContainer: appContainer)
+                    .padding(.bottom, SymiSpacing.xxxl)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
-                    HomeInsightsView(data: patternPreviewData)
+                    InsightsView(appContainer: appContainer)
                 }
                 .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
@@ -198,7 +204,7 @@ private struct HomeMonthCalendarView: View {
             Image(systemName: systemImage)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
+                .frame(width: SymiSize.minInteractiveHeight + 2, height: SymiSize.minInteractiveHeight + 2)
                 .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface), in: Circle())
         }
         .buttonStyle(.plain)
@@ -378,6 +384,44 @@ private struct PrimaryEntryButton: View {
     }
 }
 
+private struct HomeAllEntriesLink: View {
+    let appContainer: AppContainer
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        NavigationLink {
+            HistoryView(appContainer: appContainer)
+        } label: {
+            HStack(spacing: SymiSpacing.sm) {
+                Image(systemName: "list.bullet.rectangle")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                    .accessibilityHidden(true)
+
+                Text("Alle Einträge")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+
+                Spacer(minLength: SymiSpacing.xs)
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, SymiSpacing.md)
+            .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
+            .background(
+                AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface),
+                in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home-all-entries")
+        .accessibilityHint("Öffnet die Liste aller Einträge.")
+    }
+}
+
 private struct HomeCalendarDay: Identifiable {
     let id = UUID()
     let date: Date?
@@ -525,33 +569,55 @@ private struct HomePatternEmptyState: View {
     }
 }
 
-private struct HomeInsightsView: View {
-    let data: HomePatternPreviewData
+struct InsightsView: View {
+    let appContainer: AppContainer
+    @State private var data = HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
-                Text("Diese Hinweise basieren nur auf deinen bisherigen Schmerz- und Migräneeinträgen. Sie ersetzen keine medizinische Einschätzung.")
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if data.hasEnoughData, !data.cards.isEmpty {
-                    VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                        ForEach(data.cards) { card in
-                            HomePatternCard(card: card)
-                        }
-                    }
-                } else {
-                    HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount)
-                }
-            }
+            HomeInsightsContent(data: data)
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.vertical, SymiSpacing.xl)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
         .brandScreen()
-        .navigationTitle("Deine Muster")
+        .navigationTitle("Insights")
+        .task {
+            await reload()
+        }
+        .refreshable {
+            await reload()
+        }
+    }
+
+    private func reload() async {
+        data = (try? await LoadHomePatternPreviewUseCase(repository: appContainer.episodeRepository).execute()) ?? HomePatternPreviewData(
+            totalPainEpisodeCount: 0,
+            cards: []
+        )
+    }
+}
+
+private struct HomeInsightsContent: View {
+    let data: HomePatternPreviewData
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
+            Text("Diese Hinweise basieren nur auf deinen bisherigen Schmerz- und Migräneeinträgen. Sie ersetzen keine medizinische Einschätzung.")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.symiTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if data.hasEnoughData, !data.cards.isEmpty {
+                VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                    ForEach(data.cards) { card in
+                        HomePatternCard(card: card)
+                    }
+                }
+            } else {
+                HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount)
+            }
+        }
     }
 }
 
