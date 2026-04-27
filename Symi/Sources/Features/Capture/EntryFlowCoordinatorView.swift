@@ -539,8 +539,8 @@ private struct EntryTriggersStepView: View {
         EntryTriggerOption(title: "Stress", symbolName: "brain.head.profile"),
         EntryTriggerOption(title: "Wetter", symbolName: "cloud.sun"),
         EntryTriggerOption(title: "Schlaf", symbolName: "moon"),
-        EntryTriggerOption(title: "Ernährung", symbolName: "apple.logo"),
-        EntryTriggerOption(title: "Bildschirmzeit", symbolName: "iphone"),
+        EntryTriggerOption(title: "Ernährung", symbolName: "fork.knife.circle"),
+        EntryTriggerOption(title: "Bildschirmzeit", symbolName: "ipad.landscape.and.iphone"),
         EntryTriggerOption(title: "Zyklus", symbolName: "drop"),
         EntryTriggerOption(title: "Bewegung", symbolName: "figure.run"),
         EntryTriggerOption(title: "Flüssigkeit", symbolName: "waterbottle")
