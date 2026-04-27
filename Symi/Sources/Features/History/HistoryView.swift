@@ -535,13 +535,12 @@ private struct JournalEntryCard: View {
                         .monospacedDigit()
                 }
 
-                if !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(JournalPalette.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(subtitle)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(JournalPalette.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(SymiSpacing.md)
@@ -593,7 +592,114 @@ private struct JournalEntryCard: View {
     }
 
     private var subtitle: String {
-        episode.notes.trimmed
+        if !episode.notes.trimmed.isEmpty {
+            return episode.notes.trimmed
+        }
+
+        if let medicationSummary {
+            return medicationSummary
+        }
+
+        if let triggerSummary {
+            return triggerSummary
+        }
+
+        if let additionalContext {
+            return additionalContext
+        }
+
+        return "Keine weiteren Details"
+    }
+
+    private var medicationSummary: String? {
+        let medicationNames = episode.medications
+            .map(\.name)
+            .map(\.trimmed)
+            .filter { !$0.isEmpty }
+
+        if !medicationNames.isEmpty {
+            return "\(medicationNames.prefix(2).joined(separator: ", ")) genommen"
+        }
+
+        let continuousMedicationNames = episode.continuousMedicationChecks
+            .map(\.name)
+            .map(\.trimmed)
+            .filter { !$0.isEmpty }
+
+        if !continuousMedicationNames.isEmpty {
+            return "Medikation erfasst: \(continuousMedicationNames.prefix(2).joined(separator: ", "))"
+        }
+
+        return nil
+    }
+
+    private var triggerSummary: String? {
+        guard let trigger = episode.triggers.map(\.trimmed).first(where: { !$0.isEmpty }) else {
+            return nil
+        }
+
+        switch trigger {
+        case "Schlaf":
+            return "Nach dem Schlafen"
+        case "Ernährung":
+            return "Nach dem Essen"
+        case "Bewegung":
+            return "Nach Bewegung"
+        case "Bildschirmzeit":
+            return "Nach Bildschirmzeit"
+        case "Stress":
+            return "Stress notiert"
+        case "Wetter":
+            return "Wetter als Auslöser"
+        case "Zyklus":
+            return "Zyklus notiert"
+        case "Flüssigkeit":
+            return "Flüssigkeit notiert"
+        default:
+            return "\(trigger) notiert"
+        }
+    }
+
+    private var additionalContext: String? {
+        if !episode.painLocation.trimmed.isEmpty {
+            return episode.painLocation.trimmed
+        }
+
+        if !episode.painCharacter.trimmed.isEmpty {
+            return episode.painCharacter.trimmed
+        }
+
+        if !episode.functionalImpact.trimmed.isEmpty {
+            return episode.functionalImpact.trimmed
+        }
+
+        return dayPartContext ?? intensityContext
+    }
+
+    private var dayPartContext: String? {
+        switch episode.dayPart {
+        case .morgens:
+            return "Am Morgen"
+        case .mittags:
+            return "Am Nachmittag"
+        case .abends:
+            return "Am Abend"
+        case .nacht:
+            return "In der Nacht"
+        }
+    }
+
+    private var intensityContext: String? {
+        switch episode.intensity {
+        case 1 ... 3:
+            return "Leichter Verlauf"
+        case 4 ... 6:
+            return "Mittlerer Verlauf"
+        case 7 ... 10:
+            return "Starker Verlauf"
+        default:
+            return nil
+        }
     }
 
     private var accessibilityLabel: String {
@@ -602,9 +708,7 @@ private struct JournalEntryCard: View {
             episode.startedAt.formatted(date: .complete, time: .shortened)
         ]
 
-        if !subtitle.isEmpty {
-            parts.append(subtitle)
-        }
+        parts.append(subtitle)
 
         return parts.joined(separator: ", ")
     }
