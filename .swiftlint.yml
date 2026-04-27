@@ -15,6 +15,7 @@ only_rules:
   - no_magic_font_size
   - no_magic_minimum_scale_factor
   - no_magic_minimum_column_width
+  - no_magic_animation_duration
 
 excluded:
   - Symi/Sources/Features/InputFlow/Styling/SymiColors.swift
@@ -99,4 +100,10 @@ custom_rules:
     name: "Keine rohen Minimum-Spaltenbreiten"
     regex: 'minimumColumnWidth:\s*\d+(?:\.\d+)?'
     message: "Nutze SymiSize-Tokens statt roher minimumColumnWidth-Werte."
+    severity: warning
+
+  no_magic_animation_duration:
+    name: "Keine rohen Animationsdauern"
+    regex: '\.(?:animation|easeIn|easeOut|easeInOut|linear|spring|snappy|smooth|bouncy)\([^)]*duration:\s*\d+(?:\.\d+)?'
+    message: "Nutze SymiAnimation-Tokens statt roher duration-Werte."
     severity: warning

@@ -58,6 +58,8 @@ nonisolated enum SymiRadius {
     static let flowTile: CGFloat = 14
     static let flowPill: CGFloat = 12
     static let flowBanner: CGFloat = 16
+    static let journalCard: CGFloat = 16
+    static let journalAccentBar: CGFloat = 2
 }
 
 enum SymiShadow {
@@ -77,6 +79,9 @@ enum SymiShadow {
     static let calendarButtonYOffset: CGFloat = 3
     static let sliderThumbRadius: CGFloat = 2
     static let sliderThumbYOffset: CGFloat = 1
+    static let journalCardRadius: CGFloat = 16
+    static let journalCardXOffset: CGFloat = 0
+    static let journalCardYOffset: CGFloat = 8
 }
 
 nonisolated enum SymiSize {
@@ -169,6 +174,9 @@ nonisolated enum SymiSize {
     static let weatherFooterLogoMaxWidth: CGFloat = 220
     static let weatherFooterLogoMinHeight: CGFloat = 32
     static let weatherFooterLogoMaxHeight: CGFloat = 56
+    static let journalAccentBarWidth: CGFloat = 4
+    static let journalEntryCardMinHeight: CGFloat = 76
+    static let journalEmptyStateMinHeight: CGFloat = 180
 }
 
 nonisolated enum SymiStroke {
@@ -181,10 +189,16 @@ nonisolated enum SymiStroke {
     static let painGaugeArc: CGFloat = 18
 }
 
+nonisolated enum SymiAnimation {
+    static let quickDuration: TimeInterval = 0.18
+}
+
 nonisolated enum SymiOpacity {
     static let clearStroke: Double = 0.04
     static let clearAccent: Double = 0.06
+    static let journalBorder: Double = 0.06
     static let cardShadow: Double = 0.07
+    static let journalShadow: Double = 0.07
     static let hairline: Double = 0.08
     static let faintTrack: Double = 0.08
     static let shadow: Double = 0.10
@@ -212,7 +226,9 @@ nonisolated enum SymiOpacity {
     static let heroSecondaryWave: Double = 0.72
     static let secondaryActionText: Double = 0.66
     static let appBackgroundSurface: Double = 0.72
+    static let journalSelectedStroke: Double = 0.80
     static let heroPrimaryWave: Double = 0.82
+    static let journalChipFill: Double = 0.84
     static let strongText: Double = 0.82
     static let heroSecondaryText: Double = 0.86
     static let heroAccentWave: Double = 0.92

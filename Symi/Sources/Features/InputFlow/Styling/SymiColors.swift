@@ -43,6 +43,10 @@ enum SymiColors {
     static let mist = SymiColorValue(hex: 0xECF7F4)
     static let onAccent = SymiColorValue(hex: 0xFFFFFF)
 
+    static let journalInk = SymiColorValue(hex: 0x143F3F)
+    static let journalTextSecondary = SymiColorValue(hex: 0x68706D)
+    static let journalSelectedChipFill = SymiColorValue(hex: 0xDDEFE7)
+
     static let triggerBlue = SymiColorValue(hex: 0x4A78D9)
     static let noteAmber = SymiColorValue(hex: 0xD18A2B)
     static let reviewPurple = SymiColorValue(hex: 0x8A65D6)

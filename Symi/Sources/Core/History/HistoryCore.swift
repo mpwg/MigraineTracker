@@ -56,6 +56,17 @@ struct LoadDayEpisodesUseCase {
     }
 }
 
+struct LoadJournalEntriesUseCase {
+    let repository: EpisodeRepository
+
+    func execute() async throws -> [EpisodeRecord] {
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
+            try repository.fetchRecent()
+        }.value
+    }
+}
+
 struct LoadEpisodeDetailUseCase {
     let repository: EpisodeRepository
 
@@ -88,9 +99,11 @@ final class HistoryController {
     var isPresentingNewEpisode = false
     var isPresentingSettings = false
     var errorMessage: String?
+    private(set) var allEpisodes: [EpisodeRecord] = []
     private(set) var monthData: HistoryMonthData
     private(set) var selectedDayEpisodes: [EpisodeRecord] = []
 
+    private let loadJournalEntriesUseCase: LoadJournalEntriesUseCase
     private let loadHistoryMonthUseCase: LoadHistoryMonthUseCase
     private let loadDayEpisodesUseCase: LoadDayEpisodesUseCase
     private let deleteEpisodeUseCase: DeleteEpisodeUseCase
@@ -99,6 +112,7 @@ final class HistoryController {
         let calendar = Calendar.current
         self.selectedDay = initialDay
         self.displayedMonth = calendar.startOfMonth(for: initialDay)
+        self.loadJournalEntriesUseCase = LoadJournalEntriesUseCase(repository: repository)
         self.loadHistoryMonthUseCase = LoadHistoryMonthUseCase(repository: repository)
         self.loadDayEpisodesUseCase = LoadDayEpisodesUseCase(repository: repository)
         self.deleteEpisodeUseCase = DeleteEpisodeUseCase(repository: repository)
@@ -121,12 +135,17 @@ final class HistoryController {
 
     func reloadAll() async {
         do {
+            try await reloadJournalEntries()
             try await reloadMonthData()
             try await reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
             errorMessage = "Tagebuch konnte nicht geladen werden."
         }
+    }
+
+    func reloadJournalEntries() async throws {
+        allEpisodes = try await loadJournalEntriesUseCase.execute()
     }
 
     func reloadMonthData() async throws {
@@ -192,6 +211,7 @@ final class HistoryController {
         do {
             try await deleteEpisodeUseCase.execute(id: pendingDeletionID)
             self.pendingDeletionID = nil
+            try await reloadJournalEntries()
             try await reloadSelectedDayEpisodes()
             errorMessage = nil
         } catch {
@@ -203,6 +223,7 @@ final class HistoryController {
     func handleSavedEpisode() {
         Task {
         do {
+            try await reloadJournalEntries()
             try await reloadMonthData()
             try await reloadSelectedDayEpisodes()
             errorMessage = nil

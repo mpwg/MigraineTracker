@@ -38,6 +38,7 @@
       }
     },
     "%@ · Intensität %lld/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -199,6 +200,7 @@
       }
     },
     "%lld Eintrag%@ · Höchste Intensität %lld/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1226,9 +1228,6 @@
         }
       }
     },
-    "Eintrag erstellen" : {
-
-    },
     "Eintrag gespeichert" : {
       "localizations" : {
         "en" : {
@@ -1501,6 +1500,7 @@
       }
     },
     "Export" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1576,6 +1576,9 @@
         }
       }
     },
+    "Fertig" : {
+
+    },
     "Filter" : {
       "localizations" : {
         "en" : {
@@ -1585,6 +1588,9 @@
           }
         }
       }
+    },
+    "Filter zurücksetzen" : {
+
     },
     "Flow-Schritt %@" : {
 
@@ -1603,6 +1609,7 @@
       }
     },
     "Für %@ ist noch nichts dokumentiert." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1632,6 +1639,9 @@
           }
         }
       }
+    },
+    "Gefiltert" : {
+
     },
     "Gesundheit" : {
       "localizations" : {
@@ -1895,6 +1905,9 @@
           }
         }
       }
+    },
+    "Keine Einträge" : {
+
     },
     "Keine Einträge im Zeitraum" : {
       "extractionState" : "stale",
@@ -2185,6 +2198,9 @@
         }
       }
     },
+    "Medikation" : {
+
+    },
     "Medizinische Einordnung" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2256,9 +2272,6 @@
     "Mit leerem Store starten" : {
 
     },
-    "Monat" : {
-
-    },
     "Monatskalender %@" : {
 
     },
@@ -2324,6 +2337,7 @@
 
     },
     "Noch kein Eintrag für diesen Tag." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2334,6 +2348,7 @@
       }
     },
     "Noch keine Einträge an diesem Tag" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2362,6 +2377,12 @@
           }
         }
       }
+    },
+    "Notizen durchsuchen" : {
+
+    },
+    "Notizen vorhanden" : {
+
     },
     "NSAR" : {
       "localizations" : {
@@ -2420,6 +2441,7 @@
 
     },
     "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2702,9 +2724,6 @@
     "Ruhiger Verlauf der dokumentierten Stärke" : {
 
     },
-    "Sanfte Verlaufsgrafik deiner letzten Einträge" : {
-
-    },
     "Schlaf %@ min" : {
       "localizations" : {
         "en" : {
@@ -2973,6 +2992,9 @@
           }
         }
       }
+    },
+    "Suche" : {
+
     },
     "Support öffnen" : {
 
@@ -3488,10 +3510,8 @@
         }
       }
     },
-    "Woche" : {
-
-    },
     "Zeigt die Episoden dieses Tages darunter an." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
