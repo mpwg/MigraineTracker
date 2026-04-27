@@ -45,6 +45,21 @@ nonisolated enum SymiSpacing {
     static let homeLiquidBackgroundPrimaryOffsetY: CGFloat = -260
     static let homeLiquidBackgroundSecondaryOffsetX: CGFloat = 170
     static let homeLiquidBackgroundSecondaryOffsetY: CGFloat = 260
+    static let entryDetailBottomPadding: CGFloat = 76
+    static let entryDetailHeroSpacing: CGFloat = 25
+    static let entryDetailHeroPadding: CGFloat = 26
+    static let entryDetailContextRowSpacing: CGFloat = 11
+    static let entryDetailContextHorizontalPadding: CGFloat = 22
+    static let entryDetailContextVerticalPadding: CGFloat = 10
+    static let entryDetailContextRowVerticalPadding: CGFloat = 18
+    static let entryDetailTriggerSectionSpacing: CGFloat = 14
+    static let entryDetailTriggerCardPadding: CGFloat = 18
+    static let entryDetailTriggerGridSpacing: CGFloat = 10
+    static let entryDetailTriggerGridColumnSpacing: CGFloat = 9
+    static let entryDetailTriggerChipHorizontalPadding: CGFloat = 15
+    static let entryDetailTriggerChipVerticalPadding: CGFloat = 9
+    static let entryDetailMedicationCardPadding: CGFloat = 22
+    static let entryDetailDeleteBottomPadding: CGFloat = 38
 }
 
 nonisolated enum SymiRadius {
@@ -165,6 +180,13 @@ nonisolated enum SymiSize {
     static let painGaugeHeight: CGFloat = 148
     static let homeLiquidBackgroundPrimaryBlur: CGFloat = 70
     static let homeLiquidBackgroundSecondaryBlur: CGFloat = 86
+    static let entryDetailTopFadeHeight: CGFloat = 16
+    static let entryDetailFaceBadge: CGFloat = 58
+    static let entryDetailFaceIcon: CGFloat = 32
+    static let entryDetailProgressBarHeight: CGFloat = 11
+    static let entryDetailProgressHighlightHeight: CGFloat = 2
+    static let entryDetailContextIcon: CGFloat = 32
+    static let entryDetailDeleteHeight: CGFloat = 54
     static let emptyStateMinHeight: CGFloat = 360
     static let defaultWindowWidth: CGFloat = 1280
     static let defaultWindowHeight: CGFloat = 800
@@ -188,6 +210,7 @@ nonisolated enum SymiStroke {
     static let heroWaveSecondary: CGFloat = 5
     static let heroWavePrimary: CGFloat = 8
     static let painGaugeArc: CGFloat = 18
+    static let entryDetailFaceIcon: CGFloat = 2
 }
 
 nonisolated enum SymiAnimation {
@@ -253,4 +276,22 @@ nonisolated enum SymiOpacity {
     static let homeBackgroundPrimaryDark: Double = 0.08
     static let homeBackgroundSecondaryLight: Double = 0.10
     static let homeBackgroundSecondaryDark: Double = 0.05
+    static let entryDetailTopFadeEnd: Double = 0
+    static let entryDetailShadow: Double = 0.022
+    static let entryDetailHighlight: Double = 0.74
+    static let entryDetailPrimaryText: Double = 0.98
+    static let entryDetailBodyText: Double = 0.82
+    static let entryDetailFaceStroke: Double = 0.60
+    static let entryDetailProgressTrack: Double = 0.065
+    static let entryDetailProgressStart: Double = 0.98
+    static let entryDetailProgressEnd: Double = 0.98
+    static let entryDetailProgressHighlight: Double = 0.14
+    static let entryDetailIcon: Double = 0.62
+    static let entryDetailTriggerChipText: Double = 0.84
+    static let entryDetailTriggerChipFill: Double = 0.22
+    static let entryDetailDeleteText: Double = 0.78
+    static let entryDetailDeletePressed: Double = 0.68
+    static let entryDetailDeleteScale: Double = 0.98
+    static let entryDetailSecondaryText: Double = 0.84
+    static let entryDetailTertiaryText: Double = 0.82
 }

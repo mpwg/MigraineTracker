@@ -19,6 +19,7 @@ enum SymiTypography {
     static let painGaugeUnit = Font.footnote.weight(.medium)
     static let painGaugeLabel = Font.title3.weight(.semibold)
     static let homeMetric = Font.system(size: 44, weight: .bold, design: .rounded)
+    static let entryDetailIntensityTitle = Font.system(size: 44, weight: .bold, design: .rounded)
     static let flowTitle = Font.system(size: 24, weight: .bold, design: .rounded)
     static let flowSubtitle = Font.callout
     static let flowSectionTitle = Font.subheadline.weight(.regular)

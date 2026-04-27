@@ -30,7 +30,7 @@ struct EpisodeDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxxl) {
                 EntryDetailHeader(
                     title: headerTitle,
                     onBack: { dismiss() },
@@ -54,20 +54,20 @@ struct EpisodeDetailView: View {
                 }
             }
             .padding(.horizontal, SymiSpacing.xxl)
-            .padding(.top, 18)
-            .padding(.bottom, 76)
+            .padding(.top, SymiSpacing.xl)
+            .padding(.bottom, SymiSpacing.entryDetailBottomPadding)
         }
         .background(SymiColors.warmBackground.color.ignoresSafeArea())
         .overlay(alignment: .top) {
             LinearGradient(
                 colors: [
                     SymiColors.warmBackground.color,
-                    SymiColors.warmBackground.color.opacity(0)
+                    SymiColors.warmBackground.color.opacity(SymiOpacity.entryDetailTopFadeEnd)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 16)
+            .frame(height: SymiSize.entryDetailTopFadeHeight)
             .allowsHitTesting(false)
         }
         .navigationTitle("")
@@ -169,29 +169,29 @@ private struct EntryDetailHeader: View {
 
 private enum EntryDetailSurface {
     static let cornerRadius: CGFloat = 28
-    static let shadowColor = SymiColors.primaryPetrol.color.opacity(0.026)
-    static let shadowRadius: CGFloat = 22
+    static let shadowColor = SymiColors.primaryPetrol.color.opacity(SymiOpacity.entryDetailShadow)
+    static let shadowRadius: CGFloat = 24
     static let shadowYOffset: CGFloat = 10
-    static let cardFill = Color(red: 1.0, green: 0.996, blue: 0.982)
-    static let highlight = Color.white.opacity(0.74)
-    static let iconFill = Color(red: 0.91, green: 0.95, blue: 0.90)
+    static let cardFill = SymiColors.entryDetailCard.color
+    static let highlight = SymiColors.onAccent.color.opacity(SymiOpacity.entryDetailHighlight)
+    static let iconFill = SymiColors.entryDetailIconFill.color
 }
 
 private struct EntryDetailHeroCard: View {
     let episode: EpisodeRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 25) {
+        VStack(alignment: .leading, spacing: SymiSpacing.entryDetailHeroSpacing) {
             HStack(alignment: .top, spacing: SymiSpacing.lg) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: SymiSpacing.compact) {
                     Text("Intensität")
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(SymiColors.textSecondary.color)
 
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: SymiSpacing.zero) {
                         Text(JournalEntryContext.intensityLabel(for: episode.intensity))
-                            .font(.system(size: 44, weight: .bold, design: .rounded))
-                            .foregroundStyle(SymiColors.textPrimary.color.opacity(0.98))
+                            .font(SymiTypography.entryDetailIntensityTitle)
+                            .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailPrimaryText))
                             .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
                         Text("\(episode.intensity)/10")
@@ -212,10 +212,10 @@ private struct EntryDetailHeroCard: View {
 
             Text(intensityDescription)
                 .font(.system(.body, design: .rounded).weight(.medium))
-                .foregroundStyle(SymiColors.textPrimary.color.opacity(0.82))
+                .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailBodyText))
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(26)
+        .padding(SymiSpacing.entryDetailHeroPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(EntryDetailSurface.cardFill, in: RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous))
         .overlay(
@@ -248,13 +248,16 @@ private struct EntryDetailFaceBadge: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color(red: 0.965, green: 0.918, blue: 0.835))
+                .fill(SymiColors.entryDetailFaceFill.color)
 
             CalmFaceIcon()
-                .stroke(SymiColors.primaryPetrol.color.opacity(0.60), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                .frame(width: 32, height: 32)
+                .stroke(
+                    SymiColors.primaryPetrol.color.opacity(SymiOpacity.entryDetailFaceStroke),
+                    style: StrokeStyle(lineWidth: SymiStroke.entryDetailFaceIcon, lineCap: .round, lineJoin: .round)
+                )
+                .frame(width: SymiSize.entryDetailFaceIcon, height: SymiSize.entryDetailFaceIcon)
         }
-        .frame(width: 58, height: 58)
+        .frame(width: SymiSize.entryDetailFaceBadge, height: SymiSize.entryDetailFaceBadge)
         .accessibilityHidden(true)
     }
 }
@@ -292,16 +295,16 @@ private struct EntryDetailProgressBar: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.primary.opacity(0.075))
+                    .fill(Color.primary.opacity(SymiOpacity.entryDetailProgressTrack))
 
                 Capsule()
                     .fill(
                         LinearGradient(
                             gradient: Gradient(stops: [
-                                .init(color: SymiColors.noteAmber.color.opacity(0.98), location: 0),
-                                .init(color: Color(red: 0.86, green: 0.69, blue: 0.43), location: 0.42),
-                                .init(color: Color(red: 0.70, green: 0.78, blue: 0.58), location: 0.68),
-                                .init(color: SymiColors.sage.color.opacity(0.98), location: 1)
+                                .init(color: SymiColors.noteAmber.color.opacity(SymiOpacity.entryDetailProgressStart), location: 0),
+                                .init(color: SymiColors.entryDetailProgressWarmMid.color, location: 0.36),
+                                .init(color: SymiColors.entryDetailProgressSageMid.color, location: 0.70),
+                                .init(color: SymiColors.sage.color.opacity(SymiOpacity.entryDetailProgressEnd), location: 1)
                             ]),
                             startPoint: .leading,
                             endPoint: .trailing
@@ -309,14 +312,14 @@ private struct EntryDetailProgressBar: View {
                     )
                     .overlay(alignment: .top) {
                         Capsule()
-                            .fill(Color.white.opacity(0.14))
-                            .frame(height: 2)
-                            .padding(.horizontal, 1)
+                            .fill(SymiColors.onAccent.color.opacity(SymiOpacity.entryDetailProgressHighlight))
+                            .frame(height: SymiSize.entryDetailProgressHighlightHeight)
+                            .padding(.horizontal, SymiSize.accessibilityMarker)
                     }
                     .frame(width: proxy.size.width * clampedValue)
             }
         }
-        .frame(height: 11)
+        .frame(height: SymiSize.entryDetailProgressBarHeight)
     }
 }
 
@@ -332,20 +335,25 @@ private struct EntryDetailContextCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 11) {
+        VStack(alignment: .leading, spacing: SymiSpacing.entryDetailContextRowSpacing) {
             ForEach(rows) { row in
                 EntryDetailContextRow(row: row)
             }
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 10)
+        .padding(.horizontal, SymiSpacing.entryDetailContextHorizontalPadding)
+        .padding(.vertical, SymiSpacing.entryDetailContextVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(EntryDetailSurface.cardFill, in: RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous)
                 .stroke(EntryDetailSurface.highlight, lineWidth: SymiStroke.hairline)
         )
-        .shadow(color: EntryDetailSurface.shadowColor, radius: EntryDetailSurface.shadowRadius, x: 0, y: EntryDetailSurface.shadowYOffset)
+        .shadow(
+            color: EntryDetailSurface.shadowColor,
+            radius: EntryDetailSurface.shadowRadius,
+            x: SymiShadow.cardXOffset,
+            y: EntryDetailSurface.shadowYOffset
+        )
     }
 
     private var painLocationText: String {
@@ -361,7 +369,7 @@ private struct EntryDetailContextRow: View {
     let row: EntryDetailContextRowModel
 
     var body: some View {
-        HStack(alignment: .center, spacing: 16) {
+        HStack(alignment: .center, spacing: SymiSpacing.lg) {
             EntryDetailContextIcon(systemImage: row.systemImage)
 
             Text(row.title)
@@ -370,7 +378,7 @@ private struct EntryDetailContextRow: View {
                 .lineLimit(row.hierarchy.lineLimit)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 18)
+        .padding(.vertical, SymiSpacing.entryDetailContextRowVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
@@ -383,8 +391,8 @@ private struct EntryDetailContextIcon: View {
         Image(systemName: systemImage)
             .symbolRenderingMode(.monochrome)
             .font(.system(size: iconSize, weight: .medium, design: .rounded))
-            .foregroundStyle(SymiColors.primaryPetrol.color.opacity(0.62))
-            .frame(width: 32, height: 32)
+            .foregroundStyle(SymiColors.primaryPetrol.color.opacity(SymiOpacity.entryDetailIcon))
+            .frame(width: SymiSize.entryDetailContextIcon, height: SymiSize.entryDetailContextIcon)
             .offset(iconOffset)
             .background(EntryDetailSurface.iconFill, in: Circle())
     }
@@ -416,24 +424,29 @@ private struct EntryDetailTriggerSection: View {
     let triggers: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: SymiSpacing.entryDetailTriggerSectionSpacing) {
             Text("Mögliche Auslöser")
                 .font(.system(.headline, design: .rounded).weight(.semibold))
                 .foregroundStyle(SymiColors.textPrimary.color)
 
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: SymiSpacing.entryDetailTriggerGridSpacing) {
                 ForEach(visibleTriggers, id: \.self) { trigger in
                     EntryDetailTriggerChip(title: trigger)
                 }
             }
-            .padding(18)
+            .padding(SymiSpacing.entryDetailTriggerCardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(EntryDetailSurface.cardFill, in: RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous)
                     .stroke(EntryDetailSurface.highlight, lineWidth: SymiStroke.hairline)
             )
-            .shadow(color: EntryDetailSurface.shadowColor, radius: EntryDetailSurface.shadowRadius, x: 0, y: EntryDetailSurface.shadowYOffset)
+            .shadow(
+                color: EntryDetailSurface.shadowColor,
+                radius: EntryDetailSurface.shadowRadius,
+                x: SymiShadow.cardXOffset,
+                y: EntryDetailSurface.shadowYOffset
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -443,7 +456,7 @@ private struct EntryDetailTriggerSection: View {
     }
 
     private var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: 118), spacing: 9, alignment: .leading)]
+        [GridItem(.adaptive(minimum: SymiSize.multiSelectGridMinWidth), spacing: SymiSpacing.entryDetailTriggerGridColumnSpacing, alignment: .leading)]
     }
 }
 
@@ -453,12 +466,12 @@ private struct EntryDetailTriggerChip: View {
     var body: some View {
         Text(title)
             .font(.system(.subheadline, design: .rounded).weight(.semibold))
-            .foregroundStyle(SymiColors.textPrimary.color.opacity(0.84))
+            .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailTriggerChipText))
             .lineLimit(1)
             .minimumScaleFactor(SymiTypography.tightChipScaleFactor)
-            .padding(.horizontal, 15)
-            .padding(.vertical, 9)
-            .background(SymiColors.sage.color.opacity(0.22), in: Capsule())
+            .padding(.horizontal, SymiSpacing.entryDetailTriggerChipHorizontalPadding)
+            .padding(.vertical, SymiSpacing.entryDetailTriggerChipVerticalPadding)
+            .background(SymiColors.sage.color.opacity(SymiOpacity.entryDetailTriggerChipFill), in: Capsule())
     }
 }
 
@@ -466,7 +479,7 @@ private struct EntryDetailMedicationCard: View {
     let episode: EpisodeRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: SymiSpacing.xs) {
             Text("Eingenommen")
                 .font(.system(.headline, design: .rounded).weight(.semibold))
                 .foregroundStyle(SymiColors.textPrimary.color)
@@ -476,14 +489,19 @@ private struct EntryDetailMedicationCard: View {
                 .foregroundStyle(SymiColors.textSecondary.color)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(22)
+        .padding(SymiSpacing.entryDetailMedicationCardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(EntryDetailSurface.cardFill, in: RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous)
                 .stroke(EntryDetailSurface.highlight, lineWidth: SymiStroke.hairline)
         )
-        .shadow(color: EntryDetailSurface.shadowColor, radius: EntryDetailSurface.shadowRadius, x: 0, y: EntryDetailSurface.shadowYOffset)
+        .shadow(
+            color: EntryDetailSurface.shadowColor,
+            radius: EntryDetailSurface.shadowRadius,
+            x: SymiShadow.cardXOffset,
+            y: EntryDetailSurface.shadowYOffset
+        )
     }
 
     private var medicationText: String {
@@ -497,19 +515,19 @@ private struct EntryDetailDeleteAction: View {
     var body: some View {
         Button("Löschen", role: .destructive, action: onDelete)
             .font(.system(.body, design: .rounded).weight(.semibold))
-            .foregroundStyle(SymiColors.intensityStrong.color.opacity(0.78))
-            .frame(maxWidth: .infinity, minHeight: 54)
+            .foregroundStyle(SymiColors.intensityStrong.color.opacity(SymiOpacity.entryDetailDeleteText))
+            .frame(maxWidth: .infinity, minHeight: SymiSize.entryDetailDeleteHeight)
             .buttonStyle(EntryDetailDestructiveTextButtonStyle())
-            .padding(.top, 2)
-            .padding(.bottom, 38)
+            .padding(.top, SymiSpacing.micro)
+            .padding(.bottom, SymiSpacing.entryDetailDeleteBottomPadding)
     }
 }
 
 private struct EntryDetailDestructiveTextButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .opacity(configuration.isPressed ? 0.68 : 1)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(configuration.isPressed ? SymiOpacity.entryDetailDeletePressed : SymiOpacity.opaque)
+            .scaleEffect(configuration.isPressed ? SymiOpacity.entryDetailDeleteScale : SymiOpacity.opaque)
             .animation(.easeOut(duration: SymiAnimation.quickDuration), value: configuration.isPressed)
     }
 }
@@ -555,11 +573,11 @@ private enum EntryDetailContextHierarchy {
     var color: Color {
         switch self {
         case .primary:
-            SymiColors.textPrimary.color.opacity(0.98)
+            SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailPrimaryText)
         case .secondary:
-            SymiColors.textPrimary.color.opacity(0.84)
+            SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailSecondaryText)
         case .tertiary:
-            SymiColors.textSecondary.color.opacity(0.82)
+            SymiColors.textSecondary.color.opacity(SymiOpacity.entryDetailTertiaryText)
         }
     }
 

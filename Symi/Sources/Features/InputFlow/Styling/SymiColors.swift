@@ -53,6 +53,11 @@ enum SymiColors {
     static let triggerBlue = SymiColorValue(hex: 0x4A78D9)
     static let noteAmber = SymiColorValue(hex: 0xD18A2B)
     static let reviewPurple = SymiColorValue(hex: 0x8A65D6)
+    static let entryDetailCard = SymiColorValue(hex: 0xFFFFFB)
+    static let entryDetailIconFill = SymiColorValue(hex: 0xECF3E4)
+    static let entryDetailFaceFill = SymiColorValue(hex: 0xF6EAD5)
+    static let entryDetailProgressWarmMid = SymiColorValue(hex: 0xE6BA75)
+    static let entryDetailProgressSageMid = SymiColorValue(hex: 0xC2D19E)
 
     static let petrolDark = SymiColorValue(hex: 0x8ECDB8)
     static let coralDark = SymiColorValue(hex: 0xFFA196)
