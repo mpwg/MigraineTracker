@@ -55,6 +55,19 @@ struct NewEntryDesignSystemTests {
     }
 
     @Test
+    func symiDarkModeTokensUseReadableHomePalette() {
+        #expect(SymiColors.petrolDark.hexString == "#8ECDB8")
+        #expect(SymiColors.coralDark.hexString == "#FFA196")
+        #expect(SymiColors.sageDark.hexString == "#A9DEC9")
+        #expect(SymiColors.darkBackgroundTop.hexString == "#14171A")
+        #expect(SymiColors.darkBackgroundMiddle.hexString == "#0F1A1A")
+        #expect(SymiColors.darkBackgroundBottom.hexString == "#1A1714")
+        #expect(SymiColors.darkCardBackground.hexString == "#202629")
+        #expect(SymiColors.darkTextPrimary.hexString == "#F5F7F6")
+        #expect(SymiColors.darkTextSecondary.hexString == "#C5CFCC")
+    }
+
+    @Test
     func stepThemesMapFlowStepsToExpectedAccentTokens() {
         let expected: [NewEntryStepID: InputFlowStepTheme] = [
             .headache: .pain,

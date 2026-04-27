@@ -61,14 +61,90 @@ enum AppTheme {
     static let secondaryFill = symiSage.opacity(SymiOpacity.secondaryFill)
     static let cardBorder = Color.clear
     static let shadowColor = symiPetrol.opacity(SymiOpacity.shadow)
+
+    static func petrol(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? SymiColors.petrolDark.color : SymiColors.primaryPetrol.color
+    }
+
+    static func sage(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? SymiColors.sageDark.color : SymiColors.sage.color
+    }
+
+    static func coral(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? SymiColors.coralDark.color : SymiColors.coral.color
+    }
+
+    static func warmBackground(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? SymiColors.darkBackgroundMiddle.color : SymiColors.warmBackground.color
+    }
+
+    static func cardBackground(for colorScheme: ColorScheme) -> Color {
+        SymiColors.cardBackground(for: colorScheme)
+    }
+
+    static func textPrimary(for colorScheme: ColorScheme) -> Color {
+        SymiColors.textPrimary(for: colorScheme)
+    }
+
+    static func textSecondary(for colorScheme: ColorScheme) -> Color {
+        SymiColors.textSecondary(for: colorScheme)
+    }
+
+    static func appBackground(for colorScheme: ColorScheme) -> LinearGradient {
+        let colors: [Color] = if colorScheme == .dark {
+            [
+                SymiColors.darkBackgroundTop.color,
+                SymiColors.darkBackgroundMiddle.color,
+                SymiColors.darkBackgroundBottom.color
+            ]
+        } else {
+            [
+                SymiColors.warmBackground.color,
+                SymiColors.onAccent.color.opacity(SymiOpacity.appBackgroundSurface),
+                SymiColors.sage.color.opacity(SymiOpacity.backgroundAccent)
+            ]
+        }
+
+        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
+    static func cardGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        let colors: [Color] = if colorScheme == .dark {
+            [
+                SymiColors.cardBackground(for: colorScheme),
+                SymiColors.sageDark.color.opacity(SymiOpacity.softFill)
+            ]
+        } else {
+            [
+                SymiColors.card.color,
+                SymiColors.onAccent.color.opacity(SymiOpacity.strongSurface)
+            ]
+        }
+
+        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
+    static func selectedFill(for colorScheme: ColorScheme) -> Color {
+        sage(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.stepSelectedFillDark : SymiOpacity.selectedFill)
+    }
+
+    static func secondaryFill(for colorScheme: ColorScheme) -> Color {
+        sage(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.pressedFill : SymiOpacity.secondaryFill)
+    }
+
+    static func shadowColor(for colorScheme: ColorScheme) -> Color {
+        Color.black.opacity(colorScheme == .dark ? SymiOpacity.backgroundAccent : SymiOpacity.shadow)
+    }
 }
 
 private struct BrandScreenModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     func body(content: Content) -> some View {
         content
-            .tint(AppTheme.symiPetrol)
+            .tint(AppTheme.petrol(for: colorScheme))
             .scrollContentBackground(.hidden)
-            .background(AppTheme.appBackground.ignoresSafeArea())
+            .background(AppTheme.appBackground(for: colorScheme).ignoresSafeArea())
     }
 }
 
@@ -98,12 +174,14 @@ private struct WideContentModifier: ViewModifier {
 }
 
 private struct BrandCardModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     func body(content: Content) -> some View {
         content
-            .background(AppTheme.cardGradient)
+            .background(AppTheme.cardGradient(for: colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
             .shadow(
-                color: AppTheme.shadowColor,
+                color: AppTheme.shadowColor(for: colorScheme),
                 radius: SymiShadow.brandCardRadius,
                 x: SymiShadow.cardXOffset,
                 y: SymiShadow.brandCardYOffset
@@ -112,16 +190,18 @@ private struct BrandCardModifier: ViewModifier {
 }
 
 struct SymiPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(SymiTypography.button)
             .foregroundStyle(AppTheme.symiOnAccent)
             .padding(.vertical, SymiSpacing.lg)
             .frame(maxWidth: .infinity)
-            .background(AppTheme.symiCoral.opacity(configuration.isPressed ? SymiOpacity.heroPrimaryWave : SymiOpacity.opaque))
+            .background(AppTheme.coral(for: colorScheme).opacity(configuration.isPressed ? SymiOpacity.heroPrimaryWave : SymiOpacity.opaque))
             .clipShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
             .shadow(
-                color: AppTheme.symiCoral.opacity(configuration.isPressed ? SymiOpacity.pressedShadow : SymiOpacity.backgroundAccent),
+                color: AppTheme.coral(for: colorScheme).opacity(configuration.isPressed ? SymiOpacity.pressedShadow : SymiOpacity.backgroundAccent),
                 radius: SymiShadow.buttonRadius,
                 y: SymiShadow.buttonYOffset
             )
@@ -129,13 +209,15 @@ struct SymiPrimaryButtonStyle: ButtonStyle {
 }
 
 struct SymiSecondaryButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(SymiTypography.button)
-            .foregroundStyle(AppTheme.symiPetrol)
+            .foregroundStyle(AppTheme.petrol(for: colorScheme))
             .padding(.vertical, SymiSpacing.secondaryButtonVerticalPadding)
             .frame(maxWidth: .infinity)
-            .background(AppTheme.symiSage.opacity(configuration.isPressed ? SymiOpacity.pressedFill : SymiOpacity.secondaryPressedFill))
+            .background(AppTheme.sage(for: colorScheme).opacity(configuration.isPressed ? SymiOpacity.pressedFill : SymiOpacity.secondaryPressedFill))
             .clipShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
     }
 }

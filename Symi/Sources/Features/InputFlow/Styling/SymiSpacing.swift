@@ -66,6 +66,8 @@ enum SymiShadow {
     static let buttonRadius: CGFloat = 8
     static let buttonXOffset: CGFloat = 0
     static let buttonYOffset: CGFloat = 6
+    static let calendarButtonRadius: CGFloat = 7
+    static let calendarButtonYOffset: CGFloat = 3
     static let sliderThumbRadius: CGFloat = 2
     static let sliderThumbYOffset: CGFloat = 1
 }
@@ -113,9 +115,14 @@ nonisolated enum SymiSize {
     static let homeCalendarWeekdayHeight: CGFloat = 26
     static let homeCalendarNavigationButton: CGFloat = 50
     static let homeCalendarDayNumber: CGFloat = 36
+    static let homeCalendarAccessibilityGrowth: CGFloat = 10
+    static let homeCalendarDayAccessibilityGrowth: CGFloat = 14
     static let quickEntryIcon: CGFloat = 58
     static let quickEntryMinHeight: CGFloat = 108
     static let homePatternIcon: CGFloat = 34
+    static let homePatternWideMinHeight: CGFloat = 138
+    static let homePatternMinHeight: CGFloat = 168
+    static let homePatternAccessibilityHeightGrowth: CGFloat = 54
     static let homePatternEmptyIcon: CGFloat = 38
     static let trendChartHeight: CGFloat = 88
     static let reviewStepIcon: CGFloat = 44

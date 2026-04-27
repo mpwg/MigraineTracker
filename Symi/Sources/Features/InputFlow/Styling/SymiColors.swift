@@ -47,6 +47,7 @@ enum SymiColors {
     static let noteAmber = SymiColorValue(hex: 0xD18A2B)
     static let reviewPurple = SymiColorValue(hex: 0x8A65D6)
 
+    static let petrolDark = SymiColorValue(hex: 0x8ECDB8)
     static let coralDark = SymiColorValue(hex: 0xFFA196)
     static let sageDark = SymiColorValue(hex: 0xA9DEC9)
     static let triggerBlueDark = SymiColorValue(hex: 0x81A0F1)
@@ -56,9 +57,24 @@ enum SymiColors {
     static let darkBackgroundTop = SymiColorValue(hex: 0x14171A)
     static let darkBackgroundMiddle = SymiColorValue(hex: 0x0F1A1A)
     static let darkBackgroundBottom = SymiColorValue(hex: 0x1A1714)
+    static let darkCardBackground = SymiColorValue(hex: 0x202629)
+    static let darkTextPrimary = SymiColorValue(hex: 0xF5F7F6)
+    static let darkTextSecondary = SymiColorValue(hex: 0xC5CFCC)
+
+    static func cardBackground(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? darkCardBackground.color : card.color
+    }
+
+    static func textPrimary(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? darkTextPrimary.color : textPrimary.color
+    }
+
+    static func textSecondary(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? darkTextSecondary.color : textSecondary.color
+    }
 
     static func elevatedCard(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : card.color
+        colorScheme == .dark ? darkCardBackground.color : card.color
     }
 
     static func subtleSeparator(for colorScheme: ColorScheme) -> Color {

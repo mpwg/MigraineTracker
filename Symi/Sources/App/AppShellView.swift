@@ -32,6 +32,7 @@ enum AppSection: String, CaseIterable, Identifiable {
 
 struct AppShellView: View {
     let appContainer: AppContainer
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selectedSection: AppSection = .overview
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -44,8 +45,8 @@ struct AppShellView: View {
                 regularRoot
             }
         }
-        .tint(AppTheme.symiPetrol)
-        .toolbarBackground(AppTheme.symiPetrol.opacity(SymiOpacity.strongSurface), for: .navigationBar)
+        .tint(AppTheme.petrol(for: colorScheme))
+        .toolbarBackground(AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.strongSurface), for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             appContainer.startDeferredMaintenanceIfNeeded()
@@ -61,6 +62,8 @@ struct AppShellView: View {
                 .tabItem {
                     Label(section.title, systemImage: section.systemImage)
                 }
+                .accessibilityLabel("\(section.title) Tab")
+                .accessibilityIdentifier("tab-\(section.rawValue)")
                 .tag(section)
             }
         }
@@ -78,7 +81,10 @@ struct AppShellView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)
-                    .listRowBackground(selectedSection == section ? AppTheme.selectedFill : Color.clear)
+                    .listRowBackground(selectedSection == section ? AppTheme.selectedFill(for: colorScheme) : Color.clear)
+                    .accessibilityLabel("\(section.title) Bereich")
+                    .accessibilityValue(selectedSection == section ? "Ausgewählt" : "")
+                    .accessibilityIdentifier("sidebar-\(section.rawValue)")
                 }
             }
             .navigationTitle(ProductBranding.displayName)

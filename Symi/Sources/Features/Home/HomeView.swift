@@ -182,6 +182,7 @@ private struct HomeMonthCalendarView: View {
     let onSelectDay: (Date) -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: SymiSpacing.xs), count: 7)
     private let calendar = Calendar.current
@@ -191,7 +192,7 @@ private struct HomeMonthCalendarView: View {
             HStack(alignment: .center, spacing: SymiSpacing.md) {
                 Text(month.formatted(.dateTime.month(.wide).year()))
                     .font(.system(.largeTitle, design: .serif).weight(.regular))
-                    .foregroundStyle(AppTheme.symiPetrol)
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .lineLimit(1)
                     .minimumScaleFactor(SymiTypography.compactScaleFactor)
                     .accessibilityAddTraits(.isHeader)
@@ -208,7 +209,7 @@ private struct HomeMonthCalendarView: View {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(AppTheme.symiPetrol.opacity(SymiOpacity.heroSecondaryText))
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.heroSecondaryText))
                         .frame(maxWidth: .infinity, minHeight: SymiSize.homeCalendarWeekdayHeight)
                         .accessibilityHidden(true)
                 }
@@ -235,19 +236,27 @@ private struct HomeMonthCalendarView: View {
         .padding(.vertical, SymiSpacing.xxl)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
+        .accessibilityLabel("Monatskalender \(month.formatted(.dateTime.month(.wide).year()))")
+        .accessibilityIdentifier("home-calendar")
     }
 
     private func calendarNavigationButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(AppTheme.symiPetrol)
+                .foregroundStyle(AppTheme.petrol(for: colorScheme))
                 .frame(width: SymiSize.homeCalendarNavigationButton, height: SymiSize.homeCalendarNavigationButton)
-                .background(AppTheme.symiOnAccent, in: Circle())
-                .shadow(color: AppTheme.shadowColor.opacity(SymiOpacity.hairline), radius: 7, y: 3)
+                .background(AppTheme.cardBackground(for: colorScheme), in: Circle())
+                .shadow(
+                    color: AppTheme.shadowColor(for: colorScheme).opacity(SymiOpacity.hairline),
+                    radius: SymiShadow.calendarButtonRadius,
+                    y: SymiShadow.calendarButtonYOffset
+                )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+        .accessibilityHint("Wechselt den angezeigten Monat im Home-Kalender.")
+        .accessibilityIdentifier(label == "Vorheriger Monat" ? "home-calendar-previous-month" : "home-calendar-next-month")
     }
 
     private var weekdaySymbols: [String] {
@@ -282,20 +291,22 @@ private struct HomeCalendarDayCell: View {
     let isToday: Bool
     let entries: [EpisodeRecord]
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: SymiSpacing.xxs) {
                 Text(date.formatted(.dateTime.day()))
-                    .font(.title3.weight(isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? AppTheme.symiOnAccent : AppTheme.symiTextPrimary)
-                    .frame(width: SymiSize.homeCalendarDayNumber, height: SymiSize.homeCalendarDayNumber)
-                    .background(isSelected ? AppTheme.symiPetrol : Color.clear, in: Circle())
+                    .font(dayNumberFont)
+                    .foregroundStyle(isSelected ? AppTheme.symiOnAccent : AppTheme.textPrimary(for: colorScheme))
+                    .frame(width: dayNumberSize, height: dayNumberSize)
+                    .background(isSelected ? AppTheme.petrol(for: colorScheme) : Color.clear, in: Circle())
                     .overlay {
                         if isToday && !isSelected {
                             Circle()
-                                .stroke(AppTheme.symiPetrol.opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
-                                .frame(width: SymiSize.homeCalendarDayNumber, height: SymiSize.homeCalendarDayNumber)
+                                .stroke(AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
+                                .frame(width: dayNumberSize, height: dayNumberSize)
                         }
                     }
 
@@ -314,24 +325,38 @@ private struct HomeCalendarDayCell: View {
                     .frame(height: SymiSize.calendarDot)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: SymiSize.calendarDayMinHeight)
+            .frame(maxWidth: .infinity, minHeight: calendarDayMinHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(isSelected ? "Ausgewählt" : "")
+        .accessibilityHint("Wählt diesen Tag für den Schnelleintrag aus.")
+        .accessibilityIdentifier("home-calendar-day-\(date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits)))")
     }
 
     private func dotColor(for entry: EpisodeRecord) -> Color {
         switch entry.intensity {
         case 8...10:
-            AppTheme.symiCoral
+            AppTheme.coral(for: colorScheme)
         case 5...7:
-            AppTheme.symiSage
+            AppTheme.sage(for: colorScheme)
         default:
-            AppTheme.symiPetrol.opacity(SymiOpacity.heroSecondaryText)
+            AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.heroSecondaryText)
         }
+    }
+
+    private var dayNumberFont: Font {
+        dynamicTypeSize.isAccessibilitySize ? .body.weight(isSelected ? .semibold : .regular) : .title3.weight(isSelected ? .semibold : .regular)
+    }
+
+    private var dayNumberSize: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? SymiSize.homeCalendarDayNumber + SymiSize.homeCalendarAccessibilityGrowth : SymiSize.homeCalendarDayNumber
+    }
+
+    private var calendarDayMinHeight: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? SymiSize.calendarDayMinHeight + SymiSize.homeCalendarDayAccessibilityGrowth : SymiSize.calendarDayMinHeight
     }
 
     private var accessibilityLabel: String {
@@ -358,6 +383,7 @@ private struct HomeCalendarDayCell: View {
 private struct QuickEntryCard: View {
     let selectedDay: Date
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.md) {
@@ -368,10 +394,10 @@ private struct QuickEntryCard: View {
 
                 Text("Neuer Flow")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(AppTheme.symiPetrol)
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .padding(.horizontal, SymiSpacing.sm)
                     .padding(.vertical, SymiSpacing.xxs)
-                    .background(AppTheme.symiSage.opacity(SymiOpacity.secondaryFill), in: Capsule())
+                    .background(AppTheme.secondaryFill(for: colorScheme), in: Capsule())
                     .accessibilityLabel("Neuer Flow")
             }
 
@@ -381,18 +407,19 @@ private struct QuickEntryCard: View {
                         .font(.title.weight(.semibold))
                         .foregroundStyle(AppTheme.symiOnAccent)
                         .frame(width: SymiSize.quickEntryIcon, height: SymiSize.quickEntryIcon)
-                        .background(AppTheme.symiCoral, in: Circle())
+                        .background(AppTheme.coral(for: colorScheme), in: Circle())
+                        .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                         Text("Neuen Eintrag erstellen")
                             .font(.title3.weight(.semibold))
-                            .foregroundStyle(AppTheme.symiTextPrimary)
+                            .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                             .lineLimit(2)
                             .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
                         Text("Startet mit \(selectedDay.formatted(date: .abbreviated, time: .omitted)) und führt dich Schritt für Schritt durch den Eintrag.")
                             .font(.subheadline)
-                            .foregroundStyle(AppTheme.symiTextSecondary)
+                            .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -400,17 +427,18 @@ private struct QuickEntryCard: View {
 
                     Image(systemName: "chevron.right")
                         .font(.headline.weight(.semibold))
-                        .foregroundStyle(AppTheme.symiPetrol.opacity(SymiOpacity.heroSecondaryText))
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.heroSecondaryText))
+                        .accessibilityHidden(true)
                 }
                 .padding(SymiSpacing.xl)
                 .frame(maxWidth: .infinity, minHeight: SymiSize.quickEntryMinHeight, alignment: .leading)
-                .background(AppTheme.cardGradient, in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+                .background(AppTheme.cardGradient(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous)
-                        .stroke(AppTheme.symiCoral.opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
+                        .stroke(AppTheme.coral(for: colorScheme).opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
                 }
                 .shadow(
-                    color: AppTheme.shadowColor,
+                    color: AppTheme.shadowColor(for: colorScheme),
                     radius: SymiShadow.brandCardRadius,
                     x: SymiShadow.cardXOffset,
                     y: SymiShadow.brandCardYOffset
@@ -419,6 +447,7 @@ private struct QuickEntryCard: View {
             .buttonStyle(.plain)
             .keyboardShortcut("n", modifiers: .command)
             .hoverEffect(.highlight)
+            .accessibilityIdentifier("home-quick-entry")
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Neuen Eintrag erstellen")
             .accessibilityHint("Startet den Schnelleintrag für \(selectedDay.formatted(date: .complete, time: .omitted)).")
@@ -458,6 +487,7 @@ private struct HomePatternPreviewSection<Destination: View>: View {
                         .font(.subheadline.weight(.semibold))
                 }
                 .accessibilityHint("Öffnet die Insights-Ansicht.")
+                .accessibilityIdentifier("home-patterns-show-more")
             }
 
             if data.hasEnoughData, !data.cards.isEmpty {
@@ -472,6 +502,7 @@ private struct HomePatternPreviewSection<Destination: View>: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("home-patterns-section")
     }
 
     private var columns: [GridItem] {
@@ -484,75 +515,87 @@ private struct HomePatternPreviewSection<Destination: View>: View {
 
 private struct HomePatternCard: View {
     let card: HomePatternPreviewCard
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.sm) {
             Image(systemName: card.systemImage)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(AppTheme.symiPetrol)
+                .foregroundStyle(AppTheme.petrol(for: colorScheme))
                 .frame(width: SymiSize.homePatternIcon, height: SymiSize.homePatternIcon)
-                .background(AppTheme.symiSage.opacity(SymiOpacity.secondaryFill), in: Circle())
+                .background(AppTheme.secondaryFill(for: colorScheme), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text(card.title)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                     .textCase(.uppercase)
 
                 Text(card.value)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                     .lineLimit(2)
                     .minimumScaleFactor(SymiTypography.compactScaleFactor)
             }
 
             Text(card.detail)
                 .font(.footnote)
-                .foregroundStyle(AppTheme.symiTextSecondary)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(SymiSpacing.lg)
-        .frame(maxWidth: .infinity, minHeight: card.isWide ? 138 : 168, alignment: .topLeading)
-        .background(AppTheme.cardGradient, in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: cardMinHeight, alignment: .topLeading)
+        .background(AppTheme.cardGradient(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous)
-                .stroke(AppTheme.symiPetrol.opacity(SymiOpacity.hairline), lineWidth: SymiStroke.hairline)
+                .stroke(AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.hairline), lineWidth: SymiStroke.hairline)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(card.title), \(card.value). \(card.detail)")
+        .accessibilityIdentifier("home-pattern-card-\(card.title)")
+    }
+
+    private var cardMinHeight: CGFloat {
+        let baseHeight = card.isWide ? SymiSize.homePatternWideMinHeight : SymiSize.homePatternMinHeight
+        return dynamicTypeSize.isAccessibilitySize ? baseHeight + SymiSize.homePatternAccessibilityHeightGrowth : baseHeight
     }
 }
 
 private struct HomePatternEmptyState: View {
     let recordedCount: Int
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(alignment: .top, spacing: SymiSpacing.md) {
             Image(systemName: "sparkles")
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(AppTheme.symiCoral)
+                .foregroundStyle(AppTheme.coral(for: colorScheme))
                 .frame(width: SymiSize.homePatternEmptyIcon, height: SymiSize.homePatternEmptyIcon)
-                .background(AppTheme.symiCoral.opacity(SymiOpacity.clearAccent), in: Circle())
+                .background(AppTheme.coral(for: colorScheme).opacity(SymiOpacity.clearAccent), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xs) {
                 Text(title)
                     .font(.headline)
-                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
 
                 Text(emptyStateText)
                     .font(.subheadline)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(SymiSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.symiOnAccent.opacity(SymiOpacity.strongSurface), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+        .background(AppTheme.cardBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous)
-                .stroke(AppTheme.symiSage.opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
+                .stroke(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("home-patterns-empty-state")
     }
 
     private var emptyStateText: String {
@@ -605,6 +648,7 @@ private struct HomeInsightsView: View {
 struct AdaptiveDashboardCard<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
+    @Environment(\.colorScheme) private var colorScheme
 
     init(title: String, @ViewBuilder content: () -> Content) {
         self.title = title
@@ -615,6 +659,7 @@ struct AdaptiveDashboardCard<Content: View>: View {
         VStack(alignment: .leading, spacing: SymiSpacing.secondaryButtonVerticalPadding) {
             Text(title)
                 .font(.headline)
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                 .accessibilityAddTraits(.isHeader)
 
             VStack(alignment: .leading, spacing: SymiSpacing.md) {
@@ -630,6 +675,7 @@ struct AdaptiveDashboardCard<Content: View>: View {
 
 private struct FeelingCheckInCard: View {
     @State private var currentState = 4.0
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         AdaptiveDashboardCard(title: "Wie geht es dir heute?") {
@@ -637,20 +683,21 @@ private struct FeelingCheckInCard: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(Int(currentState))")
                         .font(SymiTypography.homeMetric)
-                        .foregroundStyle(AppTheme.symiPetrol)
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     Text(feelingLabel)
                         .font(.headline)
-                        .foregroundStyle(AppTheme.symiTextSecondary)
+                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                 }
 
                 Slider(value: $currentState, in: 0 ... 10, step: 1)
-                    .tint(AppTheme.symiCoral)
+                    .tint(AppTheme.coral(for: colorScheme))
                     .accessibilityLabel("Aktueller Zustand")
                     .accessibilityValue("\(Int(currentState)) von 10")
+                    .accessibilityIdentifier("home-feeling-slider")
 
                 Text("Eine schnelle Einschätzung reicht. Details kannst du im Eintrag ergänzen.")
                     .font(.subheadline)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
             }
         }
     }
