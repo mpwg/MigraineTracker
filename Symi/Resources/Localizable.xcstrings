@@ -1200,6 +1200,9 @@
         }
       }
     },
+    "Eingenommen" : {
+
+    },
     "Einschränkung: %@" : {
       "localizations" : {
         "en" : {
@@ -1905,6 +1908,9 @@
     "Keine aktive Dauermedikation." : {
 
     },
+    "Keine Auslöser dokumentiert." : {
+
+    },
     "Keine beendete Dauermedikation." : {
 
     },
@@ -2282,6 +2288,9 @@
       }
     },
     "Mit leerem Store starten" : {
+
+    },
+    "Mögliche Auslöser" : {
 
     },
     "Monatskalender %@" : {
