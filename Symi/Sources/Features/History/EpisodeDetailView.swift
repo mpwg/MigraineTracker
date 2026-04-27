@@ -29,33 +29,37 @@ struct EpisodeDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: SymiSpacing.xxxl) {
-                EntryDetailHeader(
-                    title: headerTitle,
-                    onBack: { dismiss() },
-                    onEdit: { isEditing = true }
-                )
-
-                if let episode {
-                    EntryDetailHeroCard(episode: episode)
-
-                    EntryDetailContextCard(episode: episode)
-
-                    if episode.hasVisibleTriggers {
-                        EntryDetailTriggerSection(triggers: episode.triggers)
-                    }
-
-                    EntryDetailMedicationCard(episode: episode)
-
-                    EntryDetailDeleteAction(onDelete: { isShowingDeleteConfirmation = true })
-                } else {
-                    EntryDetailLoadingState(isLoading: isLoading)
-                }
-            }
+        VStack(spacing: SymiSpacing.zero) {
+            EntryDetailHeader(
+                title: headerTitle,
+                onBack: { dismiss() },
+                onEdit: { isEditing = true }
+            )
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.top, SymiSpacing.xl)
-            .padding(.bottom, SymiSpacing.entryDetailBottomPadding)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: SymiSpacing.xxxl) {
+                    if let episode {
+                        EntryDetailHeroCard(episode: episode)
+
+                        EntryDetailContextCard(episode: episode)
+
+                        if episode.hasVisibleTriggers {
+                            EntryDetailTriggerSection(triggers: episode.triggers)
+                        }
+
+                        EntryDetailMedicationCard(episode: episode)
+
+                        EntryDetailDeleteAction(onDelete: { isShowingDeleteConfirmation = true })
+                    } else {
+                        EntryDetailLoadingState(isLoading: isLoading)
+                    }
+                }
+                .padding(.horizontal, SymiSpacing.xxl)
+                .padding(.top, SymiSpacing.xxxl)
+                .padding(.bottom, SymiSpacing.entryDetailBottomPadding)
+            }
         }
         .background(ColorToken.Surface.appBackground.ignoresSafeArea())
         .overlay(alignment: .top) {
