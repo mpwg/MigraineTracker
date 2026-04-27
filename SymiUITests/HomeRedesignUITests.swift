@@ -29,10 +29,36 @@ final class HomeRedesignUITests: XCTestCase {
         XCTAssertTrue(accessibilityElement(containing: "Eintrag erstellen", in: app).exists)
         XCTAssertFalse(app.sliders["home-feeling-slider"].exists)
 
+        let allEntries = app.descendants(matching: .any)["home-all-entries"]
+        scrollUntilVisible(allEntries, in: app)
+        XCTAssertTrue(allEntries.exists)
+        XCTAssertMinimumTouchTarget(allEntries)
+
         scrollUntilVisible(app.descendants(matching: .any)["home-patterns-section"], in: app)
         XCTAssertTrue(app.descendants(matching: .any)["home-patterns-section"].exists)
 
         attachScreenshot(named: "home-redesign-dark-large-type", app: app)
+    }
+
+    func testAppShellUsesRequestedTabs() {
+        let app = launchAppShell()
+
+        XCTAssertTrue(app.tabBars.buttons["Tagebuch"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.tabBars.buttons["Insights"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Teilen"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Einstellungen"].exists)
+        XCTAssertFalse(app.tabBars.buttons["Heute"].exists)
+    }
+
+    func testHomeOpensAllEntriesList() {
+        let app = launchHome()
+
+        let allEntries = app.descendants(matching: .any)["home-all-entries"]
+        scrollUntilVisible(allEntries, in: app)
+        XCTAssertTrue(allEntries.waitForExistence(timeout: 6))
+        allEntries.tap()
+
+        XCTAssertTrue(accessibilityElement(containing: "Ausgewählter Tag", in: app).waitForExistence(timeout: 6))
     }
 
     private func launchHome(extraArguments: [String] = []) -> XCUIApplication {
@@ -45,6 +71,12 @@ final class HomeRedesignUITests: XCTestCase {
             "default",
         ]
         app.launchArguments += extraArguments
+        app.launch()
+        return app
+    }
+
+    private func launchAppShell() -> XCUIApplication {
+        let app = XCUIApplication()
         app.launch()
         return app
     }

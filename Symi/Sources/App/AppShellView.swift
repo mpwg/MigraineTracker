@@ -1,8 +1,8 @@
 import SwiftUI
 
 enum AppSection: String, CaseIterable, Identifiable {
-    case overview
-    case history
+    case diary
+    case insights
     case export
     case settings
     case information
@@ -11,8 +11,8 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .overview: "Heute"
-        case .history: "Tagebuch"
+        case .diary: "Tagebuch"
+        case .insights: "Insights"
         case .export: "Teilen"
         case .settings: "Einstellungen"
         case .information: "Hinweise"
@@ -21,8 +21,8 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .overview: "sparkles"
-        case .history: "book.closed"
+        case .diary: "book.closed"
+        case .insights: "chart.line.uptrend.xyaxis"
         case .export: "square.and.arrow.up"
         case .settings: "gearshape"
         case .information: "hand.raised"
@@ -34,7 +34,7 @@ struct AppShellView: View {
     let appContainer: AppContainer
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var selectedSection: AppSection = .overview
+    @State private var selectedSection: AppSection = .diary
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
@@ -55,7 +55,7 @@ struct AppShellView: View {
 
     private var compactRoot: some View {
         TabView(selection: $selectedSection) {
-            ForEach([AppSection.overview, .history, .export, .settings]) { section in
+            ForEach([AppSection.diary, .insights, .export, .settings]) { section in
                 NavigationStack {
                     content(for: section)
                 }
@@ -102,10 +102,10 @@ struct AppShellView: View {
     @ViewBuilder
     private func content(for section: AppSection) -> some View {
         switch section {
-        case .overview:
+        case .diary:
             HomeView(appContainer: appContainer)
-        case .history:
-            HistoryView(appContainer: appContainer)
+        case .insights:
+            InsightsView(appContainer: appContainer)
         case .export:
             DataExportView(appContainer: appContainer)
         case .settings:
@@ -118,7 +118,7 @@ struct AppShellView: View {
     @ViewBuilder
     private func regularContent(for section: AppSection) -> some View {
         switch section {
-        case .overview, .history:
+        case .diary, .insights:
             content(for: section)
         case .export, .settings, .information:
             RegularDetailSurface {
