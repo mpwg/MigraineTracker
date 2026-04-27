@@ -44,24 +44,18 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
-                HomePainScaleCard(episode: latestTodayEpisode)
-                    .padding(.bottom, SymiSpacing.lg)
-
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
-                }
-                .padding(.bottom, SymiSpacing.lg)
-
                 HomeMonthCalendarView(
                     month: displayedMonth,
                     episodesByDay: calendarMonthData.episodesByDay,
                     onPrevious: showPreviousMonth,
                     onNext: showNextMonth
                 )
-                .padding(.bottom, SymiSpacing.lg)
+                    .padding(.bottom, SymiSpacing.lg)
 
-                HomeAllEntriesLink(appContainer: appContainer)
-                    .padding(.bottom, SymiSpacing.xxxl)
+                PrimaryEntryButton {
+                    isPresentingEpisodeEditor = true
+                }
+                .padding(.bottom, SymiSpacing.lg)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
                     InsightsView(appContainer: appContainer)
@@ -80,24 +74,18 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
-                HomePainScaleCard(episode: latestTodayEpisode)
-                    .padding(.bottom, SymiSpacing.lg)
-
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
-                }
-                .padding(.bottom, SymiSpacing.lg)
-
                 HomeMonthCalendarView(
                     month: displayedMonth,
                     episodesByDay: calendarMonthData.episodesByDay,
                     onPrevious: showPreviousMonth,
                     onNext: showNextMonth
                 )
-                .padding(.bottom, SymiSpacing.lg)
+                    .padding(.bottom, SymiSpacing.lg)
 
-                HomeAllEntriesLink(appContainer: appContainer)
-                    .padding(.bottom, SymiSpacing.xxxl)
+                PrimaryEntryButton {
+                    isPresentingEpisodeEditor = true
+                }
+                .padding(.bottom, SymiSpacing.lg)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
                     InsightsView(appContainer: appContainer)
@@ -147,10 +135,6 @@ struct HomeView: View {
         displayedMonth = newMonth
     }
 
-    private var latestTodayEpisode: EpisodeRecord? {
-        let today = Calendar.current.startOfDay(for: .now)
-        return calendarMonthData.episodesByDay[today]?.max { $0.startedAt < $1.startedAt }
-    }
 }
 
 private struct HomeMonthCalendarView: View {
@@ -395,160 +379,6 @@ private struct PrimaryEntryButton: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Neuer Eintrag")
         .accessibilityHint("Startet einen neuen Eintrag.")
-    }
-}
-
-private struct HomePainScaleCard: View {
-    let episode: EpisodeRecord?
-
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        GlassCard(level: .prominent) {
-            VStack(alignment: .leading, spacing: SymiSpacing.lg) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Schmerzskala")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
-                        .accessibilityAddTraits(.isHeader)
-
-                    Spacer(minLength: SymiSpacing.sm)
-
-                    Text(dayPartText)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                        .padding(.horizontal, SymiSpacing.md)
-                        .padding(.vertical, SymiSpacing.compact)
-                        .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill), in: Capsule())
-                }
-
-                HStack(alignment: .lastTextBaseline, spacing: SymiSpacing.sm) {
-                    Text(scoreText)
-                        .font(SymiTypography.homePainScaleMetric)
-                        .monospacedDigit()
-                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                        .minimumScaleFactor(SymiTypography.gaugeScaleFactor)
-
-                    Text("/10")
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-
-                    Spacer(minLength: SymiSpacing.xs)
-                }
-
-                HomeScaleBar(value: episode?.intensity)
-
-                Text(detailText)
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityIdentifier("home-pain-scale-card")
-    }
-
-    private var scoreText: String {
-        guard let episode else {
-            return "-"
-        }
-
-        return "\(min(max(episode.intensity, 1), 10))"
-    }
-
-    private var dayPartText: String {
-        episode?.dayPart.label ?? EpisodeDayPart(date: .now).label
-    }
-
-    private var detailText: String {
-        guard let episode else {
-            return "Starte mit der Skala und erfasse nur Tage, an denen du Schmerzen festhalten möchtest."
-        }
-
-        let location = episode.painLocation.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !location.isEmpty else {
-            return "Letzter Eintrag heute, \(episode.startedAt.formatted(date: .omitted, time: .shortened))."
-        }
-
-        return "\(location) · letzter Eintrag heute, \(episode.startedAt.formatted(date: .omitted, time: .shortened))."
-    }
-
-    private var accessibilityLabel: String {
-        guard let episode else {
-            return "Schmerzskala, noch kein Eintrag heute."
-        }
-
-        return "Schmerzskala, letzter Eintrag heute \(episode.intensity) von 10, \(dayPartText)."
-    }
-}
-
-private struct HomeScaleBar: View {
-    let value: Int?
-
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        HStack(spacing: SymiSpacing.compact) {
-            ForEach(1 ... 10, id: \.self) { step in
-                Capsule()
-                    .fill(fill(for: step))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: step == value ? SymiSize.homePainScaleSelectedSegmentHeight : SymiSize.homePainScaleSegmentHeight)
-            }
-        }
-        .frame(height: SymiSize.homePainScaleBarHeight)
-        .accessibilityHidden(true)
-    }
-
-    private func fill(for step: Int) -> Color {
-        guard let value else {
-            return AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface)
-        }
-
-        if step <= min(max(value, 1), 10) {
-            return step >= 7 ? AppTheme.coral(for: colorScheme) : AppTheme.petrol(for: colorScheme)
-        }
-
-        return AppTheme.sage(for: colorScheme).opacity(SymiOpacity.softFill)
-    }
-}
-
-private struct HomeAllEntriesLink: View {
-    let appContainer: AppContainer
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        NavigationLink {
-            HistoryView(appContainer: appContainer)
-        } label: {
-            HStack(spacing: SymiSpacing.sm) {
-                Image(systemName: "list.bullet.rectangle")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                    .accessibilityHidden(true)
-
-                Text("Alle Einträge")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
-
-                Spacer(minLength: SymiSpacing.xs)
-
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-                    .accessibilityHidden(true)
-            }
-            .padding(.horizontal, SymiSpacing.md)
-            .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
-            .background(
-                AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface),
-                in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home-all-entries")
-        .accessibilityHint("Öffnet die Liste aller Einträge.")
     }
 }
 

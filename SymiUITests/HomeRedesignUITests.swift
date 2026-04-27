@@ -16,7 +16,8 @@ final class HomeRedesignUITests: XCTestCase {
 
         let calendar = app.descendants(matching: .any)["home-calendar"]
         XCTAssertTrue(calendar.waitForExistence(timeout: 6))
-        XCTAssertTrue(app.descendants(matching: .any)["home-pain-scale-card"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["home-pain-scale-card"].exists)
+        XCTAssertFalse(accessibilityElement(containing: "Schmerzskala", in: app).exists)
         XCTAssertTrue(accessibilityElement(containing: "Monatskalender", in: app).exists)
         XCTAssertTrue(accessibilityElement(containing: "heute", in: app).exists)
         XCTAssertFalse(accessibilityElement(containing: "ausgewählt", in: app).exists)
@@ -29,11 +30,7 @@ final class HomeRedesignUITests: XCTestCase {
         XCTAssertMinimumTouchTarget(quickEntry)
         XCTAssertTrue(accessibilityElement(containing: "Neuer Eintrag", in: app).exists)
         XCTAssertFalse(app.sliders["home-feeling-slider"].exists)
-
-        let allEntries = app.descendants(matching: .any)["home-all-entries"]
-        scrollUntilVisible(allEntries, in: app)
-        XCTAssertTrue(allEntries.exists)
-        XCTAssertMinimumTouchTarget(allEntries)
+        XCTAssertFalse(app.descendants(matching: .any)["home-all-entries"].exists)
 
         scrollUntilVisible(app.descendants(matching: .any)["home-patterns-section"], in: app)
         XCTAssertTrue(app.descendants(matching: .any)["home-patterns-section"].exists)
@@ -49,17 +46,6 @@ final class HomeRedesignUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Teilen"].exists)
         XCTAssertTrue(app.tabBars.buttons["Einstellungen"].exists)
         XCTAssertFalse(app.tabBars.buttons["Heute"].exists)
-    }
-
-    func testHomeOpensAllEntriesList() {
-        let app = launchHome()
-
-        let allEntries = app.descendants(matching: .any)["home-all-entries"]
-        scrollUntilVisible(allEntries, in: app)
-        XCTAssertTrue(allEntries.waitForExistence(timeout: 6))
-        allEntries.tap()
-
-        XCTAssertTrue(accessibilityElement(containing: "Ausgewählter Tag", in: app).waitForExistence(timeout: 6))
     }
 
     private func launchHome(extraArguments: [String] = []) -> XCUIApplication {
