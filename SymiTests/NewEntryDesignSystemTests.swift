@@ -41,4 +41,45 @@ struct NewEntryDesignSystemTests {
         #expect(symbols.count == NewEntryStepCatalog.steps.count)
         #expect(colorTokens.count == NewEntryStepCatalog.steps.count)
     }
+
+    @Test
+    func symiColorTokensMatchInputFlowBasisColors() {
+        #expect(SymiColors.primaryPetrol.hexString == "#0F3D3E")
+        #expect(SymiColors.sage.hexString == "#8ECDB8")
+        #expect(SymiColors.coral.hexString == "#FF8A7A")
+        #expect(SymiColors.warmBackground.hexString == "#F6F4EF")
+        #expect(SymiColors.card.hexString == "#FFFFFF")
+        #expect(SymiColors.textPrimary.hexString == "#1C1C1E")
+        #expect(SymiColors.textSecondary.hexString == "#6B6B6E")
+    }
+
+    @Test
+    func stepThemesMapFlowStepsToExpectedAccentTokens() {
+        let expected: [NewEntryStepID: InputFlowStepTheme] = [
+            .headache: .pain,
+            .medication: .medication,
+            .triggers: .trigger,
+            .note: .note,
+            .review: .review
+        ]
+
+        for step in NewEntryStepCatalog.steps {
+            #expect(step.theme == expected[step.id, default: .pain])
+        }
+    }
+
+    @Test
+    func stepAccentTokensUseDesignSystemColors() {
+        let expected: [NewEntryStepColorToken: String] = [
+            .coral: "#FF8A7A",
+            .sageTeal: "#8ECDB8",
+            .blue: "#4A78D9",
+            .warmAmber: "#D18A2B",
+            .purple: "#8A65D6"
+        ]
+
+        for token in NewEntryStepColorToken.allCases {
+            #expect(token.lightColorValue.hexString == expected[token, default: ""])
+        }
+    }
 }

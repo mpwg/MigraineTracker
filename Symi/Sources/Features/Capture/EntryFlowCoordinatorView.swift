@@ -154,16 +154,16 @@ private struct EntryHeadacheStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            HeadacheIntensityCard(intensity: $coordinator.draft.intensity)
+            PainGaugeView(value: $coordinator.draft.intensity)
 
-            EntryFieldGroup(title: "Wo spürst du den Schmerz?") {
-                EntryTileGrid(minimumColumnWidth: 68) {
+            InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
+                InputFlowTileGrid(minimumColumnWidth: 68) {
                     ForEach(visiblePainLocations, id: \.self) { location in
-                        EntryOptionTile(
+                        InputFlowSelectionTile(
                             title: location,
                             systemImage: painLocationSymbol(for: location),
                             isSelected: coordinator.draft.selectedPainLocations.contains(location),
-                            colorToken: .coral,
+                            theme: .pain,
                             accessibilityIdentifier: "entry-location-\(location)"
                         ) {
                             toggle(location, in: &coordinator.draft.selectedPainLocations)
@@ -172,13 +172,13 @@ private struct EntryHeadacheStepView: View {
                 }
             }
 
-            EntryFieldGroup(title: "Wann tritt es auf?") {
-                EntryChipRow {
+            InputFlowFieldGroup(title: "Wann tritt es auf?") {
+                InputFlowPillGrid {
                     ForEach(EntryStartedAtPreset.allCases) { preset in
-                        EntrySelectionChip(
+                        InputFlowPillOption(
                             title: preset.title,
                             isSelected: selectedStartedAtPreset == preset,
-                            colorToken: .coral,
+                            theme: .pain,
                             accessibilityIdentifier: "entry-started-at-\(preset.rawValue)"
                         ) {
                             selectedStartedAtPreset = preset
@@ -269,41 +269,41 @@ private struct EntryMedicationStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            Text("Welche Medikation?")
-                .font(.callout.weight(.medium))
-                .foregroundStyle(.primary)
+            InputFlowFieldGroup(title: "Welche Medikation?") {
+                VStack(spacing: SymiSpacing.tileSpacing) {
+                    InputFlowTileGrid(minimumColumnWidth: 132) {
+                        ForEach(medicationOptions) { option in
+                            InputFlowSelectionTile(
+                                title: option.title,
+                                systemImage: option.symbolName,
+                                isSelected: medicationController.isMedicationNameSelected(option.title),
+                                theme: .medication,
+                                accessibilityIdentifier: "entry-medication-\(option.title)"
+                            ) {
+                                selectMedication(option, controller: medicationController)
+                            }
+                        }
+                    }
 
-            EntryTileGrid(minimumColumnWidth: 132) {
-                ForEach(medicationOptions) { option in
-                    EntryOptionTile(
-                        title: option.title,
-                        systemImage: option.symbolName,
-                        isSelected: medicationController.isMedicationNameSelected(option.title),
-                        colorToken: .sageTeal,
-                        accessibilityIdentifier: "entry-medication-\(option.title)"
+                    InputFlowSelectionTile(
+                        title: coordinator.draft.continuousMedicationChecks.isEmpty ? "Keine Medikation" : "Keine weitere Medikation",
+                        systemImage: "slash.circle",
+                        isSelected: medicationController.selectedMedications.isEmpty,
+                        theme: .medication,
+                        accessibilityIdentifier: "entry-medication-none"
                     ) {
-                        selectMedication(option, controller: medicationController)
+                        medicationController.resetSelections()
                     }
                 }
             }
 
-            EntryOptionTile(
-                title: coordinator.draft.continuousMedicationChecks.isEmpty ? "Keine Medikation" : "Keine weitere Medikation",
-                systemImage: "slash.circle",
-                isSelected: medicationController.selectedMedications.isEmpty,
-                colorToken: .sageTeal,
-                accessibilityIdentifier: "entry-medication-none"
-            ) {
-                medicationController.resetSelections()
-            }
-
-            EntryFieldGroup(title: "Dosierung") {
-                EntryChipRow {
+            InputFlowFieldGroup(title: "Dosierung") {
+                InputFlowPillGrid {
                     ForEach(dosageOptions, id: \.self) { dosage in
-                        EntrySelectionChip(
+                        InputFlowPillOption(
                             title: dosage,
                             isSelected: selectedDosage == dosage,
-                            colorToken: .sageTeal,
+                            theme: .medication,
                             accessibilityIdentifier: "entry-dosage-\(dosage)"
                         ) {
                             selectedDosage = dosage
@@ -312,13 +312,13 @@ private struct EntryMedicationStepView: View {
                 }
             }
 
-            EntryFieldGroup(title: "Wann hast du es eingenommen?") {
-                EntryChipRow {
+            InputFlowFieldGroup(title: "Wann hast du es eingenommen?") {
+                InputFlowPillGrid {
                     ForEach(takenAtOptions, id: \.self) { option in
-                        EntrySelectionChip(
+                        InputFlowPillOption(
                             title: option,
                             isSelected: selectedTakenAt == option,
-                            colorToken: .sageTeal,
+                            theme: .medication,
                             accessibilityIdentifier: "entry-medication-time-\(option)"
                         ) {
                             selectedTakenAt = option
@@ -427,20 +427,18 @@ private struct EntryTriggersStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            Text("Wähle alle passenden aus.")
-                .font(.callout.weight(.medium))
-                .foregroundStyle(.primary)
-
-            EntryTileGrid(minimumColumnWidth: 132) {
-                ForEach(triggerOptions) { option in
-                    EntryOptionTile(
-                        title: option.title,
-                        systemImage: option.symbolName,
-                        isSelected: coordinator.draft.selectedTriggers.contains(option.title),
-                        colorToken: .blue,
-                        accessibilityIdentifier: "entry-trigger-\(option.title)"
-                    ) {
-                        toggle(option.title, in: &coordinator.draft.selectedTriggers)
+            InputFlowFieldGroup(title: "Wähle alle passenden aus.") {
+                InputFlowTileGrid(minimumColumnWidth: 132) {
+                    ForEach(triggerOptions) { option in
+                        InputFlowSelectionTile(
+                            title: option.title,
+                            systemImage: option.symbolName,
+                            isSelected: coordinator.draft.selectedTriggers.contains(option.title),
+                            theme: .trigger,
+                            accessibilityIdentifier: "entry-trigger-\(option.title)"
+                        ) {
+                            toggle(option.title, in: &coordinator.draft.selectedTriggers)
+                        }
                     }
                 }
             }
@@ -494,12 +492,14 @@ private struct EntryNoteStepView: View {
         ) {
             EntryNoteCard(notes: $coordinator.draft.notes)
 
-            EntryFieldGroup(title: "Wie fühlst du dich gerade?") {
-                EntryTileGrid(minimumColumnWidth: 72) {
+            InputFlowFieldGroup(title: "Wie fühlst du dich gerade?") {
+                InputFlowTileGrid(minimumColumnWidth: 72) {
                     ForEach(feelingOptions) { option in
-                        EntryMoodTile(
-                            option: option,
+                        InputFlowSelectionTile(
+                            title: option.title,
+                            systemImage: option.symbolName,
                             isSelected: coordinator.draft.painCharacter == option.title,
+                            theme: .note,
                             accessibilityIdentifier: "entry-feeling-\(option.title)"
                         ) {
                             coordinator.draft.painCharacter = coordinator.draft.painCharacter == option.title ? "" : option.title
@@ -536,44 +536,40 @@ private struct EntryReviewStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            VStack(spacing: 0) {
-                EntryReviewSummarySection(
-                    step: .headache,
+            VStack(spacing: 12) {
+                ReviewSummaryCard(
+                    metadata: InputFlowStepCatalog.metadata(for: .headache),
                     lines: headacheSummary,
+                    accessibilityIdentifier: "entry-review-headache",
                     onEdit: { coordinator.edit(.headache) }
                 )
 
                 if shouldShowMedicationSummary {
-                    Divider()
-                    EntryReviewSummarySection(
-                        step: .medication,
+                    ReviewSummaryCard(
+                        metadata: InputFlowStepCatalog.metadata(for: .medication),
                         lines: medicationSummary,
+                        accessibilityIdentifier: "entry-review-medication",
                         onEdit: { coordinator.edit(.medication) }
                     )
                 }
 
                 if !coordinator.draft.selectedTriggers.isEmpty {
-                    Divider()
-                    EntryReviewSummarySection(
-                        step: .triggers,
+                    ReviewSummaryCard(
+                        metadata: InputFlowStepCatalog.metadata(for: .triggers),
                         lines: triggerSummary,
+                        accessibilityIdentifier: "entry-review-triggers",
                         onEdit: { coordinator.edit(.triggers) }
                     )
                 }
 
                 if shouldShowNoteSummary {
-                    Divider()
-                    EntryReviewSummarySection(
-                        step: .note,
+                    ReviewSummaryCard(
+                        metadata: InputFlowStepCatalog.metadata(for: .note),
                         lines: noteSummary,
+                        accessibilityIdentifier: "entry-review-note",
                         onEdit: { coordinator.edit(.note) }
                     )
                 }
-            }
-            .background(entryCardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.primary.opacity(0.08), lineWidth: 1)
             }
             .accessibilityElement(children: .contain)
 
@@ -663,10 +659,6 @@ private struct EntryReviewStepView: View {
         return lines
     }
 
-    private var entryCardBackground: some ShapeStyle {
-        Color(uiColor: .secondarySystemGroupedBackground)
-    }
-
     private func startedAtSummary(for startedAt: Date) -> String {
         let interval = abs(startedAt.timeIntervalSinceNow)
         if interval < 10 * 60 {
@@ -718,14 +710,20 @@ private struct EntryFlowScreen<Content: View, Footer: View>: View {
 
     var body: some View {
         ZStack {
-            EntryFlowBackground()
+            InputFlowBackground()
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                EntryFlowTopBar(onBack: onBack, onCancel: onCancel)
+                InputFlowHeader(
+                    step: step.inputFlowStepID,
+                    currentStep: currentIndex,
+                    totalSteps: EntryFlowCoordinator.steps.count,
+                    onBack: onBack,
+                    onCancel: onCancel
+                )
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: SymiSpacing.flowSectionSpacing) {
                         Text(step.rawValue)
                             .font(.caption2)
                             .foregroundStyle(.clear)
@@ -734,13 +732,12 @@ private struct EntryFlowScreen<Content: View, Footer: View>: View {
                             .accessibilityLabel("Flow-Schritt \(step.rawValue)")
                             .accessibilityIdentifier("entry-flow-step-\(step.rawValue)")
 
-                        EntryStepHero(step: step, currentIndex: currentIndex)
                         content
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
                     .padding(.top, 8)
                     .padding(.bottom, 24)
-                    .frame(maxWidth: 420, alignment: .leading)
+                    .frame(maxWidth: SymiSpacing.flowMaxContentWidth, alignment: .leading)
                     .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.hidden)
@@ -749,10 +746,10 @@ private struct EntryFlowScreen<Content: View, Footer: View>: View {
         }
         .safeAreaInset(edge: .bottom) {
             footer
-                .padding(.horizontal, 20)
-                .padding(.top, 10)
-                .padding(.bottom, 10)
-                .frame(maxWidth: 420)
+                .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
+                .padding(.top, SymiSpacing.flowFooterTopPadding)
+                .padding(.bottom, SymiSpacing.flowFooterBottomPadding)
+                .frame(maxWidth: SymiSpacing.flowMaxContentWidth)
                 .frame(maxWidth: .infinity)
                 .background(.regularMaterial)
         }
@@ -760,385 +757,11 @@ private struct EntryFlowScreen<Content: View, Footer: View>: View {
     }
 }
 
-private struct EntryFlowTopBar: View {
-    let onBack: () -> Void
-    let onCancel: () -> Void
-
-    var body: some View {
-        HStack {
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .frame(width: 44, height: 44)
-                    .background(.thinMaterial, in: Circle())
-                    .overlay {
-                        Circle()
-                            .stroke(Color.primary.opacity(0.08), lineWidth: 1)
-                    }
-            }
-            .accessibilityLabel("Zurück")
-            .accessibilityIdentifier("entry-flow-back")
-
-            Spacer()
-
-            Button("Abbrechen", action: onCancel)
-                .font(.callout.weight(.medium))
-                .foregroundStyle(AppTheme.symiPetrol)
-                .frame(minHeight: 44)
-                .accessibilityIdentifier("entry-flow-cancel")
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 2)
-        .frame(maxWidth: 420)
-        .frame(maxWidth: .infinity)
-    }
-}
-
-private struct EntryStepHero: View {
-    let step: EntryFlowStep
-    let currentIndex: Int
-
-    var body: some View {
-        let metadata = NewEntryStepCatalog.metadata(for: step.catalogID)
-
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 18) {
-                EntryProgressTrack(
-                    currentStep: currentIndex,
-                    totalSteps: EntryFlowCoordinator.steps.count,
-                    colorToken: metadata.colorToken
-                )
-
-                Text("von \(EntryFlowCoordinator.steps.count)")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Schritt \(currentIndex) von \(EntryFlowCoordinator.steps.count)")
-
-            Text(metadata.title)
-                .font(.title.weight(.bold))
-                .foregroundStyle(metadata.colorToken.color)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(metadata.subline)
-                .font(.callout)
-                .foregroundStyle(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-private struct EntryProgressTrack: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let currentStep: Int
-    let totalSteps: Int
-    let colorToken: NewEntryStepColorToken
-
-    var body: some View {
-        GeometryReader { proxy in
-            let indicatorSize: CGFloat = 24
-            let progressWidth = max(proxy.size.width - indicatorSize, 1)
-            let xOffset = CGFloat(clampedCurrentStep - 1) / CGFloat(max(totalSteps - 1, 1)) * progressWidth
-
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.secondary.opacity(0.18))
-                    .frame(height: 4)
-                    .offset(y: 10)
-
-                Capsule()
-                    .fill(colorToken.color(for: colorScheme))
-                    .frame(width: xOffset + indicatorSize / 2, height: 4)
-                    .offset(y: 10)
-
-                Text("\(clampedCurrentStep)")
-                    .font(.caption.weight(.bold))
-                    .monospacedDigit()
-                    .foregroundStyle(.white)
-                    .frame(width: indicatorSize, height: indicatorSize)
-                    .background(colorToken.color(for: colorScheme), in: Circle())
-                    .offset(x: xOffset)
-            }
-        }
-        .frame(height: 24)
-    }
-
-    private var clampedCurrentStep: Int {
-        min(max(currentStep, 1), max(totalSteps, 1))
-    }
-}
-
-private struct HeadacheIntensityCard: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    @Binding var intensity: Int
-
-    var body: some View {
-        VStack(spacing: 18) {
-            ZStack(alignment: .center) {
-                EntryGaugeArc()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                NewEntryStepColorToken.sageTeal.color,
-                                Color(red: 0.96, green: 0.79, blue: 0.48),
-                                NewEntryStepColorToken.coral.color
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        style: StrokeStyle(lineWidth: 13, lineCap: .round)
-                    )
-                    .frame(width: 212, height: 142)
-                    .accessibilityHidden(true)
-
-                VStack(spacing: 4) {
-                    Text("\(normalizedIntensity)")
-                        .font(.system(size: 58, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(AppTheme.symiPetrol)
-                        .minimumScaleFactor(0.75)
-
-                    Text("/10")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-
-                    Text(intensityLabel)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(NewEntryStepColorToken.coral.color)
-                        .padding(.top, 8)
-                }
-                .padding(.top, 20)
-            }
-            .frame(maxWidth: .infinity)
-
-            VStack(spacing: 8) {
-                Slider(
-                    value: Binding(
-                        get: { Double(normalizedIntensity) },
-                        set: { intensity = Int($0) }
-                    ),
-                    in: 1 ... 10,
-                    step: 1
-                )
-                .tint(NewEntryStepColorToken.coral.color)
-                .accessibilityLabel("Kopfschmerzstärke \(normalizedIntensity) von 10, \(intensityLabel.lowercased())")
-                .accessibilityIdentifier("entry-intensity-slider")
-
-                HStack {
-                    Text("0")
-                    Spacer()
-                    Text("10")
-                }
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(22)
-        .frame(maxWidth: .infinity)
-        .background(entryCardBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(NewEntryStepColorToken.coral.border(for: colorScheme), lineWidth: 1)
-        }
-        .accessibilityIdentifier("entry-intensity-card")
-    }
-
-    private var entryCardBackground: some ShapeStyle {
-        Color(uiColor: .secondarySystemGroupedBackground)
-    }
-
-    private var normalizedIntensity: Int {
-        min(max(intensity, 1), 10)
-    }
-
-    private var intensityLabel: String {
-        switch normalizedIntensity {
-        case 1 ... 3:
-            "Leicht"
-        case 4 ... 6:
-            "Mittel"
-        case 7 ... 8:
-            "Stark"
-        default:
-            "Sehr stark"
-        }
-    }
-}
-
-private struct EntryGaugeArc: Shape {
-    func path(in rect: CGRect) -> Path {
-        let radius = min(rect.width / 2, rect.height) - 8
-        let center = CGPoint(x: rect.midX, y: rect.maxY - 8)
-        var path = Path()
-        path.addArc(
-            center: center,
-            radius: radius,
-            startAngle: .degrees(200),
-            endAngle: .degrees(340),
-            clockwise: false
-        )
-        return path
-    }
-}
-
-private struct EntryFieldGroup<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: Content
-
-    init(title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.callout.weight(.medium))
-                .foregroundStyle(.primary)
-
-            content
-        }
-    }
-}
-
-private struct EntryTileGrid<Content: View>: View {
-    let minimumColumnWidth: CGFloat
-    @ViewBuilder let content: Content
-
-    init(minimumColumnWidth: CGFloat, @ViewBuilder content: () -> Content) {
-        self.minimumColumnWidth = minimumColumnWidth
-        self.content = content()
-    }
-
-    var body: some View {
-        LazyVGrid(
-            columns: [
-                GridItem(.adaptive(minimum: minimumColumnWidth), spacing: 10, alignment: .top)
-            ],
-            alignment: .leading,
-            spacing: 10
-        ) {
-            content
-        }
-    }
-}
-
-private struct EntryOptionTile: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let title: String
-    let systemImage: String
-    let isSelected: Bool
-    let colorToken: NewEntryStepColorToken
-    let accessibilityIdentifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(isSelected ? colorToken.color(for: colorScheme) : .secondary)
-                    .frame(height: 26)
-
-                Text(title)
-                    .font(.subheadline.weight(.medium))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, minHeight: 82)
-            .background(tileBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(isSelected ? colorToken.border(for: colorScheme) : Color.primary.opacity(0.09), lineWidth: 1)
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
-        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
-        .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityIdentifier(accessibilityIdentifier)
-    }
-
-    private var tileBackground: Color {
-        if isSelected {
-            return colorToken.selectedFill(for: colorScheme)
-        }
-
-        return Color(uiColor: .secondarySystemGroupedBackground)
-    }
-}
-
-private struct EntryChipRow<Content: View>: View {
-    @ViewBuilder let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        LazyVGrid(
-            columns: [
-                GridItem(.adaptive(minimum: 70), spacing: 8, alignment: .top)
-            ],
-            alignment: .leading,
-            spacing: 8
-        ) {
-            content
-        }
-    }
-}
-
-private struct EntrySelectionChip: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let title: String
-    let isSelected: Bool
-    let colorToken: NewEntryStepColorToken
-    let accessibilityIdentifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.footnote.weight(.medium))
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.82)
-                .foregroundStyle(isSelected ? colorToken.color(for: colorScheme) : .primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 9)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background(isSelected ? colorToken.selectedFill(for: colorScheme) : Color(uiColor: .secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(isSelected ? colorToken.border(for: colorScheme) : Color.primary.opacity(0.08), lineWidth: 1)
-                }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
-        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
-        .accessibilityIdentifier(accessibilityIdentifier)
-    }
-}
-
 private struct EntryContinuousMedicationBlock: View {
     @Binding var checks: [ContinuousMedicationCheckDraft]
 
     var body: some View {
-        EntryFieldGroup(title: "Dauermedikation") {
+        InputFlowFieldGroup(title: "Dauermedikation") {
             VStack(spacing: 10) {
                 ForEach($checks) { $check in
                     Toggle(isOn: $check.wasTaken) {
@@ -1179,127 +802,78 @@ private struct EntryInfoBanner: View {
 }
 
 private struct EntryNoteCard: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     @Binding var notes: String
 
     private let limit = 500
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            TextEditor(text: $notes)
-                .font(.callout)
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .frame(minHeight: 230)
-                .onChange(of: notes) { _, newValue in
-                    if newValue.count > limit {
-                        notes = String(newValue.prefix(limit))
+        InputFlowCard(theme: .note, isHighlighted: true) {
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $notes)
+                    .font(.callout)
+                    .scrollContentBackground(.hidden)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 4)
+                    .frame(minHeight: 220)
+                    .onChange(of: notes) { _, newValue in
+                        if newValue.count > limit {
+                            notes = String(newValue.prefix(limit))
+                        }
+                    }
+                    .accessibilityLabel("Notiz")
+                    .accessibilityIdentifier("entry-note-text")
+
+                if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Was hat geholfen?")
+                        Text("Was war heute anders?")
+                    }
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+                    .allowsHitTesting(false)
+                }
+
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("\(notes.count)/\(limit)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .padding(8)
                     }
                 }
-                .accessibilityLabel("Notiz")
-                .accessibilityIdentifier("entry-note-text")
-
-            if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Was hat geholfen?")
-                    Text("Was war heute anders?")
-                }
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 20)
-                .allowsHitTesting(false)
-            }
-
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Text("\(notes.count)/\(limit)")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .padding(12)
-                }
             }
         }
-        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(NewEntryStepColorToken.warmAmber.border(for: colorScheme), lineWidth: 1)
-        }
-    }
-}
-
-private struct EntryMoodTile: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let option: EntryFeelingOption
-    let isSelected: Bool
-    let accessibilityIdentifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                Image(systemName: option.symbolName)
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(isSelected ? NewEntryStepColorToken.warmAmber.color(for: colorScheme) : .secondary)
-                    .frame(height: 26)
-
-                Text(option.title)
-                    .font(.caption.weight(.medium))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, minHeight: 76)
-            .background(
-                isSelected ?
-                    NewEntryStepColorToken.warmAmber.selectedFill(for: colorScheme) :
-                    Color(uiColor: .secondarySystemGroupedBackground),
-                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(isSelected ? NewEntryStepColorToken.warmAmber.border(for: colorScheme) : Color.primary.opacity(0.08), lineWidth: 1)
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(option.title)
-        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
-        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 
 private struct EntryTodayLinkCard: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Zu heutigem Eintrag hinzufügen")
-                    .font(.subheadline.weight(.semibold))
-                Text("Diese Notiz wird mit deinem Eintrag von heute verknüpft.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+        InputFlowCard(theme: .note) {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Zu heutigem Eintrag hinzufügen")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Diese Notiz wird mit deinem Eintrag von heute verknüpft.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 8)
+
+                Toggle("Zu heutigem Eintrag hinzufügen", isOn: $isOn)
+                    .labelsHidden()
+                    .tint(InputFlowStepTheme.note.accent)
+                    .accessibilityIdentifier("entry-note-link-toggle")
             }
-
-            Spacer(minLength: 8)
-
-            Toggle("Zu heutigem Eintrag hinzufügen", isOn: $isOn)
-                .labelsHidden()
-                .tint(NewEntryStepColorToken.warmAmber.color)
-                .accessibilityIdentifier("entry-note-link-toggle")
+            .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-        .background(NewEntryStepColorToken.warmAmber.softFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -1335,76 +909,24 @@ private struct EntryFlowFooter: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Button(action: onPrimary) {
-                HStack(spacing: 12) {
-                    Spacer(minLength: 0)
-
-                    if isSaving {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text(primaryTitle)
-                            .font(.headline.weight(.semibold))
-                        Image(systemName: primarySystemImage)
-                            .font(.headline.weight(.semibold))
-                    }
-
-                    Spacer(minLength: 0)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 18)
-                .frame(maxWidth: .infinity, minHeight: 54)
-                .background(AppTheme.symiPetrol, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .disabled(isSaving)
-            .accessibilityIdentifier(primaryIdentifier)
+            InputFlowPrimaryButton(
+                title: primaryTitle,
+                systemImage: primarySystemImage,
+                isLoading: isSaving,
+                isDisabled: isSaving,
+                accessibilityIdentifier: primaryIdentifier,
+                action: onPrimary
+            )
 
             if let secondaryTitle, let onSecondary {
-                Button(secondaryTitle, action: onSecondary)
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(AppTheme.symiPetrol)
-                    .frame(minHeight: 44)
-                    .disabled(isSaving)
-                    .accessibilityIdentifier(secondaryIdentifier ?? "entry-flow-secondary")
+                InputFlowSecondaryAction(
+                    title: secondaryTitle,
+                    isDisabled: isSaving,
+                    accessibilityIdentifier: secondaryIdentifier ?? "entry-flow-secondary",
+                    action: onSecondary
+                )
             }
         }
-    }
-}
-
-private struct EntryReviewSummarySection: View {
-    let step: EntryFlowStep
-    let lines: [String]
-    let onEdit: () -> Void
-
-    var body: some View {
-        let metadata = NewEntryStepCatalog.metadata(for: step.catalogID)
-
-        HStack(alignment: .top, spacing: 12) {
-            StepIcon(metadata)
-                .frame(width: 42, height: 42)
-
-            VStack(alignment: .leading, spacing: 7) {
-                Text(metadata.title)
-                    .font(.headline.weight(.semibold))
-
-                ForEach(lines, id: \.self) { line in
-                    Text(line)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            Spacer(minLength: 8)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onEdit)
-        .accessibilityElement(children: .combine)
-        .accessibilityHint("Tippe doppelt, um diesen Schritt zu bearbeiten.")
-        .accessibilityIdentifier("entry-review-\(step.rawValue)")
     }
 }
 
@@ -1425,34 +947,6 @@ private struct EntryPatternHint: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(NewEntryStepColorToken.purple.softFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityIdentifier("entry-review-pattern-hint")
-    }
-}
-
-private struct EntryFlowBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        LinearGradient(
-            colors: colors,
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private var colors: [Color] {
-        if colorScheme == .dark {
-            return [
-                Color(red: 0.08, green: 0.09, blue: 0.10),
-                Color(red: 0.06, green: 0.10, blue: 0.10),
-                Color(red: 0.10, green: 0.09, blue: 0.08)
-            ]
-        }
-
-        return [
-            Color(red: 0.99, green: 0.98, blue: 0.96),
-            Color.white,
-            Color(red: 0.95, green: 0.98, blue: 0.97)
-        ]
     }
 }
 
@@ -1477,21 +971,4 @@ private struct EntryFeelingOption: Identifiable {
     let symbolName: String
 
     var id: String { title }
-}
-
-private extension EntryFlowStep {
-    var catalogID: NewEntryStepID {
-        switch self {
-        case .headache:
-            .headache
-        case .medication:
-            .medication
-        case .triggers:
-            .triggers
-        case .note:
-            .note
-        case .review:
-            .review
-        }
-    }
 }

@@ -1,145 +1,12 @@
 import SwiftUI
 
-enum NewEntryStepID: String, CaseIterable, Identifiable, Sendable {
-    case headache
-    case medication
-    case triggers
-    case note
-    case review
-
-    var id: String { rawValue }
-}
-
-enum NewEntryStepStatus: String, Sendable {
-    case open
-    case active
-    case complete
-}
-
-struct NewEntryStepMetadata: Identifiable, Sendable {
-    let id: NewEntryStepID
-    let title: String
-    let subline: String
-    let symbolName: String
-    let colorToken: NewEntryStepColorToken
-    let status: NewEntryStepStatus?
-}
-
-enum NewEntryStepCatalog {
-    static let steps: [NewEntryStepMetadata] = [
-        NewEntryStepMetadata(
-            id: .headache,
-            title: "Kopfschmerz",
-            subline: "Wie stark ist es gerade?",
-            symbolName: "waveform.path.ecg",
-            colorToken: .coral,
-            status: nil
-        ),
-        NewEntryStepMetadata(
-            id: .medication,
-            title: "Medikation",
-            subline: "Hast du etwas genommen?",
-            symbolName: "pills.fill",
-            colorToken: .sageTeal,
-            status: nil
-        ),
-        NewEntryStepMetadata(
-            id: .triggers,
-            title: "Auslöser",
-            subline: "Was könnte eine Rolle gespielt haben?",
-            symbolName: "brain.head.profile",
-            colorToken: .blue,
-            status: nil
-        ),
-        NewEntryStepMetadata(
-            id: .note,
-            title: "Notiz",
-            subline: "Was möchtest du festhalten?",
-            symbolName: "note.text",
-            colorToken: .warmAmber,
-            status: nil
-        ),
-        NewEntryStepMetadata(
-            id: .review,
-            title: "Eintrag prüfen",
-            subline: "Alles bereit zum Speichern.",
-            symbolName: "checkmark.seal.fill",
-            colorToken: .purple,
-            status: nil
-        )
-    ]
-
-    static func metadata(for id: NewEntryStepID) -> NewEntryStepMetadata {
-        guard let metadata = steps.first(where: { $0.id == id }) else {
-            preconditionFailure("Fehlende Step-Metadaten für \(id.rawValue).")
-        }
-
-        return metadata
-    }
-}
-
-enum NewEntryStepColorToken: String, CaseIterable, Sendable {
-    case coral
-    case sageTeal
-    case blue
-    case warmAmber
-    case purple
-
-    var color: Color {
-        color(for: .light)
-    }
-
-    func color(for colorScheme: ColorScheme) -> Color {
-        let components = colorScheme == .dark ? darkComponents : lightComponents
-        return Color(red: components.red, green: components.green, blue: components.blue)
-    }
-
-    func softFill(for colorScheme: ColorScheme) -> Color {
-        color(for: colorScheme).opacity(0.16)
-    }
-
-    func selectedFill(for colorScheme: ColorScheme) -> Color {
-        color(for: colorScheme).opacity(0.24)
-    }
-
-    func border(for colorScheme: ColorScheme) -> Color {
-        color(for: colorScheme).opacity(0.36)
-    }
-
-    private var lightComponents: ColorComponents {
-        switch self {
-        case .coral:
-            ColorComponents(red: 0.98, green: 0.39, blue: 0.33)
-        case .sageTeal:
-            ColorComponents(red: 0.23, green: 0.61, blue: 0.52)
-        case .blue:
-            ColorComponents(red: 0.24, green: 0.47, blue: 0.84)
-        case .warmAmber:
-            ColorComponents(red: 0.82, green: 0.52, blue: 0.19)
-        case .purple:
-            ColorComponents(red: 0.54, green: 0.38, blue: 0.82)
-        }
-    }
-
-    private var darkComponents: ColorComponents {
-        switch self {
-        case .coral:
-            ColorComponents(red: 1.00, green: 0.56, blue: 0.50)
-        case .sageTeal:
-            ColorComponents(red: 0.48, green: 0.82, blue: 0.73)
-        case .blue:
-            ColorComponents(red: 0.50, green: 0.67, blue: 1.00)
-        case .warmAmber:
-            ColorComponents(red: 0.96, green: 0.70, blue: 0.38)
-        case .purple:
-            ColorComponents(red: 0.75, green: 0.62, blue: 1.00)
-        }
-    }
-}
+typealias NewEntryStepID = InputFlowStepID
+typealias NewEntryStepStatus = InputFlowStepStatus
+typealias NewEntryStepMetadata = InputFlowStepMetadata
+typealias NewEntryStepCatalog = InputFlowStepCatalog
+typealias NewEntryStepColorToken = InputFlowStepColorToken
 
 struct StepIcon: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let metadata: NewEntryStepMetadata
 
     init(_ metadata: NewEntryStepMetadata) {
@@ -147,19 +14,11 @@ struct StepIcon: View {
     }
 
     var body: some View {
-        Image(systemName: metadata.symbolName)
-            .font(.title3.weight(.semibold))
-            .foregroundStyle(metadata.colorToken.color(for: colorScheme))
-            .frame(width: 44, height: 44)
-            .background(metadata.colorToken.softFill(for: colorScheme))
-            .clipShape(Circle())
-            .accessibilityHidden(true)
+        InputFlowStepIcon(metadata)
     }
 }
 
 struct ProgressIndicator: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let currentStep: Int
     let totalSteps: Int
     let colorToken: NewEntryStepColorToken
@@ -171,36 +30,11 @@ struct ProgressIndicator: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(clampedCurrentStep) von \(safeTotalSteps)")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("Schritt \(clampedCurrentStep) von \(safeTotalSteps)")
-
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.secondary.opacity(0.18))
-
-                    Capsule()
-                        .fill(colorToken.color(for: colorScheme))
-                        .frame(width: proxy.size.width * progress)
-                }
-            }
-            .frame(height: 6)
-        }
-    }
-
-    private var safeTotalSteps: Int {
-        max(totalSteps, 1)
-    }
-
-    private var clampedCurrentStep: Int {
-        min(max(currentStep, 1), safeTotalSteps)
-    }
-
-    private var progress: Double {
-        Double(clampedCurrentStep) / Double(safeTotalSteps)
+        InputFlowProgressView(
+            currentStep: currentStep,
+            totalSteps: totalSteps,
+            theme: InputFlowStepTheme(colorToken: colorToken)
+        )
     }
 }
 
@@ -302,10 +136,4 @@ struct MultiSelectGrid: View {
             selection.insert(option)
         }
     }
-}
-
-private struct ColorComponents: Sendable {
-    let red: Double
-    let green: Double
-    let blue: Double
 }
