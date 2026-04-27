@@ -115,6 +115,8 @@ nonisolated enum SymiSize {
     static let homeCalendarDayNumber: CGFloat = 36
     static let quickEntryIcon: CGFloat = 58
     static let quickEntryMinHeight: CGFloat = 108
+    static let homePatternIcon: CGFloat = 34
+    static let homePatternEmptyIcon: CGFloat = 38
     static let trendChartHeight: CGFloat = 88
     static let reviewStepIcon: CGFloat = 44
     static let reviewSummaryIcon: CGFloat = 42

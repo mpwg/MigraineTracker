@@ -224,6 +224,52 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func homePatternPreviewRequiresEnoughPainEpisodes() async throws {
+        let repository = EpisodeRepositoryMock()
+        repository.recentRecords = [
+            makeEpisode(id: UUID(), startedAt: .now, intensity: 5, type: .migraine),
+            makeEpisode(id: UUID(), startedAt: .now.addingTimeInterval(-86_400), intensity: 3, type: .unclear),
+            makeEpisode(id: UUID(), startedAt: .now.addingTimeInterval(-172_800), intensity: 4, type: .headache)
+        ]
+
+        let result = try await LoadHomePatternPreviewUseCase(repository: repository).execute()
+
+        #expect(result.totalPainEpisodeCount == 2)
+        #expect(result.hasEnoughData == false)
+        #expect(result.cards.isEmpty)
+    }
+
+    @Test
+    func homePatternPreviewBuildsCautiousCardsFromPainEpisodes() async throws {
+        let repository = EpisodeRepositoryMock()
+        let monday = Date(timeIntervalSince1970: 1_711_929_600)
+        let tuesday = monday.addingTimeInterval(86_400)
+        let weather = WeatherRecord(
+            recordedAt: monday,
+            condition: "Regen",
+            temperature: 12,
+            humidity: 80,
+            pressure: 1_004,
+            precipitation: 1.2,
+            weatherCode: 61,
+            source: "Apple Weather"
+        )
+        repository.recentRecords = [
+            makeEpisode(id: UUID(), startedAt: monday, intensity: 6, type: .migraine, symptoms: ["Übelkeit"], menstruationStatus: .active, weather: weather),
+            makeEpisode(id: UUID(), startedAt: monday.addingTimeInterval(3_600), intensity: 5, type: .headache, symptoms: ["Übelkeit"], menstruationStatus: .expected, weather: weather),
+            makeEpisode(id: UUID(), startedAt: tuesday, intensity: 4, type: .migraine, symptoms: ["Lichtempfindlichkeit"], weather: weather)
+        ]
+
+        let result = try await LoadHomePatternPreviewUseCase(repository: repository).execute()
+
+        #expect(result.hasEnoughData)
+        #expect(result.cards.map(\.kind) == [.frequentDay, .weatherSymptoms, .menstruationCycle])
+        #expect(result.cards.first?.title == "Häufigster Tag")
+        #expect(result.cards.contains { $0.title == "Wetter & Symptome" })
+        #expect(result.cards.contains { $0.isWide })
+    }
+
+    @Test
     func loadSettingsUseCaseCountsActiveTrashAndConflicts() async throws {
         let episodeRepository = EpisodeRepositoryMock()
         let medicationRepository = MedicationCatalogRepositoryMock()
@@ -361,25 +407,34 @@ private final class SyncServiceMock: SyncService {
     func resolveConflictUsingRemote(_ conflict: SyncConflict) async {}
 }
 
-private func makeEpisode(id: UUID, startedAt: Date, intensity: Int, deletedAt: Date? = nil) -> EpisodeRecord {
+private func makeEpisode(
+    id: UUID,
+    startedAt: Date,
+    intensity: Int,
+    deletedAt: Date? = nil,
+    type: EpisodeType = .migraine,
+    symptoms: [String] = [],
+    menstruationStatus: MenstruationStatus = .unknown,
+    weather: WeatherRecord? = nil
+) -> EpisodeRecord {
     EpisodeRecord(
         id: id,
         startedAt: startedAt,
         endedAt: nil,
         updatedAt: startedAt,
         deletedAt: deletedAt,
-        type: .migraine,
+        type: type,
         intensity: intensity,
         painLocation: "",
         painCharacter: "",
         notes: "",
-        symptoms: [],
+        symptoms: symptoms,
         triggers: [],
         functionalImpact: "",
-        menstruationStatus: .unknown,
+        menstruationStatus: menstruationStatus,
         medications: [],
         continuousMedicationChecks: [],
-        weather: nil,
+        weather: weather,
         healthContext: nil
     )
 }

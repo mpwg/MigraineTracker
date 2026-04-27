@@ -7,6 +7,7 @@ struct HomeView: View {
     @State private var displayedMonth = Calendar.current.startOfMonth(for: .now)
     @State private var selectedDay = Calendar.current.startOfDay(for: .now)
     @State private var calendarMonthData = HistoryMonthData(month: Calendar.current.startOfMonth(for: .now), episodesByDay: [:])
+    @State private var patternPreviewData = HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
     @State private var isPresentingEpisodeEditor = false
 
     init(appContainer: AppContainer) {
@@ -23,7 +24,7 @@ struct HomeView: View {
         }
         .navigationTitle(ProductBranding.displayName)
         .task(id: displayedMonth) {
-            await reloadCalendarMonth()
+            await reloadAll()
         }
         .refreshable {
             await reloadAll()
@@ -50,6 +51,10 @@ struct HomeView: View {
 
                 QuickEntryCard(selectedDay: selectedDay) {
                     isPresentingEpisodeEditor = true
+                }
+
+                HomePatternPreviewSection(data: patternPreviewData) {
+                    HomeInsightsView(data: patternPreviewData)
                 }
 
                 FeelingCheckInCard()
@@ -92,6 +97,9 @@ struct HomeView: View {
                     QuickEntryCard(selectedDay: selectedDay) {
                         isPresentingEpisodeEditor = true
                     }
+                    HomePatternPreviewSection(data: patternPreviewData) {
+                        HomeInsightsView(data: patternPreviewData)
+                    }
                     FeelingCheckInCard()
                 }
 
@@ -119,11 +127,16 @@ struct HomeView: View {
 
     private func reloadAll() async {
         await reloadCalendarMonth()
+        await reloadPatternPreview()
     }
 
     private func reloadCalendarMonth() async {
         let month = displayedMonth
         calendarMonthData = (try? await LoadHistoryMonthUseCase(repository: appContainer.episodeRepository).execute(month: month)) ?? HistoryMonthData(month: month, episodesByDay: [:])
+    }
+
+    private func reloadPatternPreview() async {
+        patternPreviewData = (try? await LoadHomePatternPreviewUseCase(repository: appContainer.episodeRepository).execute()) ?? HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
     }
 
     private func showPreviousMonth() {
@@ -417,6 +430,176 @@ private struct QuickEntryCard: View {
 private struct HomeCalendarDay: Identifiable {
     let id = UUID()
     let date: Date?
+}
+
+private struct HomePatternPreviewSection<Destination: View>: View {
+    let data: HomePatternPreviewData
+    @ViewBuilder let destination: Destination
+
+    init(data: HomePatternPreviewData, @ViewBuilder destination: () -> Destination) {
+        self.data = data
+        self.destination = destination()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.md) {
+                Text("Deine Muster")
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+
+                Spacer(minLength: SymiSpacing.sm)
+
+                NavigationLink {
+                    destination
+                } label: {
+                    Label("Mehr ansehen", systemImage: "chevron.right")
+                        .labelStyle(.titleOnly)
+                        .font(.subheadline.weight(.semibold))
+                }
+                .accessibilityHint("Öffnet die Insights-Ansicht.")
+            }
+
+            if data.hasEnoughData, !data.cards.isEmpty {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: SymiSpacing.md) {
+                    ForEach(data.cards) { card in
+                        HomePatternCard(card: card)
+                            .gridCellColumns(card.isWide ? 2 : 1)
+                    }
+                }
+            } else {
+                HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var columns: [GridItem] {
+        [
+            GridItem(.flexible(minimum: 140), spacing: SymiSpacing.md, alignment: .top),
+            GridItem(.flexible(minimum: 140), spacing: SymiSpacing.md, alignment: .top)
+        ]
+    }
+}
+
+private struct HomePatternCard: View {
+    let card: HomePatternPreviewCard
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+            Image(systemName: card.systemImage)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(AppTheme.symiPetrol)
+                .frame(width: SymiSize.homePatternIcon, height: SymiSize.homePatternIcon)
+                .background(AppTheme.symiSage.opacity(SymiOpacity.secondaryFill), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text(card.title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .textCase(.uppercase)
+
+                Text(card.value)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
+            }
+
+            Text(card.detail)
+                .font(.footnote)
+                .foregroundStyle(AppTheme.symiTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(SymiSpacing.lg)
+        .frame(maxWidth: .infinity, minHeight: card.isWide ? 138 : 168, alignment: .topLeading)
+        .background(AppTheme.cardGradient, in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous)
+                .stroke(AppTheme.symiPetrol.opacity(SymiOpacity.hairline), lineWidth: SymiStroke.hairline)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct HomePatternEmptyState: View {
+    let recordedCount: Int
+
+    var body: some View {
+        HStack(alignment: .top, spacing: SymiSpacing.md) {
+            Image(systemName: "sparkles")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(AppTheme.symiCoral)
+                .frame(width: SymiSize.homePatternEmptyIcon, height: SymiSize.homePatternEmptyIcon)
+                .background(AppTheme.symiCoral.opacity(SymiOpacity.clearAccent), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+
+                Text(emptyStateText)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(SymiSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.symiOnAccent.opacity(SymiOpacity.strongSurface), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous)
+                .stroke(AppTheme.symiSage.opacity(SymiOpacity.selectedFill), lineWidth: SymiStroke.hairline)
+        }
+    }
+
+    private var emptyStateText: String {
+        if recordedCount >= HomePatternPreviewData.minimumEpisodeCount {
+            return "Es gibt schon genug Einträge, aber noch keinen wiederkehrenden Hinweis, den wir ruhig anzeigen würden."
+        }
+
+        if recordedCount == 0 {
+            return "Wenn du ein paar Schmerz- oder Migräneeinträge erfasst hast, zeigen wir hier vorsichtige Hinweise."
+        }
+
+        return "\(recordedCount) von 3 nötigen Schmerz- oder Migräneeinträgen sind vorhanden."
+    }
+
+    private var title: String {
+        recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "Noch kein ruhiger Hinweis" : "Noch nicht genug Einträge"
+    }
+}
+
+private struct HomeInsightsView: View {
+    let data: HomePatternPreviewData
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
+                Text("Diese Hinweise basieren nur auf deinen bisherigen Schmerz- und Migräneeinträgen. Sie ersetzen keine medizinische Einschätzung.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if data.hasEnoughData, !data.cards.isEmpty {
+                    VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                        ForEach(data.cards) { card in
+                            HomePatternCard(card: card)
+                        }
+                    }
+                } else {
+                    HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount)
+                }
+            }
+            .padding(.horizontal, SymiSpacing.xxl)
+            .padding(.vertical, SymiSpacing.xl)
+            .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
+        }
+        .brandScreen()
+        .navigationTitle("Deine Muster")
+    }
 }
 
 struct AdaptiveDashboardCard<Content: View>: View {
