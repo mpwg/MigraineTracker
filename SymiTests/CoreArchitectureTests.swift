@@ -232,7 +232,10 @@ struct CoreArchitectureTests {
             makeEpisode(id: UUID(), startedAt: .now.addingTimeInterval(-172_800), intensity: 4, type: .headache)
         ]
 
-        let result = try await LoadHomePatternPreviewUseCase(repository: repository).execute()
+        let result = try await LoadHomePatternPreviewUseCase(
+            repository: repository,
+            insightEngine: InsightEngine()
+        ).execute()
 
         #expect(result.totalPainEpisodeCount == 2)
         #expect(result.hasEnoughData == false)
@@ -240,33 +243,120 @@ struct CoreArchitectureTests {
     }
 
     @Test
-    func homePatternPreviewBuildsCautiousCardsFromPainEpisodes() async throws {
-        let repository = EpisodeRepositoryMock()
-        let monday = Date(timeIntervalSince1970: 1_711_929_600)
-        let tuesday = monday.addingTimeInterval(86_400)
-        let weather = WeatherRecord(
-            recordedAt: monday,
-            condition: "Regen",
-            temperature: 12,
-            humidity: 80,
-            pressure: 1_004,
-            precipitation: 1.2,
-            weatherCode: 61,
-            source: "Apple Weather"
-        )
-        repository.recentRecords = [
-            makeEpisode(id: UUID(), startedAt: monday, intensity: 6, type: .migraine, symptoms: ["Übelkeit"], menstruationStatus: .active, weather: weather),
-            makeEpisode(id: UUID(), startedAt: monday.addingTimeInterval(3_600), intensity: 5, type: .headache, symptoms: ["Übelkeit"], menstruationStatus: .expected, weather: weather),
-            makeEpisode(id: UUID(), startedAt: tuesday, intensity: 4, type: .migraine, symptoms: ["Lichtempfindlichkeit"], weather: weather)
+    func insightEngineIgnoresUnclearEpisodesForAverageAndMinimumCount() {
+        let engine = InsightEngine()
+        let start = fixedDate()
+        let episodes = [
+            makeEpisode(id: UUID(), startedAt: start, intensity: 6, type: .migraine),
+            makeEpisode(id: UUID(), startedAt: start, intensity: 6, type: .headache),
+            makeEpisode(id: UUID(), startedAt: start, intensity: 6, type: .migraine),
+            makeEpisode(id: UUID(), startedAt: start, intensity: 6, type: .headache),
+            makeEpisode(id: UUID(), startedAt: start, intensity: 6, type: .migraine),
+            makeEpisode(id: UUID(), startedAt: start, intensity: 10, type: .unclear),
+            makeEpisode(id: UUID(), startedAt: start, intensity: 10, type: .unclear)
         ]
 
-        let result = try await LoadHomePatternPreviewUseCase(repository: repository).execute()
+        let result = engine.evaluate(episodes: episodes, calendar: fixedCalendar())
+        let average = result.insights.first { $0.category == .averageIntensity }
 
-        #expect(result.hasEnoughData)
-        #expect(result.cards.map(\.kind) == [.frequentDay, .weatherSymptoms, .menstruationCycle])
-        #expect(result.cards.first?.title == "Häufigster Tag")
-        #expect(result.cards.contains { $0.title == "Wetter & Symptome" })
-        #expect(result.cards.contains { $0.isWide })
+        #expect(result.totalQualifiedEpisodeCount == 5)
+        #expect(average?.title == "Durchschnitt 6/10")
+    }
+
+    @Test
+    func insightEngineReturnsNoArtificialInsightForEmptyData() {
+        let result = InsightEngine().evaluate(episodes: [], calendar: fixedCalendar())
+
+        #expect(result.totalQualifiedEpisodeCount == 0)
+        #expect(result.heroInsight == nil)
+        #expect(result.insights.isEmpty)
+    }
+
+    @Test
+    func insightEngineBuildsAverageIntensityInsight() {
+        let engine = InsightEngine()
+        let start = fixedDate()
+        let intensities = [4, 6, 8, 5, 7]
+        let episodes = intensities.enumerated().map { offset, intensity in
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(Double(offset) * 86_400), intensity: intensity)
+        }
+
+        let result = engine.evaluate(episodes: episodes, calendar: fixedCalendar())
+        let average = result.insights.first { $0.category == .averageIntensity }
+
+        #expect(average?.title == "Durchschnitt 6/10")
+        #expect(average?.description.contains("6 von 10") == true)
+        #expect(average?.confidence ?? 0 >= InsightScorer.confidenceThreshold)
+        #expect(abs((average?.importance ?? 0) - 0.6) < 0.001)
+    }
+
+    @Test
+    func insightEngineAppliesWeekdayAndTriggerThresholds() {
+        let engine = InsightEngine()
+        let start = fixedDate()
+        let weakEpisodes = (0 ..< 5).map { offset in
+            makeEpisode(
+                id: UUID(),
+                startedAt: start.addingTimeInterval(Double(offset) * 86_400),
+                intensity: 4,
+                triggers: offset < 2 ? ["Stress"] : []
+            )
+        }
+
+        let weakResult = engine.evaluate(episodes: weakEpisodes, calendar: fixedCalendar())
+
+        #expect(!weakResult.insights.contains { $0.category == .weekdayPattern })
+        #expect(!weakResult.insights.contains { $0.category == .triggerCorrelation })
+
+        let strongEpisodes = [
+            makeEpisode(id: UUID(), startedAt: start, intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(7 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(14 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(21 * 86_400), intensity: 8),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(86_400), intensity: 7)
+        ]
+
+        let strongResult = engine.evaluate(episodes: strongEpisodes, calendar: fixedCalendar())
+
+        #expect(strongResult.insights.contains { $0.category == .weekdayPattern })
+        #expect(strongResult.insights.contains { $0.category == .triggerCorrelation })
+    }
+
+    @Test
+    func insightEngineDetectsRisingAndFallingTrends() {
+        let engine = InsightEngine()
+        let start = fixedDate()
+        let rising = [2, 2, 3, 7, 8, 8].enumerated().map { offset, intensity in
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(Double(offset) * 86_400), intensity: intensity)
+        }
+        let falling = [8, 8, 7, 3, 2, 2].enumerated().map { offset, intensity in
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(Double(offset) * 86_400), intensity: intensity)
+        }
+
+        let risingTrend = engine.evaluate(episodes: rising, calendar: fixedCalendar()).insights.first { $0.category == .trend }
+        let fallingTrend = engine.evaluate(episodes: falling, calendar: fixedCalendar()).insights.first { $0.category == .trend }
+
+        #expect(risingTrend?.title == "Intensität steigt")
+        #expect(fallingTrend?.title == "Intensität fällt")
+    }
+
+    @Test
+    func insightEngineSortsByCombinedScoreAndExposesHeroInsight() {
+        let engine = InsightEngine()
+        let start = fixedDate()
+        let episodes = [
+            makeEpisode(id: UUID(), startedAt: start, intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(7 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(14 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(21 * 86_400), intensity: 8, triggers: ["Stress"]),
+            makeEpisode(id: UUID(), startedAt: start.addingTimeInterval(28 * 86_400), intensity: 8, triggers: ["Stress"])
+        ]
+
+        let result = engine.evaluate(episodes: episodes, calendar: fixedCalendar())
+
+        #expect(Array(result.insights.map(\.category).prefix(2)) == [.weekdayPattern, .triggerCorrelation])
+        #expect(result.heroInsight == result.insights.first)
+        #expect(result.heroInsight?.category == .weekdayPattern)
     }
 
     @Test
@@ -414,6 +504,7 @@ private func makeEpisode(
     deletedAt: Date? = nil,
     type: EpisodeType = .migraine,
     symptoms: [String] = [],
+    triggers: [String] = [],
     menstruationStatus: MenstruationStatus = .unknown,
     weather: WeatherRecord? = nil
 ) -> EpisodeRecord {
@@ -429,7 +520,7 @@ private func makeEpisode(
         painCharacter: "",
         notes: "",
         symptoms: symptoms,
-        triggers: [],
+        triggers: triggers,
         functionalImpact: "",
         menstruationStatus: menstruationStatus,
         medications: [],
@@ -437,6 +528,17 @@ private func makeEpisode(
         weather: weather,
         healthContext: nil
     )
+}
+
+private func fixedDate() -> Date {
+    Date(timeIntervalSince1970: 1_704_067_200)
+}
+
+private func fixedCalendar() -> Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    calendar.firstWeekday = 2
+    return calendar
 }
 
 private func sampleEnvelope() -> SyncDocumentEnvelope {

@@ -53,6 +53,16 @@
         }
       }
     },
+    "%@ %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@ %% Luftfeuchte" : {
       "localizations" : {
         "en" : {
@@ -376,6 +386,9 @@
       }
     },
     "Alle Details" : {
+
+    },
+    "Alle Einträge" : {
 
     },
     "Alles im Blick" : {
@@ -1676,6 +1689,7 @@
       }
     },
     "Heute" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1709,6 +1723,9 @@
       }
     },
     "In Sekunden eintragen" : {
+
+    },
+    "Insights" : {
 
     },
     "Intensität" : {
@@ -2390,6 +2407,9 @@
     "Öffnet die Insights-Ansicht." : {
 
     },
+    "Öffnet die Liste aller Einträge." : {
+
+    },
     "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
       "localizations" : {
         "en" : {
@@ -2825,6 +2845,9 @@
     "Skala" : {
 
     },
+    "So entstehen die Hinweise" : {
+
+    },
     "So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2954,6 +2977,9 @@
           }
         }
       }
+    },
+    "Symi wertet nur Migräne- und Kopfschmerz-Einträge aus. Ab %lld Einträgen entstehen Kandidaten für Wochentag, Trigger, Durchschnitt und Trend. Confidence kombiniert Musterstärke und Datenmenge; Importance kombiniert Relevanz und Intensität. Angezeigt wird erst ab 50 %% Confidence und 40 %% Importance, sortiert nach dem kombinierten Score." : {
+
     },
     "Symi-Bericht" : {
       "localizations" : {
@@ -3425,6 +3451,9 @@
           }
         }
       }
+    },
+    "Wichtigster Hinweis" : {
+
     },
     "Wiederherstellen" : {
       "localizations" : {

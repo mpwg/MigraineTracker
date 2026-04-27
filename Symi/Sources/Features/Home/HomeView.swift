@@ -118,7 +118,10 @@ struct HomeView: View {
     }
 
     private func reloadPatternPreview() async {
-        patternPreviewData = (try? await LoadHomePatternPreviewUseCase(repository: appContainer.episodeRepository).execute()) ?? HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
+        patternPreviewData = (try? await LoadHomePatternPreviewUseCase(
+            repository: appContainer.episodeRepository,
+            insightEngine: appContainer.insightEngine
+        ).execute()) ?? HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
     }
 
     private func showPreviousMonth() {
@@ -557,7 +560,7 @@ private struct HomePatternEmptyState: View {
             return "Wenn du ein paar Schmerz- oder Migräneeinträge erfasst hast, zeigen wir hier vorsichtige Hinweise."
         }
 
-        return "\(recordedCount) von 3 nötigen Schmerz- oder Migräneeinträgen sind vorhanden."
+        return "\(recordedCount) von \(HomePatternPreviewData.minimumEpisodeCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden."
     }
 
     private var title: String {
@@ -571,7 +574,7 @@ private struct HomePatternEmptyState: View {
 
 struct InsightsView: View {
     let appContainer: AppContainer
-    @State private var data = HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
+    @State private var data = InsightResult(totalQualifiedEpisodeCount: 0, insights: [])
 
     var body: some View {
         ScrollView {
@@ -591,15 +594,15 @@ struct InsightsView: View {
     }
 
     private func reload() async {
-        data = (try? await LoadHomePatternPreviewUseCase(repository: appContainer.episodeRepository).execute()) ?? HomePatternPreviewData(
-            totalPainEpisodeCount: 0,
-            cards: []
-        )
+        data = (try? await LoadInsightResultUseCase(
+            repository: appContainer.episodeRepository,
+            insightEngine: appContainer.insightEngine
+        ).execute()) ?? InsightResult(totalQualifiedEpisodeCount: 0, insights: [])
     }
 }
 
 private struct HomeInsightsContent: View {
-    let data: HomePatternPreviewData
+    let data: InsightResult
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
@@ -608,16 +611,105 @@ private struct HomeInsightsContent: View {
                 .foregroundStyle(AppTheme.symiTextSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if data.hasEnoughData, !data.cards.isEmpty {
+            if data.hasEnoughData, let heroInsight = data.heroInsight {
                 VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                    ForEach(data.cards) { card in
-                        HomePatternCard(card: card)
+                    InsightHeroCard(insight: heroInsight)
+
+                    ForEach(data.insights.dropFirst()) { insight in
+                        HomePatternCard(card: HomePatternPreviewCard(insight: insight))
                     }
                 }
             } else {
-                HomePatternEmptyState(recordedCount: data.totalPainEpisodeCount)
+                HomePatternEmptyState(recordedCount: data.totalQualifiedEpisodeCount)
+            }
+
+            InsightMethodSummary()
+        }
+    }
+}
+
+private struct InsightHeroCard: View {
+    let insight: Insight
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            HStack(alignment: .center, spacing: SymiSpacing.md) {
+                Image(systemName: insight.systemImage ?? insight.category.fallbackSystemImage)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.symiOnAccent)
+                    .frame(width: 44, height: 44)
+                    .background(AppTheme.petrol(for: colorScheme), in: Circle())
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                    Text("Wichtigster Hinweis")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                        .textCase(.uppercase)
+
+                    Text(insight.title)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Text(insight.description)
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: SymiSpacing.sm) {
+                InsightScorePill(label: "Confidence", value: insight.confidence)
+                InsightScorePill(label: "Importance", value: insight.importance)
             }
         }
+        .padding(SymiSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .homeSurface()
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("insights-hero")
+    }
+}
+
+private struct InsightScorePill: View {
+    let label: String
+    let value: Double
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Text("\(label) \(percentageText)")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(AppTheme.petrol(for: colorScheme))
+            .padding(.horizontal, SymiSpacing.sm)
+            .padding(.vertical, SymiSpacing.compact)
+            .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface), in: Capsule())
+    }
+
+    private var percentageText: String {
+        "\(Int((value * 100).rounded())) %"
+    }
+}
+
+private struct InsightMethodSummary: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+            Label("So entstehen die Hinweise", systemImage: "function")
+                .font(.headline)
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+
+            Text("Symi wertet nur Migräne- und Kopfschmerz-Einträge aus. Ab \(InsightEngine.minimumQualifiedEpisodeCount) Einträgen entstehen Kandidaten für Wochentag, Trigger, Durchschnitt und Trend. Confidence kombiniert Musterstärke und Datenmenge; Importance kombiniert Relevanz und Intensität. Angezeigt wird erst ab 50 % Confidence und 40 % Importance, sortiert nach dem kombinierten Score.")
+                .font(.footnote)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(SymiSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .homeSurface()
+        .accessibilityIdentifier("insights-method-summary")
     }
 }
 

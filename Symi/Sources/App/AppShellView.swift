@@ -21,8 +21,8 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .diary: "book.closed"
-        case .insights: "chart.line.uptrend.xyaxis"
+        case .diary: "book.pages"
+        case .insights: "sparkle.magnifyingglass"
         case .export: "square.and.arrow.up"
         case .settings: "gearshape"
         case .information: "hand.raised"
