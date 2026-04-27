@@ -73,6 +73,9 @@
         }
       }
     },
+    "%@ Bereich" : {
+
+    },
     "%@ Bericht" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -107,6 +110,9 @@
         }
       }
     },
+    "%@ Tab" : {
+
+    },
     "%@ wird aus SwiftData entfernt." : {
       "localizations" : {
         "en" : {
@@ -123,6 +129,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ will be moved to the trash."
+          }
+        }
+      }
+    },
+    "%@, %@. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@. %3$@"
           }
         }
       }
@@ -348,9 +364,6 @@
           }
         }
       }
-    },
-    "Aktueller Zustand" : {
-
     },
     "Alle" : {
       "localizations" : {
@@ -866,9 +879,6 @@
         }
       }
     },
-    "Deine Daten gehören dir." : {
-
-    },
     "Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -879,6 +889,9 @@
           }
         }
       }
+    },
+    "Deine Muster" : {
+
     },
     "Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht." : {
       "localizations" : {
@@ -1017,6 +1030,9 @@
         }
       }
     },
+    "Diese Hinweise basieren nur auf deinen bisherigen Schmerz- und Migräneeinträgen. Sie ersetzen keine medizinische Einschätzung." : {
+
+    },
     "Diese Notiz wird mit deinem Eintrag von heute verknüpft." : {
 
     },
@@ -1150,9 +1166,6 @@
           }
         }
       }
-    },
-    "Eine schnelle Einschätzung reicht. Details kannst du im Eintrag ergänzen." : {
-
     },
     "Einschränkung: %@" : {
       "localizations" : {
@@ -2181,6 +2194,9 @@
         }
       }
     },
+    "Mehr ansehen" : {
+
+    },
     "Mehr gute Tage" : {
 
     },
@@ -2220,6 +2236,9 @@
     "Monat" : {
 
     },
+    "Monatskalender %@" : {
+
+    },
     "Muster verstehen" : {
 
     },
@@ -2254,9 +2273,6 @@
         }
       }
     },
-    "Neuen Eintrag erstellen" : {
-
-    },
     "Neuer Eintrag" : {
       "localizations" : {
         "en" : {
@@ -2266,9 +2282,6 @@
           }
         }
       }
-    },
-    "Neuer Flow" : {
-
     },
     "Nicht alles ist überall verfügbar" : {
       "extractionState" : "stale",
@@ -2373,6 +2386,9 @@
           }
         }
       }
+    },
+    "Öffnet die Insights-Ansicht." : {
+
     },
     "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
       "localizations" : {
@@ -2718,9 +2734,6 @@
         }
       }
     },
-    "Schnelleintrag" : {
-
-    },
     "Schneller Eintrag" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2896,10 +2909,10 @@
     "Startdatum" : {
 
     },
-    "Startet den Schnelleintrag für %@." : {
+    "Starte einen neuen Eintrag" : {
 
     },
-    "Startet mit %@ und führt dich Schritt für Schritt durch den Eintrag." : {
+    "Startet einen neuen Eintrag." : {
 
     },
     "Status" : {
@@ -2941,9 +2954,6 @@
           }
         }
       }
-    },
-    "Symi bleibt lokal nutzbar. Sync und Export passieren nur, wenn du sie aktiv nutzt." : {
-
     },
     "Symi-Bericht" : {
       "localizations" : {
@@ -3295,7 +3305,7 @@
     "Was war heute anders?" : {
 
     },
-    "Website und Support: symiapp.com" : {
+    "Wechselt den angezeigten Monat im Home-Kalender." : {
 
     },
     "Weitere Angaben" : {

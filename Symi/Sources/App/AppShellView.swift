@@ -67,6 +67,8 @@ struct AppShellView: View {
                 .tag(section)
             }
         }
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 
     private var regularRoot: some View {
