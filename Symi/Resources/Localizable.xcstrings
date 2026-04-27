@@ -1200,6 +1200,9 @@
         }
       }
     },
+    "Eingenommen" : {
+
+    },
     "Einschränkung: %@" : {
       "localizations" : {
         "en" : {
@@ -2282,6 +2285,9 @@
       }
     },
     "Mit leerem Store starten" : {
+
+    },
+    "Mögliche Auslöser" : {
 
     },
     "Monatskalender %@" : {
