@@ -57,16 +57,9 @@ struct EpisodeDetailView: View {
             .padding(.top, SymiSpacing.xl)
             .padding(.bottom, SymiSpacing.entryDetailBottomPadding)
         }
-        .background(SymiColors.warmBackground.color.ignoresSafeArea())
+        .background(ColorToken.Surface.appBackground.ignoresSafeArea())
         .overlay(alignment: .top) {
-            LinearGradient(
-                colors: [
-                    SymiColors.warmBackground.color,
-                    SymiColors.warmBackground.color.opacity(SymiOpacity.entryDetailTopFadeEnd)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            ColorToken.Surface.topFade
             .frame(height: SymiSize.entryDetailTopFadeHeight)
             .allowsHitTesting(false)
         }
@@ -74,7 +67,7 @@ struct EpisodeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
-        .tint(SymiColors.primaryPetrol.color)
+        .tint(ColorToken.Brand.primary)
         .task {
             await reload()
         }
@@ -144,23 +137,23 @@ private struct EntryDetailHeader: View {
             Button(action: onBack) {
                 Image(systemName: "chevron.left")
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(SymiColors.textPrimary.color)
+                    .foregroundStyle(ColorToken.Text.onSurface)
                     .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
-                    .background(SymiColors.onAccent.color, in: Circle())
+                    .background(ColorToken.Surface.headerControlBackground, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Zurück")
 
             Text(title)
                 .font(.system(.headline, design: .rounded).weight(.semibold))
-                .foregroundStyle(SymiColors.textPrimary.color)
+                .foregroundStyle(ColorToken.Text.onSurface)
                 .lineLimit(1)
                 .minimumScaleFactor(SymiTypography.compactScaleFactor)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             Button("Bearbeiten", action: onEdit)
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .foregroundStyle(SymiColors.primaryPetrol.color)
+                .foregroundStyle(ColorToken.Brand.primary)
                 .frame(minHeight: SymiSize.minInteractiveHeight)
                 .buttonStyle(.plain)
         }
@@ -169,16 +162,24 @@ private struct EntryDetailHeader: View {
 
 private enum EntryDetailSurface {
     static let cornerRadius: CGFloat = 28
-    static let shadowColor = SymiColors.primaryPetrol.color.opacity(SymiOpacity.entryDetailShadow)
+    static let shadowColor = ColorToken.Shadow.card
     static let shadowRadius: CGFloat = 24
     static let shadowYOffset: CGFloat = 10
-    static let cardFill = SymiColors.entryDetailCard.color
-    static let highlight = SymiColors.onAccent.color.opacity(SymiOpacity.entryDetailHighlight)
-    static let iconFill = SymiColors.entryDetailIconFill.color
+    static let cardFill = ColorToken.Surface.primary
+    static let highlight = ColorToken.Surface.cardHighlight
+    static let iconFill = ColorToken.Surface.iconBackground
 }
 
 private struct EntryDetailHeroCard: View {
     let episode: EpisodeRecord
+
+    private var painLevel: PainLevel {
+        PainLevel(intensity: episode.intensity)
+    }
+
+    private var painToken: PainToken {
+        ColorToken.Pain.token(for: painLevel)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.entryDetailHeroSpacing) {
@@ -186,33 +187,33 @@ private struct EntryDetailHeroCard: View {
                 VStack(alignment: .leading, spacing: SymiSpacing.compact) {
                     Text("Intensität")
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .foregroundStyle(SymiColors.textSecondary.color)
+                        .foregroundStyle(ColorToken.Text.label)
 
                     VStack(alignment: .leading, spacing: SymiSpacing.zero) {
                         Text(JournalEntryContext.intensityLabel(for: episode.intensity))
                             .font(SymiTypography.entryDetailIntensityTitle)
-                            .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailPrimaryText))
+                            .foregroundStyle(painToken.emphasizedText)
                             .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
                         Text("\(episode.intensity)/10")
                             .font(.system(.title2, design: .rounded).weight(.semibold))
-                            .foregroundStyle(SymiColors.textSecondary.color)
+                            .foregroundStyle(ColorToken.Text.label)
                             .monospacedDigit()
                     }
                 }
 
                 Spacer(minLength: SymiSpacing.md)
 
-                EntryDetailFaceBadge()
+                EntryDetailFaceBadge(painLevel: painLevel, painToken: painToken)
             }
 
-            EntryDetailProgressBar(value: Double(episode.intensity) / 10)
+            EntryDetailProgressBar(value: Double(episode.intensity) / 10, painToken: painToken)
                 .accessibilityLabel("Intensität")
                 .accessibilityValue("\(episode.intensity) von 10")
 
             Text(intensityDescription)
                 .font(.system(.body, design: .rounded).weight(.medium))
-                .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailBodyText))
+                .foregroundStyle(painToken.descriptionText)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(SymiSpacing.entryDetailHeroPadding)
@@ -245,14 +246,17 @@ private struct EntryDetailHeroCard: View {
 }
 
 private struct EntryDetailFaceBadge: View {
+    let painLevel: PainLevel
+    let painToken: PainToken
+
     var body: some View {
         ZStack {
             Circle()
-                .fill(SymiColors.entryDetailFaceFill.color)
+                .fill(painToken.faceBackground)
 
-            CalmFaceIcon()
+            CalmFaceIcon(painLevel: painLevel)
                 .stroke(
-                    SymiColors.primaryPetrol.color.opacity(SymiOpacity.entryDetailFaceStroke),
+                    painToken.icon,
                     style: StrokeStyle(lineWidth: SymiStroke.entryDetailFaceIcon, lineCap: .round, lineJoin: .round)
                 )
                 .frame(width: SymiSize.entryDetailFaceIcon, height: SymiSize.entryDetailFaceIcon)
@@ -263,6 +267,8 @@ private struct EntryDetailFaceBadge: View {
 }
 
 private struct CalmFaceIcon: Shape {
+    let painLevel: PainLevel
+
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let width = rect.width
@@ -270,24 +276,87 @@ private struct CalmFaceIcon: Shape {
 
         path.addEllipse(in: CGRect(x: width * 0.06, y: height * 0.04, width: width * 0.88, height: height * 0.90))
 
-        path.move(to: CGPoint(x: width * 0.34, y: height * 0.40))
-        path.addLine(to: CGPoint(x: width * 0.34, y: height * 0.42))
+        path.move(to: CGPoint(x: width * 0.34, y: leftEyeStartY * height))
+        path.addLine(to: CGPoint(x: width * 0.34, y: leftEyeEndY * height))
 
-        path.move(to: CGPoint(x: width * 0.66, y: height * 0.40))
-        path.addLine(to: CGPoint(x: width * 0.66, y: height * 0.42))
+        path.move(to: CGPoint(x: width * 0.66, y: rightEyeStartY * height))
+        path.addLine(to: CGPoint(x: width * 0.66, y: rightEyeEndY * height))
 
-        path.move(to: CGPoint(x: width * 0.36, y: height * 0.63))
+        path.move(to: CGPoint(x: width * 0.36, y: mouthY * height))
         path.addQuadCurve(
-            to: CGPoint(x: width * 0.64, y: height * 0.63),
-            control: CGPoint(x: width * 0.50, y: height * 0.67)
+            to: CGPoint(x: width * 0.64, y: mouthY * height),
+            control: CGPoint(x: width * 0.50, y: mouthControlY * height)
         )
 
         return path
+    }
+
+    private var leftEyeStartY: CGFloat {
+        switch painLevel {
+        case .high:
+            0.38
+        case .none, .low, .medium:
+            0.40
+        }
+    }
+
+    private var leftEyeEndY: CGFloat {
+        switch painLevel {
+        case .high:
+            0.42
+        case .none, .low, .medium:
+            0.42
+        }
+    }
+
+    private var rightEyeStartY: CGFloat {
+        switch painLevel {
+        case .high:
+            0.38
+        case .none, .low, .medium:
+            0.40
+        }
+    }
+
+    private var rightEyeEndY: CGFloat {
+        switch painLevel {
+        case .high:
+            0.42
+        case .none, .low, .medium:
+            0.42
+        }
+    }
+
+    private var mouthY: CGFloat {
+        switch painLevel {
+        case .none:
+            0.63
+        case .low:
+            0.64
+        case .medium:
+            0.63
+        case .high:
+            0.64
+        }
+    }
+
+    private var mouthControlY: CGFloat {
+        switch painLevel {
+        case .none:
+            0.68
+        case .low:
+            0.62
+        case .medium:
+            0.67
+        case .high:
+            0.59
+        }
     }
 }
 
 private struct EntryDetailProgressBar: View {
     let value: Double
+    let painToken: PainToken
 
     var body: some View {
         GeometryReader { proxy in
@@ -295,24 +364,13 @@ private struct EntryDetailProgressBar: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.primary.opacity(SymiOpacity.entryDetailProgressTrack))
+                    .fill(ColorToken.Surface.progressTrack)
 
                 Capsule()
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(stops: [
-                                .init(color: SymiColors.noteAmber.color.opacity(SymiOpacity.entryDetailProgressStart), location: 0),
-                                .init(color: SymiColors.entryDetailProgressWarmMid.color, location: 0.36),
-                                .init(color: SymiColors.entryDetailProgressSageMid.color, location: 0.70),
-                                .init(color: SymiColors.sage.color.opacity(SymiOpacity.entryDetailProgressEnd), location: 1)
-                            ]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .fill(painToken.progressGradient)
                     .overlay(alignment: .top) {
                         Capsule()
-                            .fill(SymiColors.onAccent.color.opacity(SymiOpacity.entryDetailProgressHighlight))
+                            .fill(ColorToken.Surface.progressHighlight)
                             .frame(height: SymiSize.entryDetailProgressHighlightHeight)
                             .padding(.horizontal, SymiSize.accessibilityMarker)
                     }
@@ -326,11 +384,20 @@ private struct EntryDetailProgressBar: View {
 private struct EntryDetailContextCard: View {
     let episode: EpisodeRecord
 
+    private var painLevel: PainLevel {
+        PainLevel(intensity: episode.intensity)
+    }
+
     private var rows: [EntryDetailContextRowModel] {
         [
             EntryDetailContextRowModel(systemImage: "clock", title: JournalEntryContext.timeOfDay(for: episode.startedAt)),
-            EntryDetailContextRowModel(systemImage: "brain.head.profile", title: painLocationText, hierarchy: .secondary),
-            EntryDetailContextRowModel(systemImage: "note.text", title: noteText, hierarchy: .tertiary)
+            EntryDetailContextRowModel(
+                systemImage: "brain.head.profile",
+                title: painLocationText,
+                hierarchy: .secondary,
+                category: .pain(painLevel)
+            ),
+            EntryDetailContextRowModel(systemImage: "note.text", title: noteText, hierarchy: .tertiary, category: .note)
         ]
     }
 
@@ -370,7 +437,7 @@ private struct EntryDetailContextRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: SymiSpacing.lg) {
-            EntryDetailContextIcon(systemImage: row.systemImage)
+            EntryDetailContextIcon(systemImage: row.systemImage, category: row.category)
 
             Text(row.title)
                 .font(row.hierarchy.font)
@@ -386,12 +453,13 @@ private struct EntryDetailContextRow: View {
 
 private struct EntryDetailContextIcon: View {
     let systemImage: String
+    let category: EntryDetailContextCategory
 
     var body: some View {
         Image(systemName: systemImage)
             .symbolRenderingMode(.monochrome)
             .font(.system(size: iconSize, weight: .medium, design: .rounded))
-            .foregroundStyle(SymiColors.primaryPetrol.color.opacity(SymiOpacity.entryDetailIcon))
+            .foregroundStyle(category.iconColor)
             .frame(width: SymiSize.entryDetailContextIcon, height: SymiSize.entryDetailContextIcon)
             .offset(iconOffset)
             .background(EntryDetailSurface.iconFill, in: Circle())
@@ -427,9 +495,9 @@ private struct EntryDetailTriggerSection: View {
         VStack(alignment: .leading, spacing: SymiSpacing.entryDetailTriggerSectionSpacing) {
             Text("Mögliche Auslöser")
                 .font(.system(.headline, design: .rounded).weight(.semibold))
-                .foregroundStyle(SymiColors.textPrimary.color)
+                .foregroundStyle(ColorToken.Text.onSurface)
 
-            LazyVGrid(columns: columns, alignment: .leading, spacing: SymiSpacing.entryDetailTriggerGridSpacing) {
+            LazyVGrid(columns: columns, alignment: chipAlignment, spacing: SymiSpacing.entryDetailTriggerGridSpacing) {
                 ForEach(visibleTriggers, id: \.self) { trigger in
                     EntryDetailTriggerChip(title: trigger)
                 }
@@ -455,8 +523,18 @@ private struct EntryDetailTriggerSection: View {
         triggers.map(\.trimmed).filter { !$0.isEmpty }
     }
 
+    private var chipAlignment: HorizontalAlignment {
+        visibleTriggers.count == 1 ? .center : .leading
+    }
+
     private var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: SymiSize.multiSelectGridMinWidth), spacing: SymiSpacing.entryDetailTriggerGridColumnSpacing, alignment: .leading)]
+        [
+            GridItem(
+                .adaptive(minimum: SymiSize.entryDetailTriggerGridMinWidth),
+                spacing: SymiSpacing.entryDetailTriggerGridColumnSpacing,
+                alignment: .leading
+            )
+        ]
     }
 }
 
@@ -466,12 +544,12 @@ private struct EntryDetailTriggerChip: View {
     var body: some View {
         Text(title)
             .font(.system(.subheadline, design: .rounded).weight(.semibold))
-            .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailTriggerChipText))
+            .foregroundStyle(ColorToken.Trigger.foreground)
             .lineLimit(1)
             .minimumScaleFactor(SymiTypography.tightChipScaleFactor)
             .padding(.horizontal, SymiSpacing.entryDetailTriggerChipHorizontalPadding)
             .padding(.vertical, SymiSpacing.entryDetailTriggerChipVerticalPadding)
-            .background(SymiColors.sage.color.opacity(SymiOpacity.entryDetailTriggerChipFill), in: Capsule())
+            .background(ColorToken.Trigger.background, in: Capsule())
     }
 }
 
@@ -482,11 +560,11 @@ private struct EntryDetailMedicationCard: View {
         VStack(alignment: .leading, spacing: SymiSpacing.xs) {
             Text("Eingenommen")
                 .font(.system(.headline, design: .rounded).weight(.semibold))
-                .foregroundStyle(SymiColors.textPrimary.color)
+                .foregroundStyle(ColorToken.Medication.foreground)
 
             Text(medicationText)
                 .font(.system(.body, design: .rounded).weight(.medium))
-                .foregroundStyle(SymiColors.textSecondary.color)
+                .foregroundStyle(ColorToken.Text.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(SymiSpacing.entryDetailMedicationCardPadding)
@@ -515,7 +593,7 @@ private struct EntryDetailDeleteAction: View {
     var body: some View {
         Button("Löschen", role: .destructive, action: onDelete)
             .font(.system(.body, design: .rounded).weight(.semibold))
-            .foregroundStyle(SymiColors.intensityStrong.color.opacity(SymiOpacity.entryDetailDeleteText))
+            .foregroundStyle(ColorToken.Text.destructive)
             .frame(maxWidth: .infinity, minHeight: SymiSize.entryDetailDeleteHeight)
             .buttonStyle(EntryDetailDestructiveTextButtonStyle())
             .padding(.top, SymiSpacing.micro)
@@ -552,6 +630,7 @@ private struct EntryDetailContextRowModel: Identifiable {
     let systemImage: String
     let title: String
     var hierarchy: EntryDetailContextHierarchy = .primary
+    var category: EntryDetailContextCategory = .neutral
 }
 
 private enum EntryDetailContextHierarchy {
@@ -573,11 +652,11 @@ private enum EntryDetailContextHierarchy {
     var color: Color {
         switch self {
         case .primary:
-            SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailPrimaryText)
+            ColorToken.Text.primary
         case .secondary:
-            SymiColors.textPrimary.color.opacity(SymiOpacity.entryDetailSecondaryText)
+            ColorToken.Text.secondary
         case .tertiary:
-            SymiColors.textSecondary.color.opacity(SymiOpacity.entryDetailTertiaryText)
+            ColorToken.Text.tertiary
         }
     }
 
@@ -587,6 +666,23 @@ private enum EntryDetailContextHierarchy {
             1
         case .tertiary:
             2
+        }
+    }
+}
+
+private enum EntryDetailContextCategory {
+    case neutral
+    case pain(PainLevel)
+    case note
+
+    var iconColor: Color {
+        switch self {
+        case .neutral:
+            ColorToken.Neutral.icon
+        case let .pain(level):
+            ColorToken.Pain.token(for: level).icon
+        case .note:
+            ColorToken.Text.secondary
         }
     }
 }

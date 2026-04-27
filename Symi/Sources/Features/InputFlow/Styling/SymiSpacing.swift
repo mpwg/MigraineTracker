@@ -186,6 +186,7 @@ nonisolated enum SymiSize {
     static let entryDetailProgressBarHeight: CGFloat = 11
     static let entryDetailProgressHighlightHeight: CGFloat = 2
     static let entryDetailContextIcon: CGFloat = 32
+    static let entryDetailTriggerGridMinWidth: CGFloat = 118
     static let entryDetailDeleteHeight: CGFloat = 54
     static let emptyStateMinHeight: CGFloat = 360
     static let defaultWindowWidth: CGFloat = 1280
