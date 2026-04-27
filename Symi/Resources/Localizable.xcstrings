@@ -419,6 +419,7 @@
       }
     },
     "Als Wiederholungseinnahme dokumentiert" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -469,6 +470,7 @@
       }
     },
     "Anzahl: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1051,6 +1053,7 @@
 
     },
     "Diese Episode wird in den Papierkorb verschoben." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1064,6 +1067,9 @@
 
     },
     "Diese Option entfernt die lokalen Store-Dateien erst nach deiner Bestätigung und erstellt danach einen neuen leeren Store." : {
+
+    },
+    "Dieser Eintrag wird in den Papierkorb verschoben." : {
 
     },
     "Dokumentationshilfe" : {
@@ -1257,6 +1263,9 @@
         }
       }
     },
+    "Eintrag nicht gefunden" : {
+
+    },
     "Eintrag speichern" : {
       "localizations" : {
         "en" : {
@@ -1400,6 +1409,7 @@
       }
     },
     "Episode löschen?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1410,6 +1420,7 @@
       }
     },
     "Episode nicht gefunden" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1420,6 +1431,7 @@
       }
     },
     "Episodendetail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3488,6 +3500,7 @@
       }
     },
     "Wirkung: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3498,6 +3511,7 @@
       }
     },
     "Wirkungseintritt: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

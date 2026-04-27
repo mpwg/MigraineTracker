@@ -230,6 +230,7 @@ nonisolated enum SymiOpacity {
     static let journalSelectedStroke: Double = 0.80
     static let heroPrimaryWave: Double = 0.82
     static let journalChipFill: Double = 0.84
+    static let journalPressed: Double = 0.88
     static let strongText: Double = 0.82
     static let heroSecondaryText: Double = 0.86
     static let heroAccentWave: Double = 0.92

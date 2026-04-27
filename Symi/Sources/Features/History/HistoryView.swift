@@ -36,6 +36,7 @@ struct HistoryView: View {
                     JournalEntryGroups(
                         groupedEpisodes: groupedEpisodes,
                         appContainer: appContainer,
+                        onChanged: { Task { await reloadJournal() } },
                         onEdit: { controller.editingEpisodeID = $0 },
                         onDelete: { controller.pendingDeletionID = $0 }
                     )
@@ -167,7 +168,8 @@ private enum JournalPalette {
     static let card = SymiColors.onAccent.color
     static let accent = SymiColors.sage.color
     static let ink = SymiColors.journalInk.color
-    static let secondary = SymiColors.journalTextSecondary.color
+    static let primaryText = SymiColors.textPrimary.color
+    static let secondary = SymiColors.textSecondary.color
     static let border = Color.primary.opacity(SymiOpacity.journalBorder)
     static let chipFill = SymiColors.onAccent.color.opacity(SymiOpacity.journalChipFill)
     static let selectedChipFill = SymiColors.journalSelectedChipFill.color
@@ -469,6 +471,7 @@ private struct JournalRemovableChip: View {
 private struct JournalEntryGroups: View {
     let groupedEpisodes: [JournalDayGroup]
     let appContainer: AppContainer
+    let onChanged: () -> Void
     let onEdit: (UUID) -> Void
     let onDelete: (UUID) -> Void
 
@@ -476,22 +479,26 @@ private struct JournalEntryGroups: View {
         if groupedEpisodes.isEmpty {
             JournalEmptyState()
         } else {
-            VStack(alignment: .leading, spacing: SymiSpacing.xl) {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxxl) {
                 ForEach(groupedEpisodes) { group in
-                    VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                    VStack(alignment: .leading, spacing: SymiSpacing.sm) {
                         Text(group.day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                             .font(.system(.headline, design: .rounded).weight(.bold))
                             .foregroundStyle(JournalPalette.ink)
                             .accessibilityAddTraits(.isHeader)
 
-                        VStack(spacing: SymiSpacing.md) {
+                        VStack(spacing: SymiSpacing.sm) {
                             ForEach(group.episodes) { episode in
                                 NavigationLink {
-                                    EpisodeDetailView(appContainer: appContainer, episodeID: episode.id)
+                                    EpisodeDetailView(
+                                        appContainer: appContainer,
+                                        episodeID: episode.id,
+                                        onChanged: onChanged
+                                    )
                                 } label: {
                                     JournalEntryCard(episode: episode)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(JournalEntryButtonStyle())
                                 .contextMenu {
                                     Button("Bearbeiten", systemImage: "pencil") {
                                         onEdit(episode.id)
@@ -522,8 +529,8 @@ private struct JournalEntryCard: View {
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.sm) {
                     Text(intensityTitle)
-                        .font(.system(.headline, design: .rounded).weight(.bold))
-                        .foregroundStyle(intensityColor)
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(JournalPalette.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
@@ -533,6 +540,11 @@ private struct JournalEntryCard: View {
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(JournalPalette.secondary)
                         .monospacedDigit()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(JournalPalette.secondary.opacity(SymiOpacity.secondaryActionText))
+                        .accessibilityHidden(true)
                 }
 
                 Text(subtitle)
@@ -562,144 +574,15 @@ private struct JournalEntryCard: View {
     }
 
     private var intensityTitle: String {
-        "\(intensityLabel) • \(episode.intensity)/10"
-    }
-
-    private var intensityLabel: String {
-        switch episode.intensity {
-        case 1 ... 3:
-            "Leicht"
-        case 4 ... 6:
-            "Mittel"
-        case 7 ... 10:
-            "Stark"
-        default:
-            "Nicht bewertet"
-        }
+        JournalEntryContext.title(for: episode)
     }
 
     private var intensityColor: Color {
-        switch episode.intensity {
-        case 1 ... 3:
-            return SymiColors.intensityLight.color
-        case 4 ... 6:
-            return SymiColors.intensityMedium.color
-        case 7 ... 10:
-            return SymiColors.intensityStrong.color
-        default:
-            return JournalPalette.ink
-        }
+        JournalEntryContext.intensityColor(for: episode.intensity)
     }
 
     private var subtitle: String {
-        if !episode.notes.trimmed.isEmpty {
-            return episode.notes.trimmed
-        }
-
-        if let medicationSummary {
-            return medicationSummary
-        }
-
-        if let triggerSummary {
-            return triggerSummary
-        }
-
-        if let additionalContext {
-            return additionalContext
-        }
-
-        return "Keine weiteren Details"
-    }
-
-    private var medicationSummary: String? {
-        let medicationNames = episode.medications
-            .map(\.name)
-            .map(\.trimmed)
-            .filter { !$0.isEmpty }
-
-        if !medicationNames.isEmpty {
-            return "\(medicationNames.prefix(2).joined(separator: ", ")) genommen"
-        }
-
-        let continuousMedicationNames = episode.continuousMedicationChecks
-            .map(\.name)
-            .map(\.trimmed)
-            .filter { !$0.isEmpty }
-
-        if !continuousMedicationNames.isEmpty {
-            return "Medikation erfasst: \(continuousMedicationNames.prefix(2).joined(separator: ", "))"
-        }
-
-        return nil
-    }
-
-    private var triggerSummary: String? {
-        guard let trigger = episode.triggers.map(\.trimmed).first(where: { !$0.isEmpty }) else {
-            return nil
-        }
-
-        switch trigger {
-        case "Schlaf":
-            return "Nach dem Schlafen"
-        case "Ernährung":
-            return "Nach dem Essen"
-        case "Bewegung":
-            return "Nach Bewegung"
-        case "Bildschirmzeit":
-            return "Nach Bildschirmzeit"
-        case "Stress":
-            return "Stress notiert"
-        case "Wetter":
-            return "Wetter als Auslöser"
-        case "Zyklus":
-            return "Zyklus notiert"
-        case "Flüssigkeit":
-            return "Flüssigkeit notiert"
-        default:
-            return "\(trigger) notiert"
-        }
-    }
-
-    private var additionalContext: String? {
-        if !episode.painLocation.trimmed.isEmpty {
-            return episode.painLocation.trimmed
-        }
-
-        if !episode.painCharacter.trimmed.isEmpty {
-            return episode.painCharacter.trimmed
-        }
-
-        if !episode.functionalImpact.trimmed.isEmpty {
-            return episode.functionalImpact.trimmed
-        }
-
-        return dayPartContext ?? intensityContext
-    }
-
-    private var dayPartContext: String? {
-        switch episode.dayPart {
-        case .morgens:
-            return "Am Morgen"
-        case .mittags:
-            return "Am Nachmittag"
-        case .abends:
-            return "Am Abend"
-        case .nacht:
-            return "In der Nacht"
-        }
-    }
-
-    private var intensityContext: String? {
-        switch episode.intensity {
-        case 1 ... 3:
-            return "Leichter Verlauf"
-        case 4 ... 6:
-            return "Mittlerer Verlauf"
-        case 7 ... 10:
-            return "Starker Verlauf"
-        default:
-            return nil
-        }
+        JournalEntryContext.subtitle(for: episode)
     }
 
     private var accessibilityLabel: String {
@@ -711,6 +594,15 @@ private struct JournalEntryCard: View {
         parts.append(subtitle)
 
         return parts.joined(separator: ", ")
+    }
+}
+
+private struct JournalEntryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(configuration.isPressed ? SymiOpacity.journalPressed : SymiOpacity.opaque)
+            .animation(.snappy(duration: SymiAnimation.quickDuration), value: configuration.isPressed)
     }
 }
 
