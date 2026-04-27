@@ -38,6 +38,7 @@
       }
     },
     "%@ · Intensität %lld/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -52,6 +53,9 @@
           }
         }
       }
+    },
+    "%@ / 10" : {
+
     },
     "%@ %@" : {
       "localizations" : {
@@ -96,6 +100,9 @@
           }
         }
       }
+    },
+    "%@ entfernen" : {
+
     },
     "%@ heute genommen" : {
 
@@ -196,6 +203,7 @@
       }
     },
     "%lld Eintrag%@ · Höchste Intensität %lld/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -210,6 +218,9 @@
           }
         }
       }
+    },
+    "%lld Einträge im gewählten Zeitraum" : {
+
     },
     "%lld von 10" : {
 
@@ -286,6 +297,9 @@
           }
         }
       }
+    },
+    "Ab" : {
+
     },
     "Abbrechen" : {
       "localizations" : {
@@ -405,6 +419,7 @@
       }
     },
     "Als Wiederholungseinnahme dokumentiert" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -455,6 +470,7 @@
       }
     },
     "Anzahl: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -906,6 +922,9 @@
     "Deine Muster" : {
 
     },
+    "Deine Muster im Überblick" : {
+
+    },
     "Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht." : {
       "localizations" : {
         "en" : {
@@ -1034,6 +1053,7 @@
 
     },
     "Diese Episode wird in den Papierkorb verschoben." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1043,13 +1063,13 @@
         }
       }
     },
-    "Diese Hinweise basieren nur auf deinen bisherigen Schmerz- und Migräneeinträgen. Sie ersetzen keine medizinische Einschätzung." : {
-
-    },
     "Diese Notiz wird mit deinem Eintrag von heute verknüpft." : {
 
     },
     "Diese Option entfernt die lokalen Store-Dateien erst nach deiner Bestätigung und erstellt danach einen neuen leeren Store." : {
+
+    },
+    "Dieser Eintrag wird in den Papierkorb verschoben." : {
 
     },
     "Dokumentationshilfe" : {
@@ -1220,9 +1240,6 @@
         }
       }
     },
-    "Eintrag erstellen" : {
-
-    },
     "Eintrag gespeichert" : {
       "localizations" : {
         "en" : {
@@ -1245,6 +1262,9 @@
           }
         }
       }
+    },
+    "Eintrag nicht gefunden" : {
+
     },
     "Eintrag speichern" : {
       "localizations" : {
@@ -1389,6 +1409,7 @@
       }
     },
     "Episode löschen?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1399,6 +1420,7 @@
       }
     },
     "Episode nicht gefunden" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1409,6 +1431,7 @@
       }
     },
     "Episodendetail" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1495,6 +1518,7 @@
       }
     },
     "Export" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1570,6 +1594,9 @@
         }
       }
     },
+    "Fertig" : {
+
+    },
     "Filter" : {
       "localizations" : {
         "en" : {
@@ -1597,6 +1624,7 @@
       }
     },
     "Für %@ ist noch nichts dokumentiert." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1890,6 +1918,9 @@
         }
       }
     },
+    "Keine Einträge" : {
+
+    },
     "Keine Einträge im Zeitraum" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2179,6 +2210,9 @@
         }
       }
     },
+    "Medikation" : {
+
+    },
     "Medizinische Einordnung" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2250,10 +2284,10 @@
     "Mit leerem Store starten" : {
 
     },
-    "Monat" : {
+    "Monatskalender %@" : {
 
     },
-    "Monatskalender %@" : {
+    "Muster erkannt" : {
 
     },
     "Muster verstehen" : {
@@ -2315,6 +2349,7 @@
 
     },
     "Noch kein Eintrag für diesen Tag." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2325,6 +2360,7 @@
       }
     },
     "Noch keine Einträge an diesem Tag" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2353,6 +2389,9 @@
           }
         }
       }
+    },
+    "Notizen durchsuchen" : {
+
     },
     "NSAR" : {
       "localizations" : {
@@ -2411,6 +2450,7 @@
 
     },
     "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2690,7 +2730,7 @@
     "ruhig" : {
 
     },
-    "Sanfte Verlaufsgrafik deiner letzten Einträge" : {
+    "Ruhiger Verlauf der dokumentierten Stärke" : {
 
     },
     "Schlaf %@ min" : {
@@ -2845,9 +2885,6 @@
     "Skala" : {
 
     },
-    "So entstehen die Hinweise" : {
-
-    },
     "So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2965,6 +3002,9 @@
         }
       }
     },
+    "Suche" : {
+
+    },
     "Support öffnen" : {
 
     },
@@ -2977,9 +3017,6 @@
           }
         }
       }
-    },
-    "Symi wertet nur Migräne- und Kopfschmerz-Einträge aus. Ab %lld Einträgen entstehen Kandidaten für Wochentag, Trigger, Durchschnitt und Trend. Confidence kombiniert Musterstärke und Datenmenge; Importance kombiniert Relevanz und Intensität. Angezeigt wird erst ab 50 %% Confidence und 40 %% Importance, sortiert nach dem kombinierten Score." : {
-
     },
     "Symi-Bericht" : {
       "localizations" : {
@@ -3452,9 +3489,6 @@
         }
       }
     },
-    "Wichtigster Hinweis" : {
-
-    },
     "Wiederherstellen" : {
       "localizations" : {
         "en" : {
@@ -3466,6 +3500,7 @@
       }
     },
     "Wirkung: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3476,6 +3511,7 @@
       }
     },
     "Wirkungseintritt: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3485,10 +3521,8 @@
         }
       }
     },
-    "Woche" : {
-
-    },
     "Zeigt die Episoden dieses Tages darunter an." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

@@ -2,8 +2,11 @@ import SwiftUI
 
 struct HistoryView: View {
     let appContainer: AppContainer
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var controller: HistoryController
+    @State private var searchText = ""
+    @State private var isSearchVisible = false
+    @State private var isFilterSheetPresented = false
+    @State private var filters = JournalFilters()
 
     init(appContainer: AppContainer) {
         self.appContainer = appContainer
@@ -11,58 +14,94 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            if horizontalSizeClass == .compact {
-                compactContent
+        List {
+            Section {
+                JournalFilterBar(filters: $filters)
+                    .listRowStyle()
+
+                if filters.hasActiveFilters {
+                    JournalActiveFilters(filters: $filters)
+                        .listRowStyle()
+                }
+
+                if isSearchVisible {
+                    JournalSearchField(text: $searchText)
+                        .listRowStyle()
+                }
+            }
+
+            if groupedEpisodes.isEmpty {
+                JournalEmptyState()
+                    .listRowStyle()
             } else {
-                regularContent
-            }
-        }
-        .background(AppTheme.appBackground.ignoresSafeArea())
-        .tint(AppTheme.ocean)
-        .navigationTitle("Tagebuch")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    DataExportView(appContainer: appContainer)
-                } label: {
-                    Label("Export", systemImage: "square.and.arrow.up")
-                }
-            }
+                ForEach(groupedEpisodes) { group in
+                    Section {
+                        ForEach(group.episodes) { episode in
+                            NavigationLink {
+                                EpisodeDetailView(
+                                    appContainer: appContainer,
+                                    episodeID: episode.id,
+                                    onChanged: { Task { await reloadJournal() } }
+                                )
+                            } label: {
+                                JournalEntryCard(episode: episode)
+                            }
+                            .buttonStyle(JournalEntryButtonStyle())
+                            .listRowStyle(bottomInset: SymiSpacing.sm)
+                            .contextMenu {
+                                Button("Bearbeiten", systemImage: "pencil") {
+                                    controller.editingEpisodeID = episode.id
+                                }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    controller.isPresentingNewEpisode = true
-                } label: {
-                    Label("Neuer Eintrag", systemImage: "plus.circle.fill")
-                }
-                .keyboardShortcut("n", modifiers: .command)
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    controller.isPresentingSettings = true
-                } label: {
-                    Label("Einstellungen", systemImage: "gearshape")
-                }
-            }
-        }
-        .sheet(isPresented: $controller.isPresentingNewEpisode) {
-            NavigationStack {
-                EpisodeEditorView(
-                    appContainer: appContainer,
-                    initialStartedAt: controller.defaultStartDateForSelectedDay(),
-                    onSaved: {
-                        controller.isPresentingNewEpisode = false
-                        controller.handleSavedEpisode()
+                                Button("Löschen", systemImage: "trash", role: .destructive) {
+                                    controller.pendingDeletionID = episode.id
+                                }
+                            }
+                        }
+                    } header: {
+                        Text(group.day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(JournalPalette.ink)
+                            .textCase(nil)
+                            .padding(.top, SymiSpacing.xl)
+                            .accessibilityAddTraits(.isHeader)
                     }
-                )
+                }
             }
         }
-        .sheet(isPresented: $controller.isPresentingSettings) {
-            NavigationStack {
-                SettingsView(appContainer: appContainer)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(JournalPalette.background.ignoresSafeArea())
+        .tint(JournalPalette.ink)
+        .navigationTitle("Alle Einträge")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    isFilterSheetPresented = true
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                }
+                .accessibilityLabel("Filter")
+
+                Button {
+                    isSearchVisible.toggle()
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                .accessibilityLabel("Suche")
             }
+        }
+        .animation(.snappy(duration: SymiAnimation.quickDuration), value: isSearchVisible)
+        .refreshable {
+            await reloadJournal()
+        }
+        .task {
+            await reloadJournal()
+        }
+        .sheet(isPresented: $isFilterSheetPresented) {
+            JournalFilterSheet(filters: $filters)
+                .presentationDetents([.medium, .large])
         }
         .sheet(item: editingEpisodeBinding) { episodeID in
             NavigationStack {
@@ -105,107 +144,6 @@ struct HistoryView: View {
         }
     }
 
-    private var compactContent: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
-            insightSection
-            calendarSection
-
-            Button {
-                controller.isPresentingNewEpisode = true
-            } label: {
-                Text("Eintrag erstellen")
-            }
-            .buttonStyle(SymiPrimaryButtonStyle())
-            .accessibilityHint("Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag.")
-
-            selectedDaySection
-        }
-        .padding(.horizontal, SymiSpacing.lg)
-        .padding(.vertical, SymiSpacing.xxl)
-    }
-
-    private var regularContent: some View {
-        HStack(alignment: .top, spacing: AppTheme.dashboardSpacing) {
-            VStack(alignment: .leading, spacing: AppTheme.dashboardSpacing) {
-                insightSection
-                calendarSection
-            }
-            .frame(minWidth: SymiSize.historySidebarMinWidth, maxWidth: SymiSize.historySidebarMaxWidth, alignment: .top)
-
-            selectedDaySection
-                .frame(maxWidth: .infinity, alignment: .top)
-        }
-        .padding(SymiSpacing.xxxl)
-        .wideContent()
-    }
-
-    private var calendarSection: some View {
-        contentSection(
-            title: "Kalender",
-            footer: "Weiche Punkte zeigen Tage mit Einträgen. Wähle einen Tag, um Details zu sehen."
-        ) {
-            VStack(alignment: .leading, spacing: SymiSpacing.lg) {
-                MonthHeader(
-                    month: controller.displayedMonth,
-                    onPrevious: controller.goToPreviousMonth,
-                    onNext: controller.goToNextMonth
-                )
-
-                MonthGrid(
-                    month: controller.displayedMonth,
-                    selectedDay: Binding(
-                        get: { controller.selectedDay },
-                        set: { controller.selectDay($0) }
-                    ),
-                    episodesByDay: controller.episodesByDay
-                )
-            }
-        }
-    }
-
-    private var insightSection: some View {
-        contentSection(title: "Verstehen") {
-            VStack(alignment: .leading, spacing: SymiSpacing.secondaryButtonVerticalPadding) {
-                Text(insightTitle)
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(AppTheme.symiPetrol)
-                Text(insightDetail)
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
-
-                Picker("Zeitraum", selection: .constant("Woche")) {
-                    Text("Woche").tag("Woche")
-                    Text("Monat").tag("Monat")
-                }
-                .pickerStyle(.segmented)
-
-                SoftTrendChart(values: recentIntensityValues)
-                    .frame(height: SymiSize.trendChartHeight)
-                    .accessibilityLabel("Sanfte Verlaufsgrafik deiner letzten Einträge")
-            }
-        }
-    }
-
-    private var selectedDaySection: some View {
-        contentSection(title: "Ausgewählter Tag") {
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                daySummary
-
-                if controller.selectedDayEpisodes.isEmpty {
-                    ContentUnavailableView(
-                        "Noch keine Einträge an diesem Tag",
-                        systemImage: "calendar",
-                        description: Text("Für \(controller.selectedDay.formatted(date: .complete, time: .omitted)) ist noch nichts dokumentiert.")
-                    )
-                } else {
-                    ForEach(controller.selectedDayEpisodes) { episode in
-                        episodeLink(for: episode)
-                    }
-                }
-            }
-        }
-    }
-
     private var editingEpisodeBinding: Binding<IdentifiedEpisodeID?> {
         Binding(
             get: { controller.editingEpisodeID.map(IdentifiedEpisodeID.init) },
@@ -218,358 +156,596 @@ struct HistoryView: View {
             return nil
         }
 
-        return controller.selectedDayEpisodes.first(where: { $0.id == id })
+        return controller.allEpisodes.first(where: { $0.id == id })
     }
 
-    @ViewBuilder
-    private func contentSection<Content: View>(title: String, footer: String? = nil, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            Text(title)
-                .font(.headline)
+    private var filteredEpisodes: [EpisodeRecord] {
+        controller.allEpisodes.filter { episode in
+            filters.matches(episode) &&
+                matchesSearch(episode)
+        }
+    }
 
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                content()
+    private var groupedEpisodes: [JournalDayGroup] {
+        let calendar = Calendar.current
+        let groups = Dictionary(grouping: filteredEpisodes) { episode in
+            calendar.startOfDay(for: episode.startedAt)
+        }
+
+        return groups
+            .map { day, episodes in
+                JournalDayGroup(day: day, episodes: episodes.sorted { $0.startedAt > $1.startedAt })
             }
-            .padding(SymiSpacing.lg)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .brandCard()
+            .sorted { $0.day > $1.day }
+    }
 
-            if let footer {
-                Text(footer)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+    private func matchesSearch(_ episode: EpisodeRecord) -> Bool {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            return true
+        }
+
+        return episode.notes.localizedCaseInsensitiveContains(query)
+    }
+
+    private func reloadJournal() async {
+        do {
+            try await controller.reloadJournalEntries()
+            controller.errorMessage = nil
+        } catch {
+            controller.errorMessage = "Einträge konnten nicht geladen werden."
+        }
+    }
+}
+
+private enum JournalPalette {
+    static let background = SymiColors.warmBackground.color
+    static let card = SymiColors.onAccent.color
+    static let accent = SymiColors.sage.color
+    static let ink = SymiColors.journalInk.color
+    static let primaryText = SymiColors.textPrimary.color
+    static let secondary = SymiColors.textSecondary.color
+    static let border = Color.primary.opacity(SymiOpacity.journalBorder)
+    static let chipFill = SymiColors.onAccent.color.opacity(SymiOpacity.journalChipFill)
+    static let selectedChipFill = SymiColors.journalSelectedChipFill.color
+    static let shadow = Color.primary.opacity(SymiOpacity.journalShadow)
+}
+
+private enum JournalDateRange: String, CaseIterable, Identifiable {
+    case all = "Alle"
+    case today = "Heute"
+    case sevenDays = "7 Tage"
+    case thirtyDays = "30 Tage"
+    case custom = "Custom"
+
+    var id: String { rawValue }
+}
+
+private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
+    case all = "Alle"
+    case light = "Leicht"
+    case medium = "Mittel"
+    case strong = "Stark"
+
+    var id: String { rawValue }
+
+    func matches(_ intensity: Int) -> Bool {
+        switch self {
+        case .all:
+            true
+        case .light:
+            (1 ... 3).contains(intensity)
+        case .medium:
+            (4 ... 6).contains(intensity)
+        case .strong:
+            (7 ... 10).contains(intensity)
+        }
+    }
+}
+
+private struct JournalFilters: Equatable {
+    var dateRange: JournalDateRange = .all
+    var customStartDate = Calendar.current.startOfDay(for: .now)
+    var intensity: JournalIntensityFilter = .all
+    var requiresNotes = false
+    var requiresMedication = false
+
+    var hasActiveFilters: Bool {
+        dateRange != .all || hasActivePrimaryFilters
+    }
+
+    var hasActivePrimaryFilters: Bool {
+        intensity != .all || requiresNotes || requiresMedication
+    }
+
+    func matches(_ episode: EpisodeRecord) -> Bool {
+        guard matchesDateRange(episode.startedAt) else {
+            return false
+        }
+
+        if !intensity.matches(episode.intensity) {
+            return false
+        }
+
+        if requiresNotes, episode.notes.trimmed.isEmpty {
+            return false
+        }
+
+        if requiresMedication, episode.medications.isEmpty && episode.continuousMedicationChecks.isEmpty {
+            return false
+        }
+
+        return true
+    }
+
+    private func matchesDateRange(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let day = calendar.startOfDay(for: date)
+
+        switch dateRange {
+        case .all:
+            return true
+        case .today:
+            return day == today
+        case .sevenDays:
+            guard let startDate = calendar.date(byAdding: .day, value: -7, to: today) else {
+                return true
+            }
+            return date >= startDate
+        case .thirtyDays:
+            guard let startDate = calendar.date(byAdding: .day, value: -30, to: today) else {
+                return true
+            }
+            return date >= startDate
+        case .custom:
+            return date >= calendar.startOfDay(for: customStartDate)
+        }
+    }
+}
+
+private struct JournalDayGroup: Identifiable {
+    let day: Date
+    let episodes: [EpisodeRecord]
+
+    var id: Date { day }
+}
+
+private struct JournalHeader: View {
+    @Binding var isSearchVisible: Bool
+    let onFilter: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
+            Text("Alle Einträge")
+                .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                .foregroundStyle(JournalPalette.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(SymiTypography.compactScaleFactor)
+                .accessibilityAddTraits(.isHeader)
+
+            Spacer(minLength: SymiSpacing.md)
+
+            Button(action: onFilter) {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .font(.headline.weight(.semibold))
+                    .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
+                    .background(JournalPalette.card, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Filter")
+
+            Button {
+                isSearchVisible.toggle()
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.headline.weight(.semibold))
+                    .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
+                    .background(JournalPalette.card, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Suche")
+        }
+    }
+}
+
+private struct JournalSearchField: View {
+    @Binding var text: String
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        TextField("Notizen durchsuchen", text: $text)
+            .font(.system(.body, design: .rounded))
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .padding(.horizontal, SymiSpacing.md)
+            .frame(minHeight: SymiSize.minInteractiveHeight)
+            .background(JournalPalette.card, in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous)
+                    .stroke(JournalPalette.border, lineWidth: SymiStroke.hairline)
+            )
+            .focused($isFocused)
+            .task {
+                isFocused = true
+            }
+    }
+}
+
+private struct JournalActiveFilters: View {
+    @Binding var filters: JournalFilters
+
+    var body: some View {
+        if filters.hasActiveFilters {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: SymiSpacing.xs) {
+                    if filters.dateRange != .all {
+                        JournalRemovableChip(title: dateRangeTitle) {
+                            filters.dateRange = .all
+                        }
+                    }
+
+                    if filters.intensity != .all {
+                        JournalRemovableChip(title: filters.intensity.rawValue) {
+                            filters.intensity = .all
+                        }
+                    }
+
+                    if filters.requiresNotes {
+                        JournalRemovableChip(title: "Mit Notizen") {
+                            filters.requiresNotes = false
+                        }
+                    }
+
+                    if filters.requiresMedication {
+                        JournalRemovableChip(title: "Medikation") {
+                            filters.requiresMedication = false
+                        }
+                    }
+                }
             }
         }
     }
 
-    private var daySummary: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.compact) {
-            Text(controller.daySummary.date.formatted(date: .complete, time: .omitted))
-                .font(.headline)
-
-            if controller.daySummary.episodeCount == 0 {
-                Text("Noch kein Eintrag für diesen Tag.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("\(controller.daySummary.episodeCount) Eintrag\(controller.daySummary.episodeCount == 1 ? "" : "e") · Höchste Intensität \(controller.daySummary.highestIntensity)/10")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, SymiSpacing.micro)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var insightTitle: String {
-        controller.daySummary.episodeCount == 0 ? "Mehr gute Tage beginnen mit Überblick." : "Wir sehen ein Muster."
-    }
-
-    private var insightDetail: String {
-        if controller.daySummary.episodeCount == 0 {
-            return "Noch kein Eintrag an diesem Tag. Deine nächsten Notizen machen den Kalender hilfreicher."
+    private var dateRangeTitle: String {
+        if filters.dateRange == .custom {
+            return filters.customStartDate.formatted(date: .abbreviated, time: .omitted)
         }
 
-        return "\(controller.daySummary.episodeCount) Eintrag\(controller.daySummary.episodeCount == 1 ? "" : "e") an diesem Tag, höchste Intensität \(controller.daySummary.highestIntensity)/10."
+        return filters.dateRange.rawValue
     }
+}
 
-    private var recentIntensityValues: [Int] {
-        let values = controller.selectedDayEpisodes.map(\.intensity)
-        return values.isEmpty ? [2, 4, 3, 6, 4, 5, 3] : values
-    }
+private struct JournalFilterBar: View {
+    @Binding var filters: JournalFilters
 
-    @ViewBuilder
-    private func episodeLink(for episode: EpisodeRecord) -> some View {
-        NavigationLink {
-            EpisodeDetailView(appContainer: appContainer, episodeID: episode.id)
-        } label: {
-            EpisodeRow(episode: episode)
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button("Löschen", role: .destructive) {
-                controller.pendingDeletionID = episode.id
-            }
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: SymiSpacing.xs) {
+                ForEach(JournalIntensityFilter.allCases) { intensity in
+                    JournalChip(
+                        title: intensity.rawValue,
+                        isSelected: filters.intensity == intensity
+                    ) {
+                        filters.intensity = intensity
+                    }
+                }
 
-            Button("Bearbeiten") {
-                controller.editingEpisodeID = episode.id
-            }
-            .tint(.accentColor)
-        }
-        .contextMenu {
-            Button("Bearbeiten", systemImage: "pencil") {
-                controller.editingEpisodeID = episode.id
-            }
+                JournalChip(
+                    title: "Mit Notizen",
+                    isSelected: filters.requiresNotes
+                ) {
+                    filters.requiresNotes.toggle()
+                }
 
-            Button("Löschen", systemImage: "trash", role: .destructive) {
-                controller.pendingDeletionID = episode.id
+                JournalChip(
+                    title: "Medikation",
+                    isSelected: filters.requiresMedication
+                ) {
+                    filters.requiresMedication.toggle()
+                }
             }
         }
     }
 }
 
-private struct EpisodeRow: View {
+private struct JournalChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .foregroundStyle(JournalPalette.ink)
+                .padding(.horizontal, SymiSpacing.md)
+                .frame(minHeight: SymiSize.minInteractiveHeight)
+                .background(isSelected ? JournalPalette.selectedChipFill : JournalPalette.chipFill, in: Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            isSelected ? JournalPalette.accent.opacity(SymiOpacity.journalSelectedStroke) : JournalPalette.border,
+                            lineWidth: SymiStroke.hairline
+                        )
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "")
+    }
+}
+
+private struct JournalRemovableChip: View {
+    let title: String
+    let onRemove: () -> Void
+
+    var body: some View {
+        Button(action: onRemove) {
+            HStack(spacing: SymiSpacing.compact) {
+                Text(title)
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(JournalPalette.ink)
+            .padding(.horizontal, SymiSpacing.md)
+            .frame(minHeight: SymiSize.journalActiveFilterChipMinHeight)
+            .background(JournalPalette.selectedChipFill, in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(JournalPalette.accent.opacity(SymiOpacity.journalSelectedStroke), lineWidth: SymiStroke.hairline)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title) entfernen")
+    }
+}
+
+private struct JournalEntryGroups: View {
+    let groupedEpisodes: [JournalDayGroup]
+    let appContainer: AppContainer
+    let onChanged: () -> Void
+    let onEdit: (UUID) -> Void
+    let onDelete: (UUID) -> Void
+
+    var body: some View {
+        if groupedEpisodes.isEmpty {
+            JournalEmptyState()
+        } else {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxxl) {
+                ForEach(groupedEpisodes) { group in
+                    VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+                        Text(group.day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(JournalPalette.ink)
+                            .accessibilityAddTraits(.isHeader)
+
+                        VStack(spacing: SymiSpacing.sm) {
+                            ForEach(group.episodes) { episode in
+                                NavigationLink {
+                                    EpisodeDetailView(
+                                        appContainer: appContainer,
+                                        episodeID: episode.id,
+                                        onChanged: onChanged
+                                    )
+                                } label: {
+                                    JournalEntryCard(episode: episode)
+                                }
+                                .buttonStyle(JournalEntryButtonStyle())
+                                .contextMenu {
+                                    Button("Bearbeiten", systemImage: "pencil") {
+                                        onEdit(episode.id)
+                                    }
+
+                                    Button("Löschen", systemImage: "trash", role: .destructive) {
+                                        onDelete(episode.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct JournalEntryCard: View {
     let episode: EpisodeRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.compact) {
-            Text(episode.startedAt.formatted(date: .abbreviated, time: .omitted))
-                .font(.headline)
+        HStack(spacing: SymiSpacing.md) {
+            RoundedRectangle(cornerRadius: SymiRadius.journalAccentBar, style: .continuous)
+                .fill(intensityColor)
+                .frame(width: SymiSize.journalAccentBarWidth)
 
-            Text(episode.startedAt.formatted(date: .omitted, time: .shortened))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.sm) {
+                    Text(intensityTitle)
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(JournalPalette.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
-            Text("\(episode.type.rawValue) · Intensität \(episode.intensity)/10")
-                .foregroundStyle(.secondary)
+                    Spacer(minLength: SymiSpacing.sm)
 
-            if !episode.medications.isEmpty || !episode.symptoms.isEmpty {
-                Text(episodeMetaLine)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    Text(episode.startedAt.formatted(date: .omitted, time: .shortened))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .foregroundStyle(JournalPalette.secondary)
+                        .monospacedDigit()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(JournalPalette.secondary.opacity(SymiOpacity.secondaryActionText))
+                        .accessibilityHidden(true)
+                }
+
+                Text(subtitle)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(JournalPalette.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, SymiSpacing.micro)
+        .padding(SymiSpacing.md)
+        .frame(maxWidth: .infinity, minHeight: SymiSize.journalEntryCardMinHeight, alignment: .leading)
+        .background(JournalPalette.card, in: RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous)
+                .stroke(JournalPalette.border, lineWidth: SymiStroke.hairline)
+        )
+        .shadow(
+            color: JournalPalette.shadow,
+            radius: SymiShadow.journalCardRadius,
+            x: SymiShadow.journalCardXOffset,
+            y: SymiShadow.journalCardYOffset
+        )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilitySummary)
+        .accessibilityLabel(accessibilityLabel)
         .accessibilityHint("Öffnet die Detailansicht des Eintrags.")
     }
 
-    private var episodeMetaLine: String {
-        var parts: [String] = []
-
-        if !episode.medications.isEmpty {
-            parts.append("\(episode.medications.count) Medikament(e)")
-        }
-
-        if !episode.symptoms.isEmpty {
-            parts.append(episode.symptoms.joined(separator: ", "))
-        }
-
-        return parts.joined(separator: " · ")
+    private var intensityTitle: String {
+        JournalEntryContext.title(for: episode)
     }
 
-    private var accessibilitySummary: String {
+    private var intensityColor: Color {
+        JournalEntryContext.intensityColor(for: episode.intensity)
+    }
+
+    private var subtitle: String {
+        JournalEntryContext.subtitle(for: episode)
+    }
+
+    private var accessibilityLabel: String {
         var parts = [
-            episode.startedAt.formatted(date: .complete, time: .shortened),
-            episode.type.rawValue,
-            "Intensität \(episode.intensity) von 10"
+            intensityTitle,
+            episode.startedAt.formatted(date: .complete, time: .shortened)
         ]
 
-        if !episodeMetaLine.isEmpty {
-            parts.append(episodeMetaLine)
-        }
+        parts.append(subtitle)
 
         return parts.joined(separator: ", ")
     }
 }
 
-private struct MonthHeader: View {
-    let month: Date
-    let onPrevious: () -> Void
-    let onNext: () -> Void
+private struct JournalEntryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .opacity(configuration.isPressed ? SymiOpacity.journalPressed : SymiOpacity.opaque)
+            .animation(.snappy(duration: SymiAnimation.quickDuration), value: configuration.isPressed)
+    }
+}
+
+private struct JournalEmptyState: View {
+    var body: some View {
+        VStack(spacing: SymiSpacing.zero) {
+            Text("Keine Einträge")
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .foregroundStyle(JournalPalette.ink)
+        }
+        .frame(maxWidth: .infinity, minHeight: SymiSize.journalEmptyStateMinHeight)
+        .background(JournalPalette.card, in: RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous)
+                .stroke(JournalPalette.border, lineWidth: SymiStroke.hairline)
+        )
+    }
+}
+
+private struct JournalFilterSheet: View {
+    @Binding var filters: JournalFilters
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        HStack {
-            Button(action: onPrevious) {
-                Image(systemName: "chevron.left")
+        NavigationStack {
+            Form {
+                Section("Zeitraum") {
+                    ForEach(JournalDateRange.allCases) { range in
+                        JournalDateRangeRow(
+                            title: range.rawValue,
+                            isSelected: filters.dateRange == range
+                        ) {
+                            filters.dateRange = range
+                        }
+                    }
+
+                    if filters.dateRange == .custom {
+                        DatePicker(
+                            "Ab",
+                            selection: $filters.customStartDate,
+                            displayedComponents: [.date]
+                        )
+                    }
+                }
             }
-            .padding(SymiSpacing.sm)
-            .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: SymiRadius.chip, style: .continuous))
-            .accessibilityLabel("Vorheriger Monat")
-
-            Spacer()
-
-            Text(month.formatted(.dateTime.month(.wide).year()))
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
-
-            Spacer()
-
-            Button(action: onNext) {
-                Image(systemName: "chevron.right")
+            .navigationTitle("Filter")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fertig") {
+                        dismiss()
+                    }
+                }
             }
-            .padding(SymiSpacing.sm)
-            .background(AppTheme.secondaryFill, in: RoundedRectangle(cornerRadius: SymiRadius.chip, style: .continuous))
-            .accessibilityLabel("Nächster Monat")
+        }
+    }
+}
+
+private struct JournalDateRangeRow: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: SymiSpacing.md) {
+                Text(title)
+                    .font(.system(.body, design: .rounded).weight(.medium))
+                    .foregroundStyle(JournalPalette.ink)
+
+                Spacer(minLength: SymiSpacing.md)
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(JournalPalette.accent)
+                }
+            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.vertical, SymiSpacing.xxs)
-    }
-}
-
-private struct MonthGrid: View {
-    let month: Date
-    @Binding var selectedDay: Date
-    let episodesByDay: [Date: [EpisodeRecord]]
-
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: SymiSpacing.xs), count: 7)
-
-    var body: some View {
-        VStack(spacing: SymiSpacing.md) {
-            LazyVGrid(columns: columns, spacing: SymiSpacing.xs) {
-                ForEach(weekdaySymbols, id: \.self) { symbol in
-                    Text(symbol)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-
-                ForEach(Array(dayCells.enumerated()), id: \.offset) { _, cell in
-                    if let date = cell.date {
-                        Button {
-                            selectedDay = date
-                        } label: {
-                            DayCell(
-                                date: date,
-                                isSelected: Calendar.current.isDate(date, inSameDayAs: selectedDay),
-                                episodeCount: episodesByDay[Calendar.current.startOfDay(for: date)]?.count ?? 0,
-                                peakIntensity: episodesByDay[Calendar.current.startOfDay(for: date)]?.map(\.intensity).max() ?? 0
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        Color.clear
-                            .frame(height: SymiSize.calendarWeekdayHeight)
-                    }
-                }
-            }
-        }
-    }
-
-    private var weekdaySymbols: [String] {
-        let calendar = Calendar.current
-        let symbols = calendar.shortStandaloneWeekdaySymbols
-        let first = calendar.firstWeekday - 1
-        return Array(symbols[first...] + symbols[..<first])
-    }
-
-    private var dayCells: [CalendarDay] {
-        let calendar = Calendar.current
-        let startOfMonth = calendar.startOfMonth(for: month)
-        let range = calendar.range(of: .day, in: .month, for: startOfMonth) ?? 1 ..< 1
-        let weekday = calendar.component(.weekday, from: startOfMonth)
-        let leadingEmptyDays = (weekday - calendar.firstWeekday + 7) % 7
-
-        var cells = Array(repeating: CalendarDay(date: nil), count: leadingEmptyDays)
-        cells += range.compactMap { day -> CalendarDay? in
-            guard let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) else {
-                return nil
-            }
-            return CalendarDay(date: date)
-        }
-
-        while cells.count % 7 != 0 {
-            cells.append(CalendarDay(date: nil))
-        }
-
-        return cells
-    }
-}
-
-private struct DayCell: View {
-    let date: Date
-    let isSelected: Bool
-    let episodeCount: Int
-    let peakIntensity: Int
-
-    var body: some View {
-        VStack(spacing: SymiSpacing.xxs) {
-            Text(date.formatted(.dateTime.day()))
-                .font(.subheadline.weight(.semibold))
-
-            if episodeCount > 0 {
-                Circle()
-                    .fill(intensityColor)
-                    .frame(width: SymiSize.calendarDot, height: SymiSize.calendarDot)
-            } else {
-                Spacer()
-                    .frame(height: SymiSize.calendarPlaceholderHeight)
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: SymiSize.calendarDayMinHeight)
-        .padding(.vertical, SymiSpacing.compact)
-        .background(isSelected ? AppTheme.selectedFill : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(isSelected ? "Ausgewählt" : "")
-        .accessibilityHint("Zeigt die Episoden dieses Tages darunter an.")
-    }
-
-    private var intensityColor: Color {
-        switch peakIntensity {
-        case 8...10: AppTheme.symiCoral
-        case 5...7: AppTheme.symiSage
-        default: AppTheme.seaGlass
-        }
-    }
-
-    private var accessibilityLabel: String {
-        if episodeCount == 0 {
-            return "\(date.formatted(date: .complete, time: .omitted)), keine Episoden"
-        }
-
-        return "\(date.formatted(date: .complete, time: .omitted)), \(episodeCount) Episode\(episodeCount == 1 ? "" : "n"), höchste Intensität \(peakIntensity) von 10"
-    }
-}
-
-private struct CalendarDay: Identifiable {
-    let id = UUID()
-    let date: Date?
-}
-
-private struct SoftTrendChart: View {
-    let values: [Int]
-
-    var body: some View {
-        GeometryReader { proxy in
-            let points = chartPoints(in: proxy.size)
-
-            ZStack(alignment: .bottomLeading) {
-                RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
-                    .fill(AppTheme.symiSage.opacity(SymiOpacity.softFill))
-
-                Path { path in
-                    guard let first = points.first else { return }
-                    path.move(to: first)
-                    for point in points.dropFirst() {
-                        path.addLine(to: point)
-                    }
-                }
-                .stroke(
-                    AppTheme.symiPetrol,
-                    style: StrokeStyle(lineWidth: SymiStroke.trendLine, lineCap: .round, lineJoin: .round)
-                )
-
-                ForEach(Array(points.enumerated()), id: \.offset) { _, point in
-                    Circle()
-                        .fill(AppTheme.symiCard)
-                        .frame(width: SymiSize.calendarDot, height: SymiSize.calendarDot)
-                        .overlay(Circle().stroke(AppTheme.symiPetrol, lineWidth: SymiSpacing.micro))
-                        .position(point)
-                }
-            }
-        }
-    }
-
-    private func chartPoints(in size: CGSize) -> [CGPoint] {
-        guard values.count > 1 else {
-            return [CGPoint(x: size.width / 2, y: size.height / 2)]
-        }
-
-        let maxValue = max(values.max() ?? 10, 10)
-        return values.enumerated().map { index, value in
-            let progressX = CGFloat(index) / CGFloat(values.count - 1)
-            let progressY = CGFloat(value) / CGFloat(maxValue)
-            return CGPoint(
-                x: progressX * size.width,
-                y: size.height - (progressY * (size.height - 18)) - 9
-            )
-        }
     }
 }
 
 private struct IdentifiedEpisodeID: Identifiable {
     let id: UUID
+}
+
+private extension View {
+    func listRowStyle(bottomInset: CGFloat = SymiSpacing.xs) -> some View {
+        listRowInsets(
+            EdgeInsets(
+                top: SymiSpacing.zero,
+                leading: SymiSpacing.xxl,
+                bottom: bottomInset,
+                trailing: SymiSpacing.xxl
+            )
+        )
+        .listRowSeparator(.hidden)
+        .listRowBackground(JournalPalette.background)
+    }
+}
+
+private extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 extension Calendar {
