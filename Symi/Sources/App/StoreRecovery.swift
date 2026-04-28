@@ -51,6 +51,47 @@ nonisolated enum PersistentStoreRecoveryFileError: LocalizedError, Equatable {
     }
 }
 
+nonisolated enum AppStartupPreparationError: LocalizedError, Equatable {
+    case applicationSupportDirectoryUnavailable
+
+    var errorDescription: String? {
+        switch self {
+        case .applicationSupportDirectoryUnavailable:
+            "Das Application-Support-Verzeichnis konnte nicht gefunden werden."
+        }
+    }
+}
+
+nonisolated enum AppStartupFailureReason: Equatable, Sendable {
+    case bootstrapFailure
+    case recoveryUnavailable
+
+    var headline: String {
+        switch self {
+        case .bootstrapFailure:
+            "Symi konnte nicht vollständig gestartet werden."
+        case .recoveryUnavailable:
+            "Symi konnte den Wiederherstellungsmodus nicht vollständig vorbereiten."
+        }
+    }
+
+    var explanation: String {
+        switch self {
+        case .bootstrapFailure:
+            "Symi bleibt in einem geschützten Safe-Mode, damit Diagnoseinformationen sichtbar bleiben und vorhandene Store-Dateien nicht verändert werden."
+        case .recoveryUnavailable:
+            "Der lokale Store wurde nicht geöffnet oder gelöscht. Du kannst vorhandene Store-Dateien sichern und Symi nach einem Update erneut starten."
+        }
+    }
+}
+
+nonisolated struct AppStartupFailureContext: Equatable, Sendable {
+    let reason: AppStartupFailureReason
+    let errorSummary: String
+    let storeURL: URL?
+    let recoveryContext: PersistentStoreRecoveryContext?
+}
+
 nonisolated enum PersistentStoreRecoveryService {
     static let unknownModelVersionErrorCode = 134504
     static let migrationErrorCodeRange = 134100...134199
@@ -154,6 +195,157 @@ nonisolated enum PersistentStoreRecoveryService {
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
         return formatter.string(from: date)
+    }
+}
+
+struct StartupSafeModeView: View {
+    let context: AppStartupFailureContext
+    let prepareStoreBackup: () throws -> [URL]
+    let startEmptyStore: @MainActor () throws -> AppRuntimeEnvironment
+    let didRecover: @MainActor (AppRuntimeEnvironment) -> Void
+
+    @State private var backupFileURLs: [URL] = []
+    @State private var statusMessage: String?
+    @State private var errorMessage: String?
+    @State private var isPreparingBackup = false
+    @State private var isStartingEmptyStore = false
+    @State private var showsDestructiveConfirmation = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                        Label("Safe-Mode aktiv", systemImage: "wrench.and.screwdriver")
+                            .font(.headline)
+                            .foregroundStyle(AppTheme.symiPetrol)
+
+                        Text(context.reason.headline)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiTextPrimary)
+
+                        Text(context.reason.explanation)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiTextSecondary)
+                    }
+                    .padding(.vertical, SymiSpacing.compact)
+                }
+
+                Section("Diagnose") {
+                    LabeledContent("Fehlercode", value: context.errorSummary)
+
+                    if let storeURL = context.storeURL {
+                        LabeledContent("Store", value: storeURL.lastPathComponent)
+                    }
+
+                    if let recoveryContext = context.recoveryContext {
+                        LabeledContent("Recovery-Grund", value: recoveryContext.reason.rawValue)
+                    }
+                }
+
+                if context.storeURL != nil {
+                    Section("Store-Sicherung") {
+                        Text("Vorhandene Store-Dateien bleiben unverändert. Du kannst sie für Support oder eine spätere Wiederherstellung sichern.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        Button {
+                            prepareBackup()
+                        } label: {
+                            Label(isPreparingBackup ? "Sicherung wird vorbereitet" : "Store-Dateien sichern", systemImage: "externaldrive.badge.plus")
+                        }
+                        .disabled(isPreparingBackup || isStartingEmptyStore)
+
+                        if !backupFileURLs.isEmpty {
+                            ShareLink(items: backupFileURLs) {
+                                Label("Sicherung teilen", systemImage: "square.and.arrow.up")
+                            }
+                        }
+                    }
+
+                    Section("Store-Recovery") {
+                        Text("Diese Option entfernt lokale Store-Dateien erst nach deiner Bestätigung und versucht danach einen leeren Neustart.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        Button(role: .destructive) {
+                            showsDestructiveConfirmation = true
+                        } label: {
+                            Label(isStartingEmptyStore ? "Leerer Store wird erstellt" : "Mit leerem Store starten", systemImage: "trash")
+                        }
+                        .disabled(isPreparingBackup || isStartingEmptyStore)
+                    }
+                }
+
+                if let statusMessage {
+                    Section {
+                        Text(statusMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiTextSecondary)
+                    }
+                }
+
+                if let errorMessage {
+                    Section {
+                        Text(errorMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiCoral)
+                    }
+                }
+            }
+            .navigationTitle("Safe-Mode")
+            .brandGroupedScreen()
+            .confirmationDialog(
+                "Lokale Store-Dateien löschen?",
+                isPresented: $showsDestructiveConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Store-Dateien löschen und leer starten", role: .destructive) {
+                    startWithEmptyStore()
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text("Diese Aktion löscht den lokalen SwiftData-Store auf diesem Gerät. Sichere die Store-Dateien vorher, wenn du sie später wiederherstellen möchtest.")
+            }
+        }
+    }
+
+    private func prepareBackup() {
+        isPreparingBackup = true
+        statusMessage = nil
+        errorMessage = nil
+
+        do {
+            backupFileURLs = try prepareStoreBackup()
+            statusMessage = "Die Store-Dateien wurden für die Sicherung vorbereitet."
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+        }
+
+        isPreparingBackup = false
+    }
+
+    private func startWithEmptyStore() {
+        isStartingEmptyStore = true
+        statusMessage = nil
+        errorMessage = nil
+
+        do {
+            let environment = try startEmptyStore()
+            didRecover(environment)
+        } catch {
+            errorMessage = userFacingMessage(for: error)
+            isStartingEmptyStore = false
+        }
+    }
+
+    private func userFacingMessage(for error: Error) -> String {
+        if let localizedError = error as? LocalizedError, let description = localizedError.errorDescription {
+            return description
+        }
+
+        let nsError = error as NSError
+        return "Der Vorgang konnte nicht abgeschlossen werden. Fehlercode: \(nsError.domain) \(nsError.code)"
     }
 }
 

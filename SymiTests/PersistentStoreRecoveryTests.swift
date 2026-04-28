@@ -82,6 +82,25 @@ struct PersistentStoreRecoveryTests {
         #expect(try Data(contentsOf: walURL) == walData)
         #expect(backupURLs.allSatisfy { FileManager.default.fileExists(atPath: $0.path) })
     }
+
+    @Test
+    func applicationSupportDirectoryFailureDoesNotReachContainerStartup() throws {
+        let directory = try makeTemporaryDirectory()
+        let blockedApplicationSupportURL = directory.appending(path: "ApplicationSupport")
+        try Data("keine Schreibrechte auf Verzeichnis-Ebene".utf8).write(to: blockedApplicationSupportURL)
+        let launchConfiguration = AppLaunchConfiguration(arguments: [], environment: [:])
+
+        do {
+            _ = try SymiApp.makeAppRuntimeEnvironment(
+                launchConfiguration: launchConfiguration,
+                applicationSupportDirectoryURL: blockedApplicationSupportURL
+            )
+            Issue.record("Ein nicht nutzbares Application-Support-Ziel darf nicht in den normalen App-Start laufen.")
+        } catch {
+            let nsError = error as NSError
+            #expect(nsError.domain == NSCocoaErrorDomain)
+        }
+    }
 }
 
 private func makeTemporaryDirectory() throws -> URL {
