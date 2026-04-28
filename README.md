@@ -2,14 +2,13 @@
 
 Symi ist ein lokal-first Migräne Tagebuch für mehr gute Tage. Die App kombiniert einen schnellen, ruhigen Eintrag mit persönlichem Tagebuch, Wetterkontext, Medikamentendokumentation und Export.
 
-[![Im App Store laden](https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/de-at?size=250x83)](https://apps.apple.com/app/id6761906025)
+[![Im App Store laden](https://tools.applemediaservices.com/api/badges/download-on-the-app-store/white/de-at)](https://apps.apple.com/app/id6761906025)
 
 [![App Store Release](https://github.com/mpwg/Symi/actions/workflows/ios-app-store.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/ios-app-store.yml)
 [![TestFlight Release](https://github.com/mpwg/Symi/actions/workflows/ios-testflight.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/ios-testflight.yml)
 
 [![iOS CI](https://github.com/mpwg/Symi/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/ios-ci.yml)
 [![CodeQL](https://github.com/mpwg/Symi/actions/workflows/codeql.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/codeql.yml)
-
 
 
 ## Produktstand
