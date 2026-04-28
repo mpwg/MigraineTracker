@@ -15,7 +15,7 @@ struct SyncFailedRecordSave: Sendable {
     let error: CKError
 }
 
-protocol SyncProvider: AnyObject {
+protocol SyncProvider: AnyObject, Sendable {
     var queuedChangeCount: Int { get async }
     var accountAvailability: SyncServiceState { get async }
 
@@ -26,15 +26,88 @@ protocol SyncProvider: AnyObject {
     func send() async throws
 }
 
-final class CloudKitSyncProvider: NSObject, @unchecked Sendable, SyncProvider {
+actor CloudKitSyncProviderState {
+    private var syncEngine: CKSyncEngine?
+    private var pendingRecordNames = Set<String>()
+
+    var queuedChangeCount: Int {
+        if let syncEngine {
+            return syncEngine.state.pendingRecordZoneChanges.count + syncEngine.state.pendingDatabaseChanges.count
+        }
+
+        return pendingRecordNames.count
+    }
+
+    func hasSyncEngine() -> Bool {
+        syncEngine != nil
+    }
+
+    func installSyncEngine(_ engine: CKSyncEngine) {
+        syncEngine = engine
+    }
+
+    func stopSyncEngine() async {
+        await syncEngine?.cancelOperations()
+        syncEngine = nil
+    }
+
+    func queue(recordNames: [String], zoneID: CKRecordZone.ID) -> Bool {
+        pendingRecordNames.formUnion(recordNames)
+
+        guard let syncEngine else {
+            return false
+        }
+
+        syncEngine.state.add(pendingRecordZoneChanges: pendingRecordZoneChanges(for: recordNames, zoneID: zoneID))
+        return true
+    }
+
+    func removeSentRecordNames(_ recordNames: [String]) {
+        pendingRecordNames.subtract(recordNames)
+    }
+
+    func fetchChanges(zoneID: CKRecordZone.ID) async throws -> Bool {
+        guard let syncEngine else {
+            return false
+        }
+
+        try await syncEngine.fetchChanges(
+            .init(scope: .zoneIDs([zoneID]))
+        )
+        return true
+    }
+
+    func sendChanges(zoneID: CKRecordZone.ID) async throws -> Bool {
+        guard let syncEngine else {
+            return false
+        }
+
+        try await syncEngine.sendChanges(
+            .init(scope: .zoneIDs([zoneID]))
+        )
+        return true
+    }
+
+    private func pendingRecordZoneChanges(
+        for recordNames: [String],
+        zoneID: CKRecordZone.ID
+    ) -> [CKSyncEngine.PendingRecordZoneChange] {
+        recordNames.map {
+            CKSyncEngine.PendingRecordZoneChange.saveRecord(
+                CKRecord.ID(recordName: $0, zoneID: zoneID)
+            )
+        }
+    }
+}
+
+final class CloudKitSyncProvider: NSObject, SyncProvider {
     private let stateStore: SyncStateStore
     private let zoneID: CKRecordZone.ID
     private let recordProvider: @Sendable (CKRecord.ID) async -> CKRecord?
     private let eventHandler: @Sendable (SyncProviderEvent) async -> Void
     private let appLogStore: AppLogStore
-    private var syncEngine: CKSyncEngine?
+    private let providerState = CloudKitSyncProviderState()
     private let container = CKContainer(identifier: SyncConfiguration.containerIdentifier)
-    private var pendingRecordNames = Set<String>()
 
     init(
         stateStore: SyncStateStore,
@@ -52,11 +125,7 @@ final class CloudKitSyncProvider: NSObject, @unchecked Sendable, SyncProvider {
 
     var queuedChangeCount: Int {
         get async {
-            if let syncEngine {
-                return syncEngine.state.pendingRecordZoneChanges.count + syncEngine.state.pendingDatabaseChanges.count
-            }
-
-            return pendingRecordNames.count
+            await providerState.queuedChangeCount
         }
     }
 
@@ -78,7 +147,7 @@ final class CloudKitSyncProvider: NSObject, @unchecked Sendable, SyncProvider {
     }
 
     func start() async throws {
-        guard syncEngine == nil else {
+        guard await !providerState.hasSyncEngine() else {
             await log(level: .debug, operation: "provider.start.skip", message: "Sync-Engine läuft bereits.")
             return
         }
@@ -96,63 +165,52 @@ final class CloudKitSyncProvider: NSObject, @unchecked Sendable, SyncProvider {
                 .saveZone(CKRecordZone(zoneID: zoneID))
             ]
         )
-        syncEngine = engine
+        await providerState.installSyncEngine(engine)
         await log(level: .info, operation: "provider.start", message: "CloudKit-Sync-Engine gestartet.", metadata: [
             "zone": zoneID.zoneName
         ])
     }
 
     func stop() async {
-        await syncEngine?.cancelOperations()
-        syncEngine = nil
+        await providerState.stopSyncEngine()
         await log(level: .info, operation: "provider.stop", message: "CloudKit-Sync-Engine gestoppt.")
     }
 
     func queue(recordNames: [String]) async {
-        pendingRecordNames.formUnion(recordNames)
         await log(level: .debug, operation: "provider.queue", message: "Records für Upload markiert.", metadata: [
             "count": "\(recordNames.count)",
             "recordNames": recordNames.sorted().joined(separator: ",")
         ])
 
-        guard let syncEngine else {
+        let wasQueuedInEngine = await providerState.queue(recordNames: recordNames, zoneID: zoneID)
+        guard wasQueuedInEngine else {
             await log(level: .warning, operation: "provider.queue.deferred", message: "Queue wurde vorgemerkt, Engine ist aber noch nicht aktiv.")
             return
         }
-
-        let changes = recordNames.map {
-            CKSyncEngine.PendingRecordZoneChange.saveRecord(
-                CKRecord.ID(recordName: $0, zoneID: zoneID)
-            )
-        }
-        syncEngine.state.add(pendingRecordZoneChanges: changes)
     }
 
     func fetch() async throws {
-        guard let syncEngine else {
+        guard await providerState.hasSyncEngine() else {
             await log(level: .warning, operation: "provider.fetch.skip", message: "Fetch übersprungen, da keine Sync-Engine aktiv ist.")
             return
         }
 
         await log(level: .info, operation: "provider.fetch.start", message: "CloudKit-Änderungen werden geladen.")
-        try await syncEngine.fetchChanges(
-            .init(scope: .zoneIDs([zoneID]))
-        )
+        _ = try await providerState.fetchChanges(zoneID: zoneID)
         await log(level: .info, operation: "provider.fetch.finish", message: "CloudKit-Änderungen wurden geladen.")
     }
 
     func send() async throws {
-        guard let syncEngine else {
+        guard await providerState.hasSyncEngine() else {
             await log(level: .warning, operation: "provider.send.skip", message: "Upload übersprungen, da keine Sync-Engine aktiv ist.")
             return
         }
 
+        let pendingRecordCount = await queuedChangeCount
         await log(level: .info, operation: "provider.send.start", message: "CloudKit-Änderungen werden gesendet.", metadata: [
-            "pendingRecords": "\(await queuedChangeCount)"
+            "pendingRecords": "\(pendingRecordCount)"
         ])
-        try await syncEngine.sendChanges(
-            .init(scope: .zoneIDs([zoneID]))
-        )
+        _ = try await providerState.sendChanges(zoneID: zoneID)
         await log(level: .info, operation: "provider.send.finish", message: "CloudKit-Änderungen wurden gesendet.")
     }
 }
@@ -174,7 +232,7 @@ extension CloudKitSyncProvider: CKSyncEngineDelegate {
             let failures = changes.failedRecordSaves.map {
                 SyncFailedRecordSave(recordID: $0.record.recordID, error: $0.error)
             }
-            pendingRecordNames.subtract(changes.savedRecords.map { $0.recordID.recordName })
+            await providerState.removeSentRecordNames(changes.savedRecords.map { $0.recordID.recordName })
             await log(level: failures.isEmpty ? .info : .warning, operation: "provider.event.sentRecordZoneChanges", message: "Upload-Ergebnis erhalten.", metadata: [
                 "savedRecords": "\(changes.savedRecords.count)",
                 "failedRecords": "\(failures.count)"

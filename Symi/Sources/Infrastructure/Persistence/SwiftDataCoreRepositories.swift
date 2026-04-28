@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-final class SwiftDataEpisodeRepository: EpisodeRepository, @unchecked Sendable {
+final class SwiftDataEpisodeRepository: EpisodeRepository, Sendable {
     private let modelContainer: ModelContainer
     private let healthContextStore: HealthContextStore
 
@@ -175,7 +175,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, @unchecked Sendable {
     }
 }
 
-final class SwiftDataContinuousMedicationRepository: ContinuousMedicationRepository, @unchecked Sendable {
+final class SwiftDataContinuousMedicationRepository: ContinuousMedicationRepository, Sendable {
     private let modelContainer: ModelContainer
 
     init(modelContainer: ModelContainer) {
@@ -258,7 +258,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
     }
 }
 
-final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository, @unchecked Sendable {
+final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository, Sendable {
     private let modelContainer: ModelContainer
 
     init(modelContainer: ModelContainer) {
@@ -353,7 +353,7 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository, @
     }
 }
 
-final class SwiftDataExportRepository: ExportRepository, @unchecked Sendable {
+final class SwiftDataExportRepository: ExportRepository, Sendable {
     private let modelContainer: ModelContainer
     private let healthContextStore: HealthContextStore
 

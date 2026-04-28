@@ -1,17 +1,13 @@
 import Foundation
 
-final class HealthContextStore: @unchecked Sendable {
+final class HealthContextStore: Sendable {
     private let directoryURL: URL
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
 
     init(baseURL: URL? = nil) {
         let root = baseURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
         self.directoryURL = root
             .appendingPathComponent("Symi", isDirectory: true)
             .appendingPathComponent("HealthContext", isDirectory: true)
-        encoder.dateEncodingStrategy = .iso8601
-        decoder.dateDecodingStrategy = .iso8601
     }
 
     nonisolated func save(_ snapshot: HealthContextSnapshotData?, for episodeID: UUID) throws {
@@ -25,6 +21,8 @@ final class HealthContextStore: @unchecked Sendable {
         }
 
         try ProtectedFileStorage.createProtectedDirectory(at: directoryURL)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(snapshot)
         try data.write(to: url, options: .atomic)
         try ProtectedFileStorage.applyProtection(to: url)
@@ -32,6 +30,8 @@ final class HealthContextStore: @unchecked Sendable {
 
     nonisolated func load(for episodeID: UUID) -> HealthContextRecord? {
         let url = fileURL(for: episodeID)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         guard let data = try? Data(contentsOf: url), let snapshot = try? decoder.decode(HealthContextSnapshotData.self, from: data) else {
             return nil
         }

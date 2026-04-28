@@ -1,4 +1,5 @@
 import Foundation
+import os
 import Testing
 @testable import Symi
 
@@ -251,12 +252,29 @@ private enum EntryFlowTestError: Error {
     case timedOut
 }
 
-private final class EntryFlowEpisodeRepositoryMock: EpisodeRepository, @unchecked Sendable {
+private final class EntryFlowEpisodeRepositoryMock: EpisodeRepository, Sendable {
+    private struct State: Sendable {
+        var lastSavedDraft: EpisodeDraft?
+        var lastWeatherSnapshot: WeatherSnapshotData?
+        var lastHealthContext: HealthContextSnapshotData?
+        var saveCount = 0
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: State())
     let savedID = UUID()
-    var lastSavedDraft: EpisodeDraft?
-    var lastWeatherSnapshot: WeatherSnapshotData?
-    var lastHealthContext: HealthContextSnapshotData?
-    var saveCount = 0
+
+    var lastSavedDraft: EpisodeDraft? {
+        state.withLock(\.lastSavedDraft)
+    }
+    var lastWeatherSnapshot: WeatherSnapshotData? {
+        state.withLock(\.lastWeatherSnapshot)
+    }
+    var lastHealthContext: HealthContextSnapshotData? {
+        state.withLock(\.lastHealthContext)
+    }
+    var saveCount: Int {
+        state.withLock(\.saveCount)
+    }
 
     func fetchRecent() throws -> [EpisodeRecord] { [] }
     func fetchByDay(_ day: Date) throws -> [EpisodeRecord] { [] }
@@ -264,10 +282,12 @@ private final class EntryFlowEpisodeRepositoryMock: EpisodeRepository, @unchecke
     func load(id: UUID) throws -> EpisodeRecord? { nil }
 
     func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?, healthContext: HealthContextSnapshotData?) throws -> UUID {
-        saveCount += 1
-        lastSavedDraft = draft
-        lastWeatherSnapshot = weatherSnapshot
-        lastHealthContext = healthContext
+        state.withLock {
+            $0.saveCount += 1
+            $0.lastSavedDraft = draft
+            $0.lastWeatherSnapshot = weatherSnapshot
+            $0.lastHealthContext = healthContext
+        }
         return savedID
     }
 
@@ -276,7 +296,7 @@ private final class EntryFlowEpisodeRepositoryMock: EpisodeRepository, @unchecke
     func fetchDeleted() throws -> [EpisodeRecord] { [] }
 }
 
-private final class EntryFlowMedicationRepositoryMock: MedicationCatalogRepository, @unchecked Sendable {
+private final class EntryFlowMedicationRepositoryMock: MedicationCatalogRepository, Sendable {
     func fetchDefinitions(searchText: String?) throws -> [MedicationDefinitionRecord] { [] }
 
     func saveCustomDefinition(_ draft: CustomMedicationDefinitionDraft) throws -> MedicationDefinitionRecord {
@@ -298,7 +318,7 @@ private final class EntryFlowMedicationRepositoryMock: MedicationCatalogReposito
     func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord] { [] }
 }
 
-private final class EntryFlowContinuousMedicationRepositoryMock: ContinuousMedicationRepository, @unchecked Sendable {
+private final class EntryFlowContinuousMedicationRepositoryMock: ContinuousMedicationRepository, Sendable {
     let activeMedications: [ContinuousMedicationRecord]
 
     init(activeMedications: [ContinuousMedicationRecord] = []) {
