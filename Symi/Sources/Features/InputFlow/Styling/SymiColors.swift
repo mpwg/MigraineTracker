@@ -42,26 +42,6 @@ struct SymiColorValue: Equatable, Sendable {
     }
 }
 
-nonisolated enum PainLevel: Sendable {
-    case none
-    case low
-    case medium
-    case high
-
-    init(intensity: Int) {
-        switch intensity {
-        case 1 ... 3:
-            self = .low
-        case 4 ... 6:
-            self = .medium
-        case 7 ... 10:
-            self = .high
-        default:
-            self = .none
-        }
-    }
-}
-
 enum SymiColors {
     static let primaryPetrol = SymiColorValue(hex: 0x0F3D3E)
     static let sage = SymiColorValue(hex: 0x8ECDB8)
@@ -174,14 +154,14 @@ enum ColorToken {
     }
 
     enum Pain {
-        static func token(for level: PainLevel) -> PainToken {
+        static func token(for level: PainIntensityLevel) -> PainToken {
             PainToken(level: level)
         }
     }
 }
 
 struct PainToken {
-    let level: PainLevel
+    let level: PainIntensityLevel
 
     var foreground: Color {
         baseValue.color
@@ -192,11 +172,11 @@ struct PainToken {
     }
 
     var emphasizedText: Color {
-        level == .high ? foreground : ColorToken.Text.primary
+        level == .high || level == .veryHigh ? foreground : ColorToken.Text.primary
     }
 
     var descriptionText: Color {
-        level == .high ? foreground : ColorToken.Text.secondary
+        level == .high || level == .veryHigh ? foreground : ColorToken.Text.secondary
     }
 
     var faceBackground: Color {
@@ -207,7 +187,7 @@ struct PainToken {
             SymiColors.entryDetailIconFill.color
         case .medium:
             SymiColors.entryDetailFaceFill.color
-        case .high:
+        case .high, .veryHigh:
             SymiColors.coral.color.opacity(SymiOpacity.clearAccent)
         }
     }
@@ -231,7 +211,7 @@ struct PainToken {
             SymiColors.intensityLight
         case .medium:
             SymiColors.intensityMedium
-        case .high:
+        case .high, .veryHigh:
             SymiColors.intensityStrong
         }
     }

@@ -19,27 +19,18 @@ enum JournalEntryContext {
     }
 
     static func intensityLabel(for intensity: Int) -> String {
-        switch intensity {
-        case 1 ... 3:
-            "Leicht"
-        case 4 ... 6:
-            "Mittel"
-        case 7 ... 10:
-            "Stark"
-        default:
-            "Nicht bewertet"
-        }
+        PainIntensityLevel(intensity: intensity).displayLabel
     }
 
     static func intensityColor(for intensity: Int) -> Color {
-        switch intensity {
-        case 1 ... 3:
+        switch PainIntensityLevel(intensity: intensity) {
+        case .low:
             SymiColors.intensityLight.color
-        case 4 ... 6:
+        case .medium:
             SymiColors.intensityMedium.color
-        case 7 ... 10:
+        case .high, .veryHigh:
             SymiColors.intensityStrong.color
-        default:
+        case .none:
             SymiColors.textPrimary.color
         }
     }
@@ -81,16 +72,7 @@ enum JournalEntryContext {
     }
 
     static func intensityContext(for intensity: Int) -> String? {
-        switch intensity {
-        case 1 ... 3:
-            "Leichter Verlauf"
-        case 4 ... 6:
-            "Mittlerer Verlauf"
-        case 7 ... 10:
-            "Starker Verlauf"
-        default:
-            nil
-        }
+        PainIntensityLevel(intensity: intensity).contextText
     }
 
     private static func contextualSubtitleSegments(for episode: EpisodeRecord) -> [String] {

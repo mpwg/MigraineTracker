@@ -177,8 +177,8 @@ private enum EntryDetailSurface {
 private struct EntryDetailHeroCard: View {
     let episode: EpisodeRecord
 
-    private var painLevel: PainLevel {
-        PainLevel(intensity: episode.intensity)
+    private var painLevel: PainIntensityLevel {
+        PainIntensityLevel(intensity: episode.intensity)
     }
 
     private var painToken: PainToken {
@@ -236,21 +236,12 @@ private struct EntryDetailHeroCard: View {
     }
 
     private var intensityDescription: String {
-        switch episode.intensity {
-        case 1 ... 3:
-            "Die Schmerzen waren leicht und gut im Alltag einzuordnen."
-        case 4 ... 6:
-            "Die Schmerzen waren spürbar, aber noch gut auszuhalten."
-        case 7 ... 10:
-            "Die Schmerzen waren deutlich und haben viel Aufmerksamkeit gebraucht."
-        default:
-            "Die Intensität wurde für diesen Eintrag nicht bewertet."
-        }
+        PainIntensityLevel(intensity: episode.intensity).detailDescription
     }
 }
 
 private struct EntryDetailFaceBadge: View {
-    let painLevel: PainLevel
+    let painLevel: PainIntensityLevel
     let painToken: PainToken
 
     var body: some View {
@@ -271,7 +262,7 @@ private struct EntryDetailFaceBadge: View {
 }
 
 private struct CalmFaceIcon: Shape {
-    let painLevel: PainLevel
+    let painLevel: PainIntensityLevel
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -297,7 +288,7 @@ private struct CalmFaceIcon: Shape {
 
     private var leftEyeStartY: CGFloat {
         switch painLevel {
-        case .high:
+        case .high, .veryHigh:
             0.38
         case .none, .low, .medium:
             0.40
@@ -306,7 +297,7 @@ private struct CalmFaceIcon: Shape {
 
     private var leftEyeEndY: CGFloat {
         switch painLevel {
-        case .high:
+        case .high, .veryHigh:
             0.42
         case .none, .low, .medium:
             0.42
@@ -315,7 +306,7 @@ private struct CalmFaceIcon: Shape {
 
     private var rightEyeStartY: CGFloat {
         switch painLevel {
-        case .high:
+        case .high, .veryHigh:
             0.38
         case .none, .low, .medium:
             0.40
@@ -324,7 +315,7 @@ private struct CalmFaceIcon: Shape {
 
     private var rightEyeEndY: CGFloat {
         switch painLevel {
-        case .high:
+        case .high, .veryHigh:
             0.42
         case .none, .low, .medium:
             0.42
@@ -339,7 +330,7 @@ private struct CalmFaceIcon: Shape {
             0.64
         case .medium:
             0.63
-        case .high:
+        case .high, .veryHigh:
             0.64
         }
     }
@@ -352,7 +343,7 @@ private struct CalmFaceIcon: Shape {
             0.62
         case .medium:
             0.67
-        case .high:
+        case .high, .veryHigh:
             0.59
         }
     }
@@ -388,8 +379,8 @@ private struct EntryDetailProgressBar: View {
 private struct EntryDetailContextCard: View {
     let episode: EpisodeRecord
 
-    private var painLevel: PainLevel {
-        PainLevel(intensity: episode.intensity)
+    private var painLevel: PainIntensityLevel {
+        PainIntensityLevel(intensity: episode.intensity)
     }
 
     private var rows: [EntryDetailContextRowModel] {
@@ -676,7 +667,7 @@ private enum EntryDetailContextHierarchy {
 
 private enum EntryDetailContextCategory {
     case neutral
-    case pain(PainLevel)
+    case pain(PainIntensityLevel)
     case note
 
     var iconColor: Color {

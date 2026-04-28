@@ -186,13 +186,6 @@ extension HealthContextSnapshotData {
 
 enum HealthSeverityMapper {
     static func symptomSeverityLabel(forIntensity intensity: Int) -> String {
-        switch intensity {
-        case ...3:
-            "Leicht"
-        case 4...6:
-            "Mittel"
-        default:
-            "Stark"
-        }
+        PainIntensityLevel(intensity: intensity).healthSeverityLabel
     }
 }

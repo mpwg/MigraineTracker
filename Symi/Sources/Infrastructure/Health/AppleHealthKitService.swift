@@ -373,12 +373,12 @@ final class AppleHealthKitService: HealthService {
     }
 
     private static func severityValue(forIntensity intensity: Int) -> Int {
-        switch intensity {
-        case ...3:
+        switch PainIntensityLevel(intensity: intensity) {
+        case .none, .low:
             HKCategoryValueSeverity.mild.rawValue
-        case 4...6:
+        case .medium:
             HKCategoryValueSeverity.moderate.rawValue
-        default:
+        case .high, .veryHigh:
             HKCategoryValueSeverity.severe.rawValue
         }
     }

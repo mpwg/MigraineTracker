@@ -226,19 +226,23 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
     case light = "Leicht"
     case medium = "Mittel"
     case strong = "Stark"
+    case veryStrong = "Sehr stark"
 
     var id: String { rawValue }
 
     func matches(_ intensity: Int) -> Bool {
-        switch self {
+        let level = PainIntensityLevel(intensity: intensity)
+        return switch self {
         case .all:
             true
         case .light:
-            (1 ... 3).contains(intensity)
+            level == .low
         case .medium:
-            (4 ... 6).contains(intensity)
+            level == .medium
         case .strong:
-            (7 ... 10).contains(intensity)
+            level == .high
+        case .veryStrong:
+            level == .veryHigh
         }
     }
 }

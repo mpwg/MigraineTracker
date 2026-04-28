@@ -77,6 +77,32 @@ struct CoreArchitectureTests {
         #expect(HealthSeverityMapper.symptomSeverityLabel(forIntensity: 1) == "Leicht")
         #expect(HealthSeverityMapper.symptomSeverityLabel(forIntensity: 4) == "Mittel")
         #expect(HealthSeverityMapper.symptomSeverityLabel(forIntensity: 8) == "Stark")
+        #expect(HealthSeverityMapper.symptomSeverityLabel(forIntensity: 10) == "Stark")
+    }
+
+    @Test
+    func painIntensityLevelUsesCentralBoundaryBuckets() {
+        let expectations: [(Int, PainIntensityLevel, String, String?)] = [
+            (0, .none, "Nicht bewertet", nil),
+            (1, .low, "Leicht", "Leichter Verlauf"),
+            (3, .low, "Leicht", "Leichter Verlauf"),
+            (4, .medium, "Mittel", "Mittlerer Verlauf"),
+            (6, .medium, "Mittel", "Mittlerer Verlauf"),
+            (7, .high, "Stark", "Starker Verlauf"),
+            (8, .high, "Stark", "Starker Verlauf"),
+            (9, .veryHigh, "Sehr stark", "Sehr starker Verlauf"),
+            (10, .veryHigh, "Sehr stark", "Sehr starker Verlauf"),
+            (11, .none, "Nicht bewertet", nil)
+        ]
+
+        for expectation in expectations {
+            let level = PainIntensityLevel(intensity: expectation.0)
+
+            #expect(level == expectation.1)
+            #expect(level.displayLabel == expectation.2)
+            #expect(level.contextText == expectation.3)
+            #expect(level.contains(intensity: expectation.0))
+        }
     }
 
     @Test
