@@ -126,20 +126,12 @@ struct MultiSelectGrid: View {
                     isSelected: isSelected,
                     colorToken: colorToken
                 ) {
-                    toggle(option)
+                    selection.toggleMembership(option)
                 }
                 .accessibilityLabel("\(accessibilityPrefix): \(option)")
                 .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
                 .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
             }
-        }
-    }
-
-    private func toggle(_ option: String) {
-        if selection.contains(option) {
-            selection.remove(option)
-        } else {
-            selection.insert(option)
         }
     }
 }

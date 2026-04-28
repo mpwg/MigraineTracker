@@ -42,6 +42,42 @@ struct InputFlowTileGrid<Content: View>: View {
     }
 }
 
+struct InputFlowFixedTileGrid<Content: View>: View {
+    let minimumColumnWidth: CGFloat
+    let columnCount: Int
+    let spacing: CGFloat
+    let content: Content
+
+    init(
+        minimumColumnWidth: CGFloat,
+        columnCount: Int,
+        spacing: CGFloat = SymiSpacing.xs,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.minimumColumnWidth = minimumColumnWidth
+        self.columnCount = columnCount
+        self.spacing = spacing
+        self.content = content()
+    }
+
+    var body: some View {
+        LazyVGrid(
+            columns: Array(
+                repeating: GridItem(
+                    .flexible(minimum: minimumColumnWidth),
+                    spacing: spacing,
+                    alignment: .top
+                ),
+                count: columnCount
+            ),
+            alignment: .leading,
+            spacing: spacing
+        ) {
+            content
+        }
+    }
+}
+
 struct InputFlowPillGrid<Content: View>: View {
     let minimumColumnWidth: CGFloat
     let content: Content
