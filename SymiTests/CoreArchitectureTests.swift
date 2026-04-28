@@ -231,6 +231,24 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func medicationDetailTextFormatsEmptyWhitespaceAndCombinations() {
+        #expect(MedicationTextFormatter.detailText(dosage: "", frequency: "") == "")
+        #expect(MedicationTextFormatter.detailText(dosage: "  ", frequency: "\n\t") == "")
+        #expect(MedicationTextFormatter.detailText(dosage: " 50 mg ", frequency: "") == "50 mg")
+        #expect(MedicationTextFormatter.detailText(dosage: "", frequency: " täglich ") == "täglich")
+        #expect(MedicationTextFormatter.detailText(dosage: " 50 mg ", frequency: " täglich ") == "50 mg · täglich")
+    }
+
+    @Test
+    func medicationSelectionKeyNormalizesEmptyWhitespaceAndCombinations() {
+        #expect(MedicationSelectionKey.make(name: "", category: .other, dosage: "") == "|Sonstiges|")
+        #expect(MedicationSelectionKey.make(name: "  ", category: .other, dosage: "\n\t") == "|Sonstiges|")
+        #expect(MedicationSelectionKey.make(name: " Sumatriptan ", category: .triptan, dosage: "") == "sumatriptan|Triptan|")
+        #expect(MedicationSelectionKey.make(name: "", category: .nsar, dosage: " 400 MG ") == "|NSAR|400 mg")
+        #expect(MedicationSelectionKey.make(name: " IBUprofen ", category: .nsar, dosage: " 400 MG ") == "ibuprofen|NSAR|400 mg")
+    }
+
+    @Test
     func loadHistoryMonthUseCaseGroupsByCalendarDay() async throws {
         let repository = EpisodeRepositoryMock()
         let firstDay = Date(timeIntervalSince1970: 10_000)

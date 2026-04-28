@@ -85,10 +85,7 @@ struct ContinuousMedicationRecord: Identifiable, Equatable, Sendable {
     }
 
     nonisolated var detailText: String {
-        [dosage, frequency]
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " · ")
+        MedicationTextFormatter.detailText(dosage: dosage, frequency: frequency)
     }
 }
 
@@ -101,10 +98,7 @@ struct ContinuousMedicationCheckRecord: Identifiable, Equatable, Sendable {
     nonisolated let wasTaken: Bool
 
     nonisolated var detailText: String {
-        [dosage, frequency]
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " · ")
+        MedicationTextFormatter.detailText(dosage: dosage, frequency: frequency)
     }
 }
 
@@ -212,10 +206,7 @@ struct ContinuousMedicationCheckDraft: Identifiable, Equatable, Sendable {
     }
 
     nonisolated var detailText: String {
-        [dosage, frequency]
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " · ")
+        MedicationTextFormatter.detailText(dosage: dosage, frequency: frequency)
     }
 }
 
@@ -295,11 +286,11 @@ struct MedicationDefinitionRecord: Identifiable, Equatable, Sendable {
     }
 
     nonisolated var selectionKey: String {
-        [
-            name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-            category.rawValue,
-            suggestedDosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        ].joined(separator: "|")
+        MedicationSelectionKey.make(
+            name: name,
+            category: category,
+            dosage: suggestedDosage
+        )
     }
 }
 
@@ -333,7 +324,7 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
     nonisolated init(record: MedicationRecord) {
         self.init(
             id: record.id,
-            selectionKey: Self.makeSelectionKey(
+            selectionKey: MedicationSelectionKey.make(
                 name: record.name,
                 category: record.category,
                 dosage: record.dosage
@@ -352,14 +343,6 @@ struct MedicationSelectionDraft: Identifiable, Equatable, Sendable {
             category: definition.category,
             dosage: definition.suggestedDosage
         )
-    }
-
-    nonisolated static func makeSelectionKey(name: String, category: MedicationCategory, dosage: String) -> String {
-        [
-            name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-            category.rawValue,
-            dosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        ].joined(separator: "|")
     }
 }
 
