@@ -756,6 +756,8 @@ private struct ManageCloudDataView: View {
             "Episode"
         case .medicationDefinition:
             "Medikamentenvorlage"
+        case .continuousMedication:
+            "Dauermedikation"
         }
     }
 

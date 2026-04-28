@@ -4,10 +4,10 @@ enum HealthDataDirection: String, Codable, CaseIterable, Identifiable, Sendable 
     case read = "Lesen"
     case write = "Schreiben"
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 }
 
-enum HealthDataTypeID: String, Codable, CaseIterable, Identifiable, Sendable {
+public enum HealthDataTypeID: String, Codable, CaseIterable, Identifiable, Sendable {
     case sleep
     case steps
     case heartRate
@@ -19,7 +19,7 @@ enum HealthDataTypeID: String, Codable, CaseIterable, Identifiable, Sendable {
     case dizziness
     case fatigue
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
     nonisolated var displayName: String {
         switch self {
@@ -70,24 +70,68 @@ enum HealthDataCatalog {
     }
 }
 
-struct HealthSymptomSampleData: @preconcurrency Codable, Equatable, Sendable {
-    let type: HealthDataTypeID
-    let severity: String
-    let startDate: Date
-    let endDate: Date
-    let source: String
+public struct HealthSymptomSampleData: @preconcurrency Codable, Equatable, Sendable {
+    public let type: HealthDataTypeID
+    public let severity: String
+    public let startDate: Date
+    public let endDate: Date
+    public let source: String
+
+    public nonisolated init(
+        type: HealthDataTypeID,
+        severity: String,
+        startDate: Date,
+        endDate: Date,
+        source: String
+    ) {
+        self.type = type
+        self.severity = severity
+        self.startDate = startDate
+        self.endDate = endDate
+        self.source = source
+    }
+
+    public nonisolated static func == (lhs: HealthSymptomSampleData, rhs: HealthSymptomSampleData) -> Bool {
+        lhs.type == rhs.type &&
+            lhs.severity == rhs.severity &&
+            lhs.startDate == rhs.startDate &&
+            lhs.endDate == rhs.endDate &&
+            lhs.source == rhs.source
+    }
 }
 
-struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sendable {
-    let recordedAt: Date
-    let source: String
-    let sleepMinutes: Double?
-    let stepCount: Int?
-    let averageHeartRate: Double?
-    let restingHeartRate: Double?
-    let heartRateVariability: Double?
-    let menstrualFlow: String?
-    let symptoms: [HealthSymptomSampleData]
+public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sendable {
+    public let recordedAt: Date
+    public let source: String
+    public let sleepMinutes: Double?
+    public let stepCount: Int?
+    public let averageHeartRate: Double?
+    public let restingHeartRate: Double?
+    public let heartRateVariability: Double?
+    public let menstrualFlow: String?
+    public let symptoms: [HealthSymptomSampleData]
+
+    public nonisolated init(
+        recordedAt: Date,
+        source: String,
+        sleepMinutes: Double?,
+        stepCount: Int?,
+        averageHeartRate: Double?,
+        restingHeartRate: Double?,
+        heartRateVariability: Double?,
+        menstrualFlow: String?,
+        symptoms: [HealthSymptomSampleData]
+    ) {
+        self.recordedAt = recordedAt
+        self.source = source
+        self.sleepMinutes = sleepMinutes
+        self.stepCount = stepCount
+        self.averageHeartRate = averageHeartRate
+        self.restingHeartRate = restingHeartRate
+        self.heartRateVariability = heartRateVariability
+        self.menstrualFlow = menstrualFlow
+        self.symptoms = symptoms
+    }
 
     var hasVisibleData: Bool {
         sleepMinutes != nil ||
@@ -96,7 +140,19 @@ struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sendable {
         restingHeartRate != nil ||
         heartRateVariability != nil ||
         menstrualFlow != nil ||
-        !symptoms.isEmpty
+            !symptoms.isEmpty
+    }
+
+    public nonisolated static func == (lhs: HealthContextSnapshotData, rhs: HealthContextSnapshotData) -> Bool {
+        lhs.recordedAt == rhs.recordedAt &&
+            lhs.source == rhs.source &&
+            lhs.sleepMinutes == rhs.sleepMinutes &&
+            lhs.stepCount == rhs.stepCount &&
+            lhs.averageHeartRate == rhs.averageHeartRate &&
+            lhs.restingHeartRate == rhs.restingHeartRate &&
+            lhs.heartRateVariability == rhs.heartRateVariability &&
+            lhs.menstrualFlow == rhs.menstrualFlow &&
+            lhs.symptoms == rhs.symptoms
     }
 }
 

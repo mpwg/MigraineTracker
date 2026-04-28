@@ -98,13 +98,19 @@ enum ScreenshotBootstrap {
 
         let seed = try ScreenshotSeedFactory.populate(seedName: seedName, in: container)
         let appLogStore = AppLogStore()
-        let syncCoordinator = SyncCoordinator(modelContainer: container, appLogStore: appLogStore)
+        let healthContextStore = HealthContextStore()
+        let syncCoordinator = SyncCoordinator(
+            modelContainer: container,
+            appLogStore: appLogStore,
+            healthContextStore: healthContextStore
+        )
         let appContainer = AppContainer(
             modelContainer: container,
             syncCoordinator: syncCoordinator,
             appLogStore: appLogStore,
             weatherService: ScreenshotWeatherService(),
-            locationService: ScreenshotLocationService()
+            locationService: ScreenshotLocationService(),
+            healthContextStore: healthContextStore
         )
 
         return (container, appContainer, appLogStore, syncCoordinator, seed)

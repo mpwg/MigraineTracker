@@ -77,15 +77,18 @@ struct SymiApp: App {
 
         let container = try makeContainer(schema: schema, configuration: configuration)
         let appLogStore = AppLogStore()
+        let healthContextStore = HealthContextStore()
         let syncCoordinator = SyncCoordinator(
             modelContainer: container,
             appLogStore: appLogStore,
+            healthContextStore: healthContextStore,
             autostart: !launchConfiguration.isRunningTests
         )
         let appContainer = AppContainer(
             modelContainer: container,
             syncCoordinator: syncCoordinator,
-            appLogStore: appLogStore
+            appLogStore: appLogStore,
+            healthContextStore: healthContextStore
         )
 
         return AppRuntimeEnvironment(
