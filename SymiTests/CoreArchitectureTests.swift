@@ -303,11 +303,21 @@ struct CoreArchitectureTests {
 
     @Test
     func medicationSelectionKeyNormalizesEmptyWhitespaceAndCombinations() {
-        #expect(MedicationSelectionKey.make(name: "", category: .other, dosage: "") == "|other|")
-        #expect(MedicationSelectionKey.make(name: "  ", category: .other, dosage: "\n\t") == "|other|")
-        #expect(MedicationSelectionKey.make(name: " Sumatriptan ", category: .triptan, dosage: "") == "sumatriptan|triptan|")
-        #expect(MedicationSelectionKey.make(name: "", category: .nsar, dosage: " 400 MG ") == "|nsaid|400 mg")
-        #expect(MedicationSelectionKey.make(name: " IBUprofen ", category: .nsar, dosage: " 400 MG ") == "ibuprofen|nsaid|400 mg")
+        #expect(MedicationSelectionKey.make(name: "", category: .other, dosage: "") == "medication-sha256:82978ea8f0f7c687c3da6025348d05ff1374c5bef81cab2cc82e60cb31dffc65")
+        #expect(MedicationSelectionKey.make(name: "  ", category: .other, dosage: "\n\t") == "medication-sha256:82978ea8f0f7c687c3da6025348d05ff1374c5bef81cab2cc82e60cb31dffc65")
+        #expect(MedicationSelectionKey.make(name: " Sumatriptan ", category: .triptan, dosage: "") == "medication-sha256:d86f49430a38ae6e54ee854f9592e26a4c785384eca3bae9e4987ead9b299798")
+        #expect(MedicationSelectionKey.make(name: "", category: .nsar, dosage: " 400 MG ") == "medication-sha256:b9f25953cf30b394f34897efb939cf4d2abb9efc33ccfa85ef0c260ea1cacf00")
+        #expect(MedicationSelectionKey.make(name: " IBUprofen ", category: .nsar, dosage: " 400 MG ") == "medication-sha256:bd0ab64203035d1e1990e1c16f12fb23d41471aa7d2f2b070b33fc0346768081")
+    }
+
+    @Test
+    func stringListStorageRoundtripsDelimiterCharactersAsJSON() {
+        let values = ["Übelkeit|Aura", "Stress", "Bildschirm|Zeit"]
+        let storage = StringListStorage.encode(values)
+
+        #expect(storage == "[\"Übelkeit|Aura\",\"Stress\",\"Bildschirm|Zeit\"]")
+        #expect(StringListStorage.decode(storage) == values)
+        #expect(StringListStorage.decode("Übelkeit|Aura") == ["Übelkeit", "Aura"])
     }
 
     @Test

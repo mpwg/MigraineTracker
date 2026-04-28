@@ -416,7 +416,7 @@ private func makeSyncTestStack() throws -> (
     repository: LocalSyncRepository,
     healthContextStore: HealthContextStore
 ) {
-    let schema = Schema(versionedSchema: SymiSchemaV6.self)
+    let schema = Schema(versionedSchema: SymiSchemaV7.self)
     let configuration = ModelConfiguration(
         "sync-tests-\(UUID().uuidString)",
         schema: schema,
