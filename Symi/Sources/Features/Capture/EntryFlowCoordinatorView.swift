@@ -801,16 +801,7 @@ private struct EntryReviewStepView: View {
     }
 
     private func intensityLabel(for intensity: Int) -> String {
-        switch intensity {
-        case 1 ... 3:
-            "Leicht"
-        case 4 ... 6:
-            "Mittel"
-        case 7 ... 8:
-            "Stark"
-        default:
-            "Sehr stark"
-        }
+        PainIntensityLevel(intensity: intensity).displayLabel
     }
 }
 

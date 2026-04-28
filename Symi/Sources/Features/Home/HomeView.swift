@@ -288,12 +288,12 @@ private struct HomeCalendarDayCell: View {
     }
 
     private func dotColor(for entry: EpisodeRecord) -> Color {
-        switch entry.intensity {
-        case 8 ... 10:
+        switch PainIntensityLevel(intensity: entry.intensity) {
+        case .high, .veryHigh:
             AppTheme.coral(for: colorScheme).opacity(SymiOpacity.calendarHighIntensityDot)
-        case 5 ... 7:
+        case .medium:
             AppTheme.sage(for: colorScheme).opacity(SymiOpacity.calendarMediumIntensityDot)
-        default:
+        case .none, .low:
             AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.calendarLowIntensityDot)
         }
     }
