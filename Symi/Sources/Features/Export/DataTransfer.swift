@@ -8,16 +8,50 @@ extension UTType {
 
 enum DataTransferError: LocalizedError {
     case invalidFormat
+    case fileTooLarge(limitInMegabytes: Int)
 
     var errorDescription: String? {
         switch self {
         case .invalidFormat:
             return "Die Datei enthält kein unterstütztes Datenformat für \(ProductBranding.displayName)."
+        case let .fileTooLarge(limitInMegabytes):
+            return "Die Backup-Datei ist größer als \(limitInMegabytes) MB und wurde nicht importiert."
         }
     }
 }
 
+struct BackupImportPreview: Equatable, Sendable {
+    struct DateRange: Equatable, Sendable {
+        let start: Date
+        let end: Date
+    }
+
+    let newEpisodes: Int
+    let changedEpisodes: Int
+    let deletedEpisodes: Int
+    let newMedicationDefinitions: Int
+    let changedMedicationDefinitions: Int
+    let newContinuousMedications: Int
+    let changedContinuousMedications: Int
+    let conflicts: [String]
+    let dateRange: DateRange?
+    let exportedAt: Date
+
+    var hasChanges: Bool {
+        newEpisodes + changedEpisodes + deletedEpisodes +
+            newMedicationDefinitions + changedMedicationDefinitions +
+            newContinuousMedications + changedContinuousMedications > 0
+    }
+}
+
+struct BackupImportResult: Sendable {
+    let preview: BackupImportPreview
+    let rollbackBackupURL: URL
+}
+
 struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
+    nonisolated static let maximumImportFileSizeInBytes = 10 * 1_024 * 1_024
+
     let formatVersion: Int
     let exportedAt: Date
     let episodes: [EpisodePayload]
@@ -73,7 +107,7 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
 
-        let fileName = "schmerztagebuch-export-\(Self.fileDateString(from: exportedAt)).json5"
+        let fileName = "schmerztagebuch-export-\(Self.fileDateString(from: exportedAt))-\(UUID().uuidString).json5"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         let data = try encoder.encode(self)
 
@@ -81,7 +115,7 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
         return url
     }
 
-    nonisolated static func load(from url: URL) throws -> DataTransferSnapshot {
+    nonisolated static func load(from url: URL, maximumFileSizeInBytes: Int = maximumImportFileSizeInBytes) throws -> DataTransferSnapshot {
         let shouldStopAccess = url.startAccessingSecurityScopedResource()
         defer {
             if shouldStopAccess {
@@ -89,17 +123,96 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
             }
         }
 
+        if let fileSize = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+           fileSize > maximumFileSizeInBytes {
+            throw DataTransferError.fileTooLarge(limitInMegabytes: maximumFileSizeInBytes / 1_024 / 1_024)
+        }
+
         let data = try Data(contentsOf: url)
+        guard data.count <= maximumFileSizeInBytes else {
+            throw DataTransferError.fileTooLarge(limitInMegabytes: maximumFileSizeInBytes / 1_024 / 1_024)
+        }
+
         let decoder = JSONDecoder()
         decoder.allowsJSON5 = true
         decoder.dateDecodingStrategy = .iso8601
 
-        let snapshot = try decoder.decode(DataTransferSnapshot.self, from: data)
+        let snapshot: DataTransferSnapshot
+        do {
+            snapshot = try decoder.decode(DataTransferSnapshot.self, from: data)
+        } catch {
+            throw DataTransferError.invalidFormat
+        }
         guard snapshot.formatVersion == 1 else {
             throw DataTransferError.invalidFormat
         }
 
         return snapshot
+    }
+
+    nonisolated func previewImport(into context: ModelContext) throws -> BackupImportPreview {
+        let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
+        let episodesByID = Dictionary(uniqueKeysWithValues: existingEpisodes.map { ($0.id, $0) })
+        let existingDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
+        let customDefinitionsByKey = Dictionary(
+            uniqueKeysWithValues: existingDefinitions
+                .filter(\.isCustom)
+                .map { ($0.catalogKey, $0) }
+        )
+        let existingContinuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
+        let continuousMedicationsByID = Dictionary(uniqueKeysWithValues: existingContinuousMedications.map { ($0.id, $0) })
+
+        var newEpisodes = 0
+        var changedEpisodes = 0
+        var deletedEpisodes = 0
+        var conflicts: [String] = []
+
+        for payload in episodes {
+            if payload.deletedAt != nil {
+                deletedEpisodes += 1
+            }
+
+            guard let existingEpisode = episodesByID[payload.id] else {
+                newEpisodes += 1
+                continue
+            }
+
+            if payload.differs(from: existingEpisode) {
+                changedEpisodes += 1
+            }
+
+            if existingEpisode.updatedAt > payload.updatedAt {
+                conflicts.append("Episode \(payload.startedAt.formatted(date: .numeric, time: .shortened)) ist lokal neuer als das Backup.")
+            }
+        }
+
+        let changedDefinitions = customMedicationDefinitions.filter { payload in
+            guard let existingDefinition = customDefinitionsByKey[payload.catalogKey] else { return false }
+            return existingDefinition.updatedAt != payload.updatedAt || existingDefinition.deletedAt != payload.deletedAt
+        }
+
+        let changedContinuousMedications = continuousMedications.filter { payload in
+            guard let existingMedication = continuousMedicationsByID[payload.id] else { return false }
+            return existingMedication.updatedAt != payload.updatedAt
+        }
+
+        let dateRange = episodes
+            .map(\.startedAt)
+            .min()
+            .flatMap { start in episodes.map(\.startedAt).max().map { BackupImportPreview.DateRange(start: start, end: $0) } }
+
+        return BackupImportPreview(
+            newEpisodes: newEpisodes,
+            changedEpisodes: changedEpisodes,
+            deletedEpisodes: deletedEpisodes,
+            newMedicationDefinitions: customMedicationDefinitions.filter { customDefinitionsByKey[$0.catalogKey] == nil }.count,
+            changedMedicationDefinitions: changedDefinitions.count,
+            newContinuousMedications: continuousMedications.filter { continuousMedicationsByID[$0.id] == nil }.count,
+            changedContinuousMedications: changedContinuousMedications.count,
+            conflicts: conflicts,
+            dateRange: dateRange,
+            exportedAt: exportedAt
+        )
     }
 
     nonisolated func merge(into context: ModelContext, healthContextStore: HealthContextStore) throws {
@@ -356,6 +469,24 @@ struct EpisodePayload: Codable, Sendable {
             context.delete(existingWeatherSnapshot)
             episode.weatherSnapshot = nil
         }
+    }
+
+    nonisolated func differs(from episode: Episode) -> Bool {
+        episode.startedAt != startedAt ||
+            episode.endedAt != endedAt ||
+            episode.updatedAt != updatedAt ||
+            episode.deletedAt != deletedAt ||
+            episode.type != type ||
+            episode.intensity != intensity ||
+            episode.painLocation != painLocation ||
+            episode.painCharacter != painCharacter ||
+            episode.notes != notes ||
+            episode.symptoms != symptoms ||
+            episode.triggers != triggers ||
+            episode.functionalImpact != functionalImpact ||
+            episode.menstruationStatus != menstruationStatus ||
+            episode.medications.map(\.id) != medications.map(\.id) ||
+            episode.continuousMedicationChecks.map(\.id) != continuousMedicationChecks.map(\.id)
     }
 
     nonisolated func applySidecars(to healthContextStore: HealthContextStore) throws {

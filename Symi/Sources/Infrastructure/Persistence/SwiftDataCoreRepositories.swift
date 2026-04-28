@@ -403,10 +403,18 @@ final class SwiftDataExportRepository: ExportRepository, @unchecked Sendable {
         return try snapshot.writeToTemporaryFile()
     }
 
-    nonisolated func importBackup(from url: URL) throws {
+    nonisolated func previewBackupImport(from url: URL) throws -> BackupImportPreview {
         let snapshot = try DataTransferSnapshot.load(from: url)
+        return try snapshot.previewImport(into: readContext())
+    }
+
+    nonisolated func importBackup(from url: URL) throws -> BackupImportResult {
+        let rollbackBackupURL = try createBackup()
+        let snapshot = try DataTransferSnapshot.load(from: url)
+        let preview = try snapshot.previewImport(into: readContext())
         let context = writeContext()
         try snapshot.merge(into: context, healthContextStore: healthContextStore)
+        return BackupImportResult(preview: preview, rollbackBackupURL: rollbackBackupURL)
     }
 
     nonisolated private func readContext() -> ModelContext {
