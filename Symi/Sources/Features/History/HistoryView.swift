@@ -61,7 +61,7 @@ struct HistoryView: View {
                     } header: {
                         Text(group.day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                             .font(.system(.headline, design: .rounded).weight(.bold))
-                            .foregroundStyle(JournalPalette.ink)
+                            .foregroundStyle(ColorToken.Journal.ink)
                             .textCase(nil)
                             .padding(.top, SymiSpacing.xl)
                             .accessibilityAddTraits(.isHeader)
@@ -71,8 +71,8 @@ struct HistoryView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(JournalPalette.background.ignoresSafeArea())
-        .tint(JournalPalette.ink)
+        .background(ColorToken.Journal.background.ignoresSafeArea())
+        .tint(ColorToken.Journal.ink)
         .navigationTitle("Alle Einträge")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -198,19 +198,6 @@ struct HistoryView: View {
     }
 }
 
-private enum JournalPalette {
-    static let background = SymiColors.warmBackground.color
-    static let card = SymiColors.onAccent.color
-    static let accent = SymiColors.sage.color
-    static let ink = SymiColors.journalInk.color
-    static let primaryText = SymiColors.textPrimary.color
-    static let secondary = SymiColors.textSecondary.color
-    static let border = Color.primary.opacity(SymiOpacity.journalBorder)
-    static let chipFill = SymiColors.onAccent.color.opacity(SymiOpacity.journalChipFill)
-    static let selectedChipFill = SymiColors.journalSelectedChipFill.color
-    static let shadow = Color.primary.opacity(SymiOpacity.journalShadow)
-}
-
 private enum JournalDateRange: String, CaseIterable, Identifiable {
     case all = "Alle"
     case today = "Heute"
@@ -323,7 +310,7 @@ private struct JournalHeader: View {
         HStack(alignment: .center, spacing: SymiSpacing.md) {
             Text("Alle Einträge")
                 .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                .foregroundStyle(JournalPalette.ink)
+                .foregroundStyle(ColorToken.Journal.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(SymiTypography.compactScaleFactor)
                 .accessibilityAddTraits(.isHeader)
@@ -334,7 +321,7 @@ private struct JournalHeader: View {
                 Image(systemName: "line.3.horizontal.decrease")
                     .font(.headline.weight(.semibold))
                     .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
-                    .background(JournalPalette.card, in: Circle())
+                    .background(ColorToken.Journal.card, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Filter")
@@ -345,7 +332,7 @@ private struct JournalHeader: View {
                 Image(systemName: "magnifyingglass")
                     .font(.headline.weight(.semibold))
                     .frame(width: SymiSize.minInteractiveHeight, height: SymiSize.minInteractiveHeight)
-                    .background(JournalPalette.card, in: Circle())
+                    .background(ColorToken.Journal.card, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Suche")
@@ -364,10 +351,10 @@ private struct JournalSearchField: View {
             .autocorrectionDisabled()
             .padding(.horizontal, SymiSpacing.md)
             .frame(minHeight: SymiSize.minInteractiveHeight)
-            .background(JournalPalette.card, in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+            .background(ColorToken.Journal.card, in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous)
-                    .stroke(JournalPalette.border, lineWidth: SymiStroke.hairline)
+                    .stroke(ColorToken.Journal.border, lineWidth: SymiStroke.hairline)
             )
             .focused($isFocused)
             .task {
@@ -462,14 +449,14 @@ private struct JournalChip: View {
         Button(action: action) {
             Text(title)
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .foregroundStyle(JournalPalette.ink)
+                .foregroundStyle(ColorToken.Journal.ink)
                 .padding(.horizontal, SymiSpacing.md)
                 .frame(minHeight: SymiSize.minInteractiveHeight)
-                .background(isSelected ? JournalPalette.selectedChipFill : JournalPalette.chipFill, in: Capsule())
+                .background(isSelected ? ColorToken.Journal.selectedChipFill : ColorToken.Journal.chipFill, in: Capsule())
                 .overlay(
                     Capsule()
                         .stroke(
-                            isSelected ? JournalPalette.accent.opacity(SymiOpacity.journalSelectedStroke) : JournalPalette.border,
+                            isSelected ? ColorToken.Journal.accent.opacity(SymiOpacity.journalSelectedStroke) : ColorToken.Journal.border,
                             lineWidth: SymiStroke.hairline
                         )
                 )
@@ -493,13 +480,13 @@ private struct JournalRemovableChip: View {
                     .font(.caption2.weight(.bold))
                     .accessibilityHidden(true)
             }
-            .foregroundStyle(JournalPalette.ink)
+            .foregroundStyle(ColorToken.Journal.ink)
             .padding(.horizontal, SymiSpacing.md)
             .frame(minHeight: SymiSize.journalActiveFilterChipMinHeight)
-            .background(JournalPalette.selectedChipFill, in: Capsule())
+            .background(ColorToken.Journal.selectedChipFill, in: Capsule())
             .overlay(
                 Capsule()
-                    .stroke(JournalPalette.accent.opacity(SymiOpacity.journalSelectedStroke), lineWidth: SymiStroke.hairline)
+                    .stroke(ColorToken.Journal.accent.opacity(SymiOpacity.journalSelectedStroke), lineWidth: SymiStroke.hairline)
             )
         }
         .buttonStyle(.plain)
@@ -523,7 +510,7 @@ private struct JournalEntryGroups: View {
                     VStack(alignment: .leading, spacing: SymiSpacing.sm) {
                         Text(group.day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                             .font(.system(.headline, design: .rounded).weight(.bold))
-                            .foregroundStyle(JournalPalette.ink)
+                            .foregroundStyle(ColorToken.Journal.ink)
                             .accessibilityAddTraits(.isHeader)
 
                         VStack(spacing: SymiSpacing.sm) {
@@ -569,7 +556,7 @@ private struct JournalEntryCard: View {
                 HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.sm) {
                     Text(intensityTitle)
                         .font(.system(.headline, design: .rounded).weight(.semibold))
-                        .foregroundStyle(JournalPalette.primaryText)
+                        .foregroundStyle(ColorToken.Journal.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
@@ -577,18 +564,18 @@ private struct JournalEntryCard: View {
 
                     Text(episode.startedAt.formatted(date: .omitted, time: .shortened))
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(JournalPalette.secondary)
+                        .foregroundStyle(ColorToken.Journal.secondaryText)
                         .monospacedDigit()
 
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(JournalPalette.secondary.opacity(SymiOpacity.secondaryActionText))
+                        .foregroundStyle(ColorToken.Journal.secondaryText.opacity(SymiOpacity.secondaryActionText))
                         .accessibilityHidden(true)
                 }
 
                 Text(subtitle)
                     .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(JournalPalette.secondary)
+                    .foregroundStyle(ColorToken.Journal.secondaryText)
                     .lineLimit(2)
                     .truncationMode(.tail)
                     .fixedSize(horizontal: false, vertical: true)
@@ -596,13 +583,13 @@ private struct JournalEntryCard: View {
         }
         .padding(SymiSpacing.md)
         .frame(maxWidth: .infinity, minHeight: SymiSize.journalEntryCardMinHeight, alignment: .leading)
-        .background(JournalPalette.card, in: RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous))
+        .background(ColorToken.Journal.card, in: RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous)
-                .stroke(JournalPalette.border, lineWidth: SymiStroke.hairline)
+                .stroke(ColorToken.Journal.border, lineWidth: SymiStroke.hairline)
         )
         .shadow(
-            color: JournalPalette.shadow,
+            color: ColorToken.Journal.shadow,
             radius: SymiShadow.journalCardRadius,
             x: SymiShadow.journalCardXOffset,
             y: SymiShadow.journalCardYOffset
@@ -650,13 +637,13 @@ private struct JournalEmptyState: View {
         VStack(spacing: SymiSpacing.zero) {
             Text("Keine Einträge")
                 .font(.system(.headline, design: .rounded).weight(.bold))
-                .foregroundStyle(JournalPalette.ink)
+                .foregroundStyle(ColorToken.Journal.ink)
         }
         .frame(maxWidth: .infinity, minHeight: SymiSize.journalEmptyStateMinHeight)
-        .background(JournalPalette.card, in: RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous))
+        .background(ColorToken.Journal.card, in: RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: SymiRadius.journalCard, style: .continuous)
-                .stroke(JournalPalette.border, lineWidth: SymiStroke.hairline)
+                .stroke(ColorToken.Journal.border, lineWidth: SymiStroke.hairline)
         )
     }
 }
@@ -710,14 +697,14 @@ private struct JournalDateRangeRow: View {
             HStack(spacing: SymiSpacing.md) {
                 Text(title)
                     .font(.system(.body, design: .rounded).weight(.medium))
-                    .foregroundStyle(JournalPalette.ink)
+                    .foregroundStyle(ColorToken.Journal.ink)
 
                 Spacer(minLength: SymiSpacing.md)
 
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(JournalPalette.accent)
+                        .foregroundStyle(ColorToken.Journal.accent)
                 }
             }
             .contentShape(Rectangle())
@@ -742,7 +729,7 @@ private extension View {
             )
         )
         .listRowSeparator(.hidden)
-        .listRowBackground(JournalPalette.background)
+        .listRowBackground(ColorToken.Journal.background)
     }
 }
 
