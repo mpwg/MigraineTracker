@@ -254,6 +254,19 @@ enum EpisodeDayPart: String, CaseIterable, Codable, Identifiable, Sendable {
             "Nacht"
         }
     }
+
+    nonisolated var contextualLabel: String {
+        switch self {
+        case .morgens:
+            "Am Morgen"
+        case .mittags:
+            "Am Nachmittag"
+        case .abends:
+            "Am Abend"
+        case .nacht:
+            "In der Nacht"
+        }
+    }
 }
 
 struct MedicationDefinitionRecord: Identifiable, Equatable, Sendable {

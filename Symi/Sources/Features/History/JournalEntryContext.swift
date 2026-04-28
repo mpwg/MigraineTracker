@@ -36,18 +36,7 @@ enum JournalEntryContext {
     }
 
     static func timeOfDay(for date: Date, calendar: Calendar = .current) -> String {
-        let hour = calendar.component(.hour, from: date)
-
-        return switch hour {
-        case 5 ..< 11:
-            "Am Morgen"
-        case 11 ..< 17:
-            "Am Nachmittag"
-        case 17 ..< 22:
-            "Am Abend"
-        default:
-            "In der Nacht"
-        }
+        EpisodeDayPart(date: date, calendar: calendar).contextualLabel
     }
 
     static func medicationSummary(for episode: EpisodeRecord) -> String? {
