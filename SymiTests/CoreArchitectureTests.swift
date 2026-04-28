@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import os
 import Testing
 import WeatherKit
 @testable import Symi
@@ -667,41 +668,97 @@ struct CoreArchitectureTests {
 
 }
 
-private final class EpisodeRepositoryMock: EpisodeRepository, @unchecked Sendable {
-    var recentRecords: [EpisodeRecord] = []
-    var monthRecords: [EpisodeRecord] = []
-    var dayRecords: [EpisodeRecord] = []
-    var loadedRecord: EpisodeRecord?
-    var deletedRecords: [EpisodeRecord] = []
-    var lastSavedDraft: EpisodeDraft?
-    var lastWeatherSnapshot: WeatherSnapshotData?
-    var lastHealthContext: HealthContextSnapshotData?
+private final class EpisodeRepositoryMock: EpisodeRepository, Sendable {
+    private struct State: Sendable {
+        var recentRecords: [EpisodeRecord] = []
+        var monthRecords: [EpisodeRecord] = []
+        var dayRecords: [EpisodeRecord] = []
+        var loadedRecord: EpisodeRecord?
+        var deletedRecords: [EpisodeRecord] = []
+        var lastSavedDraft: EpisodeDraft?
+        var lastWeatherSnapshot: WeatherSnapshotData?
+        var lastHealthContext: HealthContextSnapshotData?
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: State())
     let savedDraftID = UUID()
 
-    func fetchRecent() throws -> [EpisodeRecord] { recentRecords }
-    func fetchByDay(_ day: Date) throws -> [EpisodeRecord] { dayRecords }
-    func fetchByMonth(_ month: Date) throws -> [EpisodeRecord] { monthRecords }
-    func load(id: UUID) throws -> EpisodeRecord? { loadedRecord }
+    var recentRecords: [EpisodeRecord] {
+        get { state.withLock(\.recentRecords) }
+        set { state.withLock { $0.recentRecords = newValue } }
+    }
+    var monthRecords: [EpisodeRecord] {
+        get { state.withLock(\.monthRecords) }
+        set { state.withLock { $0.monthRecords = newValue } }
+    }
+    var dayRecords: [EpisodeRecord] {
+        get { state.withLock(\.dayRecords) }
+        set { state.withLock { $0.dayRecords = newValue } }
+    }
+    var loadedRecord: EpisodeRecord? {
+        get { state.withLock(\.loadedRecord) }
+        set { state.withLock { $0.loadedRecord = newValue } }
+    }
+    var deletedRecords: [EpisodeRecord] {
+        get { state.withLock(\.deletedRecords) }
+        set { state.withLock { $0.deletedRecords = newValue } }
+    }
+    var lastSavedDraft: EpisodeDraft? {
+        state.withLock(\.lastSavedDraft)
+    }
+    var lastWeatherSnapshot: WeatherSnapshotData? {
+        state.withLock(\.lastWeatherSnapshot)
+    }
+    var lastHealthContext: HealthContextSnapshotData? {
+        state.withLock(\.lastHealthContext)
+    }
+
+    func fetchRecent() throws -> [EpisodeRecord] { state.withLock(\.recentRecords) }
+    func fetchByDay(_ day: Date) throws -> [EpisodeRecord] { state.withLock(\.dayRecords) }
+    func fetchByMonth(_ month: Date) throws -> [EpisodeRecord] { state.withLock(\.monthRecords) }
+    func load(id: UUID) throws -> EpisodeRecord? { state.withLock(\.loadedRecord) }
     func save(draft: EpisodeDraft, weatherSnapshot: WeatherSnapshotData?, healthContext: HealthContextSnapshotData?) throws -> UUID {
-        lastSavedDraft = draft
-        lastWeatherSnapshot = weatherSnapshot
-        lastHealthContext = healthContext
+        state.withLock {
+            $0.lastSavedDraft = draft
+            $0.lastWeatherSnapshot = weatherSnapshot
+            $0.lastHealthContext = healthContext
+        }
         return savedDraftID
     }
     func softDelete(id: UUID) throws {}
     func restore(id: UUID) throws {}
-    func fetchDeleted() throws -> [EpisodeRecord] { deletedRecords }
+    func fetchDeleted() throws -> [EpisodeRecord] { state.withLock(\.deletedRecords) }
 }
 
-private final class MedicationCatalogRepositoryMock: MedicationCatalogRepository, @unchecked Sendable {
-    var definitions: [MedicationDefinitionRecord] = []
-    var deletedDefinitions: [MedicationDefinitionRecord] = []
-    var savedDrafts: [CustomMedicationDefinitionDraft] = []
-    var deletedCatalogKeys: [String] = []
+private final class MedicationCatalogRepositoryMock: MedicationCatalogRepository, Sendable {
+    private struct State: Sendable {
+        var definitions: [MedicationDefinitionRecord] = []
+        var deletedDefinitions: [MedicationDefinitionRecord] = []
+        var savedDrafts: [CustomMedicationDefinitionDraft] = []
+        var deletedCatalogKeys: [String] = []
+    }
 
-    func fetchDefinitions(searchText: String?) throws -> [MedicationDefinitionRecord] { definitions }
+    private let state = OSAllocatedUnfairLock(initialState: State())
+
+    var definitions: [MedicationDefinitionRecord] {
+        get { state.withLock(\.definitions) }
+        set { state.withLock { $0.definitions = newValue } }
+    }
+    var deletedDefinitions: [MedicationDefinitionRecord] {
+        get { state.withLock(\.deletedDefinitions) }
+        set { state.withLock { $0.deletedDefinitions = newValue } }
+    }
+    var savedDrafts: [CustomMedicationDefinitionDraft] {
+        state.withLock(\.savedDrafts)
+    }
+    var deletedCatalogKeys: [String] {
+        state.withLock(\.deletedCatalogKeys)
+    }
+
+    func fetchDefinitions(searchText: String?) throws -> [MedicationDefinitionRecord] {
+        state.withLock(\.definitions)
+    }
     func saveCustomDefinition(_ draft: CustomMedicationDefinitionDraft) throws -> MedicationDefinitionRecord {
-        savedDrafts.append(draft)
         let record = MedicationDefinitionRecord(
             catalogKey: draft.id,
             groupID: "custom-medications",
@@ -714,13 +771,20 @@ private final class MedicationCatalogRepositoryMock: MedicationCatalogRepository
             isCustom: true,
             isDeleted: false
         )
-        definitions.append(record)
+        state.withLock {
+            $0.savedDrafts.append(draft)
+            $0.definitions.append(record)
+        }
         return record
     }
     func softDeleteCustomDefinition(catalogKey: String) throws {
-        deletedCatalogKeys.append(catalogKey)
+        state.withLock {
+            $0.deletedCatalogKeys.append(catalogKey)
+        }
     }
-    func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord] { deletedDefinitions }
+    func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord] {
+        state.withLock(\.deletedDefinitions)
+    }
 }
 
 private enum UnexpectedServiceCallError: Error {

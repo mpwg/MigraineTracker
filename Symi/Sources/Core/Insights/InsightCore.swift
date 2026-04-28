@@ -261,12 +261,8 @@ extension InsightMetrics {
     }
 }
 
-final class InsightEngine: @unchecked Sendable {
+final class InsightEngine: Sendable {
     static let minimumQualifiedEpisodeCount = 5
-
-    private var cachedFingerprint: String?
-    private var cachedResult: InsightResult?
-    private let cacheLock = NSLock()
 
     func evaluate(
         episodes: [EpisodeRecord],
@@ -274,20 +270,6 @@ final class InsightEngine: @unchecked Sendable {
         referenceDate: Date? = nil,
         calendar: Calendar = .current
     ) -> InsightResult {
-        let fingerprint = DataAggregator.fingerprint(
-            for: episodes,
-            period: period,
-            referenceDate: referenceDate,
-            calendar: calendar
-        )
-
-        cacheLock.lock()
-        if fingerprint == cachedFingerprint, let cachedResult {
-            cacheLock.unlock()
-            return cachedResult
-        }
-        cacheLock.unlock()
-
         let aggregate = DataAggregator.aggregate(
             episodes: episodes,
             period: period,
@@ -338,11 +320,6 @@ final class InsightEngine: @unchecked Sendable {
                 insights: insights
             )
         }
-
-        cacheLock.lock()
-        cachedFingerprint = fingerprint
-        cachedResult = result
-        cacheLock.unlock()
 
         return result
     }

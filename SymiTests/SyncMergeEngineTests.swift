@@ -125,6 +125,39 @@ struct SyncMergeEngineTests {
     }
 
     @Test
+    func cloudKitProviderStateSerializesConcurrentQueueAccess() async {
+        let state = CloudKitSyncProviderState()
+        let recordNames = (0..<80).map { "record-\($0)" }
+
+        await withTaskGroup(of: Void.self) { group in
+            for recordName in recordNames {
+                group.addTask {
+                    _ = await state.queue(recordNames: [recordName], zoneID: syncTestZoneID)
+                }
+            }
+        }
+
+        #expect(await state.queuedChangeCount == recordNames.count)
+    }
+
+    @Test
+    func cloudKitProviderStateRemovesSentRecordsAcrossConcurrentCallbacks() async {
+        let state = CloudKitSyncProviderState()
+        let recordNames = (0..<60).map { "record-\($0)" }
+        _ = await state.queue(recordNames: recordNames, zoneID: syncTestZoneID)
+
+        await withTaskGroup(of: Void.self) { group in
+            for chunk in recordNames.chunked(into: 5) {
+                group.addTask {
+                    await state.removeSentRecordNames(chunk)
+                }
+            }
+        }
+
+        #expect(await state.queuedChangeCount == 0)
+    }
+
+    @Test
     @MainActor
     func cloudKitRecordCodecRejectsEnvelopeMetadataMismatch() throws {
         let envelope = definitionEnvelope(name: "Sumatriptan", deletedAt: nil)
@@ -666,6 +699,14 @@ private func fuzzedEpisodeEnvelope(seed: Int) -> SyncDocumentEnvelope {
 
 private let syncTestDeviceID = "device-local"
 private let syncTestZoneID = CKRecordZone.ID(zoneName: "SyncTests", ownerName: CKCurrentUserDefaultName)
+
+private extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map { startIndex in
+            Array(self[startIndex..<Swift.min(startIndex + size, count)])
+        }
+    }
+}
 
 @MainActor
 private func makeSyncTestStack() throws -> (
