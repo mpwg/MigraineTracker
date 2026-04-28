@@ -104,6 +104,75 @@ struct SyncMergeEngineTests {
 
     @Test
     @MainActor
+    func cloudKitRecordCodecEnforcesPayloadByteBudget() throws {
+        let acceptedEnvelope = episodeEnvelopeNearCloudKitPayloadBudget()
+        let acceptedByteCount = try #require(CloudKitRecordCodec.payloadByteCount(for: acceptedEnvelope))
+
+        #expect(acceptedByteCount <= SyncPayloadSchema.maximumCloudKitPayloadBytes)
+        #expect(try record(from: acceptedEnvelope).recordID.recordName == acceptedEnvelope.documentID)
+
+        let oversizedEnvelope = oversizedEpisodeEnvelope()
+        let oversizedByteCount = try #require(CloudKitRecordCodec.payloadByteCount(for: oversizedEnvelope))
+
+        #expect(oversizedByteCount > SyncPayloadSchema.maximumCloudKitPayloadBytes)
+        #expect(
+            CloudKitRecordCodec.record(
+                for: oversizedEnvelope,
+                zoneID: syncTestZoneID,
+                existingSystemFields: nil
+            ) == nil
+        )
+    }
+
+    @Test
+    @MainActor
+    func cloudKitRecordCodecRejectsEnvelopeMetadataMismatch() throws {
+        let envelope = definitionEnvelope(name: "Sumatriptan", deletedAt: nil)
+        let record = try record(from: envelope)
+
+        record["schemaVersion"] = NSNumber(value: envelope.schemaVersion + 1)
+
+        #expect(CloudKitRecordCodec.envelope(from: record) == nil)
+    }
+
+    @Test
+    @MainActor
+    func syncPayloadFuzzCasesRoundTripWithinCloudKitBudget() throws {
+        for seed in 0..<32 {
+            let envelope = fuzzedEpisodeEnvelope(seed: seed)
+            let byteCount = try #require(CloudKitRecordCodec.payloadByteCount(for: envelope))
+            let record = try record(from: envelope)
+
+            #expect(byteCount <= SyncPayloadSchema.maximumCloudKitPayloadBytes)
+            #expect(CloudKitRecordCodec.envelope(from: record) == envelope)
+        }
+    }
+
+    @Test
+    @MainActor
+    func remoteValidatorRejectsUnsupportedSchemaVersionAndPayloadTypeMismatch() throws {
+        var unsupportedVersion = definitionEnvelope(name: "Sumatriptan", deletedAt: nil)
+        unsupportedVersion.schemaVersion = SyncPayloadSchema.currentVersion(for: unsupportedVersion.entityType) + 1
+
+        #expect(throws: RemoteSyncPayloadValidationError.self) {
+            try RemoteSyncPayloadValidator.validate(unsupportedVersion)
+        }
+
+        let mismatchedEnvelope = SyncDocumentEnvelope(
+            documentID: unsupportedVersion.documentID,
+            entityType: .episode,
+            modifiedAt: unsupportedVersion.modifiedAt,
+            authorDeviceID: unsupportedVersion.authorDeviceID,
+            payload: unsupportedVersion.payload
+        )
+
+        #expect(throws: RemoteSyncPayloadValidationError.self) {
+            try RemoteSyncPayloadValidator.validate(mismatchedEnvelope)
+        }
+    }
+
+    @Test
+    @MainActor
     func conflictFreeRemoteMergeStoresShadowForMergedState() async throws {
         let stack = try makeSyncTestStack()
         let documentID = try insertBaseEpisode(in: stack.container)
@@ -521,6 +590,78 @@ private func episodeEnvelope(
             )
         )
     )
+}
+
+@MainActor
+private func episodeEnvelopeNearCloudKitPayloadBudget() -> SyncDocumentEnvelope {
+    var lowerBound = 0
+    var upperBound = SyncPayloadSchema.maximumCloudKitPayloadBytes
+    var best = episodeEnvelope(notes: "", symptoms: [])
+
+    while lowerBound <= upperBound {
+        let midpoint = (lowerBound + upperBound) / 2
+        let candidate = episodeEnvelope(notes: String(repeating: "a", count: midpoint), symptoms: ["Aura"])
+        let byteCount = CloudKitRecordCodec.payloadByteCount(for: candidate) ?? Int.max
+
+        if byteCount <= SyncPayloadSchema.maximumCloudKitPayloadBytes {
+            best = candidate
+            lowerBound = midpoint + 1
+        } else {
+            upperBound = midpoint - 1
+        }
+    }
+
+    return best
+}
+
+@MainActor
+private func oversizedEpisodeEnvelope() -> SyncDocumentEnvelope {
+    var notes = String(repeating: "a", count: SyncPayloadSchema.maximumCloudKitPayloadBytes)
+    var envelope = episodeEnvelope(notes: notes, symptoms: ["Aura"])
+
+    while (CloudKitRecordCodec.payloadByteCount(for: envelope) ?? 0) <= SyncPayloadSchema.maximumCloudKitPayloadBytes {
+        notes += "übel "
+        envelope = episodeEnvelope(notes: notes, symptoms: ["Aura"])
+    }
+
+    return envelope
+}
+
+private func fuzzedEpisodeEnvelope(seed: Int) -> SyncDocumentEnvelope {
+    let fragments = [
+        "Migräne",
+        "Übelkeit",
+        "Aura",
+        "Lärm",
+        "Licht",
+        "Stress",
+        "Schlaf",
+        "Wärme"
+    ]
+    let notes = (0...seed).map { index in
+        fragments[(seed + index) % fragments.count]
+    }.joined(separator: " · ")
+    let symptoms = Array(fragments.prefix((seed % fragments.count) + 1))
+
+    var envelope = episodeEnvelope(
+        notes: notes,
+        symptoms: symptoms,
+        medications: [
+            SyncMedicationEntryPayload(
+                id: UUID(uuidString: "00000000-0000-0000-0000-\(String(format: "%012d", seed + 1))")!.uuidString,
+                name: "Ibuprofen \(seed)",
+                category: MedicationCategory.nsar.rawValue,
+                dosage: "\(200 + seed) mg",
+                quantity: max(1, seed % 4),
+                takenAt: Date(timeIntervalSince1970: TimeInterval(seed * 60)),
+                effectiveness: MedicationEffectiveness.partial.rawValue,
+                reliefStartedAt: nil,
+                isRepeatDose: seed.isMultiple(of: 3)
+            )
+        ]
+    )
+    envelope.modifiedAt = Date(timeIntervalSince1970: TimeInterval(seed + 1_000))
+    return envelope
 }
 
 private let syncTestDeviceID = "device-local"

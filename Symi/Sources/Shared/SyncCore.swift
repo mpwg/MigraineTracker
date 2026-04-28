@@ -35,6 +35,29 @@ public enum SyncEntityType: String, Codable, CaseIterable, Sendable {
     case continuousMedication
 }
 
+public enum SyncPayloadSchema {
+    public nonisolated static let currentVersion = 1
+    public nonisolated static let maximumCloudKitPayloadBytes = 900_000
+
+    public nonisolated static func currentVersion(for entityType: SyncEntityType) -> Int {
+        switch entityType {
+        case .episode, .medicationDefinition, .continuousMedication:
+            currentVersion
+        }
+    }
+
+    public nonisolated static func supportedVersions(for entityType: SyncEntityType) -> ClosedRange<Int> {
+        switch entityType {
+        case .episode, .medicationDefinition, .continuousMedication:
+            currentVersion...currentVersion
+        }
+    }
+
+    public nonisolated static func supports(_ version: Int, for entityType: SyncEntityType) -> Bool {
+        supportedVersions(for: entityType).contains(version)
+    }
+}
+
 public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
     public nonisolated var state: SyncServiceState
     public nonisolated var service: String
@@ -75,7 +98,7 @@ public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {
     public nonisolated init(
         documentID: String,
         entityType: SyncEntityType,
-        schemaVersion: Int = 1,
+        schemaVersion: Int = SyncPayloadSchema.currentVersion,
         modifiedAt: Date,
         authorDeviceID: String,
         deletedAt: Date? = nil,
@@ -135,6 +158,17 @@ public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {
                 try container.encode(payload, forKey: .medicationDefinition)
             case .continuousMedication(let payload):
                 try container.encode(payload, forKey: .continuousMedication)
+            }
+        }
+
+        public nonisolated var entityType: SyncEntityType {
+            switch self {
+            case .episode:
+                .episode
+            case .medicationDefinition:
+                .medicationDefinition
+            case .continuousMedication:
+                .continuousMedication
             }
         }
     }
