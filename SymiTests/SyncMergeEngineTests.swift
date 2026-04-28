@@ -6,6 +6,26 @@ import Testing
 
 struct SyncMergeEngineTests {
     @Test
+    func corruptSyncStateFileStartsWithCleanStateAndCanPersistAgain() async throws {
+        let baseDirectory = try makeTemporaryDirectory()
+        let syncDirectory = baseDirectory.appendingPathComponent("Symi", isDirectory: true)
+        try FileManager.default.createDirectory(at: syncDirectory, withIntermediateDirectories: true)
+        let syncStateURL = syncDirectory.appendingPathComponent("sync-state.json")
+        try Data("{ keine gültige Sync-State-Datei".utf8).write(to: syncStateURL)
+
+        let stateStore = SyncStateStore(baseDirectoryURL: baseDirectory)
+
+        #expect(await stateStore.syncEnabled() == false)
+
+        await stateStore.setSyncEnabled(true)
+        let persistedData = try Data(contentsOf: syncStateURL)
+        let persistedObject = try #require(
+            JSONSerialization.jsonObject(with: persistedData) as? [String: Any]
+        )
+        #expect(persistedObject["syncEnabled"] as? Bool == true)
+    }
+
+    @Test
     @MainActor
     func corruptRecordSystemFieldsPrepareFreshRecordWithoutCrashing() throws {
         let envelope = definitionEnvelope(name: "Sumatriptan", deletedAt: nil)

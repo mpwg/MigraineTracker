@@ -64,10 +64,15 @@ struct SymiApp: App {
     @MainActor
     static func makeAppRuntimeEnvironment(
         launchConfiguration: AppLaunchConfiguration,
-        storeURL overrideStoreURL: URL? = nil
+        storeURL overrideStoreURL: URL? = nil,
+        applicationSupportDirectoryURL: URL? = nil
     ) throws -> AppRuntimeEnvironment {
         let schema = Schema(versionedSchema: SymiSchemaV6.self)
-        let storeURL = overrideStoreURL ?? (launchConfiguration.isRunningTests ? unitTestStoreURL() : defaultStoreURL())
+        let storeURL = try resolvedStoreURL(
+            overrideStoreURL: overrideStoreURL,
+            launchConfiguration: launchConfiguration,
+            applicationSupportDirectoryURL: applicationSupportDirectoryURL
+        )
         let configuration = ModelConfiguration(
             "default",
             schema: schema,
@@ -101,7 +106,7 @@ struct SymiApp: App {
     }
 
     @MainActor
-    private static func makeInitialStartupState(launchConfiguration: AppLaunchConfiguration) -> AppStartupState {
+    static func makeInitialStartupState(launchConfiguration: AppLaunchConfiguration) -> AppStartupState {
         do {
             if launchConfiguration.isScreenshotMode {
                 let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)
@@ -126,10 +131,26 @@ struct SymiApp: App {
                     )
                 )
             } catch {
-                fatalError("Recovery-Container konnte nicht erstellt werden: \(error)")
+                logger.error("Recovery-Container konnte nicht erstellt werden. Safe-Mode wird angezeigt. Fehler: \(Self.sanitizedSummary(for: error), privacy: .public)")
+                return .safeMode(
+                    AppStartupFailureContext(
+                        reason: .recoveryUnavailable,
+                        errorSummary: sanitizedSummary(for: error),
+                        storeURL: context.storeURL,
+                        recoveryContext: context
+                    )
+                )
             }
         } catch {
-            fatalError("App-Start konnte nicht vorbereitet werden: \(error)")
+            logger.error("App-Start konnte nicht vorbereitet werden. Safe-Mode wird angezeigt. Fehler: \(Self.sanitizedSummary(for: error), privacy: .public)")
+            return .safeMode(
+                AppStartupFailureContext(
+                    reason: .bootstrapFailure,
+                    errorSummary: sanitizedSummary(for: error),
+                    storeURL: nil,
+                    recoveryContext: nil
+                )
+            )
         }
     }
 
@@ -173,9 +194,32 @@ struct SymiApp: App {
         }
     }
 
-    private static func defaultStoreURL() -> URL {
-        let applicationSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    static func defaultStoreURL(
+        applicationSupportDirectoryURL: URL? = nil,
+        fileManager: FileManager = .default
+    ) throws -> URL {
+        guard let applicationSupportURL = applicationSupportDirectoryURL ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw AppStartupPreparationError.applicationSupportDirectoryUnavailable
+        }
+
+        try fileManager.createDirectory(at: applicationSupportURL, withIntermediateDirectories: true)
         return applicationSupportURL.appending(path: "default.store")
+    }
+
+    private static func resolvedStoreURL(
+        overrideStoreURL: URL?,
+        launchConfiguration: AppLaunchConfiguration,
+        applicationSupportDirectoryURL: URL?
+    ) throws -> URL {
+        if let overrideStoreURL {
+            return overrideStoreURL
+        }
+
+        if launchConfiguration.isRunningTests {
+            return unitTestStoreURL()
+        }
+
+        return try defaultStoreURL(applicationSupportDirectoryURL: applicationSupportDirectoryURL)
     }
 
     private static func unitTestStoreURL() -> URL {
@@ -206,12 +250,18 @@ struct SymiApp: App {
 
         return trimmed
     }
+
+    static func sanitizedSummary(for error: Error) -> String {
+        let nsError = error as NSError
+        return "\(nsError.domain) \(nsError.code)"
+    }
 }
 
 @MainActor
 enum AppStartupState {
     case app(AppRuntimeEnvironment)
     case recovery(StoreRecoveryEnvironment)
+    case safeMode(AppStartupFailureContext)
 }
 
 @MainActor
@@ -275,6 +325,31 @@ private struct AppRootView: View {
                 }
             )
             .modelContainer(environment.fallbackContainer)
+        case .safeMode(let context):
+            StartupSafeModeView(
+                context: context,
+                prepareStoreBackup: {
+                    guard let storeURL = context.storeURL else {
+                        throw PersistentStoreRecoveryFileError.noStoreFilesFound
+                    }
+
+                    return try PersistentStoreRecoveryService.copyStoreFilesForSharing(from: storeURL)
+                },
+                startEmptyStore: {
+                    guard let storeURL = context.storeURL else {
+                        throw PersistentStoreRecoveryFileError.noStoreFilesFound
+                    }
+
+                    try PersistentStoreRecoveryService.removeStoreFilesAfterUserConfirmation(at: storeURL)
+                    return try SymiApp.makeAppRuntimeEnvironment(
+                        launchConfiguration: launchConfiguration,
+                        storeURL: storeURL
+                    )
+                },
+                didRecover: { recoveredEnvironment in
+                    startupState = .app(recoveredEnvironment)
+                }
+            )
         }
     }
 
