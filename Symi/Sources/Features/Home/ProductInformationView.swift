@@ -9,7 +9,7 @@ struct ProductInformationView: View {
     }
 
     let mode: Mode
-    var acknowledge: (() -> Void)? = nil
+    var acknowledge: (() -> Void)?
 
     var body: some View {
         List {

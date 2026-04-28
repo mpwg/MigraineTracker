@@ -700,6 +700,14 @@ private func fuzzedEpisodeEnvelope(seed: Int) -> SyncDocumentEnvelope {
 private let syncTestDeviceID = "device-local"
 private let syncTestZoneID = CKRecordZone.ID(zoneName: "SyncTests", ownerName: CKCurrentUserDefaultName)
 
+private struct SyncTestStack {
+    let container: ModelContainer
+    let stateStore: SyncStateStore
+    let coordinator: SyncCoordinator
+    let repository: LocalSyncRepository
+    let healthContextStore: HealthContextStore
+}
+
 private extension Array {
     func chunked(into size: Int) -> [[Element]] {
         stride(from: 0, to: count, by: size).map { startIndex in
@@ -709,13 +717,7 @@ private extension Array {
 }
 
 @MainActor
-private func makeSyncTestStack() throws -> (
-    container: ModelContainer,
-    stateStore: SyncStateStore,
-    coordinator: SyncCoordinator,
-    repository: LocalSyncRepository,
-    healthContextStore: HealthContextStore
-) {
+private func makeSyncTestStack() throws -> SyncTestStack {
     let schema = Schema(versionedSchema: SymiSchemaV6.self)
     let configuration = ModelConfiguration(
         "sync-tests-\(UUID().uuidString)",
@@ -737,7 +739,13 @@ private func makeSyncTestStack() throws -> (
     )
     let repository = LocalSyncRepository(modelContainer: container, healthContextStore: healthContextStore)
 
-    return (container, stateStore, coordinator, repository, healthContextStore)
+    return SyncTestStack(
+        container: container,
+        stateStore: stateStore,
+        coordinator: coordinator,
+        repository: repository,
+        healthContextStore: healthContextStore
+    )
 }
 
 @MainActor

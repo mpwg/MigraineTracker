@@ -2,9 +2,9 @@ import CryptoKit
 import Foundation
 
 enum EpisodeType: String, CaseIterable, Codable, Identifiable {
-    case migraine = "migraine"
-    case headache = "headache"
-    case unclear = "unclear"
+    case migraine
+    case headache
+    case unclear
 
     nonisolated var id: String { rawValue }
 
@@ -39,10 +39,10 @@ enum EpisodeType: String, CaseIterable, Codable, Identifiable {
 }
 
 enum MenstruationStatus: String, CaseIterable, Codable, Identifiable {
-    case unknown = "unknown"
-    case none = "none"
-    case active = "active"
-    case expected = "expected"
+    case unknown
+    case none
+    case active
+    case expected
 
     nonisolated var id: String { rawValue }
 
@@ -128,9 +128,9 @@ enum MedicationCategory: String, CaseIterable, Codable, Identifiable {
 }
 
 enum MedicationEffectiveness: String, CaseIterable, Codable, Identifiable {
-    case none = "none"
-    case partial = "partial"
-    case good = "good"
+    case none
+    case partial
+    case good
 
     nonisolated var id: String { rawValue }
 
@@ -179,7 +179,7 @@ enum StringListStorage {
             return ""
         }
 
-        return String(decoding: data, as: UTF8.self)
+        return String(bytes: data, encoding: .utf8) ?? ""
     }
 
     nonisolated static func decode(_ storage: String) -> [String] {
@@ -474,7 +474,7 @@ extension WeatherSnapshot {
         guard !points.isEmpty, let data = try? JSONEncoder.weatherContextEncoder.encode(points) else {
             return ""
         }
-        return String(decoding: data, as: UTF8.self)
+        return String(bytes: data, encoding: .utf8) ?? ""
     }
 
     private static func decodeContextPoints(_ storage: String) -> [WeatherContextPointData] {

@@ -10,7 +10,7 @@ final class HomeRedesignUITests: XCTestCase {
         let app = launchHome(
             extraArguments: [
                 "-AppleInterfaceStyle", "Dark",
-                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL",
+                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"
             ]
         )
 
@@ -75,7 +75,7 @@ final class HomeRedesignUITests: XCTestCase {
             "-mt_screenshot_screen",
             "home",
             "-mt_screenshot_seed",
-            "default",
+            "default"
         ]
         app.launchArguments += extraArguments
         app.launch()

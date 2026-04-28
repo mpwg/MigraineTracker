@@ -295,8 +295,8 @@ struct CoreArchitectureTests {
 
     @Test
     func medicationDetailTextFormatsEmptyWhitespaceAndCombinations() {
-        #expect(MedicationTextFormatter.detailText(dosage: "", frequency: "") == "")
-        #expect(MedicationTextFormatter.detailText(dosage: "  ", frequency: "\n\t") == "")
+        #expect(MedicationTextFormatter.detailText(dosage: "", frequency: "").isEmpty)
+        #expect(MedicationTextFormatter.detailText(dosage: "  ", frequency: "\n\t").isEmpty)
         #expect(MedicationTextFormatter.detailText(dosage: " 50 mg ", frequency: "") == "50 mg")
         #expect(MedicationTextFormatter.detailText(dosage: "", frequency: " täglich ") == "täglich")
         #expect(MedicationTextFormatter.detailText(dosage: " 50 mg ", frequency: " täglich ") == "50 mg · täglich")

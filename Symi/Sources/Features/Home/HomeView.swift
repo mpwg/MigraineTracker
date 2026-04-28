@@ -1096,7 +1096,7 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
         LinearGradient(
             colors: [
                 SymiColors.primaryPetrol.color,
-                SymiColorValue(hex: 0x134A4B).color,
+                SymiColorValue(hex: 0x134A4B).color
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing

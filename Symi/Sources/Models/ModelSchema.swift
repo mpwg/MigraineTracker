@@ -9,7 +9,7 @@ enum SymiSchemaV1: VersionedSchema {
             Episode.self,
             MedicationEntry.self,
             MedicationDefinition.self,
-            WeatherSnapshot.self,
+            WeatherSnapshot.self
         ]
     }
 
@@ -182,7 +182,7 @@ enum SymiSchemaV2: VersionedSchema {
             Episode.self,
             MedicationEntry.self,
             MedicationDefinition.self,
-            WeatherSnapshot.self,
+            WeatherSnapshot.self
         ]
     }
 
@@ -367,7 +367,7 @@ enum SymiSchemaV3: VersionedSchema {
             Episode.self,
             MedicationEntry.self,
             MedicationDefinition.self,
-            WeatherSnapshot.self,
+            WeatherSnapshot.self
         ]
     }
 
@@ -561,7 +561,7 @@ enum SymiSchemaV4: VersionedSchema {
             WeatherSnapshot.self,
             Doctor.self,
             DoctorAppointment.self,
-            DoctorDirectoryEntry.self,
+            DoctorDirectoryEntry.self
         ]
     }
 
@@ -884,7 +884,6 @@ enum SymiSchemaV4: VersionedSchema {
     }
 }
 
-
 enum SymiSchemaV5: VersionedSchema {
     static let versionIdentifier = Schema.Version(5, 0, 0)
 
@@ -893,7 +892,7 @@ enum SymiSchemaV5: VersionedSchema {
             Episode.self,
             MedicationEntry.self,
             MedicationDefinition.self,
-            WeatherSnapshot.self,
+            WeatherSnapshot.self
         ]
     }
 
@@ -1090,7 +1089,6 @@ enum SymiSchemaV5: VersionedSchema {
         }
     }
 
-
 }
 
 enum SymiSchemaV6: VersionedSchema {
@@ -1103,7 +1101,7 @@ enum SymiSchemaV6: VersionedSchema {
             MedicationDefinition.self,
             ContinuousMedication.self,
             ContinuousMedicationCheck.self,
-            WeatherSnapshot.self,
+            WeatherSnapshot.self
         ]
     }
 
@@ -1375,7 +1373,7 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
             SymiSchemaV3.self,
             SymiSchemaV4.self,
             SymiSchemaV5.self,
-            SymiSchemaV6.self,
+            SymiSchemaV6.self
         ]
     }
 
