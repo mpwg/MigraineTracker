@@ -110,9 +110,3 @@ enum JournalEntryContext {
             .filter { !$0.isEmpty }
     }
 }
-
-private extension String {
-    var trimmed: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
