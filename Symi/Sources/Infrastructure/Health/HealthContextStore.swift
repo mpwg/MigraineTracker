@@ -24,9 +24,10 @@ final class HealthContextStore: @unchecked Sendable {
             return
         }
 
-        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try ProtectedFileStorage.createProtectedDirectory(at: directoryURL)
         let data = try encoder.encode(snapshot)
         try data.write(to: url, options: .atomic)
+        try ProtectedFileStorage.applyProtection(to: url)
     }
 
     nonisolated func load(for episodeID: UUID) -> HealthContextRecord? {

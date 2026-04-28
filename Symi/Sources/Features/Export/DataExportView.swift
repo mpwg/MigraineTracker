@@ -32,6 +32,10 @@ struct DataExportView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
+                Text("Geteilte PDFs verlassen die geschützte App-Sandbox. Speichere oder sende sie nur an Orte, denen du vertraust.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
                 if let exportErrorMessage = controller.exportErrorMessage {
                     Text(exportErrorMessage)
                         .font(.subheadline)
@@ -61,6 +65,10 @@ struct DataExportView: View {
 
             Section("Backup") {
                 Text("Das Backup enthält alle Einträge, eigene Medikamentenvorlagen, Wetter-Snapshots und gespeicherten Apple-Health-Kontext, inklusive Papierkorb-Einträgen.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Text("Geteilte Backup-Dateien können außerhalb der App-Sandbox liegen und dort anderen Schutzregeln unterliegen.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 

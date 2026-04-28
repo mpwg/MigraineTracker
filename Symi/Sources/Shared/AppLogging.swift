@@ -103,11 +103,11 @@ public actor AppLogStore {
         let baseURL = baseDirectoryURL ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         let directoryURL = baseURL.appendingPathComponent("Symi", isDirectory: true)
-        try? fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try? ProtectedFileStorage.createProtectedDirectory(at: directoryURL, fileManager: fileManager)
 
         self.fileURL = directoryURL.appendingPathComponent("app-log.ndjson")
         self.snapshotDirectoryURL = directoryURL.appendingPathComponent("Snapshots", isDirectory: true)
-        try? fileManager.createDirectory(at: snapshotDirectoryURL, withIntermediateDirectories: true)
+        try? ProtectedFileStorage.createProtectedDirectory(at: snapshotDirectoryURL, fileManager: fileManager)
         self.entries = []
 
         self.encoder.dateEncodingStrategy = .iso8601
@@ -174,6 +174,7 @@ public actor AppLogStore {
 
         do {
             try lines.joined(separator: "\n").appending("\n").write(to: exportURL, atomically: true, encoding: .utf8)
+            try ProtectedFileStorage.applyProtection(to: exportURL, excludedFromBackup: true)
             return exportURL
         } catch {
             return nil
@@ -264,6 +265,7 @@ public actor AppLogStore {
                 }
             } else {
                 try lines.joined(separator: "\n").appending("\n").write(to: fileURL, atomically: true, encoding: .utf8)
+                try ProtectedFileStorage.applyProtection(to: fileURL, fileManager: fileManager)
             }
         } catch {
             // Logging darf den App-Fluss nicht blockieren.
