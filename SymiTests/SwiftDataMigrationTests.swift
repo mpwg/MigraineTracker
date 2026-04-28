@@ -168,7 +168,7 @@ struct SwiftDataMigrationTests {
     }
 
     @Test
-    func migratesV6DelimiterListsToCurrentJSONStorage() throws {
+    func startupMaintenanceMigratesLegacyDelimiterListsToJSONStorage() throws {
         let storeURL = try makeStoreURL()
         let episodeID = UUID(uuidString: "15500000-0000-0000-0000-000000000006")!
         let startedAt = Date(timeIntervalSince1970: 1_725_000_000)
@@ -192,6 +192,7 @@ struct SwiftDataMigrationTests {
         }
 
         let migratedContainer = try makeCurrentContainer(storeURL: storeURL)
+        try StartupMaintenanceService.normalizePersistentEnumValues(in: migratedContainer)
         let context = ModelContext(migratedContainer)
         let episode = try #require(try context.fetch(FetchDescriptor<Episode>()).first)
 
@@ -267,7 +268,7 @@ private func makeContainer<SchemaType: VersionedSchema>(
 }
 
 private func makeCurrentContainer(storeURL: URL) throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV7.self)
+    let schema = Schema(versionedSchema: SymiSchemaV6.self)
     let configuration = ModelConfiguration("migration-test", schema: schema, url: storeURL, cloudKitDatabase: .none)
     return try ModelContainer(
         for: schema,
