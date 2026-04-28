@@ -16,13 +16,67 @@ struct SyncMergeEngineTests {
         let stateStore = SyncStateStore(baseDirectoryURL: baseDirectory)
 
         #expect(await stateStore.syncEnabled() == false)
+        #expect(await stateStore.lastError() != nil)
+
+        let events = await stateStore.drainPersistenceEvents()
+        #expect(events.first?.operation == "stateStore.load.error")
+        #expect(events.first?.level == .error)
+
+        let backupURLs = try FileManager.default.contentsOfDirectory(
+            at: syncDirectory,
+            includingPropertiesForKeys: nil
+        )
+        .filter { $0.lastPathComponent.hasPrefix("sync-state.schema-1.corrupt-") }
+        #expect(backupURLs.count == 1)
+        #expect(try Data(contentsOf: backupURLs[0]) == Data("{ keine gültige Sync-State-Datei".utf8))
 
         await stateStore.setSyncEnabled(true)
         let persistedData = try Data(contentsOf: syncStateURL)
         let persistedObject = try #require(
             JSONSerialization.jsonObject(with: persistedData) as? [String: Any]
         )
+        #expect(persistedObject["schemaVersion"] as? Int == 1)
         #expect(persistedObject["syncEnabled"] as? Bool == true)
+    }
+
+    @Test
+    func partialSyncStateFileIsBackedUpAndReported() async throws {
+        let baseDirectory = try makeTemporaryDirectory()
+        let syncDirectory = baseDirectory.appendingPathComponent("Symi", isDirectory: true)
+        try FileManager.default.createDirectory(at: syncDirectory, withIntermediateDirectories: true)
+        let syncStateURL = syncDirectory.appendingPathComponent("sync-state.json")
+        try Data("{\"schemaVersion\":1,\"syncEnabled\":true,\"shadows\":".utf8).write(to: syncStateURL)
+
+        let stateStore = SyncStateStore(baseDirectoryURL: baseDirectory)
+
+        #expect(await stateStore.syncEnabled() == false)
+        #expect(await stateStore.lastError()?.contains("zurückgesetzt") == true)
+
+        let backupURLs = try FileManager.default.contentsOfDirectory(
+            at: syncDirectory,
+            includingPropertiesForKeys: nil
+        )
+        .filter { $0.lastPathComponent.hasPrefix("sync-state.schema-1.corrupt-") }
+        #expect(backupURLs.count == 1)
+    }
+
+    @Test
+    func syncStateWriteFailureIsReportedInStatusAndLogEvents() async throws {
+        let baseDirectory = try makeTemporaryDirectory()
+        let syncDirectory = baseDirectory.appendingPathComponent("Symi", isDirectory: true)
+        let syncStateURL = syncDirectory.appendingPathComponent("sync-state.json")
+        try FileManager.default.createDirectory(at: syncStateURL, withIntermediateDirectories: true)
+        let stateStore = SyncStateStore(baseDirectoryURL: baseDirectory)
+
+        await stateStore.setSyncEnabled(true)
+
+        let lastError = try #require(await stateStore.lastError())
+        #expect(lastError.contains("konnte nicht geschrieben werden"))
+
+        let events = await stateStore.drainPersistenceEvents()
+        let writeError = try #require(events.first { $0.operation == "stateStore.persist.error" })
+        #expect(writeError.level == .error)
+        #expect(writeError.metadata["path"] == syncStateURL.path)
     }
 
     @Test

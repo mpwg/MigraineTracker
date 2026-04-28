@@ -58,6 +58,7 @@ final class SyncCoordinator {
         await PerformanceInstrumentation.measure("SyncLoadPersistedState") {
             isEnabled = await stateStore.syncEnabled()
             conflicts = await stateStore.conflicts()
+            await logStateStoreEvents()
             await log(level: .info, operation: "coordinator.loadPersistedState", message: "Persistierter Sync-Status geladen.", metadata: [
                 "enabled": "\(isEnabled)",
                 "conflicts": "\(conflicts.count)"
@@ -76,6 +77,7 @@ final class SyncCoordinator {
     func setSyncEnabled(_ enabled: Bool) {
         Task {
             await stateStore.setSyncEnabled(enabled)
+            await logStateStoreEvents()
             isEnabled = enabled
             await log(level: .info, operation: "coordinator.setSyncEnabled", message: enabled ? "Sync wurde aktiviert." : "Sync wurde deaktiviert.")
 
@@ -124,11 +126,13 @@ final class SyncCoordinator {
                     try await provider.send()
                 }
                 await stateStore.clearLastError()
+                await logStateStoreEvents()
                 await log(level: .info, operation: "coordinator.syncNow.finish", message: "Sync-Lauf erfolgreich abgeschlossen.", metadata: [
                     "conflicts": "\(await stateStore.conflicts().count)"
                 ])
             } catch {
                 await stateStore.setLastError(error.localizedDescription)
+                await logStateStoreEvents()
                 await log(level: .error, operation: "coordinator.syncNow.error", message: "Sync-Lauf fehlgeschlagen.", metadata: [
                     "error": error.localizedDescription
                 ])
@@ -565,6 +569,18 @@ final class SyncCoordinator {
             message: message,
             metadata: metadata
         )
+    }
+
+    private func logStateStoreEvents() async {
+        let events = await stateStore.drainPersistenceEvents()
+        for event in events {
+            await log(
+                level: event.level,
+                operation: event.operation,
+                message: event.message,
+                metadata: event.metadata
+            )
+        }
     }
 
     private func metadata(for envelope: SyncDocumentEnvelope, shadow: SyncShadow?) -> [String: String] {

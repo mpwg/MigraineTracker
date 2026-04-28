@@ -14,6 +14,9 @@ enum SyncConfiguration {
 
 actor SyncStateStore {
     private struct PersistedSyncState: Codable {
+        static let currentSchemaVersion = 1
+
+        var schemaVersion = currentSchemaVersion
         var syncEnabled = false
         var engineStateData: Data?
         var shadows: [String: SyncShadow] = [:]
@@ -21,12 +24,55 @@ actor SyncStateStore {
         var lastUploadedAt: Date?
         var lastDownloadedAt: Date?
         var lastError: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case schemaVersion
+            case syncEnabled
+            case engineStateData
+            case shadows
+            case conflicts
+            case lastUploadedAt
+            case lastDownloadedAt
+            case lastError
+        }
+
+        init() {}
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? Self.currentSchemaVersion
+
+            guard schemaVersion == Self.currentSchemaVersion else {
+                throw DecodingError.dataCorruptedError(
+                    forKey: .schemaVersion,
+                    in: container,
+                    debugDescription: "Nicht unterstützte Sync-State-Schema-Version \(schemaVersion)."
+                )
+            }
+
+            self.schemaVersion = schemaVersion
+            self.syncEnabled = try container.decodeIfPresent(Bool.self, forKey: .syncEnabled) ?? false
+            self.engineStateData = try container.decodeIfPresent(Data.self, forKey: .engineStateData)
+            self.shadows = try container.decodeIfPresent([String: SyncShadow].self, forKey: .shadows) ?? [:]
+            self.conflicts = try container.decodeIfPresent([String: SyncConflict].self, forKey: .conflicts) ?? [:]
+            self.lastUploadedAt = try container.decodeIfPresent(Date.self, forKey: .lastUploadedAt)
+            self.lastDownloadedAt = try container.decodeIfPresent(Date.self, forKey: .lastDownloadedAt)
+            self.lastError = try container.decodeIfPresent(String.self, forKey: .lastError)
+        }
+    }
+
+    struct PersistenceEvent: Sendable {
+        let level: AppLogLevel
+        let operation: String
+        let message: String
+        let metadata: [String: String]
     }
 
     private let url: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private var state: PersistedSyncState
+    private var persistenceEvents: [PersistenceEvent]
 
     init(fileManager: FileManager = .default, baseDirectoryURL: URL? = nil) {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -36,17 +82,52 @@ actor SyncStateStore {
         let baseURL = baseDirectoryURL ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         let directory = baseURL.appendingPathComponent("Symi", isDirectory: true)
-        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         self.url = directory.appendingPathComponent("sync-state.json")
 
-        if
-            let data = try? Data(contentsOf: url),
-            let persisted = try? decoder.decode(PersistedSyncState.self, from: data)
-        {
-            self.state = persisted
-        } else {
-            self.state = PersistedSyncState()
+        var initialState = PersistedSyncState()
+        var initialEvents: [PersistenceEvent] = []
+
+        do {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
+            let message = "Sync-State-Verzeichnis konnte nicht erstellt werden: \(error.localizedDescription)"
+            initialState.lastError = message
+            initialEvents.append(
+                PersistenceEvent(
+                    level: .error,
+                    operation: "stateStore.createDirectory.error",
+                    message: message,
+                    metadata: ["path": directory.path]
+                )
+            )
         }
+
+        if fileManager.fileExists(atPath: url.path) {
+            do {
+                let data = try Data(contentsOf: url)
+                initialState = try decoder.decode(PersistedSyncState.self, from: data)
+            } catch {
+                let backupResult = Self.backUpCorruptStateFile(at: url, fileManager: fileManager)
+                let message = "Sync-State-Datei konnte nicht gelesen werden und wurde zurückgesetzt: \(error.localizedDescription)"
+                initialState = PersistedSyncState()
+                initialState.lastError = message
+                initialEvents.append(
+                    PersistenceEvent(
+                        level: .error,
+                        operation: "stateStore.load.error",
+                        message: message,
+                        metadata: [
+                            "path": url.path,
+                            "backupPath": backupResult.backupURL?.path ?? "",
+                            "backupError": backupResult.errorDescription ?? ""
+                        ]
+                    )
+                )
+            }
+        }
+
+        self.state = initialState
+        self.persistenceEvents = initialEvents
     }
 
     func syncEnabled() -> Bool {
@@ -63,12 +144,29 @@ actor SyncStateStore {
             return nil
         }
 
-        return try? decoder.decode(CKSyncEngine.State.Serialization.self, from: data)
+        do {
+            return try decoder.decode(CKSyncEngine.State.Serialization.self, from: data)
+        } catch {
+            recordPersistenceFailure(
+                operation: "stateStore.engineState.decode.error",
+                message: "CKSyncEngine-State konnte nicht gelesen werden: \(error.localizedDescription)",
+                metadata: [:]
+            )
+            return nil
+        }
     }
 
     func saveEngineState(_ serialization: CKSyncEngine.State.Serialization) {
-        state.engineStateData = try? encoder.encode(serialization)
-        persist()
+        do {
+            state.engineStateData = try encoder.encode(serialization)
+            persist()
+        } catch {
+            recordPersistenceFailure(
+                operation: "stateStore.engineState.encode.error",
+                message: "CKSyncEngine-State konnte nicht gespeichert werden: \(error.localizedDescription)",
+                metadata: [:]
+            )
+        }
     }
 
     func shadows() -> [String: SyncShadow] {
@@ -135,11 +233,54 @@ actor SyncStateStore {
         persist()
     }
 
-    private func persist() {
-        guard let data = try? encoder.encode(state) else {
-            return
-        }
+    func drainPersistenceEvents() -> [PersistenceEvent] {
+        let events = persistenceEvents
+        persistenceEvents.removeAll()
+        return events
+    }
 
-        try? data.write(to: url, options: .atomic)
+    private func persist() {
+        do {
+            let data = try encoder.encode(state)
+            try data.write(to: url, options: .atomic)
+        } catch {
+            recordPersistenceFailure(
+                operation: "stateStore.persist.error",
+                message: "Sync-State-Datei konnte nicht geschrieben werden: \(error.localizedDescription)",
+                metadata: ["path": url.path]
+            )
+        }
+    }
+
+    private func recordPersistenceFailure(operation: String, message: String, metadata: [String: String]) {
+        state.lastError = message
+        persistenceEvents.append(
+            PersistenceEvent(
+                level: .error,
+                operation: operation,
+                message: message,
+                metadata: metadata
+            )
+        )
+    }
+
+    private static func backUpCorruptStateFile(
+        at url: URL,
+        fileManager: FileManager
+    ) -> (backupURL: URL?, errorDescription: String?) {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let timestamp = formatter.string(from: .now)
+            .replacingOccurrences(of: ":", with: "-")
+        let backupURL = url
+            .deletingLastPathComponent()
+            .appendingPathComponent("sync-state.schema-\(PersistedSyncState.currentSchemaVersion).corrupt-\(timestamp).json")
+
+        do {
+            try fileManager.copyItem(at: url, to: backupURL)
+            return (backupURL, nil)
+        } catch {
+            return (nil, error.localizedDescription)
+        }
     }
 }
