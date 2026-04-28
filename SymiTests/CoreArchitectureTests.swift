@@ -157,6 +157,34 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func featureSourcesDoNotWireAppContainerOrInfrastructureImplementations() throws {
+        let featureFiles = try swiftSourceFiles(in: "Symi/Sources/Features")
+        #expect(!featureFiles.isEmpty)
+        let forbiddenReferences = [
+            "AppContainer",
+            "SwiftDataEpisodeRepository",
+            "SwiftDataMedicationCatalogRepository",
+            "SwiftDataContinuousMedicationRepository",
+            "SwiftDataExportRepository",
+            "AppleHealthKitService",
+            "AppleWeatherKitWeatherService",
+            "SystemLocationService",
+            "SyncServiceAdapter"
+        ]
+
+        for file in featureFiles {
+            let contents = try String(contentsOf: file, encoding: .utf8)
+
+            for reference in forbiddenReferences {
+                #expect(
+                    !contents.contains(reference),
+                    "\(file.lastPathComponent) verdrahtet \(reference) direkt statt Feature-Dependencies zu verwenden."
+                )
+            }
+        }
+    }
+
+    @Test
     func appleWeatherKitServiceSkipsDatesBeforeHourlyHistory() async throws {
         let service = AppleWeatherKitWeatherService()
         let oldDate = Date(timeIntervalSince1970: 1_627_775_999)
@@ -761,6 +789,31 @@ private func fixedCalendar() -> Calendar {
     calendar.timeZone = TimeZone(secondsFromGMT: 0)!
     calendar.firstWeekday = 2
     return calendar
+}
+
+private func swiftSourceFiles(in relativePath: String) throws -> [URL] {
+    let testFileURL = URL(fileURLWithPath: #filePath)
+    let repositoryRoot = testFileURL
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    let directory = repositoryRoot.appending(path: relativePath, directoryHint: .isDirectory)
+
+    guard let enumerator = FileManager.default.enumerator(
+        at: directory,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+    ) else {
+        return []
+    }
+
+    return try enumerator.compactMap { item -> URL? in
+        guard let url = item as? URL, url.pathExtension == "swift" else {
+            return nil
+        }
+
+        let values = try url.resourceValues(forKeys: [.isRegularFileKey])
+        return values.isRegularFile == true ? url : nil
+    }
 }
 
 private func sampleEnvelope() -> SyncDocumentEnvelope {

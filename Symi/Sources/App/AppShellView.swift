@@ -32,6 +32,7 @@ enum AppSection: String, CaseIterable, Identifiable {
 
 struct AppShellView: View {
     let appContainer: AppContainer
+    private var features: AppFeatureDependencies { appContainer.featureDependencies }
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selectedSection: AppSection = .diary
@@ -103,13 +104,13 @@ struct AppShellView: View {
     private func content(for section: AppSection) -> some View {
         switch section {
         case .diary:
-            HomeView(appContainer: appContainer)
+            HomeView(dependencies: features.home)
         case .insights:
-            InsightsView(appContainer: appContainer)
+            InsightsView(dependencies: features.insights)
         case .export:
-            DataExportView(appContainer: appContainer)
+            DataExportView(dependencies: features.dataExport)
         case .settings:
-            SettingsView(appContainer: appContainer, showsCloseButton: false)
+            SettingsView(dependencies: features.settings, showsCloseButton: false)
         case .information:
             ProductInformationView(mode: .standard)
         }

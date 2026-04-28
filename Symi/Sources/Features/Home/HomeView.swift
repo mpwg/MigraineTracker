@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
-    let appContainer: AppContainer
+    let dependencies: HomeFeatureDependencies
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var displayedMonth = Calendar.current.startOfMonth(for: .now)
@@ -10,8 +10,8 @@ struct HomeView: View {
     @State private var quickEntryIntensity = 5
     @State private var isPresentingEpisodeEditor = false
 
-    init(appContainer: AppContainer) {
-        self.appContainer = appContainer
+    init(dependencies: HomeFeatureDependencies) {
+        self.dependencies = dependencies
     }
 
     var body: some View {
@@ -32,7 +32,7 @@ struct HomeView: View {
             await reloadAll()
         }
         .fullScreenCover(isPresented: $isPresentingEpisodeEditor) {
-            EntryFlowCoordinatorView(appContainer: appContainer, initialStartedAt: .now) {
+            EntryFlowCoordinatorView(dependencies: dependencies.capture, initialStartedAt: .now) {
                 isPresentingEpisodeEditor = false
                 Task { await reloadAll() }
             }
@@ -53,7 +53,7 @@ struct HomeView: View {
                 }
                 .padding(.bottom, SymiSpacing.lg)
 
-                HomeAllEntriesLink(appContainer: appContainer)
+                HomeAllEntriesLink(dependencies: dependencies.history)
                     .padding(.bottom, SymiSpacing.lg)
 
                 HomeMonthCalendarView(
@@ -65,7 +65,7 @@ struct HomeView: View {
                     .padding(.bottom, SymiSpacing.lg)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
-                    InsightsView(appContainer: appContainer)
+                    InsightsView(dependencies: dependencies.insights)
                 }
                 .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
@@ -97,11 +97,11 @@ struct HomeView: View {
                 )
                     .padding(.bottom, SymiSpacing.lg)
 
-                HomeAllEntriesLink(appContainer: appContainer)
+                HomeAllEntriesLink(dependencies: dependencies.history)
                     .padding(.bottom, SymiSpacing.lg)
 
                 HomePatternPreviewSection(data: patternPreviewData) {
-                    InsightsView(appContainer: appContainer)
+                    InsightsView(dependencies: dependencies.insights)
                 }
                 .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
@@ -121,14 +121,11 @@ struct HomeView: View {
 
     private func reloadCalendarMonth() async {
         let month = displayedMonth
-        calendarMonthData = (try? await LoadHistoryMonthUseCase(repository: appContainer.episodeRepository).execute(month: month)) ?? HistoryMonthData(month: month, episodesByDay: [:])
+        calendarMonthData = (try? await dependencies.loadCalendarMonth(month)) ?? HistoryMonthData(month: month, episodesByDay: [:])
     }
 
     private func reloadPatternPreview() async {
-        patternPreviewData = (try? await LoadHomePatternPreviewUseCase(
-            repository: appContainer.episodeRepository,
-            insightEngine: appContainer.insightEngine
-        ).execute()) ?? HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
+        patternPreviewData = (try? await dependencies.loadPatternPreview()) ?? HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
     }
 
     private func showPreviousMonth() {
@@ -396,12 +393,12 @@ private struct PrimaryEntryButton: View {
 }
 
 private struct HomeAllEntriesLink: View {
-    let appContainer: AppContainer
+    let dependencies: HistoryFeatureDependencies
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationLink {
-            HistoryView(appContainer: appContainer)
+            HistoryView(dependencies: dependencies)
         } label: {
             HStack(spacing: SymiSpacing.sm) {
                 Image(systemName: "list.bullet.rectangle")
@@ -592,7 +589,7 @@ private struct HomePatternEmptyState: View {
 }
 
 struct InsightsView: View {
-    let appContainer: AppContainer
+    let dependencies: InsightsFeatureDependencies
     @State private var data = InsightResult(totalQualifiedEpisodeCount: 0, insights: [])
     @State private var selectedPeriod: InsightPeriod = .thirtyDays
 
@@ -623,10 +620,7 @@ struct InsightsView: View {
     }
 
     private func reload() async {
-        data = (try? await LoadInsightResultUseCase(
-            repository: appContainer.episodeRepository,
-            insightEngine: appContainer.insightEngine
-        ).execute(period: selectedPeriod)) ?? InsightResult(
+        data = (try? await dependencies.loadResult(selectedPeriod)) ?? InsightResult(
             period: selectedPeriod,
             totalQualifiedEpisodeCount: 0,
             insights: []

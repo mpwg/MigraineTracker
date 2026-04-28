@@ -299,6 +299,7 @@ struct ScreenshotRootView: View {
     let appContainer: AppContainer
     let configuration: AppLaunchConfiguration
     let seed: ScreenshotSeed
+    private var features: AppFeatureDependencies { appContainer.featureDependencies }
 
     var body: some View {
         rootView
@@ -309,30 +310,30 @@ struct ScreenshotRootView: View {
         switch configuration.screenshotRoute ?? .home {
         case .home:
             NavigationStack {
-                HomeView(appContainer: appContainer)
+                HomeView(dependencies: features.home)
             }
 
         case .newEntry:
-            EntryFlowCoordinatorView(appContainer: appContainer, initialStartedAt: seed.newEntryDate)
+            EntryFlowCoordinatorView(dependencies: features.capture, initialStartedAt: seed.newEntryDate)
 
         case .insights:
             NavigationStack {
-                InsightsView(appContainer: appContainer)
+                InsightsView(dependencies: features.insights)
             }
 
         case .history:
             NavigationStack {
-                HistoryView(appContainer: appContainer)
+                HistoryView(dependencies: features.history)
             }
 
         case .episodeDetail:
             NavigationStack {
-                EpisodeDetailView(appContainer: appContainer, episodeID: seed.primaryEpisodeID)
+                EpisodeDetailView(dependencies: features.history, episodeID: seed.primaryEpisodeID)
             }
 
         case .export:
             NavigationStack {
-                DataExportView(appContainer: appContainer)
+                DataExportView(dependencies: features.dataExport)
             }
 
         case .privacyInfo:

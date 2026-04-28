@@ -3,24 +3,9 @@ import SwiftData
 
 @MainActor
 final class AppContainer {
-    let modelContainer: ModelContainer
-    let syncCoordinator: SyncCoordinator
-    let appLogStore: AppLogStore
-    let weatherService: WeatherService
-    let locationService: LocationService
-    let healthService: HealthService
-    let healthContextStore: HealthContextStore
-    let episodeWeatherContextService: EpisodeWeatherContextProviding
-    let weatherBackfillService: WeatherBackfillService
-    let startupMaintenanceService: StartupMaintenanceService
+    let featureDependencies: AppFeatureDependencies
 
-    let episodeRepository: EpisodeRepository
-    let medicationCatalogRepository: MedicationCatalogRepository
-    let continuousMedicationRepository: ContinuousMedicationRepository
-    let exportRepository: ExportRepository
-    let insightEngine: InsightEngine
-    let syncService: SyncService
-    let appLogService: AppLogService
+    private let startupMaintenanceService: StartupMaintenanceService
 
     init(
         modelContainer: ModelContainer,
@@ -31,18 +16,11 @@ final class AppContainer {
         healthService: any HealthService = AppleHealthKitService(),
         healthContextStore: HealthContextStore = HealthContextStore()
     ) {
-        self.modelContainer = modelContainer
-        self.syncCoordinator = syncCoordinator
-        self.appLogStore = appLogStore
-        self.weatherService = weatherService
-        self.locationService = locationService
-        self.healthService = healthService
-        self.healthContextStore = healthContextStore
-        self.episodeWeatherContextService = EpisodeWeatherContextService(
+        let episodeWeatherContextService = EpisodeWeatherContextService(
             weatherService: weatherService,
             locationService: locationService
         )
-        self.weatherBackfillService = WeatherBackfillService(
+        let weatherBackfillService = WeatherBackfillService(
             modelContainer: modelContainer,
             weatherService: weatherService,
             locationService: locationService
@@ -51,58 +29,147 @@ final class AppContainer {
             modelContainer: modelContainer,
             weatherBackfillService: weatherBackfillService
         )
-        self.episodeRepository = SwiftDataEpisodeRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
-        self.medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
-        self.continuousMedicationRepository = SwiftDataContinuousMedicationRepository(modelContainer: modelContainer)
-        self.exportRepository = SwiftDataExportRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
-        self.insightEngine = InsightEngine()
-        self.syncService = SyncServiceAdapter(coordinator: syncCoordinator)
-        self.appLogService = appLogStore
+
+        let episodeRepository = SwiftDataEpisodeRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
+        let medicationCatalogRepository = SwiftDataMedicationCatalogRepository(modelContainer: modelContainer)
+        let continuousMedicationRepository = SwiftDataContinuousMedicationRepository(modelContainer: modelContainer)
+        let exportRepository = SwiftDataExportRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
+        let insightEngine = InsightEngine()
+        let syncService = SyncServiceAdapter(coordinator: syncCoordinator)
+
+        let capture = CaptureFeatureDependencies(
+            makeEntryFlowCoordinator: { initialStartedAt in
+                EntryFlowCoordinator(
+                    initialStartedAt: initialStartedAt,
+                    episodeRepository: episodeRepository,
+                    medicationRepository: medicationCatalogRepository,
+                    continuousMedicationRepository: continuousMedicationRepository,
+                    weatherContextService: episodeWeatherContextService,
+                    healthService: healthService
+                )
+            },
+            makeEpisodeEditorController: { episodeID, initialStartedAt in
+                EpisodeEditorController(
+                    episodeID: episodeID,
+                    initialStartedAt: initialStartedAt,
+                    episodeRepository: episodeRepository,
+                    medicationRepository: medicationCatalogRepository,
+                    weatherContextService: episodeWeatherContextService,
+                    healthService: healthService
+                )
+            }
+        )
+        let history = HistoryFeatureDependencies(
+            makeHistoryController: {
+                HistoryController(repository: episodeRepository)
+            },
+            loadEpisodeDetail: { episodeID in
+                try await LoadEpisodeDetailUseCase(repository: episodeRepository).execute(id: episodeID)
+            },
+            deleteEpisode: { episodeID in
+                try await DeleteEpisodeUseCase(repository: episodeRepository).execute(id: episodeID)
+            },
+            capture: capture
+        )
+        let insights = InsightsFeatureDependencies(
+            loadResult: { period in
+                try await LoadInsightResultUseCase(
+                    repository: episodeRepository,
+                    insightEngine: insightEngine
+                ).execute(period: period)
+            }
+        )
+        let dataExport = DataExportFeatureDependencies(
+            makeDataExportController: {
+                DataExportController(repository: exportRepository)
+            }
+        )
+        let settings = SettingsFeatureDependencies(
+            makeSettingsController: {
+                SettingsController(
+                    episodeRepository: episodeRepository,
+                    medicationRepository: medicationCatalogRepository,
+                    continuousMedicationRepository: continuousMedicationRepository,
+                    syncService: syncService,
+                    appLogService: appLogStore,
+                    healthService: healthService
+                )
+            },
+            dataExport: dataExport
+        )
+        self.featureDependencies = AppFeatureDependencies(
+            home: HomeFeatureDependencies(
+                loadCalendarMonth: { month in
+                    try await LoadHistoryMonthUseCase(repository: episodeRepository).execute(month: month)
+                },
+                loadPatternPreview: {
+                    try await LoadHomePatternPreviewUseCase(
+                        repository: episodeRepository,
+                        insightEngine: insightEngine
+                    ).execute()
+                },
+                capture: capture,
+                history: history,
+                insights: insights
+            ),
+            capture: capture,
+            history: history,
+            insights: insights,
+            settings: settings,
+            dataExport: dataExport
+        )
     }
 
     func startDeferredMaintenanceIfNeeded() {
         startupMaintenanceService.startIfNeeded()
     }
+}
 
-    func makeEpisodeEditorController(episodeID: UUID? = nil, initialStartedAt: Date? = nil) -> EpisodeEditorController {
-        EpisodeEditorController(
-            episodeID: episodeID,
-            initialStartedAt: initialStartedAt,
-            episodeRepository: episodeRepository,
-            medicationRepository: medicationCatalogRepository,
-            weatherContextService: episodeWeatherContextService,
-            healthService: healthService
-        )
-    }
+@MainActor
+struct AppFeatureDependencies {
+    let home: HomeFeatureDependencies
+    let capture: CaptureFeatureDependencies
+    let history: HistoryFeatureDependencies
+    let insights: InsightsFeatureDependencies
+    let settings: SettingsFeatureDependencies
+    let dataExport: DataExportFeatureDependencies
+}
 
-    func makeEntryFlowCoordinator(initialStartedAt: Date? = nil) -> EntryFlowCoordinator {
-        EntryFlowCoordinator(
-            initialStartedAt: initialStartedAt,
-            episodeRepository: episodeRepository,
-            medicationRepository: medicationCatalogRepository,
-            continuousMedicationRepository: continuousMedicationRepository,
-            weatherContextService: episodeWeatherContextService,
-            healthService: healthService
-        )
-    }
+@MainActor
+struct HomeFeatureDependencies {
+    let loadCalendarMonth: (Date) async throws -> HistoryMonthData
+    let loadPatternPreview: () async throws -> HomePatternPreviewData
+    let capture: CaptureFeatureDependencies
+    let history: HistoryFeatureDependencies
+    let insights: InsightsFeatureDependencies
+}
 
-    func makeHistoryController() -> HistoryController {
-        HistoryController(repository: episodeRepository)
-    }
+@MainActor
+struct CaptureFeatureDependencies {
+    let makeEntryFlowCoordinator: (Date?) -> EntryFlowCoordinator
+    let makeEpisodeEditorController: (UUID?, Date?) -> EpisodeEditorController
+}
 
-    func makeSettingsController() -> SettingsController {
-        SettingsController(
-            episodeRepository: episodeRepository,
-            medicationRepository: medicationCatalogRepository,
-            continuousMedicationRepository: continuousMedicationRepository,
-            syncService: syncService,
-            appLogService: appLogService,
-            healthService: healthService
-        )
-    }
+@MainActor
+struct HistoryFeatureDependencies {
+    let makeHistoryController: () -> HistoryController
+    let loadEpisodeDetail: (UUID) async throws -> EpisodeRecord?
+    let deleteEpisode: (UUID) async throws -> Void
+    let capture: CaptureFeatureDependencies
+}
 
-    func makeDataExportController() -> DataExportController {
-        DataExportController(repository: exportRepository)
-    }
+@MainActor
+struct InsightsFeatureDependencies {
+    let loadResult: (InsightPeriod) async throws -> InsightResult
+}
 
+@MainActor
+struct SettingsFeatureDependencies {
+    let makeSettingsController: () -> SettingsController
+    let dataExport: DataExportFeatureDependencies
+}
+
+@MainActor
+struct DataExportFeatureDependencies {
+    let makeDataExportController: () -> DataExportController
 }
