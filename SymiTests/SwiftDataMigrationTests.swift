@@ -168,6 +168,42 @@ struct SwiftDataMigrationTests {
     }
 
     @Test
+    func startupMaintenanceMigratesLegacyDelimiterListsToJSONStorage() throws {
+        let storeURL = try makeStoreURL()
+        let episodeID = UUID(uuidString: "15500000-0000-0000-0000-000000000006")!
+        let startedAt = Date(timeIntervalSince1970: 1_725_000_000)
+
+        do {
+            let container = try makeContainer(schema: SymiSchemaV6.self, storeURL: storeURL)
+            let context = ModelContext(container)
+            let episode = SymiSchemaV6.Episode(
+                id: episodeID,
+                startedAt: startedAt,
+                updatedAt: startedAt.addingTimeInterval(90),
+                typeRaw: EpisodeType.migraine.rawValue,
+                intensity: 7,
+                symptomsStorage: "Übelkeit|Aura",
+                triggersStorage: "Stress|Schlaf",
+                menstruationStatusRaw: MenstruationStatus.unknown.rawValue
+            )
+
+            context.insert(episode)
+            try context.save()
+        }
+
+        let migratedContainer = try makeCurrentContainer(storeURL: storeURL)
+        try StartupMaintenanceService.normalizePersistentEnumValues(in: migratedContainer)
+        let context = ModelContext(migratedContainer)
+        let episode = try #require(try context.fetch(FetchDescriptor<Episode>()).first)
+
+        #expect(episode.id == episodeID)
+        #expect(episode.symptoms == ["Übelkeit", "Aura"])
+        #expect(episode.triggers == ["Stress", "Schlaf"])
+        #expect(episode.symptomsStorage == "[\"Übelkeit\",\"Aura\"]")
+        #expect(episode.triggersStorage == "[\"Stress\",\"Schlaf\"]")
+    }
+
+    @Test
     func normalizesLegacyGermanEnumValuesInCurrentStore() throws {
         let container = try makeCurrentContainer(storeURL: try makeStoreURL())
         let context = ModelContext(container)

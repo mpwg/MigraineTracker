@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 enum EpisodeType: String, CaseIterable, Codable, Identifiable {
@@ -172,13 +173,63 @@ struct MedicationTextFormatter {
     }
 }
 
+enum StringListStorage {
+    nonisolated static func encode(_ values: [String]) -> String {
+        guard !values.isEmpty, let data = try? JSONEncoder().encode(values) else {
+            return ""
+        }
+
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    nonisolated static func decode(_ storage: String) -> [String] {
+        let trimmedStorage = storage.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedStorage.isEmpty else {
+            return []
+        }
+
+        if trimmedStorage.first == "[",
+           let data = trimmedStorage.data(using: .utf8),
+           let values = try? JSONDecoder().decode([String].self, from: data) {
+            return values.filter { !$0.isEmpty }
+        }
+
+        return decodeLegacyDelimiterStorage(trimmedStorage)
+    }
+
+    nonisolated static func migrateLegacyStorage(_ storage: String) -> String {
+        let trimmedStorage = storage.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedStorage.isEmpty, trimmedStorage.first != "[" else {
+            return storage
+        }
+
+        return encode(decodeLegacyDelimiterStorage(trimmedStorage))
+    }
+
+    private nonisolated static func decodeLegacyDelimiterStorage(_ storage: String) -> [String] {
+        storage
+            .split(separator: "|")
+            .map { String($0) }
+            .filter { !$0.isEmpty }
+    }
+}
+
 struct MedicationSelectionKey {
     nonisolated static func make(name: String, category: MedicationCategory, dosage: String) -> String {
-        [
-            name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-            category.rawValue,
-            dosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        ].joined(separator: "|")
+        let payload = [
+            "name": name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+            "category": category.rawValue,
+            "dosage": dosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        ]
+        let data = (try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])) ?? Data()
+        let digest = SHA256.hash(data: data)
+            .map { byte -> String in
+                let hex = String(byte, radix: 16)
+                return hex.count == 1 ? "0\(hex)" : hex
+            }
+            .joined()
+
+        return "medication-sha256:\(digest)"
     }
 }
 
@@ -212,8 +263,8 @@ extension Episode {
             painLocation: painLocation,
             painCharacter: painCharacter,
             notes: notes,
-            symptomsStorage: symptoms.joined(separator: "|"),
-            triggersStorage: triggers.joined(separator: "|"),
+            symptomsStorage: StringListStorage.encode(symptoms),
+            triggersStorage: StringListStorage.encode(triggers),
             functionalImpact: functionalImpact,
             menstruationStatusRaw: menstruationStatus.rawValue,
             medications: medications,
@@ -232,13 +283,13 @@ extension Episode {
     }
 
     var symptoms: [String] {
-        get { Episode.decodeList(symptomsStorage) }
-        set { symptomsStorage = newValue.joined(separator: "|") }
+        get { StringListStorage.decode(symptomsStorage) }
+        set { symptomsStorage = StringListStorage.encode(newValue) }
     }
 
     var triggers: [String] {
-        get { Episode.decodeList(triggersStorage) }
-        set { triggersStorage = newValue.joined(separator: "|") }
+        get { StringListStorage.decode(triggersStorage) }
+        set { triggersStorage = StringListStorage.encode(newValue) }
     }
 
     var hasWeatherSnapshot: Bool {
@@ -264,12 +315,6 @@ extension Episode {
         deletedAt = nil
     }
 
-    private static func decodeList(_ storage: String) -> [String] {
-        storage
-            .split(separator: "|")
-            .map { String($0) }
-            .filter { !$0.isEmpty }
-    }
 }
 
 extension ContinuousMedication {

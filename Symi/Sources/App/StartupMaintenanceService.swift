@@ -53,6 +53,18 @@ final class StartupMaintenanceService {
 
         let episodes = try context.fetch(FetchDescriptor<Episode>())
         for episode in episodes {
+            let migratedSymptomsStorage = StringListStorage.migrateLegacyStorage(episode.symptomsStorage)
+            if episode.symptomsStorage != migratedSymptomsStorage {
+                episode.symptomsStorage = migratedSymptomsStorage
+                didChange = true
+            }
+
+            let migratedTriggersStorage = StringListStorage.migrateLegacyStorage(episode.triggersStorage)
+            if episode.triggersStorage != migratedTriggersStorage {
+                episode.triggersStorage = migratedTriggersStorage
+                didChange = true
+            }
+
             let normalizedType = EpisodeType(storageValue: episode.typeRaw).rawValue
             if episode.typeRaw != normalizedType {
                 episode.typeRaw = normalizedType
