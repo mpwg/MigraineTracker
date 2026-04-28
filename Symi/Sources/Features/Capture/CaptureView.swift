@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct CaptureView: View {
-    let appContainer: AppContainer
+    let dependencies: CaptureFeatureDependencies
 
     var body: some View {
-        EntryFlowCoordinatorView(appContainer: appContainer)
+        EntryFlowCoordinatorView(dependencies: dependencies)
     }
 }
 

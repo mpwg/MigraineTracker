@@ -7,17 +7,14 @@ struct EpisodeEditorView: View {
     private let onSaved: (() -> Void)?
 
     init(
-        appContainer: AppContainer,
+        dependencies: CaptureFeatureDependencies,
         episodeID: UUID? = nil,
         initialStartedAt: Date? = nil,
         onSaved: (() -> Void)? = nil
     ) {
         self.onSaved = onSaved
         _controller = State(
-            initialValue: appContainer.makeEpisodeEditorController(
-                episodeID: episodeID,
-                initialStartedAt: initialStartedAt
-            )
+            initialValue: dependencies.makeEpisodeEditorController(episodeID, initialStartedAt)
         )
     }
 

@@ -3,7 +3,7 @@ import SwiftUI
 struct EpisodeDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let appContainer: AppContainer
+    let dependencies: HistoryFeatureDependencies
     let episodeID: UUID
     let onChanged: () -> Void
 
@@ -12,19 +12,14 @@ struct EpisodeDetailView: View {
     @State private var isLoading = true
     @State private var isShowingDeleteConfirmation = false
 
-    private let loadEpisodeDetailUseCase: LoadEpisodeDetailUseCase
-    private let deleteEpisodeUseCase: DeleteEpisodeUseCase
-
     init(
-        appContainer: AppContainer,
+        dependencies: HistoryFeatureDependencies,
         episodeID: UUID,
         onChanged: @escaping () -> Void = {}
     ) {
-        self.appContainer = appContainer
+        self.dependencies = dependencies
         self.episodeID = episodeID
         self.onChanged = onChanged
-        self.loadEpisodeDetailUseCase = LoadEpisodeDetailUseCase(repository: appContainer.episodeRepository)
-        self.deleteEpisodeUseCase = DeleteEpisodeUseCase(repository: appContainer.episodeRepository)
         _episode = State(initialValue: nil)
     }
 
@@ -78,7 +73,7 @@ struct EpisodeDetailView: View {
         .sheet(isPresented: $isEditing) {
             NavigationStack {
                 EpisodeEditorView(
-                    appContainer: appContainer,
+                    dependencies: dependencies.capture,
                     episodeID: episodeID,
                     onSaved: handleSavedEpisode
                 )
@@ -115,7 +110,7 @@ struct EpisodeDetailView: View {
     private func deleteEpisode() {
         Task {
             do {
-                try await deleteEpisodeUseCase.execute(id: episodeID)
+                try await dependencies.deleteEpisode(episodeID)
                 onChanged()
                 dismiss()
             } catch {
@@ -126,7 +121,7 @@ struct EpisodeDetailView: View {
 
     private func reload() async {
         isLoading = true
-        episode = try? await loadEpisodeDetailUseCase.execute(id: episodeID)
+        episode = try? await dependencies.loadEpisodeDetail(episodeID)
         isLoading = false
     }
 }

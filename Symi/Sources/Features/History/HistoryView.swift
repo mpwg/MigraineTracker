@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct HistoryView: View {
-    let appContainer: AppContainer
+    let dependencies: HistoryFeatureDependencies
     @State private var controller: HistoryController
     @State private var searchText = ""
     @State private var isSearchVisible = false
     @State private var isFilterSheetPresented = false
     @State private var filters = JournalFilters()
 
-    init(appContainer: AppContainer) {
-        self.appContainer = appContainer
-        _controller = State(initialValue: appContainer.makeHistoryController())
+    init(dependencies: HistoryFeatureDependencies) {
+        self.dependencies = dependencies
+        _controller = State(initialValue: dependencies.makeHistoryController())
     }
 
     var body: some View {
@@ -39,7 +39,7 @@ struct HistoryView: View {
                         ForEach(group.episodes) { episode in
                             NavigationLink {
                                 EpisodeDetailView(
-                                    appContainer: appContainer,
+                                    dependencies: dependencies,
                                     episodeID: episode.id,
                                     onChanged: { Task { await reloadJournal() } }
                                 )
@@ -106,7 +106,7 @@ struct HistoryView: View {
         .sheet(item: editingEpisodeBinding) { episodeID in
             NavigationStack {
                 EpisodeEditorView(
-                    appContainer: appContainer,
+                    dependencies: dependencies.capture,
                     episodeID: episodeID.id,
                     onSaved: {
                         controller.editingEpisodeID = nil
@@ -496,7 +496,7 @@ private struct JournalRemovableChip: View {
 
 private struct JournalEntryGroups: View {
     let groupedEpisodes: [JournalDayGroup]
-    let appContainer: AppContainer
+    let dependencies: HistoryFeatureDependencies
     let onChanged: () -> Void
     let onEdit: (UUID) -> Void
     let onDelete: (UUID) -> Void
@@ -517,7 +517,7 @@ private struct JournalEntryGroups: View {
                             ForEach(group.episodes) { episode in
                                 NavigationLink {
                                     EpisodeDetailView(
-                                        appContainer: appContainer,
+                                        dependencies: dependencies,
                                         episodeID: episode.id,
                                         onChanged: onChanged
                                     )

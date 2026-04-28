@@ -7,13 +7,13 @@ struct EntryFlowCoordinatorView: View {
     private let onSaved: (() -> Void)?
 
     init(
-        appContainer: AppContainer,
+        dependencies: CaptureFeatureDependencies,
         initialStartedAt: Date? = nil,
         onSaved: (() -> Void)? = nil
     ) {
         self.onSaved = onSaved
         _coordinator = State(
-            initialValue: appContainer.makeEntryFlowCoordinator(initialStartedAt: initialStartedAt)
+            initialValue: dependencies.makeEntryFlowCoordinator(initialStartedAt)
         )
     }
 

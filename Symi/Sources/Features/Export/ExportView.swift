@@ -2,14 +2,14 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    let appContainer: AppContainer
+    let dependencies: SettingsFeatureDependencies
     let showsCloseButton: Bool
     @State private var controller: SettingsController
 
-    init(appContainer: AppContainer, showsCloseButton: Bool = true) {
-        self.appContainer = appContainer
+    init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
+        self.dependencies = dependencies
         self.showsCloseButton = showsCloseButton
-        _controller = State(initialValue: appContainer.makeSettingsController())
+        _controller = State(initialValue: dependencies.makeSettingsController())
     }
 
     var body: some View {
@@ -46,7 +46,7 @@ struct SettingsView: View {
                 .tint(AppTheme.ocean)
 
                 NavigationLink {
-                    ManageCloudDataView(appContainer: appContainer, controller: controller)
+                    ManageCloudDataView(dataExportDependencies: dependencies.dataExport, controller: controller)
                 } label: {
                     Label("Cloud-Daten verwalten", systemImage: "icloud")
                 }
@@ -101,7 +101,7 @@ struct SettingsView: View {
                 }
 
                 NavigationLink {
-                    DataExportView(appContainer: appContainer)
+                    DataExportView(dependencies: dependencies.dataExport)
                 } label: {
                     Label("Daten und Backup", systemImage: "square.and.arrow.up")
                 }
@@ -602,7 +602,7 @@ private struct SyncStatusView: View {
 }
 
 private struct ManageCloudDataView: View {
-    let appContainer: AppContainer
+    let dataExportDependencies: DataExportFeatureDependencies
     @Bindable var controller: SettingsController
     @State private var selectedConflict: SyncConflict?
     @State private var isResolvingConflict = false
@@ -635,7 +635,7 @@ private struct ManageCloudDataView: View {
                 .disabled(!controller.isSyncEnabled || controller.syncStatus.lastError == nil)
 
                 NavigationLink {
-                    DataExportView(appContainer: appContainer)
+                    DataExportView(dependencies: dataExportDependencies)
                 } label: {
                     Text("Lokales JSON5-Backup erstellen")
                 }

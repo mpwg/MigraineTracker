@@ -4,8 +4,8 @@ import UniformTypeIdentifiers
 struct DataExportView: View {
     @State private var controller: DataExportController
 
-    init(appContainer: AppContainer) {
-        _controller = State(initialValue: appContainer.makeDataExportController())
+    init(dependencies: DataExportFeatureDependencies) {
+        _controller = State(initialValue: dependencies.makeDataExportController())
     }
 
     var body: some View {
