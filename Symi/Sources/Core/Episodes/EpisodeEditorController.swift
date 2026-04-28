@@ -163,7 +163,7 @@ final class EpisodeMedicationSelectionController {
             return
         }
 
-        let selectionKey = MedicationSelectionDraft.makeSelectionKey(
+        let selectionKey = MedicationSelectionKey.make(
             name: name,
             category: fallbackCategory,
             dosage: fallbackDosage

@@ -107,7 +107,7 @@ enum AppStoreScreenshotMode {
             selectedTriggers: Set(ScreenshotLocalization.list(de: ["Stress", "Bildschirmzeit"], en: ["Stress", "Screen time"])),
             medications: [
                 MedicationSelectionDraft(
-                    selectionKey: MedicationSelectionDraft.makeSelectionKey(
+                    selectionKey: MedicationSelectionKey.make(
                         name: "Paracetamol",
                         category: .paracetamol,
                         dosage: "500 mg"
