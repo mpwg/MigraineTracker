@@ -54,7 +54,6 @@ enum SymiColors {
     static let onAccent = SymiColorValue(hex: 0xFFFFFF)
 
     static let journalInk = SymiColorValue(hex: 0x143F3F)
-    static let journalTextSecondary = SymiColorValue(hex: 0x68706D)
     static let journalSelectedChipFill = SymiColorValue(hex: 0xDDEFE7)
     static let intensityLight = SymiColorValue(hex: 0x4E9D7D)
     static let intensityMedium = SymiColorValue(hex: 0xC1842F)
@@ -138,6 +137,19 @@ enum ColorToken {
 
     enum Brand {
         static let primary = SymiColors.primaryPetrol.color
+    }
+
+    enum Journal {
+        static let background = ColorToken.Surface.appBackground
+        static let card = SymiColors.onAccent.color
+        static let accent = SymiColors.sage.color
+        static let ink = SymiColors.journalInk.color
+        static let primaryText = SymiColors.textPrimary.color
+        static let secondaryText = SymiColors.textSecondary.color
+        static let border = Color.primary.opacity(SymiOpacity.journalBorder)
+        static let chipFill = SymiColors.onAccent.color.opacity(SymiOpacity.journalChipFill)
+        static let selectedChipFill = SymiColors.journalSelectedChipFill.color
+        static let shadow = Color.primary.opacity(SymiOpacity.journalShadow)
     }
 
     enum Neutral {
