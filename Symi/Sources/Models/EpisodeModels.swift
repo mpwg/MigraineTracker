@@ -1,38 +1,166 @@
 import Foundation
 
 enum EpisodeType: String, CaseIterable, Codable, Identifiable {
-    case migraine = "Migräne"
-    case headache = "Kopfschmerz"
-    case unclear = "Unklar"
+    case migraine = "migraine"
+    case headache = "headache"
+    case unclear = "unclear"
 
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
+
+    nonisolated var displayName: String {
+        switch self {
+        case .migraine:
+            String(localized: "Migräne")
+        case .headache:
+            String(localized: "Kopfschmerz")
+        case .unclear:
+            String(localized: "Unklar")
+        }
+    }
+
+    nonisolated init(storageValue: String) {
+        switch storageValue {
+        case Self.migraine.rawValue, "Migräne":
+            self = .migraine
+        case Self.headache.rawValue, "Kopfschmerz":
+            self = .headache
+        case Self.unclear.rawValue, "Unklar":
+            self = .unclear
+        default:
+            self = .unclear
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.init(storageValue: try container.decode(String.self))
+    }
 }
 
 enum MenstruationStatus: String, CaseIterable, Codable, Identifiable {
-    case unknown = "Nicht angegeben"
-    case none = "Nein"
-    case active = "Aktuell"
-    case expected = "Erwartet"
+    case unknown = "unknown"
+    case none = "none"
+    case active = "active"
+    case expected = "expected"
 
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
+
+    nonisolated var displayName: String {
+        switch self {
+        case .unknown:
+            String(localized: "Nicht angegeben")
+        case .none:
+            String(localized: "Nein")
+        case .active:
+            String(localized: "Aktuell")
+        case .expected:
+            String(localized: "Erwartet")
+        }
+    }
+
+    nonisolated init(storageValue: String) {
+        switch storageValue {
+        case Self.unknown.rawValue, "Nicht angegeben":
+            self = .unknown
+        case Self.none.rawValue, "Nein":
+            self = .none
+        case Self.active.rawValue, "Aktuell":
+            self = .active
+        case Self.expected.rawValue, "Erwartet":
+            self = .expected
+        default:
+            self = .unknown
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.init(storageValue: try container.decode(String.self))
+    }
 }
 
 enum MedicationCategory: String, CaseIterable, Codable, Identifiable {
-    case triptan = "Triptan"
-    case nsar = "NSAR"
-    case paracetamol = "Paracetamol"
-    case antiemetic = "Antiemetikum"
-    case other = "Sonstiges"
+    case triptan = "triptan"
+    case nsar = "nsaid"
+    case paracetamol = "paracetamol"
+    case antiemetic = "antiemetic"
+    case other = "other"
 
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
+
+    nonisolated var displayName: String {
+        switch self {
+        case .triptan:
+            String(localized: "Triptan")
+        case .nsar:
+            String(localized: "NSAR")
+        case .paracetamol:
+            String(localized: "Paracetamol")
+        case .antiemetic:
+            String(localized: "Antiemetikum")
+        case .other:
+            String(localized: "Sonstiges")
+        }
+    }
+
+    nonisolated init(storageValue: String) {
+        switch storageValue {
+        case Self.triptan.rawValue, "Triptan":
+            self = .triptan
+        case Self.nsar.rawValue, "nsar", "NSAR":
+            self = .nsar
+        case Self.paracetamol.rawValue, "Paracetamol":
+            self = .paracetamol
+        case Self.antiemetic.rawValue, "Antiemetikum":
+            self = .antiemetic
+        case Self.other.rawValue, "Sonstiges":
+            self = .other
+        default:
+            self = .other
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.init(storageValue: try container.decode(String.self))
+    }
 }
 
 enum MedicationEffectiveness: String, CaseIterable, Codable, Identifiable {
-    case none = "Keine"
-    case partial = "Teilweise"
-    case good = "Gut"
+    case none = "none"
+    case partial = "partial"
+    case good = "good"
 
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
+
+    nonisolated var displayName: String {
+        switch self {
+        case .none:
+            String(localized: "Keine")
+        case .partial:
+            String(localized: "Teilweise")
+        case .good:
+            String(localized: "Gut")
+        }
+    }
+
+    nonisolated init(storageValue: String) {
+        switch storageValue {
+        case Self.none.rawValue, "Keine":
+            self = .none
+        case Self.partial.rawValue, "Teilweise":
+            self = .partial
+        case Self.good.rawValue, "Gut":
+            self = .good
+        default:
+            self = .partial
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.init(storageValue: try container.decode(String.self))
+    }
 }
 
 struct MedicationTextFormatter {
@@ -94,12 +222,12 @@ extension Episode {
     }
 
     var type: EpisodeType {
-        get { EpisodeType(rawValue: typeRaw) ?? .unclear }
+        get { EpisodeType(storageValue: typeRaw) }
         set { typeRaw = newValue.rawValue }
     }
 
     var menstruationStatus: MenstruationStatus {
-        get { MenstruationStatus(rawValue: menstruationStatusRaw) ?? .unknown }
+        get { MenstruationStatus(storageValue: menstruationStatusRaw) }
         set { menstruationStatusRaw = newValue.rawValue }
     }
 
@@ -191,12 +319,12 @@ extension MedicationEntry {
     }
 
     var category: MedicationCategory {
-        get { MedicationCategory(rawValue: categoryRaw) ?? .other }
+        get { MedicationCategory(storageValue: categoryRaw) }
         set { categoryRaw = newValue.rawValue }
     }
 
     var effectiveness: MedicationEffectiveness {
-        get { MedicationEffectiveness(rawValue: effectivenessRaw) ?? .partial }
+        get { MedicationEffectiveness(storageValue: effectivenessRaw) }
         set { effectivenessRaw = newValue.rawValue }
     }
 }
@@ -233,7 +361,7 @@ extension MedicationDefinition {
     }
 
     var category: MedicationCategory {
-        get { MedicationCategory(rawValue: categoryRaw) ?? .other }
+        get { MedicationCategory(storageValue: categoryRaw) }
         set { categoryRaw = newValue.rawValue }
     }
 

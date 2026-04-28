@@ -166,6 +166,53 @@ struct SwiftDataMigrationTests {
         #expect(episode.continuousMedicationChecks.isEmpty)
         #expect(try context.fetch(FetchDescriptor<ContinuousMedication>()).isEmpty)
     }
+
+    @Test
+    func normalizesLegacyGermanEnumValuesInCurrentStore() throws {
+        let container = try makeCurrentContainer(storeURL: try makeStoreURL())
+        let context = ModelContext(container)
+        let startedAt = Date(timeIntervalSince1970: 1_730_000_000)
+        let episode = Episode(
+            startedAt: startedAt,
+            typeRaw: "Migräne",
+            intensity: 6,
+            menstruationStatusRaw: "Nein"
+        )
+        episode.medications = [
+            MedicationEntry(
+                name: "Sumatriptan",
+                categoryRaw: "Triptan",
+                dosage: "50 mg",
+                takenAt: startedAt,
+                effectivenessRaw: "Gut",
+                episode: episode
+            )
+        ]
+        let definition = MedicationDefinition(
+            catalogKey: "custom:legacy",
+            groupID: "custom",
+            groupTitle: "Eigene Medikamente",
+            name: "Ibuprofen",
+            categoryRaw: "NSAR",
+            suggestedDosage: "400 mg",
+            sortOrder: 0,
+            isCustom: true
+        )
+        context.insert(episode)
+        context.insert(definition)
+        try context.save()
+
+        try StartupMaintenanceService.normalizePersistentEnumValues(in: container)
+
+        let migratedContext = ModelContext(container)
+        let migratedEpisode = try #require(try migratedContext.fetch(FetchDescriptor<Episode>()).first)
+        let migratedDefinition = try #require(try migratedContext.fetch(FetchDescriptor<MedicationDefinition>()).first)
+        #expect(migratedEpisode.typeRaw == "migraine")
+        #expect(migratedEpisode.menstruationStatusRaw == "none")
+        #expect(migratedEpisode.medications.first?.categoryRaw == "triptan")
+        #expect(migratedEpisode.medications.first?.effectivenessRaw == "good")
+        #expect(migratedDefinition.categoryRaw == "nsaid")
+    }
 }
 
 private func makeStoreURL() throws -> URL {

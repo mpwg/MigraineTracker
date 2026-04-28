@@ -49,6 +49,36 @@ struct DataTransferHealthContextTests {
     }
 
     @Test
+    func backupUsesStableEnumKeysAndImportsLegacyGermanValues() throws {
+        let episodeID = UUID(uuidString: "33333333-4444-5555-6666-777777777777")!
+        let sourceContainer = try makeInMemoryContainer()
+        try seedEpisode(id: episodeID, in: sourceContainer)
+
+        let backupURL = try SwiftDataExportRepository(
+            modelContainer: sourceContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        ).createBackup()
+        let backupText = try String(contentsOf: backupURL, encoding: .utf8)
+        #expect(backupText.contains(#""type" : "migraine""#))
+        #expect(backupText.contains(#""menstruationStatus" : "none""#))
+        #expect(backupText.contains(#""category" : "triptan""#))
+        #expect(backupText.contains(#""effectiveness" : "good""#))
+
+        let legacyBackupURL = try makeLegacyGermanBackupURL(episodeID: episodeID)
+        let targetContainer = try makeInMemoryContainer()
+        try SwiftDataExportRepository(
+            modelContainer: targetContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        ).importBackup(from: legacyBackupURL)
+
+        let importedEpisode = try #require(try ModelContext(targetContainer).fetch(FetchDescriptor<Episode>()).first)
+        #expect(importedEpisode.typeRaw == "migraine")
+        #expect(importedEpisode.menstruationStatusRaw == "none")
+        #expect(importedEpisode.medications.first?.categoryRaw == "triptan")
+        #expect(importedEpisode.medications.first?.effectivenessRaw == "good")
+    }
+
+    @Test
     func importWithoutHealthContextKeyKeepsExistingContext() throws {
         let episodeID = UUID()
         let existingHealthContext = makeHealthContext(source: "Bestehender Kontext")
@@ -267,6 +297,48 @@ private func backupURLByAddingExplicitNullHealthContext(to backupURL: URL) throw
     let explicitNullData = try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys])
     let url = try makeTemporaryDirectory().appending(path: "explicit-null-health-context.json5")
     try explicitNullData.write(to: url, options: .atomic)
+    return url
+}
+
+private func makeLegacyGermanBackupURL(episodeID: UUID) throws -> URL {
+    let startedAt = Date(timeIntervalSince1970: 1_700_000_000)
+    let payload: [String: Any] = [
+        "formatVersion": 1,
+        "exportedAt": ISO8601DateFormatter().string(from: startedAt),
+        "customMedicationDefinitions": [],
+        "continuousMedications": [],
+        "episodes": [
+            [
+                "id": episodeID.uuidString,
+                "startedAt": ISO8601DateFormatter().string(from: startedAt),
+                "updatedAt": ISO8601DateFormatter().string(from: startedAt.addingTimeInterval(60)),
+                "type": "Migräne",
+                "intensity": 7,
+                "painLocation": "",
+                "painCharacter": "",
+                "notes": "",
+                "symptoms": [],
+                "triggers": [],
+                "functionalImpact": "",
+                "menstruationStatus": "Nein",
+                "medications": [
+                    [
+                        "id": UUID().uuidString,
+                        "name": "Sumatriptan",
+                        "category": "Triptan",
+                        "dosage": "50 mg",
+                        "quantity": 1,
+                        "takenAt": ISO8601DateFormatter().string(from: startedAt.addingTimeInterval(900)),
+                        "effectiveness": "Gut",
+                        "isRepeatDose": false
+                    ]
+                ]
+            ]
+        ]
+    ]
+    let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+    let url = FileManager.default.temporaryDirectory.appending(path: "legacy-\(UUID().uuidString).json5")
+    try data.write(to: url)
     return url
 }
 

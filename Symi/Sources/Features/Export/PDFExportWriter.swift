@@ -127,7 +127,7 @@ nonisolated enum PDFExportWriter {
             lines.append(formatted("Schmerzcharakter: %@", record.painCharacter))
         }
 
-        if record.menstruationStatus != MenstruationStatus.unknown.rawValue {
+        if record.menstruationStatus != MenstruationStatus.unknown.displayName {
             lines.append(formatted("Menstruationsstatus: %@", localizedExportValue(record.menstruationStatus)))
         }
 
@@ -148,7 +148,7 @@ nonisolated enum PDFExportWriter {
                 let category = localizedExportValue(medication.category)
                 let dosageText = medication.dosage.isEmpty ? category : "\(category), \(medication.dosage)"
                 let quantityText = medication.quantity > 1 ? formatted(", Anzahl: %lld", Int64(medication.quantity)) : ""
-                let effectivenessText = medication.effectiveness == MedicationEffectiveness.partial.rawValue
+                let effectivenessText = medication.effectiveness == MedicationEffectiveness.partial.displayName
                     ? ""
                     : formatted(", Wirkung: %@", localizedExportValue(medication.effectiveness))
                 return "\(medication.name) (\(dosageText)\(quantityText)\(effectivenessText))"
@@ -322,22 +322,36 @@ nonisolated enum PDFExportWriter {
 
     private static func localizedExportValue(_ value: String) -> String {
         switch value {
-        case EpisodeType.migraine.rawValue,
-            EpisodeType.headache.rawValue,
-            EpisodeType.unclear.rawValue,
-            MedicationCategory.triptan.rawValue,
-            MedicationCategory.nsar.rawValue,
-            MedicationCategory.paracetamol.rawValue,
-            MedicationCategory.antiemetic.rawValue,
-            MedicationCategory.other.rawValue,
-            MenstruationStatus.unknown.rawValue,
-            MenstruationStatus.none.rawValue,
-            MenstruationStatus.active.rawValue,
-            MenstruationStatus.expected.rawValue,
-            MedicationEffectiveness.none.rawValue,
-            MedicationEffectiveness.partial.rawValue,
-            MedicationEffectiveness.good.rawValue:
-            return localized(value)
+        case EpisodeType.migraine.rawValue, "Migräne":
+            return EpisodeType.migraine.displayName
+        case EpisodeType.headache.rawValue, "Kopfschmerz":
+            return EpisodeType.headache.displayName
+        case EpisodeType.unclear.rawValue, "Unklar":
+            return EpisodeType.unclear.displayName
+        case MedicationCategory.triptan.rawValue, "Triptan":
+            return MedicationCategory.triptan.displayName
+        case MedicationCategory.nsar.rawValue, "nsar", "NSAR":
+            return MedicationCategory.nsar.displayName
+        case MedicationCategory.paracetamol.rawValue, "Paracetamol":
+            return MedicationCategory.paracetamol.displayName
+        case MedicationCategory.antiemetic.rawValue, "Antiemetikum":
+            return MedicationCategory.antiemetic.displayName
+        case MedicationCategory.other.rawValue, "Sonstiges":
+            return MedicationCategory.other.displayName
+        case MenstruationStatus.unknown.rawValue, "Nicht angegeben":
+            return MenstruationStatus.unknown.displayName
+        case MenstruationStatus.none.rawValue, "Nein":
+            return MenstruationStatus.none.displayName
+        case MenstruationStatus.active.rawValue, "Aktuell":
+            return MenstruationStatus.active.displayName
+        case MenstruationStatus.expected.rawValue, "Erwartet":
+            return MenstruationStatus.expected.displayName
+        case MedicationEffectiveness.none.rawValue, "Keine":
+            return MedicationEffectiveness.none.displayName
+        case MedicationEffectiveness.partial.rawValue, "Teilweise":
+            return MedicationEffectiveness.partial.displayName
+        case MedicationEffectiveness.good.rawValue, "Gut":
+            return MedicationEffectiveness.good.displayName
         default:
             return value
         }

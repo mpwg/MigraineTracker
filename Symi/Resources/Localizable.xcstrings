@@ -1520,6 +1520,16 @@
         }
       }
     },
+    "Erwartet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expected"
+          }
+        }
+      }
+    },
     "Export" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2354,6 +2364,16 @@
     "Nicht ausgewählt" : {
 
     },
+    "Nicht angegeben" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not specified"
+          }
+        }
+      }
+    },
     "Noch kein Eintrag für diesen Tag." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2405,6 +2425,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NSAID"
+          }
+        }
+      }
+    },
+    "Nein" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
           }
         }
       }
@@ -2576,6 +2606,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PDF"
+          }
+        }
+      }
+    },
+    "Paracetamol" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acetaminophen"
           }
         }
       }
@@ -3175,6 +3215,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Triggers"
+          }
+        }
+      }
+    },
+    "Triptan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Triptan"
           }
         }
       }

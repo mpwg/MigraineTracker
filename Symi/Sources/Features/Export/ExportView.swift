@@ -683,7 +683,7 @@ private struct ManageCloudDataView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                                 Text(episode.startedAt.formatted(date: .abbreviated, time: .shortened))
-                                Text(episode.type.rawValue)
+                                Text(episode.type.displayName)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
@@ -699,7 +699,7 @@ private struct ManageCloudDataView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                                 Text(definition.name)
-                                Text(definition.category.rawValue)
+                                Text(definition.category.displayName)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }

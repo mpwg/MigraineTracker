@@ -56,7 +56,7 @@ struct LocalSyncRepository {
             endedAt: payload.endedAt,
             updatedAt: envelope.modifiedAt,
             deletedAt: envelope.deletedAt,
-            type: EpisodeType(rawValue: payload.type) ?? .unclear,
+            type: EpisodeType(storageValue: payload.type),
             intensity: payload.intensity
         )
 
@@ -64,7 +64,7 @@ struct LocalSyncRepository {
         target.endedAt = payload.endedAt
         target.updatedAt = envelope.modifiedAt
         target.deletedAt = envelope.deletedAt
-        target.type = EpisodeType(rawValue: payload.type) ?? .unclear
+        target.type = EpisodeType(storageValue: payload.type)
         target.intensity = payload.intensity
         target.painLocation = payload.painLocation
         target.painCharacter = payload.painCharacter
@@ -72,7 +72,7 @@ struct LocalSyncRepository {
         target.symptoms = payload.symptoms
         target.triggers = payload.triggers
         target.functionalImpact = payload.functionalImpact
-        target.menstruationStatus = MenstruationStatus(rawValue: payload.menstruationStatus) ?? .unknown
+        target.menstruationStatus = MenstruationStatus(storageValue: payload.menstruationStatus)
 
         for medication in target.medications {
             context.delete(medication)
@@ -91,11 +91,11 @@ struct LocalSyncRepository {
             MedicationEntry(
                 id: UUID(uuidString: medication.id) ?? UUID(),
                 name: medication.name,
-                category: MedicationCategory(rawValue: medication.category) ?? .other,
+                category: MedicationCategory(storageValue: medication.category),
                 dosage: medication.dosage,
                 quantity: medication.quantity,
                 takenAt: medication.takenAt,
-                effectiveness: MedicationEffectiveness(rawValue: medication.effectiveness) ?? .partial,
+                effectiveness: MedicationEffectiveness(storageValue: medication.effectiveness),
                 reliefStartedAt: medication.reliefStartedAt,
                 isRepeatDose: medication.isRepeatDose,
                 episode: target
@@ -153,7 +153,7 @@ struct LocalSyncRepository {
             groupTitle: payload.groupTitle,
             groupFooter: payload.groupFooter,
             name: payload.name,
-            category: MedicationCategory(rawValue: payload.category) ?? .other,
+            category: MedicationCategory(storageValue: payload.category),
             suggestedDosage: payload.suggestedDosage,
             sortOrder: payload.sortOrder,
             isCustom: payload.isCustom,
@@ -166,7 +166,7 @@ struct LocalSyncRepository {
         target.groupTitle = payload.groupTitle
         target.groupFooter = payload.groupFooter
         target.name = payload.name
-        target.category = MedicationCategory(rawValue: payload.category) ?? .other
+        target.category = MedicationCategory(storageValue: payload.category)
         target.suggestedDosage = payload.suggestedDosage
         target.sortOrder = payload.sortOrder
         target.isCustom = payload.isCustom
