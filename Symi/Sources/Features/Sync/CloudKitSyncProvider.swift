@@ -286,7 +286,10 @@ enum CloudKitRecordCodec {
             recordID: recordID
         )
 
-        guard let data = try? encoder.encode(envelope), let payloadString = String(data: data, encoding: .utf8) else {
+        guard
+            let data = try? encodedPayloadData(for: envelope),
+            let payloadString = String(data: data, encoding: .utf8)
+        else {
             return nil
         }
 
@@ -310,7 +313,27 @@ enum CloudKitRecordCodec {
             return nil
         }
 
-        return try? decoder.decode(SyncDocumentEnvelope.self, from: data)
+        guard data.count <= SyncPayloadSchema.maximumCloudKitPayloadBytes else {
+            return nil
+        }
+
+        guard let envelope = try? decoder.decode(SyncDocumentEnvelope.self, from: data) else {
+            return nil
+        }
+
+        guard
+            record["documentID"] as? String == envelope.documentID,
+            record["entityType"] as? String == envelope.entityType.rawValue,
+            (record["schemaVersion"] as? NSNumber)?.intValue == envelope.schemaVersion
+        else {
+            return nil
+        }
+
+        return envelope
+    }
+
+    static func payloadByteCount(for envelope: SyncDocumentEnvelope) -> Int? {
+        try? encoder.encode(envelope).count
     }
 
     static func systemFields(for record: CKRecord) -> Data? {
@@ -349,10 +372,23 @@ enum CloudKitRecordCodec {
 
         return (record, nil)
     }
+
+    private static func encodedPayloadData(for envelope: SyncDocumentEnvelope) throws -> Data {
+        let data = try encoder.encode(envelope)
+        guard data.count <= SyncPayloadSchema.maximumCloudKitPayloadBytes else {
+            throw CloudKitRecordCodecError.payloadTooLarge(byteCount: data.count)
+        }
+
+        return data
+    }
 }
 
 enum CloudKitRecordSystemFieldsFallbackReason: String, Equatable, Sendable {
     case undecodableArchive
     case missingRecord
     case recordIDMismatch
+}
+
+private enum CloudKitRecordCodecError: Error {
+    case payloadTooLarge(byteCount: Int)
 }

@@ -262,6 +262,20 @@ enum RemoteSyncPayloadValidator {
     private static func validationIssues(for envelope: SyncDocumentEnvelope) -> [String] {
         var issues: [String] = []
 
+        if envelope.entityType != envelope.payload.entityType {
+            issues.append("entityType passt nicht zur Payload")
+        }
+
+        if !SyncPayloadSchema.supports(envelope.schemaVersion, for: envelope.entityType) {
+            let supportedVersions = SyncPayloadSchema.supportedVersions(for: envelope.entityType)
+            issues.append("schemaVersion \(envelope.schemaVersion) wird für \(envelope.entityType.rawValue) nicht unterstützt; unterstützt wird \(supportedVersions.lowerBound)...\(supportedVersions.upperBound)")
+        }
+
+        if let byteCount = CloudKitRecordCodec.payloadByteCount(for: envelope),
+           byteCount > SyncPayloadSchema.maximumCloudKitPayloadBytes {
+            issues.append("payloadJSON ist mit \(byteCount) Bytes größer als das Limit von \(SyncPayloadSchema.maximumCloudKitPayloadBytes) Bytes")
+        }
+
         switch envelope.payload {
         case .episode(let payload):
             validateUUID(payload.id, field: "episode.id", into: &issues)
