@@ -21,6 +21,7 @@ final class SyncCoordinator {
     init(
         modelContainer: ModelContainer,
         appLogStore: AppLogStore,
+        healthContextStore: HealthContextStore = HealthContextStore(),
         stateStore: SyncStateStore = SyncStateStore(),
         deviceID: String? = nil,
         autostart: Bool = true
@@ -28,7 +29,7 @@ final class SyncCoordinator {
         self.modelContainer = modelContainer
         self.stateStore = stateStore
         self.appLogStore = appLogStore
-        self.repository = LocalSyncRepository(modelContainer: modelContainer)
+        self.repository = LocalSyncRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
         self.deviceID = deviceID ?? Self.persistedDeviceID()
 
         guard autostart else {
@@ -558,6 +559,10 @@ final class SyncCoordinator {
             values["isCustom"] = "\(payload.isCustom)"
             values["category"] = payload.category
             values["sortOrder"] = "\(payload.sortOrder)"
+        case .continuousMedication(let payload):
+            values["hasEndDate"] = "\(payload.endDate != nil)"
+            values["hasDosage"] = "\(!payload.dosage.isEmpty)"
+            values["hasFrequency"] = "\(!payload.frequency.isEmpty)"
         }
 
         return values

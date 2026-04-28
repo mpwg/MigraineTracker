@@ -32,6 +32,7 @@ public enum SyncServiceState: String, Codable, CaseIterable, Sendable {
 public enum SyncEntityType: String, Codable, CaseIterable, Sendable {
     case episode
     case medicationDefinition
+    case continuousMedication
 }
 
 public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
@@ -92,10 +93,12 @@ public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {
     public enum Payload: Codable, Equatable, Sendable {
         case episode(SyncEpisodePayload)
         case medicationDefinition(SyncMedicationDefinitionPayload)
+        case continuousMedication(SyncContinuousMedicationPayload)
 
         private enum CodingKeys: String, CodingKey {
             case episode
             case medicationDefinition
+            case continuousMedication
         }
 
         public nonisolated init(from decoder: any Decoder) throws {
@@ -107,6 +110,11 @@ public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {
 
             if let definition = try container.decodeIfPresent(SyncMedicationDefinitionPayload.self, forKey: .medicationDefinition) {
                 self = .medicationDefinition(definition)
+                return
+            }
+
+            if let medication = try container.decodeIfPresent(SyncContinuousMedicationPayload.self, forKey: .continuousMedication) {
+                self = .continuousMedication(medication)
                 return
             }
 
@@ -125,6 +133,8 @@ public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {
                 try container.encode(payload, forKey: .episode)
             case .medicationDefinition(let payload):
                 try container.encode(payload, forKey: .medicationDefinition)
+            case .continuousMedication(let payload):
+                try container.encode(payload, forKey: .continuousMedication)
             }
         }
     }
@@ -144,7 +154,29 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
     public nonisolated var functionalImpact: String
     public nonisolated var menstruationStatus: String
     public nonisolated var medications: [SyncMedicationEntryPayload]
+    public nonisolated var continuousMedicationChecks: [SyncContinuousMedicationCheckPayload]
     public nonisolated var weatherSnapshot: SyncWeatherSnapshotPayload?
+    public nonisolated var healthContext: HealthContextSnapshotData?
+    public nonisolated var includesHealthContext: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case startedAt
+        case endedAt
+        case type
+        case intensity
+        case painLocation
+        case painCharacter
+        case notes
+        case symptoms
+        case triggers
+        case functionalImpact
+        case menstruationStatus
+        case medications
+        case continuousMedicationChecks
+        case weatherSnapshot
+        case healthContext
+    }
 
     public nonisolated init(
         id: String,
@@ -160,7 +192,10 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         functionalImpact: String,
         menstruationStatus: String,
         medications: [SyncMedicationEntryPayload],
-        weatherSnapshot: SyncWeatherSnapshotPayload?
+        continuousMedicationChecks: [SyncContinuousMedicationCheckPayload] = [],
+        weatherSnapshot: SyncWeatherSnapshotPayload?,
+        healthContext: HealthContextSnapshotData? = nil,
+        includesHealthContext: Bool = true
     ) {
         self.id = id
         self.startedAt = startedAt
@@ -175,7 +210,61 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         self.functionalImpact = functionalImpact
         self.menstruationStatus = menstruationStatus
         self.medications = medications
+        self.continuousMedicationChecks = continuousMedicationChecks
         self.weatherSnapshot = weatherSnapshot
+        self.healthContext = healthContext
+        self.includesHealthContext = includesHealthContext
+    }
+
+    public nonisolated init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.startedAt = try container.decode(Date.self, forKey: .startedAt)
+        self.endedAt = try container.decodeIfPresent(Date.self, forKey: .endedAt)
+        self.type = try container.decode(String.self, forKey: .type)
+        self.intensity = try container.decode(Int.self, forKey: .intensity)
+        self.painLocation = try container.decode(String.self, forKey: .painLocation)
+        self.painCharacter = try container.decode(String.self, forKey: .painCharacter)
+        self.notes = try container.decode(String.self, forKey: .notes)
+        self.symptoms = try container.decode([String].self, forKey: .symptoms)
+        self.triggers = try container.decode([String].self, forKey: .triggers)
+        self.functionalImpact = try container.decode(String.self, forKey: .functionalImpact)
+        self.menstruationStatus = try container.decode(String.self, forKey: .menstruationStatus)
+        self.medications = try container.decode([SyncMedicationEntryPayload].self, forKey: .medications)
+        self.continuousMedicationChecks = try container.decodeIfPresent(
+            [SyncContinuousMedicationCheckPayload].self,
+            forKey: .continuousMedicationChecks
+        ) ?? []
+        self.weatherSnapshot = try container.decodeIfPresent(SyncWeatherSnapshotPayload.self, forKey: .weatherSnapshot)
+        self.includesHealthContext = container.contains(.healthContext)
+        self.healthContext = try container.decodeIfPresent(HealthContextSnapshotData.self, forKey: .healthContext)
+    }
+
+    public nonisolated func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(startedAt, forKey: .startedAt)
+        try container.encodeIfPresent(endedAt, forKey: .endedAt)
+        try container.encode(type, forKey: .type)
+        try container.encode(intensity, forKey: .intensity)
+        try container.encode(painLocation, forKey: .painLocation)
+        try container.encode(painCharacter, forKey: .painCharacter)
+        try container.encode(notes, forKey: .notes)
+        try container.encode(symptoms, forKey: .symptoms)
+        try container.encode(triggers, forKey: .triggers)
+        try container.encode(functionalImpact, forKey: .functionalImpact)
+        try container.encode(menstruationStatus, forKey: .menstruationStatus)
+        try container.encode(medications, forKey: .medications)
+        try container.encode(continuousMedicationChecks, forKey: .continuousMedicationChecks)
+        try container.encodeIfPresent(weatherSnapshot, forKey: .weatherSnapshot)
+
+        if includesHealthContext {
+            if let healthContext {
+                try container.encode(healthContext, forKey: .healthContext)
+            } else {
+                try container.encodeNil(forKey: .healthContext)
+            }
+        }
     }
 }
 
@@ -222,6 +311,40 @@ public struct SyncMedicationEntryPayload: Codable, Equatable, Sendable {
             lhs.effectiveness == rhs.effectiveness &&
             lhs.reliefStartedAt == rhs.reliefStartedAt &&
             lhs.isRepeatDose == rhs.isRepeatDose
+    }
+}
+
+public struct SyncContinuousMedicationCheckPayload: Codable, Equatable, Sendable {
+    public nonisolated var id: String
+    public nonisolated var continuousMedicationID: String
+    public nonisolated var name: String
+    public nonisolated var dosage: String
+    public nonisolated var frequency: String
+    public nonisolated var wasTaken: Bool
+
+    public nonisolated init(
+        id: String,
+        continuousMedicationID: String,
+        name: String,
+        dosage: String,
+        frequency: String,
+        wasTaken: Bool
+    ) {
+        self.id = id
+        self.continuousMedicationID = continuousMedicationID
+        self.name = name
+        self.dosage = dosage
+        self.frequency = frequency
+        self.wasTaken = wasTaken
+    }
+
+    public nonisolated static func == (lhs: SyncContinuousMedicationCheckPayload, rhs: SyncContinuousMedicationCheckPayload) -> Bool {
+        lhs.id == rhs.id &&
+            lhs.continuousMedicationID == rhs.continuousMedicationID &&
+            lhs.name == rhs.name &&
+            lhs.dosage == rhs.dosage &&
+            lhs.frequency == rhs.frequency &&
+            lhs.wasTaken == rhs.wasTaken
     }
 }
 
@@ -363,6 +486,34 @@ public struct SyncMedicationDefinitionPayload: Codable, Equatable, Sendable {
     }
 }
 
+public struct SyncContinuousMedicationPayload: Codable, Equatable, Sendable {
+    public nonisolated var id: String
+    public nonisolated var name: String
+    public nonisolated var dosage: String
+    public nonisolated var frequency: String
+    public nonisolated var startDate: Date
+    public nonisolated var endDate: Date?
+    public nonisolated var createdAt: Date
+
+    public nonisolated init(
+        id: String,
+        name: String,
+        dosage: String,
+        frequency: String,
+        startDate: Date,
+        endDate: Date?,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.name = name
+        self.dosage = dosage
+        self.frequency = frequency
+        self.startDate = startDate
+        self.endDate = endDate
+        self.createdAt = createdAt
+    }
+}
+
 public struct SyncShadow: Codable, Equatable, Sendable {
     public nonisolated var envelope: SyncDocumentEnvelope
     public nonisolated var recordSystemFields: Data?
@@ -450,6 +601,11 @@ public enum SyncMergeEngine {
             let result = mergeMedicationDefinition(base: basePayload, local: localPayload, remote: remotePayload)
             payload = .medicationDefinition(result.payload)
             conflicts = result.conflicts
+        case (.continuousMedication(let localPayload), .continuousMedication(let remotePayload)):
+            let basePayload = base?.payload.continuousMedicationPayload
+            let result = mergeContinuousMedication(base: basePayload, local: localPayload, remote: remotePayload)
+            payload = .continuousMedication(result.payload)
+            conflicts = result.conflicts
         default:
             payload = local.payload
             conflicts = ["payload"]
@@ -497,11 +653,23 @@ public enum SyncMergeEngine {
             remote: index(remote.medications),
             conflicts: &conflicts
         )
+        let continuousMedicationChecks = mergeContinuousMedicationChecks(
+            base: index(base?.continuousMedicationChecks ?? []),
+            local: index(local.continuousMedicationChecks),
+            remote: index(remote.continuousMedicationChecks),
+            conflicts: &conflicts
+        )
 
         let weather = mergeWeather(
             base: base?.weatherSnapshot,
             local: local.weatherSnapshot,
             remote: remote.weatherSnapshot,
+            conflicts: &conflicts
+        )
+        let healthContext = mergeHealthContext(
+            base: base,
+            local: local,
+            remote: remote,
             conflicts: &conflicts
         )
 
@@ -520,7 +688,31 @@ public enum SyncMergeEngine {
                 functionalImpact: functionalImpact,
                 menstruationStatus: menstruationStatus,
                 medications: medications.sorted { $0.takenAt < $1.takenAt },
-                weatherSnapshot: weather
+                continuousMedicationChecks: continuousMedicationChecks.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending },
+                weatherSnapshot: weather,
+                healthContext: healthContext,
+                includesHealthContext: local.includesHealthContext || remote.includesHealthContext
+            ),
+            conflicts
+        )
+    }
+
+    private nonisolated static func mergeContinuousMedication(
+        base: SyncContinuousMedicationPayload?,
+        local: SyncContinuousMedicationPayload,
+        remote: SyncContinuousMedicationPayload
+    ) -> (payload: SyncContinuousMedicationPayload, conflicts: [String]) {
+        var conflicts: [String] = []
+
+        return (
+            SyncContinuousMedicationPayload(
+                id: local.id,
+                name: mergedValue(field: "name", base: base?.name, local: local.name, remote: remote.name, conflicts: &conflicts).value,
+                dosage: mergedValue(field: "dosage", base: base?.dosage, local: local.dosage, remote: remote.dosage, conflicts: &conflicts).value,
+                frequency: mergedValue(field: "frequency", base: base?.frequency, local: local.frequency, remote: remote.frequency, conflicts: &conflicts).value,
+                startDate: mergedValue(field: "startDate", base: base?.startDate, local: local.startDate, remote: remote.startDate, conflicts: &conflicts).value,
+                endDate: mergedValue(field: "endDate", base: base?.endDate, local: local.endDate, remote: remote.endDate, conflicts: &conflicts).value,
+                createdAt: mergedValue(field: "createdAt", base: base?.createdAt, local: local.createdAt, remote: remote.createdAt, conflicts: &conflicts).value
             ),
             conflicts
         )
@@ -548,6 +740,45 @@ public enum SyncMergeEngine {
             ),
             conflicts
         )
+    }
+
+    private nonisolated static func mergeContinuousMedicationChecks(
+        base: [String: SyncContinuousMedicationCheckPayload],
+        local: [String: SyncContinuousMedicationCheckPayload],
+        remote: [String: SyncContinuousMedicationCheckPayload],
+        conflicts: inout [String]
+    ) -> [SyncContinuousMedicationCheckPayload] {
+        let ids = Set(base.keys).union(local.keys).union(remote.keys)
+
+        return ids.compactMap { id in
+            switch (base[id], local[id], remote[id]) {
+            case let (base?, local?, remote?):
+                return SyncContinuousMedicationCheckPayload(
+                    id: id,
+                    continuousMedicationID: mergedValue(field: "continuousMedicationChecks.\(id).continuousMedicationID", base: base.continuousMedicationID, local: local.continuousMedicationID, remote: remote.continuousMedicationID, conflicts: &conflicts).value,
+                    name: mergedValue(field: "continuousMedicationChecks.\(id).name", base: base.name, local: local.name, remote: remote.name, conflicts: &conflicts).value,
+                    dosage: mergedValue(field: "continuousMedicationChecks.\(id).dosage", base: base.dosage, local: local.dosage, remote: remote.dosage, conflicts: &conflicts).value,
+                    frequency: mergedValue(field: "continuousMedicationChecks.\(id).frequency", base: base.frequency, local: local.frequency, remote: remote.frequency, conflicts: &conflicts).value,
+                    wasTaken: mergedValue(field: "continuousMedicationChecks.\(id).wasTaken", base: base.wasTaken, local: local.wasTaken, remote: remote.wasTaken, conflicts: &conflicts).value
+                )
+            case let (nil, local?, nil):
+                return local
+            case let (nil, nil, remote?):
+                return remote
+            case let (nil, local?, remote?):
+                if local == remote {
+                    return local
+                }
+                conflicts.append("continuousMedicationChecks.\(id)")
+                return local
+            case let (base?, local?, nil):
+                return local == base ? nil : local
+            case let (base?, nil, remote?):
+                return remote == base ? nil : remote
+            default:
+                return nil
+            }
+        }
     }
 
     private nonisolated static func mergeMedicationEntries(
@@ -642,7 +873,29 @@ public enum SyncMergeEngine {
         }
     }
 
+    private nonisolated static func mergeHealthContext(
+        base: SyncEpisodePayload?,
+        local: SyncEpisodePayload,
+        remote: SyncEpisodePayload,
+        conflicts: inout [String]
+    ) -> HealthContextSnapshotData? {
+        switch (base?.includesHealthContext == true ? base?.healthContext : nil, local.includesHealthContext, remote.includesHealthContext) {
+        case let (baseHealthContext, true, true):
+            return mergedValue(field: "healthContext", base: baseHealthContext, local: local.healthContext, remote: remote.healthContext, conflicts: &conflicts).value
+        case (_, true, false):
+            return local.healthContext
+        case (_, false, true):
+            return remote.healthContext
+        default:
+            return nil
+        }
+    }
+
     private nonisolated static func index(_ entries: [SyncMedicationEntryPayload]) -> [String: SyncMedicationEntryPayload] {
+        Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+    }
+
+    private nonisolated static func index(_ entries: [SyncContinuousMedicationCheckPayload]) -> [String: SyncContinuousMedicationCheckPayload] {
         Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
     }
 
@@ -701,6 +954,14 @@ private extension SyncDocumentEnvelope.Payload {
 
     nonisolated var medicationDefinitionPayload: SyncMedicationDefinitionPayload? {
         guard case .medicationDefinition(let payload) = self else {
+            return nil
+        }
+
+        return payload
+    }
+
+    nonisolated var continuousMedicationPayload: SyncContinuousMedicationPayload? {
+        guard case .continuousMedication(let payload) = self else {
             return nil
         }
 

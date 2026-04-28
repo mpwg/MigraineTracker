@@ -60,6 +60,109 @@ struct SyncMergeEngineTests {
 
     @Test
     @MainActor
+    func localSyncRepositoryIncludesContinuousMedicationChecksAndHealthContext() throws {
+        let stack = try makeSyncTestStack()
+        let context = ModelContext(stack.container)
+        let episodeID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+        let medicationID = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-000000000001")!
+        let checkID = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-000000000002")!
+        let episode = Episode(
+            id: episodeID,
+            startedAt: Date(timeIntervalSince1970: 1_000),
+            updatedAt: Date(timeIntervalSince1970: 2_000),
+            type: .migraine,
+            intensity: 7,
+            notes: "mit Kontext",
+            continuousMedicationChecks: [
+                ContinuousMedicationCheck(
+                    id: checkID,
+                    continuousMedicationID: medicationID,
+                    name: "Metoprolol",
+                    dosage: "47,5 mg",
+                    frequency: "morgens",
+                    wasTaken: false
+                )
+            ]
+        )
+        let continuousMedication = ContinuousMedication(
+            id: medicationID,
+            name: "Metoprolol",
+            dosage: "47,5 mg",
+            frequency: "morgens",
+            startDate: Date(timeIntervalSince1970: 500),
+            updatedAt: Date(timeIntervalSince1970: 1_500)
+        )
+        context.insert(episode)
+        context.insert(continuousMedication)
+        try context.save()
+        try stack.healthContextStore.save(sampleHealthContext(), for: episodeID)
+
+        let envelopes = try stack.repository.allEnvelopes(deviceID: syncTestDeviceID)
+        let episodePayload = try #require(envelopes.first { $0.documentID == "episode:\(episodeID.uuidString)" }?.payload.episodePayload)
+        let continuousMedicationPayload = try #require(
+            envelopes.first { $0.documentID == "continuousMedication:\(medicationID.uuidString)" }?.payload.continuousMedicationPayload
+        )
+
+        #expect(episodePayload.continuousMedicationChecks.first?.id == checkID.uuidString)
+        #expect(episodePayload.healthContext?.stepCount == 4_200)
+        #expect(continuousMedicationPayload.name == "Metoprolol")
+    }
+
+    @Test
+    @MainActor
+    func remoteEpisodeSyncAppliesContinuousMedicationChecksAndHealthContext() throws {
+        let stack = try makeSyncTestStack()
+        let episodeID = UUID(uuidString: "22222222-3333-4444-5555-666666666666")!
+        let checkID = UUID(uuidString: "BBBBBBBB-CCCC-DDDD-EEEE-000000000001")!
+        let medicationID = UUID(uuidString: "BBBBBBBB-CCCC-DDDD-EEEE-000000000002")!
+        let remoteEnvelope = SyncDocumentEnvelope(
+            documentID: "episode:\(episodeID.uuidString)",
+            entityType: .episode,
+            modifiedAt: Date(timeIntervalSince1970: 2_000),
+            authorDeviceID: "device-remote",
+            payload: .episode(
+                SyncEpisodePayload(
+                    id: episodeID.uuidString,
+                    startedAt: Date(timeIntervalSince1970: 1_000),
+                    endedAt: nil,
+                    type: "Migräne",
+                    intensity: 6,
+                    painLocation: "",
+                    painCharacter: "",
+                    notes: "remote",
+                    symptoms: [],
+                    triggers: [],
+                    functionalImpact: "",
+                    menstruationStatus: "Nicht angegeben",
+                    medications: [],
+                    continuousMedicationChecks: [
+                        SyncContinuousMedicationCheckPayload(
+                            id: checkID.uuidString,
+                            continuousMedicationID: medicationID.uuidString,
+                            name: "Magnesium",
+                            dosage: "300 mg",
+                            frequency: "abends",
+                            wasTaken: true
+                        )
+                    ],
+                    weatherSnapshot: nil,
+                    healthContext: sampleHealthContext()
+                )
+            )
+        )
+
+        try stack.repository.apply(remote: remoteEnvelope)
+
+        let context = ModelContext(stack.container)
+        let episode = try #require(try context.fetch(FetchDescriptor<Episode>()).first { $0.id == episodeID })
+        let healthContext = stack.healthContextStore.load(for: episodeID)
+
+        #expect(episode.continuousMedicationChecks.first?.name == "Magnesium")
+        #expect(healthContext?.stepCount == 4_200)
+    }
+
+    @Test
+    @MainActor
     func conflictRemoteMergeLeavesLocalStateUntouchedUntilResolution() async throws {
         let stack = try makeSyncTestStack()
         let documentID = try insertBaseEpisode(in: stack.container)
@@ -124,6 +227,18 @@ struct SyncMergeEngineTests {
 
         #expect(result.conflicts == ["notes"])
         #expect(result.merged.payload.episodePayload?.notes == "lokal")
+    }
+
+    @Test
+    func continuousMedicationConflictIsReported() {
+        let base = continuousMedicationEnvelope(name: "Metoprolol", dosage: "47,5 mg")
+        let local = continuousMedicationEnvelope(name: "Metoprolol", dosage: "95 mg")
+        let remote = continuousMedicationEnvelope(name: "Metoprolol", dosage: "50 mg")
+
+        let result = SyncMergeEngine.merge(base: base, local: local, remote: remote)
+
+        #expect(result.conflicts == ["dosage"])
+        #expect(result.merged.payload.continuousMedicationPayload?.dosage == "95 mg")
     }
 
     @Test
@@ -276,7 +391,8 @@ private func makeSyncTestStack() throws -> (
     container: ModelContainer,
     stateStore: SyncStateStore,
     coordinator: SyncCoordinator,
-    repository: LocalSyncRepository
+    repository: LocalSyncRepository,
+    healthContextStore: HealthContextStore
 ) {
     let schema = Schema(versionedSchema: SymiSchemaV6.self)
     let configuration = ModelConfiguration(
@@ -288,16 +404,18 @@ private func makeSyncTestStack() throws -> (
     let container = try ModelContainer(for: schema, configurations: [configuration])
     let stateStore = SyncStateStore(baseDirectoryURL: try makeTemporaryDirectory())
     let appLogStore = AppLogStore(baseDirectoryURL: try makeTemporaryDirectory())
+    let healthContextStore = HealthContextStore(baseURL: try makeTemporaryDirectory())
     let coordinator = SyncCoordinator(
         modelContainer: container,
         appLogStore: appLogStore,
+        healthContextStore: healthContextStore,
         stateStore: stateStore,
         deviceID: syncTestDeviceID,
         autostart: false
     )
-    let repository = LocalSyncRepository(modelContainer: container)
+    let repository = LocalSyncRepository(modelContainer: container, healthContextStore: healthContextStore)
 
-    return (container, stateStore, coordinator, repository)
+    return (container, stateStore, coordinator, repository, healthContextStore)
 }
 
 @MainActor
@@ -397,9 +515,51 @@ private func definitionEnvelope(name: String, deletedAt: Date?) -> SyncDocumentE
     )
 }
 
+private func continuousMedicationEnvelope(name: String, dosage: String) -> SyncDocumentEnvelope {
+    SyncDocumentEnvelope(
+        documentID: "continuousMedication-1",
+        entityType: .continuousMedication,
+        modifiedAt: Date(timeIntervalSince1970: 1_000),
+        authorDeviceID: "device-a",
+        payload: .continuousMedication(
+            SyncContinuousMedicationPayload(
+                id: "continuousMedication-1",
+                name: name,
+                dosage: dosage,
+                frequency: "morgens",
+                startDate: .distantPast,
+                endDate: nil,
+                createdAt: .distantPast
+            )
+        )
+    )
+}
+
+private func sampleHealthContext() -> HealthContextSnapshotData {
+    HealthContextSnapshotData(
+        recordedAt: Date(timeIntervalSince1970: 1_200),
+        source: "Test",
+        sleepMinutes: 420,
+        stepCount: 4_200,
+        averageHeartRate: nil,
+        restingHeartRate: 62,
+        heartRateVariability: nil,
+        menstrualFlow: nil,
+        symptoms: []
+    )
+}
+
 private extension SyncDocumentEnvelope.Payload {
     var episodePayload: SyncEpisodePayload? {
         guard case .episode(let payload) = self else {
+            return nil
+        }
+
+        return payload
+    }
+
+    var continuousMedicationPayload: SyncContinuousMedicationPayload? {
+        guard case .continuousMedication(let payload) = self else {
             return nil
         }
 

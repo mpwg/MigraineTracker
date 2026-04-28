@@ -4,15 +4,23 @@ import SwiftData
 @MainActor
 struct LocalSyncRepository {
     let modelContainer: ModelContainer
+    let healthContextStore: HealthContextStore
+
+    init(modelContainer: ModelContainer, healthContextStore: HealthContextStore = HealthContextStore()) {
+        self.modelContainer = modelContainer
+        self.healthContextStore = healthContextStore
+    }
 
     func allEnvelopes(deviceID: String) throws -> [SyncDocumentEnvelope] {
         let context = ModelContext(modelContainer)
         let episodes = try context.fetch(FetchDescriptor<Episode>())
         let customDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
             .filter(\.isCustom)
+        let continuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
 
-        return episodes.map { $0.syncEnvelope(deviceID: deviceID) } +
-            customDefinitions.map { $0.syncEnvelope(deviceID: deviceID) }
+        return episodes.map { $0.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore) } +
+            customDefinitions.map { $0.syncEnvelope(deviceID: deviceID) } +
+            continuousMedications.map { $0.syncEnvelope(deviceID: deviceID) }
     }
 
     func envelope(documentID: String, deviceID: String) throws -> SyncDocumentEnvelope? {
@@ -28,6 +36,8 @@ struct LocalSyncRepository {
             try applyEpisodePayload(payload, from: envelope, in: context)
         case .medicationDefinition(let payload):
             try applyMedicationDefinitionPayload(payload, from: envelope, in: context)
+        case .continuousMedication(let payload):
+            try applyContinuousMedicationPayload(payload, from: envelope, in: context)
         }
 
         try context.save()
@@ -68,6 +78,10 @@ struct LocalSyncRepository {
             context.delete(medication)
         }
 
+        for check in target.continuousMedicationChecks {
+            context.delete(check)
+        }
+
         if let weatherSnapshot = target.weatherSnapshot {
             context.delete(weatherSnapshot)
             target.weatherSnapshot = nil
@@ -84,6 +98,17 @@ struct LocalSyncRepository {
                 effectiveness: MedicationEffectiveness(rawValue: medication.effectiveness) ?? .partial,
                 reliefStartedAt: medication.reliefStartedAt,
                 isRepeatDose: medication.isRepeatDose,
+                episode: target
+            )
+        }
+        target.continuousMedicationChecks = payload.continuousMedicationChecks.map { check in
+            ContinuousMedicationCheck(
+                id: UUID(uuidString: check.id) ?? UUID(),
+                continuousMedicationID: UUID(uuidString: check.continuousMedicationID) ?? UUID(),
+                name: check.name,
+                dosage: check.dosage,
+                frequency: check.frequency,
+                wasTaken: check.wasTaken,
                 episode: target
             )
         }
@@ -109,6 +134,10 @@ struct LocalSyncRepository {
 
         if existing == nil {
             context.insert(target)
+        }
+
+        if payload.includesHealthContext {
+            try healthContextStore.save(payload.healthContext, for: episodeID)
         }
     }
 
@@ -149,11 +178,44 @@ struct LocalSyncRepository {
             context.insert(target)
         }
     }
+
+    private func applyContinuousMedicationPayload(
+        _ payload: SyncContinuousMedicationPayload,
+        from envelope: SyncDocumentEnvelope,
+        in context: ModelContext
+    ) throws {
+        let medicationID = UUID(uuidString: payload.id) ?? UUID()
+        let existing = try context.fetch(FetchDescriptor<ContinuousMedication>()).first { $0.id == medicationID }
+        let target = existing ?? ContinuousMedication(
+            id: medicationID,
+            name: payload.name,
+            dosage: payload.dosage,
+            frequency: payload.frequency,
+            startDate: payload.startDate,
+            endDate: payload.endDate,
+            createdAt: payload.createdAt,
+            updatedAt: envelope.modifiedAt
+        )
+
+        target.name = payload.name
+        target.dosage = payload.dosage
+        target.frequency = payload.frequency
+        target.startDate = payload.startDate
+        target.endDate = payload.endDate
+        target.createdAt = payload.createdAt
+        target.updatedAt = envelope.modifiedAt
+
+        if existing == nil {
+            context.insert(target)
+        }
+    }
 }
 
 extension Episode {
-    func syncEnvelope(deviceID: String) -> SyncDocumentEnvelope {
-        SyncDocumentEnvelope(
+    func syncEnvelope(deviceID: String, healthContextStore: HealthContextStore) -> SyncDocumentEnvelope {
+        let healthContext = healthContextStore.load(for: id).map(HealthContextSnapshotData.init)
+
+        return SyncDocumentEnvelope(
             documentID: "episode:\(id.uuidString)",
             entityType: .episode,
             modifiedAt: updatedAt,
@@ -186,6 +248,16 @@ extension Episode {
                             isRepeatDose: $0.isRepeatDose
                         )
                     },
+                    continuousMedicationChecks: continuousMedicationChecks.map {
+                        SyncContinuousMedicationCheckPayload(
+                            id: $0.id.uuidString,
+                            continuousMedicationID: $0.continuousMedicationID.uuidString,
+                            name: $0.name,
+                            dosage: $0.dosage,
+                            frequency: $0.frequency,
+                            wasTaken: $0.wasTaken
+                        )
+                    },
                     weatherSnapshot: weatherSnapshot.map {
                         SyncWeatherSnapshotPayload(
                             id: $0.id.uuidString,
@@ -203,7 +275,30 @@ extension Episode {
                             contextRangeEnd: $0.contextRangeEnd,
                             contextPoints: $0.contextPoints
                         )
-                    }
+                    },
+                    healthContext: healthContext
+                )
+            )
+        )
+    }
+}
+
+extension ContinuousMedication {
+    func syncEnvelope(deviceID: String) -> SyncDocumentEnvelope {
+        SyncDocumentEnvelope(
+            documentID: "continuousMedication:\(id.uuidString)",
+            entityType: .continuousMedication,
+            modifiedAt: updatedAt,
+            authorDeviceID: deviceID,
+            payload: .continuousMedication(
+                SyncContinuousMedicationPayload(
+                    id: id.uuidString,
+                    name: name,
+                    dosage: dosage,
+                    frequency: frequency,
+                    startDate: startDate,
+                    endDate: endDate,
+                    createdAt: createdAt
                 )
             )
         )
