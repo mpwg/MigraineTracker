@@ -177,12 +177,8 @@ private enum EntryDetailSurface {
 private struct EntryDetailHeroCard: View {
     let episode: EpisodeRecord
 
-    private var painLevel: PainIntensityLevel {
-        PainIntensityLevel(intensity: episode.intensity)
-    }
-
     private var painToken: PainToken {
-        ColorToken.Pain.token(for: painLevel)
+        ColorToken.Pain.token(forIntensity: episode.intensity)
     }
 
     var body: some View {
@@ -208,7 +204,7 @@ private struct EntryDetailHeroCard: View {
 
                 Spacer(minLength: SymiSpacing.md)
 
-                EntryDetailFaceBadge(painLevel: painLevel, painToken: painToken)
+                EntryDetailFaceBadge(painLevel: painToken.level, painToken: painToken)
             }
 
             EntryDetailProgressBar(value: Double(episode.intensity) / 10, painToken: painToken)

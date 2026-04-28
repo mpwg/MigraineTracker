@@ -154,6 +154,10 @@ enum ColorToken {
     }
 
     enum Pain {
+        static func token(forIntensity intensity: Int) -> PainToken {
+            PainToken(level: PainIntensityLevel(intensity: intensity))
+        }
+
         static func token(for level: PainIntensityLevel) -> PainToken {
             PainToken(level: level)
         }

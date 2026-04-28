@@ -106,6 +106,15 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func painTokenMapsRawIntensityThroughDomainLevel() {
+        for intensity in 0 ... 11 {
+            let token = ColorToken.Pain.token(forIntensity: intensity)
+
+            #expect(token.level == PainIntensityLevel(intensity: intensity))
+        }
+    }
+
+    @Test
     func episodeDayPartProvidesCentralClassificationAndDisplayText() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
