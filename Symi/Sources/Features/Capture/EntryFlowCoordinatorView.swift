@@ -162,7 +162,7 @@ private struct EntryHeadacheStepView: View {
             PainGaugeView(value: $coordinator.draft.intensity)
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
-                HeadacheOptionGrid {
+                InputFlowHeadacheOptionGrid {
                     ForEach(visiblePainLocations) { location in
                         PainLocationSelectionTile(
                             option: location,
@@ -177,7 +177,7 @@ private struct EntryHeadacheStepView: View {
             }
 
             InputFlowFieldGroup(title: "Tagesbereich") {
-                HeadacheOptionGrid {
+                InputFlowHeadacheOptionGrid {
                     ForEach(EntryDayPartPreset.allCases) { preset in
                         InputFlowSelectionTile(
                             title: preset.title,
@@ -314,22 +314,6 @@ private struct PainLocationSelectionTile: View {
         }
 
         return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
-    }
-}
-private struct HeadacheOptionGrid<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        InputFlowFixedTileGrid(
-            minimumColumnWidth: SymiSize.headacheOptionGridMinWidth,
-            columnCount: SymiSize.headacheOptionGridColumnCount
-        ) {
-            content
-        }
     }
 }
 

@@ -78,6 +78,23 @@ struct InputFlowFixedTileGrid<Content: View>: View {
     }
 }
 
+struct InputFlowHeadacheOptionGrid<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        InputFlowFixedTileGrid(
+            minimumColumnWidth: SymiSize.headacheOptionGridMinWidth,
+            columnCount: SymiSize.headacheOptionGridColumnCount
+        ) {
+            content
+        }
+    }
+}
+
 struct InputFlowPillGrid<Content: View>: View {
     let minimumColumnWidth: CGFloat
     let content: Content
