@@ -151,6 +151,7 @@ nonisolated enum PersistentStoreRecoveryService {
         let targetDirectory = fileManager.temporaryDirectory
             .appending(path: "Symi-Store-Sicherung-\(fileDateString(from: now))-\(UUID().uuidString)", directoryHint: .isDirectory)
         try fileManager.createDirectory(at: targetDirectory, withIntermediateDirectories: true)
+        try ProtectedFileStorage.applyProtection(to: targetDirectory, fileManager: fileManager, excludedFromBackup: true)
 
         return try sourceURLs.map { sourceURL in
             let targetURL = targetDirectory.appending(path: sourceURL.lastPathComponent)
@@ -158,6 +159,7 @@ nonisolated enum PersistentStoreRecoveryService {
                 try fileManager.removeItem(at: targetURL)
             }
             try fileManager.copyItem(at: sourceURL, to: targetURL)
+            try ProtectedFileStorage.applyProtection(to: targetURL, fileManager: fileManager, excludedFromBackup: true)
             return targetURL
         }
     }
@@ -176,7 +178,7 @@ nonisolated enum PersistentStoreRecoveryService {
         return "\(nsError.domain) \(nsError.code)"
     }
 
-    private static func storeFileCandidates(for storeURL: URL) -> [URL] {
+    static func storeFileCandidates(for storeURL: URL) -> [URL] {
         let directoryURL = storeURL.deletingLastPathComponent()
         let storeFileName = storeURL.lastPathComponent
 

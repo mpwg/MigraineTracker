@@ -11,8 +11,10 @@ nonisolated enum PDFExportWriter {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         let layout = PDFLayout(pageRect: PDFLayout.defaultPageRect)
 
+        try TemporaryExportFileLifecycle.prepareProtectedTemporaryFile(at: url)
         try writeRawPDF(summary: summary, mode: mode, to: url, layout: layout)
         try finalizeDocument(at: url)
+        try TemporaryExportFileLifecycle.finalizeProtectedTemporaryFile(at: url)
 
         return url
     }
@@ -102,6 +104,7 @@ nonisolated enum PDFExportWriter {
         }
 
         try data.write(to: url, options: .atomic)
+        try TemporaryExportFileLifecycle.finalizeProtectedTemporaryFile(at: url)
     }
 
     private static func exportLines(for record: EpisodeExportRecord) -> [String] {

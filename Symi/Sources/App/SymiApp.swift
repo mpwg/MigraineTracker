@@ -51,7 +51,9 @@ struct SymiApp: App {
     ) throws -> ModelContainer {
         do {
             logger.debug("Versuche ModelContainer für lokalen Store zu laden.")
-            return try loadContainer()
+            let container = try loadContainer()
+            try protectPersistentStoreFiles(at: configuration.url)
+            return container
         } catch {
             let context = PersistentStoreRecoveryService.recoveryContext(for: error, storeURL: configuration.url)
             logger.error(
@@ -203,7 +205,19 @@ struct SymiApp: App {
         }
 
         try fileManager.createDirectory(at: applicationSupportURL, withIntermediateDirectories: true)
+        try ProtectedFileStorage.applyProtection(to: applicationSupportURL, fileManager: fileManager)
         return applicationSupportURL.appending(path: "default.store")
+    }
+
+    static func protectPersistentStoreFiles(at storeURL: URL, fileManager: FileManager = .default) throws {
+        try ProtectedFileStorage.applyProtection(to: storeURL.deletingLastPathComponent(), fileManager: fileManager)
+        for fileURL in PersistentStoreRecoveryService.storeFileCandidates(for: storeURL) where fileManager.fileExists(atPath: fileURL.path) {
+            if fileURL.hasDirectoryPath {
+                try ProtectedFileStorage.applyProtectionRecursively(to: fileURL, fileManager: fileManager)
+            } else {
+                try ProtectedFileStorage.applyProtection(to: fileURL, fileManager: fileManager)
+            }
+        }
     }
 
     private static func resolvedStoreURL(

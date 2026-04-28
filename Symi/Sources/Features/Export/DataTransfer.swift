@@ -111,7 +111,9 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         let data = try encoder.encode(self)
 
+        try TemporaryExportFileLifecycle.prepareProtectedTemporaryFile(at: url)
         try data.write(to: url, options: .atomic)
+        try TemporaryExportFileLifecycle.finalizeProtectedTemporaryFile(at: url)
         return url
     }
 

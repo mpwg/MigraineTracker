@@ -88,7 +88,7 @@ actor SyncStateStore {
         var initialEvents: [PersistenceEvent] = []
 
         do {
-            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            try ProtectedFileStorage.createProtectedDirectory(at: directory, fileManager: fileManager)
         } catch {
             let message = "Sync-State-Verzeichnis konnte nicht erstellt werden: \(error.localizedDescription)"
             initialState.lastError = message
@@ -243,6 +243,7 @@ actor SyncStateStore {
         do {
             let data = try encoder.encode(state)
             try data.write(to: url, options: .atomic)
+            try ProtectedFileStorage.applyProtection(to: url)
         } catch {
             recordPersistenceFailure(
                 operation: "stateStore.persist.error",
@@ -278,6 +279,7 @@ actor SyncStateStore {
 
         do {
             try fileManager.copyItem(at: url, to: backupURL)
+            try ProtectedFileStorage.applyProtection(to: backupURL, fileManager: fileManager)
             return (backupURL, nil)
         } catch {
             return (nil, error.localizedDescription)

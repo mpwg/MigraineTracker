@@ -137,7 +137,7 @@ final class DataExportController {
     func scheduleSummaryReload(debounce: Duration? = .milliseconds(350)) {
         summaryReloadTask?.cancel()
         pdfPreparationTask?.cancel()
-        exportURL = nil
+        clearPreparedPDF()
         exportErrorMessage = nil
         isLoadingSummary = true
         isPreparingPDF = false
@@ -196,7 +196,7 @@ final class DataExportController {
 
     func schedulePDFPreparation(delay: Duration? = .milliseconds(350)) {
         pdfPreparationTask?.cancel()
-        exportURL = nil
+        clearPreparedPDF()
         exportErrorMessage = nil
 
         let requestedSummary = summary
@@ -233,7 +233,7 @@ final class DataExportController {
     ) async {
         await PerformanceInstrumentation.measure("DataExportControllerPreparePDF") {
             exportErrorMessage = nil
-            exportURL = nil
+            clearPreparedPDF()
 
             guard requestedStartDate <= requestedEndDate else {
                 exportErrorMessage = "Der Zeitraum ist ungültig."
@@ -261,7 +261,7 @@ final class DataExportController {
     func createBackup() {
         dataExportTask?.cancel()
         dataTransferMessage = nil
-        dataExportURL = nil
+        clearPreparedBackup()
         importPreview = nil
         importRollbackBackupURL = nil
 
@@ -336,6 +336,7 @@ final class DataExportController {
                 do {
                     let result = try await self.importBackupUseCase.execute(url: url)
                     guard !Task.isCancelled else { return }
+                    self.clearPreparedBackup()
                     self.importPreview = nil
                     self.pendingImportURL = nil
                     self.importRollbackBackupURL = result.rollbackBackupURL
@@ -358,6 +359,16 @@ final class DataExportController {
         dataTransferMessage = nil
         isPreparingImportPreview = false
         isApplyingImport = false
+    }
+
+    private func clearPreparedPDF() {
+        TemporaryExportFileLifecycle.cleanupManagedFile(at: exportURL)
+        exportURL = nil
+    }
+
+    private func clearPreparedBackup() {
+        TemporaryExportFileLifecycle.cleanupManagedFile(at: dataExportURL)
+        dataExportURL = nil
     }
 
     private static func defaultDateRange(calendar: Calendar = .current, now: Date = .now) -> (startDate: Date, endDate: Date) {
