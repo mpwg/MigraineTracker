@@ -72,9 +72,39 @@ struct DataExportView: View {
                     controller.isImportingData = true
                 }
 
+                if controller.isPreparingImportPreview || controller.isApplyingImport {
+                    HStack {
+                        ProgressView()
+                        Text(controller.isPreparingImportPreview ? "Backup wird geprüft." : "Backup wird importiert.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let importPreview = controller.importPreview {
+                    BackupImportPreviewView(preview: importPreview)
+
+                    HStack {
+                        Button("Abbrechen", role: .cancel) {
+                            controller.cancelImportPreview()
+                        }
+
+                        Button("Import ausführen", role: importPreview.conflicts.isEmpty ? nil : .destructive) {
+                            controller.confirmImport()
+                        }
+                        .disabled(controller.isApplyingImport)
+                    }
+                }
+
                 if let dataExportURL = controller.dataExportURL {
                     ShareLink(item: dataExportURL) {
                         Label("Backup teilen", systemImage: "square.and.arrow.up")
+                    }
+                }
+
+                if let rollbackURL = controller.importRollbackBackupURL {
+                    ShareLink(item: rollbackURL) {
+                        Label("Rollback-Backup teilen", systemImage: "arrow.uturn.backward.circle")
                     }
                 }
 
@@ -122,6 +152,45 @@ struct DataExportView: View {
             .datePickerStyle(.compact)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct BackupImportPreviewView: View {
+    let preview: BackupImportPreview
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.compact) {
+            Text("Import-Vorschau")
+                .font(.headline)
+
+            Text(summaryText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            if let dateRange = preview.dateRange {
+                Text("Zeitraum: \(dateRange.start.formatted(date: .abbreviated, time: .omitted)) bis \(dateRange.end.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !preview.conflicts.isEmpty {
+                ForEach(preview.conflicts, id: \.self) { conflict in
+                    Label(conflict, systemImage: "exclamationmark.triangle")
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiCoral)
+                }
+            }
+        }
+        .padding(.vertical, SymiSpacing.xs)
+    }
+
+    private var summaryText: String {
+        [
+            "\(preview.newEpisodes) neu",
+            "\(preview.changedEpisodes) geändert",
+            "\(preview.deletedEpisodes) gelöscht",
+            "\(preview.conflicts.count) Konflikte"
+        ].joined(separator: " · ")
     }
 }
 

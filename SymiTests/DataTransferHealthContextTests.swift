@@ -134,6 +134,75 @@ struct DataTransferHealthContextTests {
     }
 
     @Test
+    func importPreviewReportsChangesConflictsAndDoesNotMutateStore() throws {
+        let episodeID = UUID()
+        let sourceContainer = try makeInMemoryContainer()
+        try seedEpisode(id: episodeID, notes: "Backup-Stand", in: sourceContainer)
+        let backupURL = try SwiftDataExportRepository(
+            modelContainer: sourceContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        ).createBackup()
+
+        let targetContainer = try makeInMemoryContainer()
+        let newerDate = Date(timeIntervalSince1970: 1_700_000_500)
+        try seedEpisode(id: episodeID, notes: "Lokaler Stand", updatedAt: newerDate, in: targetContainer)
+        let repository = SwiftDataExportRepository(
+            modelContainer: targetContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        )
+
+        let preview = try repository.previewBackupImport(from: backupURL)
+        let storedEpisode = try #require(try ModelContext(targetContainer).fetch(FetchDescriptor<Episode>()).first)
+
+        #expect(preview.newEpisodes == 0)
+        #expect(preview.changedEpisodes == 1)
+        #expect(preview.conflicts.count == 1)
+        #expect(preview.dateRange != nil)
+        #expect(storedEpisode.notes == "Lokaler Stand")
+    }
+
+    @Test
+    func confirmedImportCreatesRollbackSnapshotBeforeMerging() throws {
+        let episodeID = UUID()
+        let sourceContainer = try makeInMemoryContainer()
+        try seedEpisode(id: episodeID, notes: "Importierter Stand", in: sourceContainer)
+        let backupURL = try SwiftDataExportRepository(
+            modelContainer: sourceContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        ).createBackup()
+
+        let targetContainer = try makeInMemoryContainer()
+        try seedEpisode(id: episodeID, notes: "Vorheriger Stand", in: targetContainer)
+        let repository = SwiftDataExportRepository(
+            modelContainer: targetContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        )
+
+        let result = try repository.importBackup(from: backupURL)
+        let rollbackText = try String(contentsOf: result.rollbackBackupURL, encoding: .utf8)
+        let importedEpisode = try #require(try ModelContext(targetContainer).fetch(FetchDescriptor<Episode>()).first)
+
+        #expect(result.preview.changedEpisodes == 1)
+        #expect(rollbackText.contains("Vorheriger Stand"))
+        #expect(importedEpisode.notes == "Importierter Stand")
+    }
+
+    @Test
+    func importRejectsFilesAboveSizeLimit() throws {
+        let url = try makeTemporaryDirectory().appending(path: "too-large.json5")
+        try Data(repeating: 0, count: DataTransferSnapshot.maximumImportFileSizeInBytes + 1).write(to: url)
+
+        var didThrowLimit = false
+        do {
+            _ = try DataTransferSnapshot.load(from: url)
+        } catch DataTransferError.fileTooLarge {
+            didThrowLimit = true
+        }
+
+        #expect(didThrowLimit)
+    }
+
+    @Test
     func importThrowsWhenHealthContextCannotBeWritten() throws {
         let episodeID = UUID()
         let sourceContainer = try makeInMemoryContainer()
@@ -174,14 +243,19 @@ private func makeInMemoryContainer() throws -> ModelContainer {
     return try ModelContainer(for: schema, configurations: [configuration])
 }
 
-private func seedEpisode(id: UUID, notes: String = "Migräne nach Wetterwechsel", in container: ModelContainer) throws {
+private func seedEpisode(
+    id: UUID,
+    notes: String = "Migräne nach Wetterwechsel",
+    updatedAt: Date? = nil,
+    in container: ModelContainer
+) throws {
     let context = ModelContext(container)
     let startedAt = Date(timeIntervalSince1970: 1_700_000_000)
     let episode = Episode(
         id: id,
         startedAt: startedAt,
         endedAt: startedAt.addingTimeInterval(7_200),
-        updatedAt: startedAt.addingTimeInterval(60),
+        updatedAt: updatedAt ?? startedAt.addingTimeInterval(60),
         type: .migraine,
         intensity: 7,
         painLocation: "Stirn",

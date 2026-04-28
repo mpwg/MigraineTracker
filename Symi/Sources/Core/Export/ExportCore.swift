@@ -5,7 +5,8 @@ protocol ExportRepository: Sendable {
     nonisolated func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary
     nonisolated func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL
     nonisolated func createBackup() throws -> URL
-    nonisolated func importBackup(from url: URL) throws
+    nonisolated func previewBackupImport(from url: URL) throws -> BackupImportPreview
+    nonisolated func importBackup(from url: URL) throws -> BackupImportResult
 }
 
 enum PDFReportMode: String, CaseIterable, Identifiable, Sendable {
@@ -61,9 +62,18 @@ struct CreateBackupUseCase {
 struct ImportBackupUseCase {
     let repository: ExportRepository
 
-    func execute(url: URL) async throws {
+    func preview(url: URL) async throws -> BackupImportPreview {
         let repository = repository
-        try await Task.detached(priority: .userInitiated) {
+        return try await Task.detached(priority: .userInitiated) {
+            try PerformanceInstrumentation.measure("BackupImportPreview") {
+                try repository.previewBackupImport(from: url)
+            }
+        }.value
+    }
+
+    func execute(url: URL) async throws -> BackupImportResult {
+        let repository = repository
+        return try await Task.detached(priority: .userInitiated) {
             try PerformanceInstrumentation.measure("BackupImport") {
                 try repository.importBackup(from: url)
             }
@@ -80,7 +90,11 @@ final class DataExportController {
     var exportErrorMessage: String?
     var dataExportURL: URL?
     var dataTransferMessage: String?
+    var importPreview: BackupImportPreview?
+    var importRollbackBackupURL: URL?
     var isImportingData = false
+    var isPreparingImportPreview = false
+    var isApplyingImport = false
     var isLoadingSummary = false
     var isPreparingPDF = false
     var includeAllDetails = false
@@ -248,6 +262,8 @@ final class DataExportController {
         dataExportTask?.cancel()
         dataTransferMessage = nil
         dataExportURL = nil
+        importPreview = nil
+        importRollbackBackupURL = nil
 
         dataExportTask = Task { [weak self] in
             await PerformanceInstrumentation.measure("DataExportControllerCreateBackup") {
@@ -280,25 +296,68 @@ final class DataExportController {
 
         dataImportTask?.cancel()
         dataTransferMessage = nil
-        isImportingData = true
+        importPreview = nil
+        importRollbackBackupURL = nil
+        isPreparingImportPreview = true
+
+        dataImportTask = Task { [weak self] in
+            await PerformanceInstrumentation.measure("DataExportControllerImportPreview") {
+                guard let self else { return }
+                defer { self.isPreparingImportPreview = false }
+                do {
+                    let preview = try await self.importBackupUseCase.preview(url: url)
+                    guard !Task.isCancelled else { return }
+                    self.importPreview = preview
+                    self.pendingImportURL = url
+                    self.dataTransferMessage = preview.hasChanges
+                        ? "Import-Vorschau erstellt. Bitte prüfen und bestätigen."
+                        : "Dry-Run abgeschlossen: Das Backup enthält keine neuen Änderungen."
+                } catch is CancellationError {
+                    return
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    self.dataTransferMessage = (error as? LocalizedError)?.errorDescription ?? "Fehler beim Prüfen der JSON5-Datei."
+                }
+            }
+        }
+    }
+
+    func confirmImport() {
+        guard let url = pendingImportURL else { return }
+
+        dataImportTask?.cancel()
+        dataTransferMessage = nil
+        isApplyingImport = true
 
         dataImportTask = Task { [weak self] in
             await PerformanceInstrumentation.measure("DataExportControllerImportBackup") {
                 guard let self else { return }
-                defer { self.isImportingData = false }
+                defer { self.isApplyingImport = false }
                 do {
-                    try await self.importBackupUseCase.execute(url: url)
+                    let result = try await self.importBackupUseCase.execute(url: url)
                     guard !Task.isCancelled else { return }
-                    self.dataTransferMessage = "JSON5-Daten wurden importiert."
+                    self.importPreview = nil
+                    self.pendingImportURL = nil
+                    self.importRollbackBackupURL = result.rollbackBackupURL
+                    self.dataTransferMessage = "JSON5-Daten wurden importiert. Vorheriger Stand wurde als Rollback-Backup gesichert."
                     await self.reloadSummary()
                 } catch is CancellationError {
                     return
                 } catch {
                     guard !Task.isCancelled else { return }
-                    self.dataTransferMessage = "Fehler beim Import der JSON5-Datei."
+                    self.dataTransferMessage = (error as? LocalizedError)?.errorDescription ?? "Fehler beim Import der JSON5-Datei."
                 }
             }
         }
+    }
+
+    func cancelImportPreview() {
+        dataImportTask?.cancel()
+        pendingImportURL = nil
+        importPreview = nil
+        dataTransferMessage = nil
+        isPreparingImportPreview = false
+        isApplyingImport = false
     }
 
     private static func defaultDateRange(calendar: Calendar = .current, now: Date = .now) -> (startDate: Date, endDate: Date) {
@@ -306,4 +365,6 @@ final class DataExportController {
         let startDate = calendar.date(byAdding: .month, value: -2, to: startOfCurrentMonth) ?? now
         return (startDate, now)
     }
+
+    @ObservationIgnored private var pendingImportURL: URL?
 }
