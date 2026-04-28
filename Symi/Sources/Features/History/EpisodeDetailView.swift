@@ -687,9 +687,3 @@ private extension EpisodeRecord {
         triggers.contains { !$0.trimmed.isEmpty }
     }
 }
-
-private extension String {
-    var trimmed: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
