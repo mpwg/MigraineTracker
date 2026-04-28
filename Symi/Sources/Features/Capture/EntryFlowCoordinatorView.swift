@@ -720,7 +720,7 @@ private struct EntryReviewStepView: View {
             lines.append("Gefühl: \(feeling)")
         }
         if draft.menstruationStatus != .unknown {
-            lines.append("Regel: \(draft.menstruationStatus.rawValue)")
+            lines.append("Regel: \(draft.menstruationStatus.displayName)")
         }
 
         return lines

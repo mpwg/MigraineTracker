@@ -177,6 +177,8 @@ struct SyncMergeEngineTests {
         let episode = try #require(try context.fetch(FetchDescriptor<Episode>()).first { $0.id == episodeID })
         let healthContext = stack.healthContextStore.load(for: episodeID)
 
+        #expect(episode.typeRaw == "migraine")
+        #expect(episode.menstruationStatusRaw == "unknown")
         #expect(episode.continuousMedicationChecks.first?.name == "Magnesium")
         #expect(healthContext?.stepCount == 4_200)
     }

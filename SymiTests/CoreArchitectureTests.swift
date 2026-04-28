@@ -303,11 +303,11 @@ struct CoreArchitectureTests {
 
     @Test
     func medicationSelectionKeyNormalizesEmptyWhitespaceAndCombinations() {
-        #expect(MedicationSelectionKey.make(name: "", category: .other, dosage: "") == "|Sonstiges|")
-        #expect(MedicationSelectionKey.make(name: "  ", category: .other, dosage: "\n\t") == "|Sonstiges|")
-        #expect(MedicationSelectionKey.make(name: " Sumatriptan ", category: .triptan, dosage: "") == "sumatriptan|Triptan|")
-        #expect(MedicationSelectionKey.make(name: "", category: .nsar, dosage: " 400 MG ") == "|NSAR|400 mg")
-        #expect(MedicationSelectionKey.make(name: " IBUprofen ", category: .nsar, dosage: " 400 MG ") == "ibuprofen|NSAR|400 mg")
+        #expect(MedicationSelectionKey.make(name: "", category: .other, dosage: "") == "|other|")
+        #expect(MedicationSelectionKey.make(name: "  ", category: .other, dosage: "\n\t") == "|other|")
+        #expect(MedicationSelectionKey.make(name: " Sumatriptan ", category: .triptan, dosage: "") == "sumatriptan|triptan|")
+        #expect(MedicationSelectionKey.make(name: "", category: .nsar, dosage: " 400 MG ") == "|nsaid|400 mg")
+        #expect(MedicationSelectionKey.make(name: " IBUprofen ", category: .nsar, dosage: " 400 MG ") == "ibuprofen|nsaid|400 mg")
     }
 
     @Test

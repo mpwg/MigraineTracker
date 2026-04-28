@@ -30,6 +30,7 @@ final class StartupMaintenanceService {
             }
 
             await Task.detached(priority: .utility) {
+                try? Self.normalizePersistentEnumValues(in: modelContainer)
                 MedicationCatalog.importSeedDataIfNeeded(into: modelContainer)
             }.value
 
@@ -44,5 +45,52 @@ final class StartupMaintenanceService {
 
     deinit {
         maintenanceTask?.cancel()
+    }
+
+    nonisolated static func normalizePersistentEnumValues(in modelContainer: ModelContainer) throws {
+        let context = ModelContext(modelContainer)
+        var didChange = false
+
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        for episode in episodes {
+            let normalizedType = EpisodeType(storageValue: episode.typeRaw).rawValue
+            if episode.typeRaw != normalizedType {
+                episode.typeRaw = normalizedType
+                didChange = true
+            }
+
+            let normalizedMenstruationStatus = MenstruationStatus(storageValue: episode.menstruationStatusRaw).rawValue
+            if episode.menstruationStatusRaw != normalizedMenstruationStatus {
+                episode.menstruationStatusRaw = normalizedMenstruationStatus
+                didChange = true
+            }
+
+            for medication in episode.medications {
+                let normalizedCategory = MedicationCategory(storageValue: medication.categoryRaw).rawValue
+                if medication.categoryRaw != normalizedCategory {
+                    medication.categoryRaw = normalizedCategory
+                    didChange = true
+                }
+
+                let normalizedEffectiveness = MedicationEffectiveness(storageValue: medication.effectivenessRaw).rawValue
+                if medication.effectivenessRaw != normalizedEffectiveness {
+                    medication.effectivenessRaw = normalizedEffectiveness
+                    didChange = true
+                }
+            }
+        }
+
+        let definitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
+        for definition in definitions {
+            let normalizedCategory = MedicationCategory(storageValue: definition.categoryRaw).rawValue
+            if definition.categoryRaw != normalizedCategory {
+                definition.categoryRaw = normalizedCategory
+                didChange = true
+            }
+        }
+
+        if didChange {
+            try context.save()
+        }
     }
 }

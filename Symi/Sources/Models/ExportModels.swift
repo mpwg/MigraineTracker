@@ -21,11 +21,11 @@ nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
         self.id = episode.id
         self.startedAt = episode.startedAt
         self.endedAt = episode.endedAt
-        self.type = episode.type.rawValue
+        self.type = episode.type.displayName
         self.intensity = episode.intensity
         self.painLocation = episode.painLocation
         self.painCharacter = episode.painCharacter
-        self.menstruationStatus = episode.menstruationStatus.rawValue
+        self.menstruationStatus = episode.menstruationStatus.displayName
         self.symptoms = episode.symptoms
         self.triggers = episode.triggers
         self.notes = episode.notes
@@ -33,10 +33,10 @@ nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
         self.medications = episode.medications.map {
             MedicationLine(
                 name: $0.name,
-                category: $0.category.rawValue,
+                category: $0.category.displayName,
                 dosage: $0.dosage,
                 quantity: $0.quantity,
-                effectiveness: $0.effectiveness.rawValue
+                effectiveness: $0.effectiveness.displayName
             )
         }
         if let weatherSnapshot = episode.weatherSnapshot {

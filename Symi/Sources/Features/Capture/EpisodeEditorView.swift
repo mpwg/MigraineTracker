@@ -159,7 +159,7 @@ private struct EpisodeScaleSection: View {
         Section {
             Picker("Typ", selection: $draft.type) {
                 ForEach(EpisodeType.allCases) { episodeType in
-                    Text(episodeType.rawValue).tag(episodeType)
+                    Text(episodeType.displayName).tag(episodeType)
                 }
             }
             .pickerStyle(.segmented)
@@ -253,7 +253,7 @@ private struct EpisodeOptionalDetailsSection: View {
 
                 Picker("Menstruationsstatus", selection: $draft.menstruationStatus) {
                     ForEach(MenstruationStatus.allCases) { status in
-                        Text(status.rawValue).tag(status)
+                        Text(status.displayName).tag(status)
                     }
                 }
 
@@ -652,7 +652,7 @@ struct CustomMedicationEditorSheet: View {
 
                 Picker("Kategorie", selection: $category) {
                     ForEach(MedicationCategory.allCases) { item in
-                        Text(item.rawValue).tag(item)
+                        Text(item.displayName).tag(item)
                     }
                 }
 
