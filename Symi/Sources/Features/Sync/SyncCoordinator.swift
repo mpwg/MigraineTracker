@@ -322,6 +322,33 @@ final class SyncCoordinator {
         let localEnvelope = try? repository.envelope(documentID: remoteEnvelope.documentID, deviceID: deviceID)
 
         do {
+            try repository.validate(remote: remoteEnvelope)
+        } catch {
+            await stateStore.setLastError(error.localizedDescription)
+
+            if let localEnvelope {
+                await stateStore.saveConflict(
+                    SyncConflict(
+                        documentID: remoteEnvelope.documentID,
+                        entityType: remoteEnvelope.entityType,
+                        base: shadow?.envelope,
+                        local: localEnvelope,
+                        remote: remoteEnvelope,
+                        conflictingFields: validationFields(from: error)
+                    )
+                )
+            }
+
+            await log(level: .error, operation: "coordinator.applyRemoteRecord.validationFailed", message: "Remote-Record wurde wegen ungültiger Payload abgelehnt.", metadata: [
+                "documentID": remoteEnvelope.documentID,
+                "recordID": record.recordID.recordName,
+                "error": error.localizedDescription
+            ])
+            conflicts = await stateStore.conflicts()
+            return
+        }
+
+        do {
             if let localEnvelope {
                 if localEnvelope == remoteEnvelope {
                     await stateStore.saveShadow(
@@ -582,5 +609,13 @@ final class SyncCoordinator {
         }
 
         return values
+    }
+
+    private func validationFields(from error: any Error) -> [String] {
+        if let validationError = error as? RemoteSyncPayloadValidationError {
+            return validationError.issues
+        }
+
+        return ["payloadValidation"]
     }
 }

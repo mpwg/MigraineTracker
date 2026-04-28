@@ -28,7 +28,13 @@ struct LocalSyncRepository {
         return envelopes.first { $0.documentID == documentID }
     }
 
+    func validate(remote envelope: SyncDocumentEnvelope) throws {
+        try RemoteSyncPayloadValidator.validate(envelope)
+    }
+
     func apply(remote envelope: SyncDocumentEnvelope) throws {
+        try validate(remote: envelope)
+
         let context = ModelContext(modelContainer)
 
         switch envelope.payload {
@@ -48,7 +54,7 @@ struct LocalSyncRepository {
         from envelope: SyncDocumentEnvelope,
         in context: ModelContext
     ) throws {
-        let episodeID = UUID(uuidString: payload.id) ?? UUID()
+        let episodeID = try RemoteSyncPayloadValidator.uuid(payload.id, field: "episode.id")
         let existing = try context.fetch(FetchDescriptor<Episode>()).first { $0.id == episodeID }
         let target = existing ?? Episode(
             id: episodeID,
@@ -87,9 +93,9 @@ struct LocalSyncRepository {
             target.weatherSnapshot = nil
         }
 
-        target.medications = payload.medications.map { medication in
+        target.medications = try payload.medications.map { medication in
             MedicationEntry(
-                id: UUID(uuidString: medication.id) ?? UUID(),
+                id: try RemoteSyncPayloadValidator.uuid(medication.id, field: "episode.medications.id"),
                 name: medication.name,
                 category: MedicationCategory(storageValue: medication.category),
                 dosage: medication.dosage,
@@ -101,10 +107,10 @@ struct LocalSyncRepository {
                 episode: target
             )
         }
-        target.continuousMedicationChecks = payload.continuousMedicationChecks.map { check in
+        target.continuousMedicationChecks = try payload.continuousMedicationChecks.map { check in
             ContinuousMedicationCheck(
-                id: UUID(uuidString: check.id) ?? UUID(),
-                continuousMedicationID: UUID(uuidString: check.continuousMedicationID) ?? UUID(),
+                id: try RemoteSyncPayloadValidator.uuid(check.id, field: "episode.continuousMedicationChecks.id"),
+                continuousMedicationID: try RemoteSyncPayloadValidator.uuid(check.continuousMedicationID, field: "episode.continuousMedicationChecks.continuousMedicationID"),
                 name: check.name,
                 dosage: check.dosage,
                 frequency: check.frequency,
@@ -112,9 +118,9 @@ struct LocalSyncRepository {
                 episode: target
             )
         }
-        target.weatherSnapshot = payload.weatherSnapshot.map { weather in
-            WeatherSnapshot(
-                id: UUID(uuidString: weather.id) ?? UUID(),
+        if let weather = payload.weatherSnapshot {
+            target.weatherSnapshot = WeatherSnapshot(
+                id: try RemoteSyncPayloadValidator.uuid(weather.id, field: "episode.weatherSnapshot.id"),
                 recordedAt: weather.recordedAt,
                 temperature: weather.temperature,
                 condition: weather.condition,
@@ -130,6 +136,8 @@ struct LocalSyncRepository {
                 contextPointsStorage: WeatherSnapshot.encodeContextPoints(weather.contextPoints),
                 episode: target
             )
+        } else {
+            target.weatherSnapshot = nil
         }
 
         if existing == nil {
@@ -184,7 +192,7 @@ struct LocalSyncRepository {
         from envelope: SyncDocumentEnvelope,
         in context: ModelContext
     ) throws {
-        let medicationID = UUID(uuidString: payload.id) ?? UUID()
+        let medicationID = try RemoteSyncPayloadValidator.uuid(payload.id, field: "continuousMedication.id")
         let existing = try context.fetch(FetchDescriptor<ContinuousMedication>()).first { $0.id == medicationID }
         let target = existing ?? ContinuousMedication(
             id: medicationID,
@@ -209,6 +217,154 @@ struct LocalSyncRepository {
             context.insert(target)
         }
     }
+}
+
+enum RemoteSyncPayloadValidationError: LocalizedError, Equatable {
+    case invalidPayload(documentID: String, issues: [String])
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPayload(let documentID, let issues):
+            "Remote-Payload \(documentID) ist ungültig: \(issues.joined(separator: ", "))"
+        }
+    }
+
+    var issues: [String] {
+        switch self {
+        case .invalidPayload(_, let issues):
+            issues
+        }
+    }
+}
+
+enum RemoteSyncPayloadValidator {
+    static func validate(_ envelope: SyncDocumentEnvelope) throws {
+        let issues = validationIssues(for: envelope)
+        guard issues.isEmpty else {
+            throw RemoteSyncPayloadValidationError.invalidPayload(
+                documentID: envelope.documentID,
+                issues: issues
+            )
+        }
+    }
+
+    static func uuid(_ value: String, field: String) throws -> UUID {
+        guard let id = UUID(uuidString: value) else {
+            throw RemoteSyncPayloadValidationError.invalidPayload(
+                documentID: field,
+                issues: ["\(field) ist keine gültige UUID"]
+            )
+        }
+
+        return id
+    }
+
+    private static func validationIssues(for envelope: SyncDocumentEnvelope) -> [String] {
+        var issues: [String] = []
+
+        switch envelope.payload {
+        case .episode(let payload):
+            validateUUID(payload.id, field: "episode.id", into: &issues)
+            validateDocumentID(envelope.documentID, expectedPrefix: "episode", payloadID: payload.id, into: &issues)
+            validateKnownValue(payload.type, field: "episode.type", allowedValues: episodeTypeValues, into: &issues)
+            validateKnownValue(payload.menstruationStatus, field: "episode.menstruationStatus", allowedValues: menstruationStatusValues, into: &issues)
+
+            for (index, medication) in payload.medications.enumerated() {
+                validateUUID(medication.id, field: "episode.medications[\(index)].id", into: &issues)
+                validateKnownValue(medication.category, field: "episode.medications[\(index)].category", allowedValues: medicationCategoryValues, into: &issues)
+                validateKnownValue(medication.effectiveness, field: "episode.medications[\(index)].effectiveness", allowedValues: medicationEffectivenessValues, into: &issues)
+            }
+
+            for (index, check) in payload.continuousMedicationChecks.enumerated() {
+                validateUUID(check.id, field: "episode.continuousMedicationChecks[\(index)].id", into: &issues)
+                validateUUID(check.continuousMedicationID, field: "episode.continuousMedicationChecks[\(index)].continuousMedicationID", into: &issues)
+            }
+
+            if let weatherSnapshot = payload.weatherSnapshot {
+                validateUUID(weatherSnapshot.id, field: "episode.weatherSnapshot.id", into: &issues)
+            }
+        case .medicationDefinition(let payload):
+            validateDocumentID(envelope.documentID, expectedPrefix: "medicationDefinition", payloadID: payload.catalogKey, into: &issues)
+            validateKnownValue(payload.category, field: "medicationDefinition.category", allowedValues: medicationCategoryValues, into: &issues)
+        case .continuousMedication(let payload):
+            validateUUID(payload.id, field: "continuousMedication.id", into: &issues)
+            validateDocumentID(envelope.documentID, expectedPrefix: "continuousMedication", payloadID: payload.id, into: &issues)
+        }
+
+        return issues
+    }
+
+    private static func validateUUID(_ value: String, field: String, into issues: inout [String]) {
+        if UUID(uuidString: value) == nil {
+            issues.append("\(field) ist keine gültige UUID")
+        }
+    }
+
+    private static func validateDocumentID(
+        _ documentID: String,
+        expectedPrefix: String,
+        payloadID: String,
+        into issues: inout [String]
+    ) {
+        let expectedDocumentID = "\(expectedPrefix):\(payloadID)"
+        if documentID != expectedDocumentID {
+            issues.append("documentID passt nicht zu \(expectedPrefix).id")
+        }
+    }
+
+    private static func validateKnownValue(
+        _ value: String,
+        field: String,
+        allowedValues: Set<String>,
+        into issues: inout [String]
+    ) {
+        if !allowedValues.contains(value) {
+            issues.append("\(field) enthält einen unbekannten Wert")
+        }
+    }
+
+    private static let episodeTypeValues: Set<String> = [
+        EpisodeType.migraine.rawValue,
+        EpisodeType.headache.rawValue,
+        EpisodeType.unclear.rawValue,
+        "Migräne",
+        "Kopfschmerz",
+        "Unklar"
+    ]
+
+    private static let menstruationStatusValues: Set<String> = [
+        MenstruationStatus.unknown.rawValue,
+        MenstruationStatus.none.rawValue,
+        MenstruationStatus.active.rawValue,
+        MenstruationStatus.expected.rawValue,
+        "Nicht angegeben",
+        "Nein",
+        "Aktuell",
+        "Erwartet"
+    ]
+
+    private static let medicationCategoryValues: Set<String> = [
+        MedicationCategory.triptan.rawValue,
+        MedicationCategory.nsar.rawValue,
+        MedicationCategory.paracetamol.rawValue,
+        MedicationCategory.antiemetic.rawValue,
+        MedicationCategory.other.rawValue,
+        "Triptan",
+        "nsar",
+        "NSAR",
+        "Paracetamol",
+        "Antiemetikum",
+        "Sonstiges"
+    ]
+
+    private static let medicationEffectivenessValues: Set<String> = [
+        MedicationEffectiveness.none.rawValue,
+        MedicationEffectiveness.partial.rawValue,
+        MedicationEffectiveness.good.rawValue,
+        "Keine",
+        "Teilweise",
+        "Gut"
+    ]
 }
 
 extension Episode {
