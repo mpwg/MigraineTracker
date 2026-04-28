@@ -185,6 +185,70 @@ struct SyncMergeEngineTests {
 
     @Test
     @MainActor
+    func invalidRemoteEpisodeIDIsRejectedWithoutCreatingLocalEpisode() async throws {
+        let stack = try makeSyncTestStack()
+        let remoteEnvelope = SyncDocumentEnvelope(
+            documentID: "episode:defekt",
+            entityType: .episode,
+            modifiedAt: Date(timeIntervalSince1970: 2_000),
+            authorDeviceID: "device-remote",
+            payload: .episode(
+                SyncEpisodePayload(
+                    id: "defekt",
+                    startedAt: Date(timeIntervalSince1970: 1_000),
+                    endedAt: nil,
+                    type: EpisodeType.migraine.rawValue,
+                    intensity: 6,
+                    painLocation: "",
+                    painCharacter: "",
+                    notes: "remote",
+                    symptoms: [],
+                    triggers: [],
+                    functionalImpact: "",
+                    menstruationStatus: MenstruationStatus.unknown.rawValue,
+                    medications: [],
+                    weatherSnapshot: nil
+                )
+            )
+        )
+
+        await stack.coordinator.applyRemoteRecord(try record(from: remoteEnvelope))
+
+        let context = ModelContext(stack.container)
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        let conflicts = await stack.stateStore.conflicts()
+        let lastError = await stack.stateStore.lastError()
+
+        #expect(episodes.isEmpty)
+        #expect(conflicts.isEmpty)
+        #expect(lastError?.contains("episode.id ist keine gültige UUID") == true)
+    }
+
+    @Test
+    @MainActor
+    func invalidRemoteEnumValueCreatesConflictForExistingLocalDocument() async throws {
+        let stack = try makeSyncTestStack()
+        let documentID = try insertBaseEpisode(in: stack.container)
+        let baseEnvelope = try requireEnvelope(from: stack.repository, documentID: documentID)
+        await stack.stateStore.saveShadow(SyncShadow(envelope: baseEnvelope), for: documentID)
+        let remoteEnvelope = episodeEnvelope(from: baseEnvelope, modifiedAt: Date(timeIntervalSince1970: 3_000)) { payload in
+            payload.type = "cluster"
+        }
+
+        await stack.coordinator.applyRemoteRecord(try record(from: remoteEnvelope))
+
+        let storedEnvelope = try requireEnvelope(from: stack.repository, documentID: documentID)
+        let conflict = try #require(await stack.stateStore.conflicts().first)
+        let lastError = await stack.stateStore.lastError()
+
+        #expect(storedEnvelope == baseEnvelope)
+        #expect(conflict.remote == remoteEnvelope)
+        #expect(conflict.conflictingFields == ["episode.type enthält einen unbekannten Wert"])
+        #expect(lastError?.contains("episode.type enthält einen unbekannten Wert") == true)
+    }
+
+    @Test
+    @MainActor
     func conflictRemoteMergeLeavesLocalStateUntouchedUntilResolution() async throws {
         let stack = try makeSyncTestStack()
         let documentID = try insertBaseEpisode(in: stack.container)
