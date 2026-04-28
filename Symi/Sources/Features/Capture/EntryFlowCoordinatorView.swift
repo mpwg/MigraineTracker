@@ -162,7 +162,7 @@ private struct EntryHeadacheStepView: View {
             PainGaugeView(value: $coordinator.draft.intensity)
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
-                HeadacheLocationGrid {
+                HeadacheOptionGrid {
                     ForEach(visiblePainLocations) { location in
                         PainLocationSelectionTile(
                             option: location,
@@ -170,14 +170,14 @@ private struct EntryHeadacheStepView: View {
                             theme: .pain,
                             accessibilityIdentifier: "entry-location-\(location.title)"
                         ) {
-                            toggle(location.title, in: &coordinator.draft.selectedPainLocations)
+                            coordinator.draft.selectedPainLocations.toggleMembership(location.title)
                         }
                     }
                 }
             }
 
             InputFlowFieldGroup(title: "Tagesbereich") {
-                HeadacheDayPartGrid {
+                HeadacheOptionGrid {
                     ForEach(EntryDayPartPreset.allCases) { preset in
                         InputFlowSelectionTile(
                             title: preset.title,
@@ -224,14 +224,6 @@ private struct EntryHeadacheStepView: View {
         }
 
         coordinator.draft.selectedPainLocations = ["Schläfen"]
-    }
-
-    private func toggle(_ option: String, in selection: inout Set<String>) {
-        if selection.contains(option) {
-            selection.remove(option)
-        } else {
-            selection.insert(option)
-        }
     }
 }
 
@@ -324,7 +316,7 @@ private struct PainLocationSelectionTile: View {
         return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
     }
 }
-private struct HeadacheLocationGrid<Content: View>: View {
+private struct HeadacheOptionGrid<Content: View>: View {
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -332,42 +324,9 @@ private struct HeadacheLocationGrid<Content: View>: View {
     }
 
     var body: some View {
-        LazyVGrid(
-            columns: Array(
-                repeating: GridItem(
-                    .flexible(minimum: SymiSize.headacheOptionGridMinWidth),
-                    spacing: SymiSpacing.xs,
-                    alignment: .top
-                ),
-                count: SymiSize.headacheOptionGridColumnCount
-            ),
-            alignment: .leading,
-            spacing: SymiSpacing.xs
-        ) {
-            content
-        }
-    }
-}
-
-private struct HeadacheDayPartGrid<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        LazyVGrid(
-            columns: Array(
-                repeating: GridItem(
-                    .flexible(minimum: SymiSize.headacheOptionGridMinWidth),
-                    spacing: SymiSpacing.xs,
-                    alignment: .top
-                ),
-                count: SymiSize.headacheOptionGridColumnCount
-            ),
-            alignment: .leading,
-            spacing: SymiSpacing.xs
+        InputFlowFixedTileGrid(
+            minimumColumnWidth: SymiSize.headacheOptionGridMinWidth,
+            columnCount: SymiSize.headacheOptionGridColumnCount
         ) {
             content
         }
@@ -569,7 +528,7 @@ private struct EntryTriggersStepView: View {
                             theme: .trigger,
                             accessibilityIdentifier: "entry-trigger-\(option.title)"
                         ) {
-                            toggle(option.title, in: &coordinator.draft.selectedTriggers)
+                            coordinator.draft.selectedTriggers.toggleMembership(option.title)
                         }
                     }
                 }
@@ -587,14 +546,6 @@ private struct EntryTriggersStepView: View {
                 onPrimary: coordinator.continueToNextStep,
                 onSecondary: coordinator.skipCurrentStep
             )
-        }
-    }
-
-    private func toggle(_ option: String, in selection: inout Set<String>) {
-        if selection.contains(option) {
-            selection.remove(option)
-        } else {
-            selection.insert(option)
         }
     }
 }

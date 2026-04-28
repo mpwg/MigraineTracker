@@ -746,12 +746,6 @@ private extension View {
     }
 }
 
-private extension String {
-    var trimmed: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
 extension Calendar {
     nonisolated func startOfMonth(for inputDate: Date) -> Date {
         self.date(from: dateComponents([.year, .month], from: inputDate)) ?? inputDate

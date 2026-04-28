@@ -35,6 +35,25 @@ enum MedicationEffectiveness: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 }
 
+struct MedicationTextFormatter {
+    nonisolated static func detailText(dosage: String, frequency: String) -> String {
+        [dosage, frequency]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+}
+
+struct MedicationSelectionKey {
+    nonisolated static func make(name: String, category: MedicationCategory, dosage: String) -> String {
+        [
+            name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+            category.rawValue,
+            dosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        ].joined(separator: "|")
+    }
+}
+
 extension Episode {
     convenience init(
         id: UUID = UUID(),
@@ -131,10 +150,7 @@ extension ContinuousMedication {
     }
 
     var detailText: String {
-        [dosage, frequency]
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " · ")
+        MedicationTextFormatter.detailText(dosage: dosage, frequency: frequency)
     }
 
     func markUpdated(at date: Date = .now) {
@@ -222,11 +238,11 @@ extension MedicationDefinition {
     }
 
     var selectionKey: String {
-        [
-            name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-            category.rawValue,
-            suggestedDosage.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        ].joined(separator: "|")
+        MedicationSelectionKey.make(
+            name: name,
+            category: category,
+            dosage: suggestedDosage
+        )
     }
 
     var isDeleted: Bool {

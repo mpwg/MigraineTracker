@@ -115,6 +115,31 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func episodeDayPartProvidesCentralClassificationAndDisplayText() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let expectations: [(Int, EpisodeDayPart, String)] = [
+            (4, .nacht, "In der Nacht"),
+            (5, .morgens, "Am Morgen"),
+            (10, .morgens, "Am Morgen"),
+            (11, .mittags, "Am Nachmittag"),
+            (16, .mittags, "Am Nachmittag"),
+            (17, .abends, "Am Abend"),
+            (21, .abends, "Am Abend"),
+            (22, .nacht, "In der Nacht")
+        ]
+
+        for expectation in expectations {
+            let date = calendar.date(from: DateComponents(year: 2026, month: 4, day: 28, hour: expectation.0))!
+            let dayPart = EpisodeDayPart(date: date, calendar: calendar)
+
+            #expect(dayPart == expectation.1)
+            #expect(dayPart.contextualLabel == expectation.2)
+            #expect(JournalEntryContext.timeOfDay(for: date, calendar: calendar) == expectation.2)
+        }
+    }
+
+    @Test
     func healthTypePreferencesSeparateSelectionFromAuthorizationRequest() {
         let suiteName = "HealthTypePreferencesTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
@@ -237,6 +262,24 @@ struct CoreArchitectureTests {
         #expect(repository.deletedCatalogKeys == ["custom:sumatriptan"])
         #expect(controller.selectedMedications.isEmpty)
         #expect(controller.validationMessage == nil)
+    }
+
+    @Test
+    func medicationDetailTextFormatsEmptyWhitespaceAndCombinations() {
+        #expect(MedicationTextFormatter.detailText(dosage: "", frequency: "") == "")
+        #expect(MedicationTextFormatter.detailText(dosage: "  ", frequency: "\n\t") == "")
+        #expect(MedicationTextFormatter.detailText(dosage: " 50 mg ", frequency: "") == "50 mg")
+        #expect(MedicationTextFormatter.detailText(dosage: "", frequency: " täglich ") == "täglich")
+        #expect(MedicationTextFormatter.detailText(dosage: " 50 mg ", frequency: " täglich ") == "50 mg · täglich")
+    }
+
+    @Test
+    func medicationSelectionKeyNormalizesEmptyWhitespaceAndCombinations() {
+        #expect(MedicationSelectionKey.make(name: "", category: .other, dosage: "") == "|Sonstiges|")
+        #expect(MedicationSelectionKey.make(name: "  ", category: .other, dosage: "\n\t") == "|Sonstiges|")
+        #expect(MedicationSelectionKey.make(name: " Sumatriptan ", category: .triptan, dosage: "") == "sumatriptan|Triptan|")
+        #expect(MedicationSelectionKey.make(name: "", category: .nsar, dosage: " 400 MG ") == "|NSAR|400 mg")
+        #expect(MedicationSelectionKey.make(name: " IBUprofen ", category: .nsar, dosage: " 400 MG ") == "ibuprofen|NSAR|400 mg")
     }
 
     @Test

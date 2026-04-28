@@ -96,4 +96,15 @@ struct NewEntryDesignSystemTests {
             #expect(token.lightColorValue.hexString == expected[token, default: ""])
         }
     }
+
+    @Test
+    func setToggleMembershipAddsAndRemovesMembers() {
+        var selection: Set<String> = ["Stress"]
+
+        selection.toggleMembership("Wetter")
+        #expect(selection == ["Stress", "Wetter"])
+
+        selection.toggleMembership("Stress")
+        #expect(selection == ["Wetter"])
+    }
 }
