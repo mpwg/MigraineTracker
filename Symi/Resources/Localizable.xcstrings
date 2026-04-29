@@ -178,6 +178,22 @@
         }
       }
     },
+    "%lld Eintrag%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Eintrag%2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld entr%2$@"
+          }
+        }
+      }
+    },
     "%lld Einträge im gewählten Zeitraum" : {
       "localizations" : {
         "en" : {
@@ -2589,6 +2605,9 @@
           }
         }
       }
+    },
+    "Remove %@" : {
+
     },
     "ruhig" : {
       "localizations" : {

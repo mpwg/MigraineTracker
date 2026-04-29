@@ -1,17 +1,16 @@
 import SwiftUI
+import SwiftData
 // swiftlint:disable file_length
 
 struct HomeView: View {
     let dependencies: HomeFeatureDependencies
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Query(filter: #Predicate<Episode> { $0.deletedAt == nil }) private var entries: [Episode]
 
     @State private var displayedMonth = Calendar.current.startOfMonth(for: .now)
     @State private var calendarMonthData = HistoryMonthData(month: Calendar.current.startOfMonth(for: .now), episodesByDay: [:])
     @State private var patternPreviewData = HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
     @State private var isPresentingEpisodeEditor = false
-    #if DEBUG
-    @State private var entryCountOverride: Int?
-    #endif
 
     init(dependencies: HomeFeatureDependencies) {
         self.dependencies = dependencies
@@ -34,14 +33,6 @@ struct HomeView: View {
         .refreshable {
             await reloadAll()
         }
-        #if DEBUG
-        .background {
-            HomeDebugKeyboardShortcuts(
-                setEntryCount: { entryCountOverride = $0 },
-                clearOverride: { entryCountOverride = nil }
-            )
-        }
-        #endif
         .fullScreenCover(isPresented: $isPresentingEpisodeEditor) {
             EntryFlowCoordinatorView(dependencies: dependencies.capture, initialStartedAt: .now) {
                 isPresentingEpisodeEditor = false
@@ -58,6 +49,7 @@ struct HomeView: View {
 
                 HomeHeroSection(
                     state: homeState,
+                    entryCount: entryCount,
                     insightCards: homeInsightCards,
                     insightsDestination: {
                         InsightsView(dependencies: dependencies.insights)
@@ -104,6 +96,7 @@ struct HomeView: View {
 
                 HomeHeroSection(
                     state: homeState,
+                    entryCount: entryCount,
                     insightCards: homeInsightCards,
                     insightsDestination: {
                         InsightsView(dependencies: dependencies.insights)
@@ -177,17 +170,14 @@ struct HomeView: View {
     }
 
     private var homeState: HomeState {
-        HomeState(entriesCount: entriesCount)
+        let state = mapToHomeState(entryCount: entryCount)
+        print("Entry count:", entryCount)
+        print("Home state:", state)
+        return state
     }
 
-    private var entriesCount: Int {
-        #if DEBUG
-        if let entryCountOverride {
-            return entryCountOverride
-        }
-        #endif
-
-        return patternPreviewData.totalPainEpisodeCount
+    private var entryCount: Int {
+        entries.count
     }
 
     private var homeInsightCards: [HomeInsightCardData] {
@@ -206,46 +196,24 @@ private enum HomeLocalized {
     }
 }
 
-#if DEBUG
-private struct HomeDebugKeyboardShortcuts: View {
-    let setEntryCount: (Int) -> Void
-    let clearOverride: () -> Void
+enum HomeState: Equatable {
+    case empty
+    case early
+    case insights
+}
 
-    var body: some View {
-        VStack {
-            debugButton("Live-Daten", shortcut: "0", action: clearOverride)
-            debugButton("Home Empty State", shortcut: "1") { setEntryCount(0) }
-            debugButton("Home Early State 1", shortcut: "2") { setEntryCount(1) }
-            debugButton("Home Early State 2", shortcut: "3") { setEntryCount(2) }
-            debugButton("Home Insight State", shortcut: "4") { setEntryCount(3) }
-        }
-        .frame(width: SymiSize.accessibilityMarker, height: SymiSize.accessibilityMarker)
-        .opacity(SymiOpacity.hiddenDebugControl)
-        .accessibilityHidden(true)
-    }
-
-    private func debugButton(_ title: String, shortcut: KeyEquivalent, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .keyboardShortcut(shortcut, modifiers: .command)
+func mapToHomeState(entryCount: Int) -> HomeState {
+    switch entryCount {
+    case 0:
+        return .empty
+    case 1..<5:
+        return .early
+    default:
+        return .insights
     }
 }
-#endif
 
-private enum HomeState: Equatable {
-    case empty
-    case early(Int)
-    case insights
-
-    init(entriesCount: Int) {
-        if entriesCount == 0 {
-            self = .empty
-        } else if entriesCount < 3 {
-            self = .early(entriesCount)
-        } else {
-            self = .insights
-        }
-    }
-
+private extension HomeState {
     var animationID: String {
         switch self {
         case .empty:
@@ -260,6 +228,7 @@ private enum HomeState: Equatable {
 
 private struct HomeHeroSection<InsightsDestination: View>: View {
     let state: HomeState
+    let entryCount: Int
     let insightCards: [HomeInsightCardData]
     @ViewBuilder let insightsDestination: () -> InsightsDestination
     let onCreateEntry: () -> Void
@@ -268,8 +237,10 @@ private struct HomeHeroSection<InsightsDestination: View>: View {
     var body: some View {
         Group {
             switch state {
-            case .empty, .early:
-                OnboardingCard(state: state, onCreateEntry: onCreateEntry)
+            case .empty:
+                EmptyOnboardingView(onCreateEntry: onCreateEntry)
+            case .early:
+                EarlyGuidanceView(entryCount: entryCount, onCreateEntry: onCreateEntry)
             case .insights:
                 InsightsCard(cards: insightCards, destination: insightsDestination)
             }
@@ -289,15 +260,33 @@ private struct HomeHeroSection<InsightsDestination: View>: View {
     }
 }
 
+private struct EmptyOnboardingView: View {
+    let onCreateEntry: () -> Void
+
+    var body: some View {
+        OnboardingCard(state: .empty, entryCount: 0, onCreateEntry: onCreateEntry)
+    }
+}
+
+private struct EarlyGuidanceView: View {
+    let entryCount: Int
+    let onCreateEntry: () -> Void
+
+    var body: some View {
+        OnboardingCard(state: .early, entryCount: entryCount, onCreateEntry: onCreateEntry)
+    }
+}
+
 private struct OnboardingCard: View {
     let state: HomeState
+    let entryCount: Int
     let onCreateEntry: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: HomeRhythm.xl) {
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
-                Text("Starte deine Reise")
+                Text(title)
                     .font(SymiTypography.flowTitle)
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
@@ -313,7 +302,7 @@ private struct OnboardingCard: View {
                 OnboardingContextBlock()
             }
 
-            if case .early(let entryCount) = state {
+            if state == .early {
                 Text("Nur noch \(remainingEntriesText(for: entryCount)) bis zu deinen ersten Insights")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
@@ -335,11 +324,22 @@ private struct OnboardingCard: View {
     }
 
     private func remainingEntriesText(for entryCount: Int) -> String {
-        let remainingEntries = max(3 - entryCount, 1)
+        let remainingEntries = max(5 - entryCount, 1)
         if remainingEntries == 1 {
             return "1 Eintrag"
         }
         return "\(remainingEntries) Einträge"
+    }
+
+    private var title: String {
+        switch state {
+        case .empty:
+            "Starte deine Reise"
+        case .early:
+            "Bleib dran"
+        case .insights:
+            "Deine Insights"
+        }
     }
 
     private var primaryActionTitle: String {
@@ -1729,6 +1729,7 @@ private extension View {
             VStack(spacing: SymiSpacing.lg) {
                 HomeHeroSection(
                     state: .empty,
+                    entryCount: 0,
                     insightCards: [],
                     insightsDestination: {
                         Text("Insights")
@@ -1737,7 +1738,8 @@ private extension View {
                 )
 
                 HomeHeroSection(
-                    state: .early(2),
+                    state: .early,
+                    entryCount: 2,
                     insightCards: [],
                     insightsDestination: {
                         Text("Insights")
@@ -1747,6 +1749,7 @@ private extension View {
 
                 HomeHeroSection(
                     state: .insights,
+                    entryCount: 5,
                     insightCards: HomeInsightCardData.fallbackCards,
                     insightsDestination: {
                         Text("Insights")
