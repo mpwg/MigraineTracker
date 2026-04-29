@@ -6,6 +6,58 @@ import Testing
 
 struct SyncMergeEngineTests {
     @Test
+    func syncStatusWarnsWhenLastDownloadIsStale() {
+        let now = Date(timeIntervalSince1970: 200_000)
+        let status = SyncStatusSnapshot(
+            state: .ready,
+            unsyncedRecords: 0,
+            lastDownloadedAt: now.addingTimeInterval(-SyncStatusSnapshot.staleDataWarningInterval - 60),
+            lastUploadedAt: now.addingTimeInterval(-300)
+        )
+
+        let warning = status.staleDataWarning(now: now, isSyncEnabled: true, openConflictCount: 0)
+
+        #expect(warning?.contains("letzte iCloud-Download") == true)
+    }
+
+    @Test
+    func syncStatusPrioritizesConflictsAndUnsyncedRecords() {
+        let status = SyncStatusSnapshot(
+            state: .conflict,
+            unsyncedRecords: 3,
+            lastDownloadedAt: Date(timeIntervalSince1970: 1_000)
+        )
+
+        let conflictWarning = status.staleDataWarning(
+            now: Date(timeIntervalSince1970: 2_000),
+            isSyncEnabled: true,
+            openConflictCount: 2
+        )
+        let unsyncedWarning = status.staleDataWarning(
+            now: Date(timeIntervalSince1970: 2_000),
+            isSyncEnabled: true,
+            openConflictCount: 0
+        )
+
+        #expect(conflictWarning?.contains("2 Sync-Konflikte") == true)
+        #expect(unsyncedWarning?.contains("3 lokale Änderungen") == true)
+    }
+
+    @Test
+    func syncStatusDoesNotWarnWhenDisabledOrFresh() {
+        let now = Date(timeIntervalSince1970: 10_000)
+        let status = SyncStatusSnapshot(
+            state: .ready,
+            unsyncedRecords: 0,
+            lastDownloadedAt: now.addingTimeInterval(-300),
+            lastUploadedAt: now.addingTimeInterval(-120)
+        )
+
+        #expect(status.staleDataWarning(now: now, isSyncEnabled: false, openConflictCount: 0) == nil)
+        #expect(status.staleDataWarning(now: now, isSyncEnabled: true, openConflictCount: 0) == nil)
+    }
+
+    @Test
     func corruptSyncStateFileStartsWithCleanStateAndCanPersistAgain() async throws {
         let baseDirectory = try makeTemporaryDirectory()
         let syncDirectory = baseDirectory.appendingPathComponent("Symi", isDirectory: true)
