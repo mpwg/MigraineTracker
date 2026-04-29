@@ -664,6 +664,9 @@
     "Backup teilen" : {
 
     },
+    "Basierend auf deinen Einträgen" : {
+
+    },
     "Bearbeiten" : {
       "localizations" : {
         "en" : {
@@ -998,6 +1001,9 @@
           }
         }
       }
+    },
+    "Deine Insights" : {
+
     },
     "Deine Muster" : {
 
@@ -1631,6 +1637,9 @@
         }
       }
     },
+    "Ersten Eintrag erstellen" : {
+
+    },
     "Erwartet" : {
       "localizations" : {
         "en" : {
@@ -1739,6 +1748,16 @@
     },
     "Flow-Schritt %@" : {
 
+    },
+    "Fortschritt %lld von %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fortschritt %1$lld von %2$lld"
+          }
+        }
+      }
     },
     "Frequenz, optional" : {
 
@@ -1910,6 +1929,9 @@
       }
     },
     "In Sekunden eintragen" : {
+
+    },
+    "In wenigen Sekunden zu mehr Klarheit über deinen Körper." : {
 
     },
     "Insights" : {
@@ -2430,6 +2452,9 @@
     "Mehr gute Tage" : {
 
     },
+    "Mehr Insights entdecken" : {
+
+    },
     "Menstruation %@" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2549,6 +2574,9 @@
       }
     },
     "Nicht ausgewählt" : {
+
+    },
+    "Noch %lld Einträge bis zu deinen ersten Insights" : {
 
     },
     "Noch kein Eintrag für diesen Tag." : {
@@ -3220,6 +3248,9 @@
     "Startdatum" : {
 
     },
+    "Starte deine Reise" : {
+
+    },
     "Starte einen neuen Eintrag" : {
 
     },
@@ -3684,6 +3715,9 @@
       }
     },
     "Wechselt den angezeigten Monat im Home-Kalender." : {
+
+    },
+    "Weiter eintragen" : {
 
     },
     "Weitere Angaben" : {
