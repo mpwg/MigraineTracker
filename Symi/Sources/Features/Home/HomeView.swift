@@ -292,7 +292,7 @@ private struct OnboardingCard: View {
             }
 
             VStack(alignment: .leading, spacing: HomeRhythm.md) {
-                PrimaryOnboardingActionRow(action: onCreateEntry)
+                PrimaryOnboardingActionRow(title: primaryActionTitle, action: onCreateEntry)
                 OnboardingContextBlock()
             }
 
@@ -318,9 +318,21 @@ private struct OnboardingCard: View {
         let remainingEntries = max(3 - entryCount, 1)
         return "\(remainingEntries) Eintrag\(remainingEntries == 1 ? "" : "e")"
     }
+
+    private var primaryActionTitle: String {
+        switch state {
+        case .empty:
+            "Jetzt eintragen"
+        case .early:
+            "Weiter eintragen"
+        case .insights:
+            "Neuer Eintrag"
+        }
+    }
 }
 
 private struct PrimaryOnboardingActionRow: View {
+    let title: String
     let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
@@ -343,7 +355,7 @@ private struct PrimaryOnboardingActionRow: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Ersten Eintrag erstellen")
+                Text(title)
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
