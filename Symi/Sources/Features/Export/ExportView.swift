@@ -553,9 +553,17 @@ private struct HealthDataTypeSection: View {
                 )) {
                     VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                         Text(definition.displayName)
+                        Text("\(definition.category.rawValue) · \(definition.healthKitIdentifier)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                         Text(definition.rationale)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        if let availabilityNote = definition.availabilityNote {
+                            Text(availabilityNote)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .tint(AppTheme.ocean)

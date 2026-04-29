@@ -44,6 +44,10 @@ struct EpisodeDetailView: View {
                             EntryDetailTriggerSection(triggers: episode.triggers)
                         }
 
+                        if let healthContext = episode.healthContext, healthContext.hasVisibleData {
+                            EntryDetailHealthContextCard(healthContext: healthContext)
+                        }
+
                         EntryDetailMedicationCard(episode: episode)
 
                         EntryDetailDeleteAction(onDelete: { isShowingDeleteConfirmation = true })
@@ -570,6 +574,73 @@ private struct EntryDetailMedicationCard: View {
 
     private var medicationText: String {
         JournalEntryContext.medicationDetail(for: episode) ?? "Keine Medikation"
+    }
+}
+
+private struct EntryDetailHealthContextCard: View {
+    let healthContext: HealthContextRecord
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+            Label("Apple Health", systemImage: "heart.text.square")
+                .font(.system(.headline, design: .rounded).weight(.semibold))
+                .foregroundStyle(ColorToken.Brand.primary)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                ForEach(lines, id: \.self) { line in
+                    Text(line)
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .foregroundStyle(ColorToken.Text.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Text("Quelle: \(healthContext.source)")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(ColorToken.Text.tertiary)
+        }
+        .padding(SymiSpacing.entryDetailMedicationCardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(EntryDetailSurface.cardFill, in: RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: EntryDetailSurface.cornerRadius, style: .continuous)
+                .stroke(EntryDetailSurface.highlight, lineWidth: SymiStroke.hairline)
+        )
+        .shadow(
+            color: EntryDetailSurface.shadowColor,
+            radius: EntryDetailSurface.shadowRadius,
+            x: SymiShadow.cardXOffset,
+            y: EntryDetailSurface.shadowYOffset
+        )
+    }
+
+    private var lines: [String] {
+        var values: [String] = []
+        if let sleepMinutes = healthContext.sleepMinutes {
+            values.append("Schlaf: \(Int(sleepMinutes.rounded()).formatted()) min")
+        }
+        if let stepCount = healthContext.stepCount {
+            values.append("Schritte: \(stepCount.formatted())")
+        }
+        if let averageHeartRate = healthContext.averageHeartRate {
+            values.append("Herzfrequenz: \(averageHeartRate.formatted(.number.precision(.fractionLength(0)))) bpm")
+        }
+        if let restingHeartRate = healthContext.restingHeartRate {
+            values.append("Ruhepuls: \(restingHeartRate.formatted(.number.precision(.fractionLength(0)))) bpm")
+        }
+        if let heartRateVariability = healthContext.heartRateVariability {
+            values.append("HRV: \(heartRateVariability.formatted(.number.precision(.fractionLength(0)))) ms")
+        }
+        if let menstrualFlow = healthContext.menstrualFlow {
+            values.append("Menstruation: \(menstrualFlow)")
+        }
+        if !healthContext.symptoms.isEmpty {
+            let symptoms = healthContext.symptoms.map { "\($0.type.displayName): \($0.severity)" }
+            values.append("Symptome: \(symptoms.joined(separator: ", "))")
+        }
+
+        values.append("Erfasst: \(healthContext.recordedAt.formatted(date: .abbreviated, time: .shortened))")
+        return values
     }
 }
 

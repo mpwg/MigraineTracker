@@ -158,6 +158,27 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func healthDataCatalogDocumentsSeparateReadableAndWritableTypes() {
+        let readDefinitions = HealthDataCatalog.readDefinitions
+        let writeDefinitions = HealthDataCatalog.writeDefinitions
+
+        #expect(!readDefinitions.isEmpty)
+        #expect(!writeDefinitions.isEmpty)
+        #expect(readDefinitions.allSatisfy { $0.direction == .read })
+        #expect(writeDefinitions.allSatisfy { $0.direction == .write })
+        #expect(Set(readDefinitions.map(\.id)).count == readDefinitions.count)
+        #expect(Set(writeDefinitions.map(\.id)).count == writeDefinitions.count)
+        #expect(readDefinitions.contains { $0.category == .sleep })
+        #expect(readDefinitions.contains { $0.category == .activity })
+        #expect(readDefinitions.contains { $0.category == .heart })
+        #expect(readDefinitions.contains { $0.category == .cycle })
+        #expect(readDefinitions.contains { $0.category == .symptom })
+        #expect(writeDefinitions.allSatisfy { $0.category == .symptom })
+        #expect(HealthDataCatalog.allDefinitions.allSatisfy { !$0.rationale.trimmed.isEmpty })
+        #expect(HealthDataCatalog.allDefinitions.allSatisfy { !$0.healthKitIdentifier.trimmed.isEmpty })
+    }
+
+    @Test
     func usageDataConsentStorePersistsExplicitDecisions() {
         let suiteName = "UsageDataConsentStoreTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!

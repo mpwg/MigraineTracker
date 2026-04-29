@@ -132,6 +132,7 @@ xcodebuild test -scheme Symi -destination 'platform=iOS Simulator,name=iPhone 16
 
 - [docs/MVP-Konzept.md](/Users/mat/code/Symi/docs/MVP-Konzept.md)
 - [docs/Insight-Engine.md](/Users/mat/code/Symi/docs/Insight-Engine.md)
+- [docs/Apple-Health-Datentypen.md](/Users/mat/code/Symi/docs/Apple-Health-Datentypen.md)
 - [docs/App-Store-Metadaten.md](/Users/mat/code/Symi/docs/App-Store-Metadaten.md)
 - [docs/Historische-Identifier.md](/Users/mat/code/Symi/docs/Historische-Identifier.md)
 - [docs/Teststrategie-und-Release-Checkliste.md](/Users/mat/code/Symi/docs/Teststrategie-und-Release-Checkliste.md)
