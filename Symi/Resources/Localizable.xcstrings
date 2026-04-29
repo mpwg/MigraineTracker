@@ -1299,9 +1299,6 @@
         }
       }
     },
-    "Ein Gespräch mit deinem Arzt kann dir Klarheit geben" : {
-
-    },
     "Eingenommen" : {
 
     },
@@ -1873,9 +1870,6 @@
           }
         }
       }
-    },
-    "Hilft dir, deine Symptome besser zu erklären" : {
-
     },
     "Hinweis: %@" : {
 
@@ -2650,6 +2644,9 @@
 
     },
     "Öffnet die Liste aller Einträge." : {
+
+    },
+    "Öffnet die Zeitraum-Auswahl" : {
 
     },
     "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
@@ -3475,6 +3472,9 @@
           }
         }
       }
+    },
+    "Unterstützt dich im Gespräch mit deinem Arzt" : {
+
     },
     "Upload: %@" : {
 

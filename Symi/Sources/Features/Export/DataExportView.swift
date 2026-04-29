@@ -267,20 +267,14 @@ private struct ReportActionCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.lg) {
-            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-                Label {
-                    Text("Hilft dir, deine Symptome besser zu erklären")
-                } icon: {
-                    Image(systemName: "heart.text.square")
-                        .foregroundStyle(SymiColors.sage.color)
-                }
-                .font(.footnote)
-                .foregroundStyle(SymiColors.textSecondary.color.opacity(0.82))
-
+            Label {
                 Text("Unterstützt dich im Gespräch mit deinem Arzt")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(SymiColors.textPrimary.color.opacity(0.86))
+            } icon: {
+                Image(systemName: "heart.text.square")
+                    .foregroundStyle(SymiColors.sage.color)
             }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(SymiColors.textPrimary.color.opacity(0.86))
 
             Text("Der Bericht wird beim Öffnen automatisch erstellt")
                 .font(.footnote.weight(.regular))
@@ -301,26 +295,30 @@ private struct FloatingReportButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: SymiSpacing.xs) {
-                if isLoading {
-                    ProgressView()
-                        .tint(.white)
-                } else {
-                    Image(systemName: "doc.text.magnifyingglass")
-                        .imageScale(.medium)
-                }
+        ZStack {
+            Rectangle()
+                .fill(.ultraThinMaterial)
 
-                Text(isLoading ? "Bericht wird erstellt" : "Bericht ansehen")
+            Button(action: action) {
+                HStack(spacing: SymiSpacing.xs) {
+                    if isLoading {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .imageScale(.medium)
+                    }
+
+                    Text(isLoading ? "Bericht wird erstellt" : "Bericht ansehen")
+                }
             }
+            .buttonStyle(ReportPrimaryButtonStyle())
+            .disabled(isLoading)
+            .padding(.horizontal, SymiSpacing.xxl)
+            .padding(.bottom, SymiSpacing.md)
         }
-        .buttonStyle(ReportPrimaryButtonStyle())
-        .disabled(isLoading)
-        .padding(SymiSpacing.sm)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.14), radius: 18, x: 0, y: 10)
-        .padding(.horizontal, SymiSpacing.xxl)
-        .padding(.bottom, SymiSpacing.lg)
+        .frame(height: 100)
+        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.12), radius: 18, x: 0, y: -8)
     }
 }
 
