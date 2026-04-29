@@ -36,7 +36,8 @@ Lokale Vorab-Prüfung vor einem Tag-Release:
 4. Screenshot-Seed ohne vollständige Screenshot-Erzeugung validieren:
    `bundle exec fastlane ios validate_screenshot_seed`
 5. App im `Release`-Build in Xcode archivieren oder per `xcodebuild archive` bauen
-6. offene Fehler in `GitHub Actions` oder `TestFlight` vor dem Tagging beseitigen
+6. Signing und Provisioning gegen die historischen Identifier `eu.mpwg.MigraineTracker` und `iCloud.eu.mpwg.MigraineTracker` prüfen; Details stehen in [Historische Identifier](/Users/mat/code/Symi/docs/Historische-Identifier.md)
+7. offene Fehler in `GitHub Actions` oder `TestFlight` vor dem Tagging beseitigen
 
 ## Automatisierte Testabdeckung
 
@@ -158,3 +159,4 @@ Die Projektregeln für Releases sind:
 - `TestFlight` wird bewusst über den manuell gestarteten Workflow `TestFlight Release` verteilt
 - der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
 - `fastlane match`, `build_app`, `pilot` und `deliver` sind die Release-Werkzeuge für Distribution
+- technische Apple-Developer-Identifier bleiben für Release und Provisioning auf `eu.mpwg.MigraineTracker`; `Symi` ist die sichtbare Produktmarke
