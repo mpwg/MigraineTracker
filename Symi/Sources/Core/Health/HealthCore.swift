@@ -37,10 +37,23 @@ public enum HealthDataTypeID: String, Codable, CaseIterable, Identifiable, Senda
     }
 }
 
+enum HealthDataTypeCategory: String, Codable, CaseIterable, Identifiable, Sendable {
+    case sleep = "Schlaf"
+    case activity = "Aktivität"
+    case heart = "Herzwerte"
+    case cycle = "Zyklus"
+    case symptom = "Symptome"
+
+    var id: String { rawValue }
+}
+
 struct HealthDataTypeDefinition: Identifiable, Equatable, Sendable {
     let id: HealthDataTypeID
     let direction: HealthDataDirection
+    let category: HealthDataTypeCategory
     let defaultEnabled: Bool
+    let healthKitIdentifier: String
+    let availabilityNote: String?
     let rationale: String
 
     var displayName: String { id.displayName }
@@ -48,21 +61,21 @@ struct HealthDataTypeDefinition: Identifiable, Equatable, Sendable {
 
 enum HealthDataCatalog {
     static let readDefinitions: [HealthDataTypeDefinition] = [
-        .init(id: .sleep, direction: .read, defaultEnabled: true, rationale: "Schlafmangel und Schlafqualität sind häufige Kontextfaktoren bei Kopfschmerzen und Migräne."),
-        .init(id: .steps, direction: .read, defaultEnabled: true, rationale: "Aktivität am Episodentag kann helfen, Belastung und Schonung im Verlauf einzuordnen."),
-        .init(id: .heartRate, direction: .read, defaultEnabled: true, rationale: "Herzfrequenz im Umfeld einer Episode kann körperlichen Stress als Kontext sichtbar machen."),
-        .init(id: .restingHeartRate, direction: .read, defaultEnabled: true, rationale: "Der Ruhepuls ergänzt den Tageskontext, ohne eine medizinische Bewertung vorzunehmen."),
-        .init(id: .heartRateVariability, direction: .read, defaultEnabled: true, rationale: "HRV kann als neutraler Kontextwert für Stress und Erholung angezeigt werden."),
-        .init(id: .menstrualFlow, direction: .read, defaultEnabled: true, rationale: "Zyklusdaten können bei migränebezogenen Mustern relevant sein, bleiben aber reine Kontextdaten."),
-        .init(id: .headache, direction: .read, defaultEnabled: true, rationale: "Vorhandene Health-Kopfschmerzsymptome werden als externe Quelle kenntlich gemacht."),
-        .init(id: .nausea, direction: .read, defaultEnabled: true, rationale: "Übelkeit ist ein häufiges Begleitsymptom von Migräne."),
-        .init(id: .dizziness, direction: .read, defaultEnabled: true, rationale: "Schwindel kann als Begleitsymptom den Episodenkontext ergänzen."),
-        .init(id: .fatigue, direction: .read, defaultEnabled: true, rationale: "Müdigkeit kann als neutraler Kontext vor oder während Schmerzepisoden relevant sein.")
+        .init(id: .sleep, direction: .read, category: .sleep, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierSleepAnalysis", availabilityNote: nil, rationale: "Schlafmangel und Schlafqualität sind häufige Kontextfaktoren bei Kopfschmerzen und Migräne."),
+        .init(id: .steps, direction: .read, category: .activity, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierStepCount", availabilityNote: nil, rationale: "Aktivität am Episodentag kann helfen, Belastung und Schonung im Verlauf einzuordnen."),
+        .init(id: .heartRate, direction: .read, category: .heart, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierHeartRate", availabilityNote: nil, rationale: "Herzfrequenz im Umfeld einer Episode kann körperlichen Stress als Kontext sichtbar machen."),
+        .init(id: .restingHeartRate, direction: .read, category: .heart, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierRestingHeartRate", availabilityNote: nil, rationale: "Der Ruhepuls ergänzt den Tageskontext, ohne eine medizinische Bewertung vorzunehmen."),
+        .init(id: .heartRateVariability, direction: .read, category: .heart, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierHeartRateVariabilitySDNN", availabilityNote: nil, rationale: "HRV kann als neutraler Kontextwert für Stress und Erholung angezeigt werden."),
+        .init(id: .menstrualFlow, direction: .read, category: .cycle, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierMenstrualFlow", availabilityNote: "Ab iOS 18 verfügbar; auf älteren Systemen wird der Typ ausgelassen.", rationale: "Zyklusdaten können bei migränebezogenen Mustern relevant sein, bleiben aber reine Kontextdaten."),
+        .init(id: .headache, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierHeadache", availabilityNote: nil, rationale: "Vorhandene Health-Kopfschmerzsymptome werden als externe Quelle kenntlich gemacht."),
+        .init(id: .nausea, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierNausea", availabilityNote: nil, rationale: "Übelkeit ist ein häufiges Begleitsymptom von Migräne."),
+        .init(id: .dizziness, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierDizziness", availabilityNote: nil, rationale: "Schwindel kann als Begleitsymptom den Episodenkontext ergänzen."),
+        .init(id: .fatigue, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierFatigue", availabilityNote: nil, rationale: "Müdigkeit kann als neutraler Kontext vor oder während Schmerzepisoden relevant sein.")
     ]
 
     static let writeDefinitions: [HealthDataTypeDefinition] = [
-        .init(id: .headache, direction: .write, defaultEnabled: true, rationale: "Die App kann die dokumentierte Schmerzepisode als Kopfschmerz-Symptom nach Apple Health schreiben."),
-        .init(id: .nausea, direction: .write, defaultEnabled: true, rationale: "Übelkeit wird nur geschrieben, wenn sie in der Episode ausdrücklich ausgewählt wurde.")
+        .init(id: .headache, direction: .write, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierHeadache", availabilityNote: nil, rationale: "Die App kann die dokumentierte Schmerzepisode als Kopfschmerz-Symptom nach Apple Health schreiben."),
+        .init(id: .nausea, direction: .write, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierNausea", availabilityNote: nil, rationale: "Übelkeit wird nur geschrieben, wenn sie in der Episode ausdrücklich ausgewählt wurde.")
     ]
 
     static var allDefinitions: [HealthDataTypeDefinition] {
@@ -177,6 +190,16 @@ struct HealthContextRecord: Equatable, Sendable {
         self.heartRateVariability = snapshot.heartRateVariability
         self.menstrualFlow = snapshot.menstrualFlow
         self.symptoms = snapshot.symptoms
+    }
+
+    var hasVisibleData: Bool {
+        sleepMinutes != nil ||
+        stepCount != nil ||
+        averageHeartRate != nil ||
+        restingHeartRate != nil ||
+        heartRateVariability != nil ||
+        menstrualFlow != nil ||
+            !symptoms.isEmpty
     }
 }
 
