@@ -430,8 +430,8 @@ private struct OnboardingStepRow: View {
                 Spacer(minLength: HomeRhythm.sm)
 
                 Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.38))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
                     .accessibilityHidden(true)
             }
         }
@@ -451,7 +451,7 @@ private struct OnboardingStepRow: View {
         case .active:
             AppTheme.petrol(for: colorScheme)
         case .completedDominant:
-            AppTheme.textPrimary(for: colorScheme).opacity(0.68)
+            AppTheme.textPrimary(for: colorScheme).opacity(0.85)
         case .muted:
             AppTheme.petrol(for: colorScheme)
         }
@@ -462,7 +462,7 @@ private struct OnboardingStepRow: View {
         case .active:
             AppTheme.sage(for: colorScheme).opacity(0.22)
         case .completedDominant:
-            AppTheme.sage(for: colorScheme).opacity(0.14)
+            AppTheme.sage(for: colorScheme).opacity(0.18)
         case .muted:
             AppTheme.sage(for: colorScheme).opacity(0.12)
         }
@@ -473,7 +473,7 @@ private struct OnboardingStepRow: View {
         case .active:
             AppTheme.petrol(for: colorScheme)
         case .completedDominant:
-            AppTheme.textPrimary(for: colorScheme).opacity(0.74)
+            AppTheme.textPrimary(for: colorScheme)
         case .muted:
             AppTheme.petrol(for: colorScheme)
         }
@@ -514,7 +514,7 @@ private struct OnboardingStepRow: View {
         case .active:
             1
         case .completedDominant:
-            0.78
+            0.80
         case .muted:
             0.62
         }
@@ -546,7 +546,8 @@ private struct CompactEntryButtonLabel: View {
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(SymiColors.coral.color)
                 .frame(width: 30, height: 30)
-                .background(AppTheme.symiOnAccent.opacity(0.96), in: Circle())
+                .background(AppTheme.symiOnAccent, in: Circle())
+                .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 1)
                 .accessibilityHidden(true)
 
             Text(title)
