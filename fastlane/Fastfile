@@ -1,7 +1,9 @@
 require "fileutils"
+require "open3"
 require "shellwords"
 require "simctl"
 require "snapshot"
+require "tmpdir"
 
 default_platform(:ios)
 
@@ -348,6 +350,41 @@ def release_signing_xcargs(build_number:)
   ].join(" ")
 end
 
+def plist_value(path, key)
+  output, _error, status = Open3.capture3("/usr/libexec/PlistBuddy", "-c", "Print :#{key}", path)
+  return nil unless status.success?
+
+  output.strip
+end
+
+def plist_key_present?(path, key)
+  _output, _error, status = Open3.capture3("/usr/libexec/PlistBuddy", "-c", "Print :#{key}", path)
+  status.success?
+end
+
+def validate_release_ipa_entitlements!(ipa_path)
+  UI.user_error!("Keine Release-IPA unter #{ipa_path} gefunden.") unless File.file?(ipa_path)
+
+  Dir.mktmpdir("symi-release-entitlements") do |tmpdir|
+    sh("unzip -q #{ipa_path.shellescape} -d #{tmpdir.shellescape}", log: false)
+
+    app_paths = Dir.glob(File.join(tmpdir, "Payload", "*.app"))
+    UI.user_error!("Die Release-IPA enthält keine eindeutig auffindbare App.") unless app_paths.one?
+
+    entitlements_path = File.join(tmpdir, "release-entitlements.plist")
+    sh("codesign -d --entitlements :- #{app_paths.first.shellescape} > #{entitlements_path.shellescape}", log: false)
+
+    aps_environment = plist_value(entitlements_path, "aps-environment")
+    UI.user_error!("Release-Entitlement aps-environment ist '#{aps_environment || 'nicht gesetzt'}', erwartet 'production'.") unless aps_environment == "production"
+
+    if plist_key_present?(entitlements_path, "com.apple.developer.aps-environment")
+      UI.user_error!("Release-Entitlements enthalten den ungültigen doppelten Schlüssel com.apple.developer.aps-environment.")
+    end
+
+    UI.message("Release-Entitlements validiert: aps-environment=production.")
+  end
+end
+
 def next_build_number
   override = ENV["BUILD_NUMBER"].to_s.strip
   return override.to_i if override.match?(/^\d+$/)
@@ -487,6 +524,7 @@ platform :ios do
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
     build_number = next_build_number
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
+    validate_release_ipa_entitlements!(ipa_path)
 
     pilot(
       api_key: api_key,
@@ -510,6 +548,7 @@ platform :ios do
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
     build_number = next_build_number
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
+    validate_release_ipa_entitlements!(ipa_path)
 
     deliver(
       api_key: api_key,
