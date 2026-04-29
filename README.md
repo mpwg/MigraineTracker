@@ -57,7 +57,8 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 ### 4. Optionale Synchronisation
 
 - iCloud-Sync aktivieren oder deaktivieren
-- Sync bewusst manuell über `Jetzt synchronisieren` auslösen; CloudKit-Subscriptions werden derzeit nicht angelegt
+- Sync-Vertrag: halbautomatisch beim Aktivieren, danach bewusst manuell über `Jetzt synchronisieren`; beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet, CloudKit-Subscriptions werden derzeit nicht angelegt
+- letzter Upload/Download, ungesyncte Records, stale Hinweise und offene Konflikte prüfen
 - Konflikte einsehen und auflösen
 - Cloud-Daten und Sync-Protokoll prüfen
 

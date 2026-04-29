@@ -385,6 +385,7 @@ final class EpisodeEditorController {
     private var saveValidationMessage: String?
     private let saveEpisodeUseCase: SaveEpisodeUseCase
     private let episodeRepository: EpisodeRepository
+    private let syncService: SyncService
     private let weatherContextService: any EpisodeWeatherContextProviding
     private let healthService: any HealthService
     private var originalStartedAt: Date?
@@ -395,10 +396,12 @@ final class EpisodeEditorController {
         initialStartedAt: Date?,
         episodeRepository: EpisodeRepository,
         medicationRepository: MedicationCatalogRepository,
+        syncService: SyncService,
         weatherContextService: any EpisodeWeatherContextProviding,
         healthService: any HealthService
     ) {
         self.episodeRepository = episodeRepository
+        self.syncService = syncService
         self.weatherContextService = weatherContextService
         self.healthService = healthService
         self.medicationController = EpisodeMedicationSelectionController(medicationRepository: medicationRepository)
@@ -426,6 +429,17 @@ final class EpisodeEditorController {
 
     var validationMessage: String? {
         saveValidationMessage ?? medicationController.validationMessage
+    }
+
+    var syncStalenessWarning: String? {
+        syncService.status.staleDataWarning(
+            isSyncEnabled: syncService.isEnabled,
+            openConflictCount: syncService.conflicts.count
+        )
+    }
+
+    func refreshSyncStatus() {
+        syncService.refreshStatus()
     }
 
     func save(onSaved: (() -> Void)?, onDismiss: @escaping () -> Void) {

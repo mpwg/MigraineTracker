@@ -59,6 +59,8 @@ public enum SyncPayloadSchema {
 }
 
 public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
+    public nonisolated static let staleDataWarningInterval: TimeInterval = 24 * 60 * 60
+
     public nonisolated var state: SyncServiceState
     public nonisolated var service: String
     public nonisolated var queuedUpdates: Int
@@ -83,6 +85,45 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
         self.lastDownloadedAt = lastDownloadedAt
         self.lastUploadedAt = lastUploadedAt
         self.lastError = lastError
+    }
+
+    public nonisolated func staleDataWarning(
+        now: Date = .now,
+        isSyncEnabled: Bool,
+        openConflictCount: Int
+    ) -> String? {
+        guard isSyncEnabled else {
+            return nil
+        }
+
+        if openConflictCount > 0 {
+            return "\(openConflictCount) Sync-Konflikt\(openConflictCount == 1 ? "" : "e") warten auf eine Entscheidung. Bearbeite erst weiter, wenn klar ist, welcher Stand gelten soll."
+        }
+
+        if unsyncedRecords > 0 {
+            return "\(unsyncedRecords) lokale Änderung\(unsyncedRecords == 1 ? "" : "en") sind noch nicht in iCloud bestätigt. Synchronisiere vor dem Bearbeiten auf anderen Geräten."
+        }
+
+        guard let lastDownloadedAt else {
+            return "Dieses Gerät hat noch keinen iCloud-Download abgeschlossen. Synchronisiere vor dem Bearbeiten, wenn du Symi auf mehreren Geräten nutzt."
+        }
+
+        let age = now.timeIntervalSince(lastDownloadedAt)
+        guard age >= Self.staleDataWarningInterval else {
+            return nil
+        }
+
+        return "Der letzte iCloud-Download liegt \(Self.relativeDurationDescription(for: age)) zurück. Synchronisiere vor dem Bearbeiten, damit du nicht auf einem alten Stand arbeitest."
+    }
+
+    private nonisolated static func relativeDurationDescription(for interval: TimeInterval) -> String {
+        let hours = max(1, Int(interval / 3_600))
+        guard hours >= 48 else {
+            return "\(hours) Stunde\(hours == 1 ? "" : "n")"
+        }
+
+        let days = max(1, hours / 24)
+        return "\(days) Tag\(days == 1 ? "" : "e")"
     }
 }
 

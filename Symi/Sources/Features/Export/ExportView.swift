@@ -29,11 +29,24 @@ struct SettingsView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
+                        if let syncStalenessWarning {
+                            Label(syncStalenessWarning, systemImage: "exclamationmark.triangle.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.symiCoral)
+                        }
+
                         HStack(spacing: SymiSpacing.lg) {
                             statValue(title: "Ausstehend", value: "\(controller.syncStatus.queuedUpdates)")
                             statValue(title: "Ungesynct", value: "\(controller.syncStatus.unsyncedRecords)")
                             statValue(title: "Konflikte", value: "\(controller.conflicts.count)")
                         }
+
+                        VStack(alignment: .leading, spacing: SymiSpacing.micro) {
+                            Text("Upload: \(formatted(controller.syncStatus.lastUploadedAt))")
+                            Text("Download: \(formatted(controller.syncStatus.lastDownloadedAt))")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, SymiSpacing.compact)
                     .brandGroupedRow()
@@ -65,7 +78,7 @@ struct SettingsView: View {
             } header: {
                 Text("Synchronisation")
             } footer: {
-                Text("Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden.")
+                Text(syncContractSummary)
             }
 
             Section {
@@ -176,17 +189,20 @@ struct SettingsView: View {
             return lastError
         }
 
-        if let lastUploadedAt = controller.syncStatus.lastUploadedAt {
-            return "Letzter Upload: \(formatted(lastUploadedAt))"
-        }
-
-        if let lastDownloadedAt = controller.syncStatus.lastDownloadedAt {
-            return "Letzter Download: \(formatted(lastDownloadedAt))"
-        }
-
         return controller.isSyncEnabled
             ? "Synchronisation ist bereit. Lokale Änderungen bleiben bis zum nächsten Lauf sicher auf dem Gerät."
             : "Synchronisation ist deaktiviert. Alle Daten bleiben lokal auf diesem Gerät erhalten."
+    }
+
+    private var syncStalenessWarning: String? {
+        controller.syncStatus.staleDataWarning(
+            isSyncEnabled: controller.isSyncEnabled,
+            openConflictCount: controller.conflicts.count
+        )
+    }
+
+    private var syncContractSummary: String {
+        "Sync ist halbautomatisch: Aktivieren startet sofort einen Abgleich; App-Start lädt den gespeicherten Sync-Status und startet den Provider. Danach löst du den Cloud-Abgleich bewusst mit `Jetzt synchronisieren` aus. CloudKit-Subscriptions werden nicht angelegt; stale Stände, ungesyncte Records und Konflikte bleiben sichtbar."
     }
 
     private var statusBadge: some View {
@@ -212,6 +228,14 @@ struct SettingsView: View {
 
     private func formatted(_ date: Date) -> String {
         date.formatted(date: .abbreviated, time: .shortened)
+    }
+
+    private func formatted(_ date: Date?) -> String {
+        guard let date else {
+            return "Noch nie"
+        }
+
+        return formatted(date)
     }
 
     private var logSubtitle: String {
@@ -550,8 +574,17 @@ private struct SyncStatusView: View {
                 statusRow("Dienst", controller.syncStatus.service)
                 statusRow("Ausstehende Uploads", "\(controller.syncStatus.queuedUpdates)")
                 statusRow("Ungesyncte Einträge", "\(controller.syncStatus.unsyncedRecords)")
+                statusRow("Offene Konflikte", "\(controller.conflicts.count)")
                 statusRow("Letzter Download", formatted(controller.syncStatus.lastDownloadedAt))
                 statusRow("Letzter Upload", formatted(controller.syncStatus.lastUploadedAt))
+
+                if let syncStalenessWarning {
+                    Label(syncStalenessWarning, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiCoral)
+                        .padding(.vertical, SymiSpacing.xxs)
+                        .brandGroupedRow()
+                }
 
                 if let lastError = controller.syncStatus.lastError {
                     VStack(alignment: .leading, spacing: SymiSpacing.compact) {
@@ -567,6 +600,13 @@ private struct SyncStatusView: View {
                 Text("Status")
             } footer: {
                 Text(statusFooter)
+            }
+
+            Section("Sync-Vertrag") {
+                Text("Symi arbeitet lokal-first. Bei aktivem iCloud-Sync startet ein neuer Abgleich sofort nach dem Aktivieren und danach nur, wenn du ihn mit `Jetzt synchronisieren` auslöst. Beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet; Push- oder Subscription-gesteuerte Hintergrundabgleiche gibt es derzeit nicht.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .brandGroupedRow()
             }
         }
         .navigationTitle("Status")
@@ -611,6 +651,13 @@ private struct SyncStatusView: View {
             "Ohne Netzwerk bleiben alle Daten lokal erhalten und werden später erneut versucht."
         }
     }
+
+    private var syncStalenessWarning: String? {
+        controller.syncStatus.staleDataWarning(
+            isSyncEnabled: controller.isSyncEnabled,
+            openConflictCount: controller.conflicts.count
+        )
+    }
 }
 
 private struct ManageCloudDataView: View {
@@ -623,12 +670,23 @@ private struct ManageCloudDataView: View {
         List {
             Section {
                 statusRow("Sync", controller.isSyncEnabled ? "Aktiviert" : "Deaktiviert")
+                statusRow("Letzter Upload", formatted(controller.syncStatus.lastUploadedAt))
+                statusRow("Letzter Download", formatted(controller.syncStatus.lastDownloadedAt))
+                statusRow("Ungesyncte Records", "\(controller.syncStatus.unsyncedRecords)")
                 statusRow("Offene Konflikte", "\(controller.conflicts.count)")
                 statusRow("Papierkorb", "\(controller.summary.trashCount)")
+
+                if let syncStalenessWarning {
+                    Label(syncStalenessWarning, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiCoral)
+                        .padding(.vertical, SymiSpacing.xxs)
+                        .brandGroupedRow()
+                }
             } header: {
                 Text("Übersicht")
             } footer: {
-                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst.")
+                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Sync läuft halbautomatisch: Aktivierung startet einen Abgleich, danach nutzt du `Jetzt synchronisieren`.")
             }
 
             Section {
@@ -780,6 +838,21 @@ private struct ManageCloudDataView: View {
             Text(value)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private func formatted(_ date: Date?) -> String {
+        guard let date else {
+            return "Noch nie"
+        }
+
+        return date.formatted(date: .numeric, time: .shortened)
+    }
+
+    private var syncStalenessWarning: String? {
+        controller.syncStatus.staleDataWarning(
+            isSyncEnabled: controller.isSyncEnabled,
+            openConflictCount: controller.conflicts.count
+        )
     }
 
     private var selectedConflictPresented: Binding<Bool> {

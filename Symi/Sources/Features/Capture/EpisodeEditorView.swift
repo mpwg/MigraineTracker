@@ -27,6 +27,10 @@ struct EpisodeEditorView: View {
                 EpisodeValidationMessageSection(message: validationMessage)
             }
 
+            if let syncStalenessWarning = controller.syncStalenessWarning {
+                EpisodeSyncWarningSection(message: syncStalenessWarning)
+            }
+
             EpisodeScaleSection(draft: $controller.draft)
             EpisodeTimingSection(draft: $controller.draft)
             EpisodeTagSection(
@@ -105,6 +109,9 @@ struct EpisodeEditorView: View {
         .task(id: controller.draft.startedAt) {
             await controller.refreshWeather()
         }
+        .task {
+            controller.refreshSyncStatus()
+        }
     }
 
     private func save() {
@@ -147,6 +154,20 @@ private struct EpisodeValidationMessageSection: View {
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.symiCoral)
                 .accessibilityLabel("Hinweis: \(message)")
+                .formAlignedRow()
+        }
+    }
+}
+
+private struct EpisodeSyncWarningSection: View {
+    let message: String
+
+    var body: some View {
+        Section {
+            Label(message, systemImage: "arrow.triangle.2.circlepath.circle.fill")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.symiCoral)
+                .accessibilityLabel("Sync-Hinweis: \(message)")
                 .formAlignedRow()
         }
     }

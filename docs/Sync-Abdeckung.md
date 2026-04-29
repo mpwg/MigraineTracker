@@ -14,6 +14,12 @@ CloudKit-Sync nutzt `SyncDocumentEnvelope` als fachliche Dokumentgrenze. Die fol
 
 Konfliktbehandlung läuft weiterhin über den dreiseitigen Merge aus Shadow, lokalem Dokument und Remote-Dokument. Konflikte bei Episoden-Sidecars werden mit Feldpfaden wie `continuousMedicationChecks.<id>.wasTaken` oder `healthContext` sichtbar gemacht; Konflikte bei Dauermedikationen werden auf den jeweiligen Feldern wie `dosage`, `frequency` oder `endDate` gemeldet.
 
+## Sync-Vertrag und UX-Signale
+
+Der iCloud-Sync ist halbautomatisch. Beim Aktivieren wird der Provider gestartet und sofort ein Abgleich ausgelöst. Beim App-Start lädt Symi den gespeicherten Sync-Status und startet den Provider, löst aber keinen stillen vollständigen Cloud-Abgleich per Subscription aus. Danach bleibt `Jetzt synchronisieren` die bewusste Nutzeraktion für Fetch und Upload; CloudKit-Subscriptions werden derzeit nicht angelegt.
+
+Die App zeigt deshalb bewusst sichtbare Frische-Signale: letzter Upload, letzter Download, ausstehende Uploads, ungesyncte Records und offene Konflikte. Wenn ein Gerät noch nie geladen hat, der letzte Download älter als 24 Stunden ist, lokale Änderungen noch nicht bestätigt sind oder Konflikte offen sind, erscheint vor dem Bearbeiten ein Sync-Hinweis. So ist erkennbar, wenn Gerät B möglicherweise auf einem älteren Stand arbeitet, weil Gerät A länger nicht synchronisiert wurde.
+
 ## CloudKit-Record-Design
 
 Symi speichert pro fachlichem Sync-Dokument weiterhin einen vollständigen `SyncDocumentEnvelope` als JSON in `payloadJSON`. Die CloudKit-Felder `documentID`, `entityType`, `schemaVersion`, `modifiedAt`, `authorDeviceID` und `deletedAt` bleiben zusätzlich als Record-Metadaten erhalten. Diese Entscheidung ist bewusst: Der Envelope hält die fachliche Dokumentgrenze stabil, vermeidet fragmentierte Teil-Records für Episoden-Sidecars und erlaubt den bestehenden dreiseitigen Merge gegen lokale Shadows ohne CloudKit-spezifische Feldlogik.
