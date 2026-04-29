@@ -312,7 +312,7 @@ private struct OnboardingCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            VStack(alignment: .leading, spacing: HomeRhythm.md) {
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 ForEach(steps) { step in
                     OnboardingStepRow(
                         step: step,
@@ -325,7 +325,7 @@ private struct OnboardingCard: View {
                 Text("Nur noch \(remainingEntriesText(for: entryCount)) bis zu deinen ersten Insights")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                    .padding(.horizontal, HomeRhythm.lg)
+                    .padding(.horizontal, HomeRhythm.xl)
                     .padding(.vertical, HomeRhythm.sm)
                     .background(AppTheme.sage(for: colorScheme).opacity(0.10), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
                     .fixedSize(horizontal: false, vertical: true)
@@ -338,7 +338,8 @@ private struct OnboardingCard: View {
             .accessibilityIdentifier("home-quick-entry")
             .accessibilityHint("Startet einen neuen Eintrag.")
         }
-        .padding(HomeRhythm.xl)
+        .padding(.horizontal, HomeRhythm.xxl)
+        .padding(.vertical, HomeRhythm.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
         .homeSoftCard()
         .accessibilityElement(children: .contain)
@@ -433,12 +434,12 @@ private struct OnboardingStepRow: View {
         case .active, .completedDominant:
             AppTheme.sage(for: colorScheme).opacity(0.22)
         case .muted:
-            AppTheme.sage(for: colorScheme).opacity(0.10)
+            AppTheme.sage(for: colorScheme).opacity(0.12)
         }
     }
 
     private var titleColor: Color {
-        status == .muted ? AppTheme.textSecondary(for: colorScheme) : AppTheme.petrol(for: colorScheme)
+        AppTheme.petrol(for: colorScheme)
     }
 
     private var titleFont: Font {
@@ -460,11 +461,11 @@ private struct OnboardingStepRow: View {
     }
 
     private var iconSize: CGFloat {
-        36
+        status == .muted ? 32 : 34
     }
 
     private var rowOpacity: Double {
-        status == .muted ? 0.58 : 1
+        status == .muted ? 0.62 : 1
     }
 }
 
@@ -878,8 +879,8 @@ private struct PrimaryButtonLabel: View {
             Image(systemName: "plus")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.symiOnAccent)
-                .frame(width: 38, height: 38)
-                .background(AppTheme.coral(for: colorScheme).opacity(0.68), in: Circle())
+                .frame(width: 34, height: 34)
+                .background(AppTheme.coral(for: colorScheme).opacity(0.82), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
@@ -901,7 +902,7 @@ private struct PrimaryButtonLabel: View {
             Spacer(minLength: SymiSpacing.xs)
         }
         .padding(.horizontal, HomeRhythm.lg)
-        .frame(maxWidth: .infinity, minHeight: SymiSize.homeQuickEntryButtonMinHeight, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: HomeRhythm.primaryButtonHeight, alignment: .leading)
     }
 }
 
@@ -1663,7 +1664,9 @@ private enum HomeRhythm {
     static let sm: CGFloat = 8
     static let md: CGFloat = 12
     static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
+    static let xl: CGFloat = 20
+    static let xxl: CGFloat = 24
+    static let primaryButtonHeight: CGFloat = 60
 }
 
 private extension View {
