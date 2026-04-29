@@ -15,15 +15,16 @@ Automatisierte Gates im Projekt:
 
 1. Workflow `iOS CI` bei jedem `pull_request` auf `main`
 2. Workflow `iOS CI` bei jedem `push` auf `main`
-3. Swift-Builds, Tests und Release-Archive laufen in GitHub Actions mit Xcode 26.4
-4. schnelles PR-Gate aus SwiftLint/Design-Token-Regeln und `SymiTests` auf `Mac Catalyst`
-5. Ausführung von `SymiTests` auf einem `iPhone 17`-Simulator bei Persistence-, Migration-, Backup- oder Import-Änderungen sowie auf `main`
-6. fokussierter UI-Smoke auf einem `iPhone 17`-Simulator für `Home → Neuer Eintrag → Speichern` bei Home-, Capture- oder UI-Test-Änderungen sowie auf `main`
-7. Upload der `xcresult`-Bundles nur bei Fehlern für nachvollziehbare Fehlerdiagnose in GitHub
-8. Workflow `TestFlight Release` per manuellem GitHub-Actions-Start für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
-9. optionaler `TestFlight Release`-Input `build_number`; leer bedeutet automatische fastlane-Buildnummer
-10. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Screenshot-Erstellung, Distribution-Signing via `match` und Upload via `deliver`
-11. Die finale Einreichung erfolgt manuell in App Store Connect über `Submit`
+3. Workflow `iOS CI` jede Nacht um `02:30 UTC`
+4. Swift-Builds, Tests und Release-Archive laufen in GitHub Actions mit Xcode 26.4
+5. schnelles PR-Gate aus SwiftLint/Design-Token-Regeln und `SymiTests` auf `Mac Catalyst`
+6. Ausführung von `SymiTests` auf einem `iPhone 17`-Simulator bei Änderungen an App-, Shared-, Core-, Sync-, Persistence-, Health-, Export-, History-, Home-, Capture-, InputFlow-, Ressourcen- oder kritischen Testdateien sowie immer auf `main`, bei manuellem Start und im nächtlichen Lauf
+7. UI-Smoke auf einem `iPhone 17`-Simulator bei Änderungen an App-Shell, Home, Capture, InputFlow, History, Export, UI-Tests, App-Ressourcen, Fastlane-Screenshot-Konfiguration oder Projektdateien sowie immer auf `main`, bei manuellem Start und im nächtlichen Lauf
+8. Upload der `xcresult`-Bundles nur bei Fehlern für nachvollziehbare Fehlerdiagnose in GitHub
+9. Workflow `TestFlight Release` per manuellem GitHub-Actions-Start für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
+10. optionaler `TestFlight Release`-Input `build_number`; leer bedeutet automatische fastlane-Buildnummer
+11. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Screenshot-Erstellung, Distribution-Signing via `match` und Upload via `deliver`
+12. Die finale Einreichung erfolgt manuell in App Store Connect über `Submit`
 
 Lokale Vorab-Prüfung vor einem Tag-Release:
 
@@ -32,7 +33,7 @@ Lokale Vorab-Prüfung vor einem Tag-Release:
 2. Unit-Tests auf dem iPhone-Simulator ausführen:
    `xcodebuild test -project Symi.xcodeproj -scheme SymiTests -destination 'platform=iOS Simulator,name=iPhone 17'`
 3. UI-Smoke lokal ausführen:
-   `xcodebuild test -project Symi.xcodeproj -scheme SymiScreenshots -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:SymiUITests/HomeRedesignUITests/testHomeQuickEntryCanSaveHeadacheOnlyEntry`
+   `xcodebuild test -project Symi.xcodeproj -scheme SymiScreenshots -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:SymiUITests/HomeRedesignUITests/testAppShellUsesRequestedTabs -only-testing:SymiUITests/HomeRedesignUITests/testHomeQuickEntryCanSaveHeadacheOnlyEntry -only-testing:SymiUITests/EntryFlowUITests/testCompleteFiveStepFlowSavesEntry -only-testing:SymiUITests/EntryFlowUITests/testOptionalStepsCanBeSkippedAndStillSavedWithoutWeather -only-testing:SymiUITests/SymiScreenshotTests/testDefaultSeedShowsScaleFirstNewEntryFlow`
 4. Screenshot-Seed ohne vollständige Screenshot-Erzeugung validieren:
    `bundle exec fastlane ios validate_screenshot_seed`
 5. App im `Release`-Build in Xcode archivieren oder per `xcodebuild archive` bauen
@@ -40,14 +41,67 @@ Lokale Vorab-Prüfung vor einem Tag-Release:
 
 ## Automatisierte Testabdeckung
 
-Die automatisierten Tests decken aktuell folgende Kernlogik ab:
+Die automatisierten Tests decken aktuell folgende Kernlogik und kritische User Journeys ab:
 
 - Wetter-Snapshots für echte API-Daten und Zukunftsvalidierung
 - Export-Metriken für Durchschnittsintensität und Medikamentenliste
 - Insight Engine für Mindestdaten, Ausschlüsse, Durchschnitt, Trigger-/Wochentag-Thresholds, Trend und Hero-Sortierung
 - SwiftData-Migration von V4 und V5 auf das aktuelle Schema inklusive Erhalt von Episoden, Medikation und Wetter-Kontext
 - JSON5-Backup-Roundtrip inklusive Apple-Health-Kontext, Wetter-Snapshots und kontinuierlicher Medikation
-- UI-Smoke für den Skala-zuerst-Erfassungsflow von Home bis Speichern
+- App-Shell-Navigation mit Tagebuch, Insights, Teilen und Einstellungen
+- UI-Smoke für den Home-Quick-Entry von Home bis Speichern
+- UI-Smoke für den vollständigen fünfstufigen Erfassungsflow mit Medikation, Auslösern, Notiz und Review
+- UI-Smoke für optionale Erfassungsschritte ohne Wetterkontext
+- Screenshot-Seed-Smoke für den Skala-zuerst-Erfassungsflow
+
+## Risiko-basiertes iPhone- und UI-Gating
+
+Pull Requests bleiben schnell, indem Catalyst-Tests immer laufen und iPhone-/UI-Jobs über eine kritische Pfadliste zugeschaltet werden. Die Liste ist bewusst breiter als die minimal betroffenen Dateien, weil SwiftUI-, Ressourcen-, Persistenz- und Shared-Änderungen häufig plattformspezifische Fehler erst im iPhone-Simulator zeigen.
+
+Der iPhone-Unit-Job läuft bei Änderungen an:
+
+- `Symi/Sources/App`
+- `Symi/Sources/Shared`
+- `Symi/Sources/Models`
+- `Symi/Sources/Core`
+- `Symi/Sources/Infrastructure/Persistence`
+- `Symi/Sources/Infrastructure/Health`
+- `Symi/Sources/Infrastructure/Sync`
+- `Symi/Sources/Features/Export`
+- `Symi/Sources/Features/Sync`
+- `Symi/Sources/Features/History`
+- `Symi/Sources/Features/Home`
+- `Symi/Sources/Features/Capture`
+- `Symi/Sources/Features/InputFlow`
+- `Symi/Resources/Data`
+- `Symi/Resources/Localizable.xcstrings`
+- `Symi/Resources/PrivacyInfo.xcprivacy`
+- kritischen Testdateien für Migration, Transfer, Recovery, Sync, Architektur, Domain-Validierung, Export-Metriken und File Protection
+- `Symi.xcodeproj`
+- `.github/workflows/ios-ci.yml`
+
+Der UI-Smoke-Job läuft bei Änderungen an:
+
+- `SymiUITests`
+- `Symi/Sources/App/AppShellView.swift`
+- `Symi/Sources/App/ScreenshotSupport.swift`
+- `Symi/Sources/Features/Home`
+- `Symi/Sources/Features/Capture`
+- `Symi/Sources/Features/InputFlow`
+- `Symi/Sources/Features/History`
+- `Symi/Sources/Features/Export`
+- `Symi/Sources/Core/Episodes`
+- `Symi/Sources/Core/History`
+- `Symi/Sources/Core/Export`
+- zentralen Theme- und Branding-Dateien in `Symi/Sources/Shared`
+- `Symi/Resources/Assets.xcassets`
+- `Symi/Resources/Localizable.xcstrings`
+- `Symi.xcodeproj`
+- `fastlane/Fastfile`
+- `fastlane/Snapfile`
+- `.github/workflows/ios-ci.yml`
+
+Auf `main`, bei manuellem Start und im nächtlichen Lauf werden iPhone-Unit-Tests und UI-Smokes immer ausgeführt. Damit laufen die kritischen Journeys regelmäßig unabhängig davon, ob ein Pull Request von der Pfadliste erfasst wurde.
 
 Damit sind die fehleranfälligen Regeln des MVP reproduzierbar abgesichert, während die schwere App-Store-Screenshot-Erzeugung getrennt vom schnellen PR-Gate bleibt.
 
