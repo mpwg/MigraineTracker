@@ -1,4 +1,5 @@
 import Foundation
+import Sentry
 
 public enum AppLogCategory: String, Codable, CaseIterable, Sendable {
     case sync
@@ -10,6 +11,7 @@ public enum AppLogLevel: String, Codable, CaseIterable, Sendable {
     case info
     case warning
     case error
+    case critical
 }
 
 public enum AppLogFilter: String, Codable, CaseIterable, Sendable, Identifiable {
@@ -87,6 +89,7 @@ public actor AppLogStore {
     private let maxEntryCount: Int
     private let fileURL: URL
     private let snapshotDirectoryURL: URL
+    private let remoteReporter: AppLogRemoteReporting?
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private var entries: [AppLogEntry]
@@ -95,10 +98,12 @@ public actor AppLogStore {
         fileManager: FileManager = .default,
         baseDirectoryURL: URL? = nil,
         retentionWindow: TimeInterval = 60 * 60 * 24 * 7,
-        maxEntryCount: Int = 3000
+        maxEntryCount: Int = 3000,
+        remoteReporter: AppLogRemoteReporting? = nil
     ) {
         self.retentionWindow = retentionWindow
         self.maxEntryCount = maxEntryCount
+        self.remoteReporter = remoteReporter
 
         let baseURL = baseDirectoryURL ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
@@ -127,18 +132,18 @@ public actor AppLogStore {
         message: String,
         metadata: [String: String] = [:]
     ) {
-        entries.append(
-            AppLogEntry(
-                category: category,
-                level: level,
-                operation: operation,
-                message: message,
-                metadata: metadata.sorted { $0.key < $1.key }.reduce(into: [:]) { partialResult, item in
-                    partialResult[item.key] = item.value
-                }
-            )
+        let entry = AppLogEntry(
+            category: category,
+            level: level,
+            operation: operation,
+            message: message,
+            metadata: metadata.sorted { $0.key < $1.key }.reduce(into: [:]) { partialResult, item in
+                partialResult[item.key] = item.value
+            }
         )
+        entries.append(entry)
         pruneAndPersist()
+        remoteReporter?.record(entry)
     }
 
     public func recentEntries(filter: AppLogFilter = .all, limit: Int = 200) -> [AppLogEntry] {
@@ -197,7 +202,7 @@ public actor AppLogStore {
         case .all:
             entries
         case .errors:
-            entries.filter { $0.level == .error }
+            entries.filter { $0.level == .error || $0.level == .critical }
         case .sync:
             entries.filter { $0.category == .sync }
         }
@@ -269,6 +274,223 @@ public actor AppLogStore {
             }
         } catch {
             // Logging darf den App-Fluss nicht blockieren.
+        }
+    }
+}
+
+public protocol AppLogRemoteReporting: Sendable {
+    nonisolated func record(_ entry: AppLogEntry)
+}
+
+public enum AppRemoteLogLevel: String, Equatable, Sendable {
+    case debug
+    case info
+    case warning
+    case error
+    case fatal
+}
+
+public struct AppRemoteLogBreadcrumb: Equatable, Sendable {
+    public nonisolated let level: AppRemoteLogLevel
+    public nonisolated let category: String
+    public nonisolated let message: String
+    public nonisolated let data: [String: String]
+}
+
+public struct AppRemoteLogEvent: Equatable, Sendable {
+    public nonisolated let level: AppRemoteLogLevel
+    public nonisolated let message: String
+    public nonisolated let extra: [String: String]
+}
+
+public protocol AppSentryClient: Sendable {
+    nonisolated func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb)
+    nonisolated func captureEvent(_ event: AppRemoteLogEvent)
+}
+
+public final class AppSentryLogReporter: AppLogRemoteReporting, @unchecked Sendable {
+    public nonisolated static let shared = AppSentryLogReporter(client: SentrySDKLogClient())
+
+    private let lock = NSLock()
+    private let client: AppSentryClient
+    private let sanitizer: AppLogSanitizing
+    nonisolated(unsafe) private var isEnabled = false
+
+    public nonisolated init(client: AppSentryClient, sanitizer: AppLogSanitizing = AppLogSanitizer()) {
+        self.client = client
+        self.sanitizer = sanitizer
+    }
+
+    public nonisolated func setEnabled(_ enabled: Bool) {
+        lock.withLock {
+            unsafe isEnabled = enabled
+        }
+    }
+
+    public nonisolated func record(_ entry: AppLogEntry) {
+        guard lock.withLock({ unsafe isEnabled }) else {
+            return
+        }
+
+        let sanitizedEntry = sanitizer.sanitize(entry)
+        let context = Self.context(from: sanitizedEntry)
+        let breadcrumb = AppRemoteLogBreadcrumb(
+            level: sanitizedEntry.level.remoteLevel,
+            category: sanitizedEntry.category.rawValue,
+            message: sanitizedEntry.message,
+            data: context
+        )
+        client.addBreadcrumb(breadcrumb)
+
+        guard sanitizedEntry.level.sendsSentryEvent else {
+            return
+        }
+
+        client.captureEvent(
+            AppRemoteLogEvent(
+                level: sanitizedEntry.level.remoteLevel,
+                message: sanitizedEntry.message,
+                extra: context
+            )
+        )
+    }
+
+    private nonisolated static func context(from entry: AppLogEntry) -> [String: String] {
+        var context = entry.metadata
+        context["operation"] = entry.operation
+        context["category"] = entry.category.rawValue
+        context["level"] = entry.level.rawValue
+        return context
+    }
+}
+
+public protocol AppLogSanitizing: Sendable {
+    nonisolated func sanitize(_ entry: AppLogEntry) -> AppLogEntry
+}
+
+public struct AppLogSanitizer: AppLogSanitizing {
+    private nonisolated static let redactedValue = "[redacted]"
+    private nonisolated static let sensitiveKeyFragments = [
+        "address",
+        "birth",
+        "coordinate",
+        "diagnosis",
+        "dose",
+        "email",
+        "health",
+        "latitude",
+        "location",
+        "longitude",
+        "medication",
+        "medicine",
+        "name",
+        "note",
+        "patient",
+        "phone",
+        "postal",
+        "trigger",
+        "weather"
+    ]
+
+    public nonisolated init() {}
+
+    public nonisolated func sanitize(_ entry: AppLogEntry) -> AppLogEntry {
+        AppLogEntry(
+            id: entry.id,
+            timestamp: entry.timestamp,
+            category: entry.category,
+            level: entry.level,
+            operation: sanitizedText(entry.operation),
+            message: sanitizedText(entry.message),
+            metadata: entry.metadata.reduce(into: [:]) { partialResult, item in
+                partialResult[sanitizedText(item.key)] = sanitizedValue(item.value, forKey: item.key)
+            }
+        )
+    }
+
+    private nonisolated func sanitizedValue(_ value: String, forKey key: String) -> String {
+        guard !isSensitiveKey(key) else {
+            return Self.redactedValue
+        }
+
+        return sanitizedText(value)
+    }
+
+    private nonisolated func isSensitiveKey(_ key: String) -> Bool {
+        let normalizedKey = key.lowercased()
+        return Self.sensitiveKeyFragments.contains { normalizedKey.contains($0) }
+    }
+
+    private nonisolated func sanitizedText(_ text: String) -> String {
+        var sanitized = text
+        sanitized = sanitized.replacing(
+            #/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/#,
+            with: Self.redactedValue
+        )
+        sanitized = sanitized.replacing(
+            #/\b(?:\+?\d[\d\s().-]{6,}\d)\b/#,
+            with: Self.redactedValue
+        )
+        sanitized = sanitized.replacing(
+            #/\b(?:patient|patientin|medikament|medikation|trigger|notiz|standort|adresse|koordinate|diagnose)\b[^.,;\n]*/#.ignoresCase(),
+            with: Self.redactedValue
+        )
+        return sanitized
+    }
+}
+
+private struct SentrySDKLogClient: AppSentryClient {
+    nonisolated func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb) {
+        let sentryBreadcrumb = Breadcrumb(level: breadcrumb.level.sentryLevel, category: breadcrumb.category)
+        sentryBreadcrumb.message = breadcrumb.message
+        sentryBreadcrumb.type = "log"
+        sentryBreadcrumb.data = breadcrumb.data
+        SentrySDK.addBreadcrumb(sentryBreadcrumb)
+    }
+
+    nonisolated func captureEvent(_ event: AppRemoteLogEvent) {
+        let sentryEvent = Event(level: event.level.sentryLevel)
+        sentryEvent.message = SentryMessage(formatted: event.message)
+        sentryEvent.logger = "Symi.AppLog"
+        sentryEvent.extra = event.extra
+        SentrySDK.capture(event: sentryEvent)
+    }
+}
+
+private extension AppLogLevel {
+    nonisolated var remoteLevel: AppRemoteLogLevel {
+        switch self {
+        case .debug:
+            .debug
+        case .info:
+            .info
+        case .warning:
+            .warning
+        case .error:
+            .error
+        case .critical:
+            .fatal
+        }
+    }
+
+    nonisolated var sendsSentryEvent: Bool {
+        self == .error || self == .critical
+    }
+}
+
+private extension AppRemoteLogLevel {
+    nonisolated var sentryLevel: SentryLevel {
+        switch self {
+        case .debug:
+            .debug
+        case .info:
+            .info
+        case .warning:
+            .warning
+        case .error:
+            .error
+        case .fatal:
+            .fatal
         }
     }
 }

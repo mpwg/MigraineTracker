@@ -83,7 +83,7 @@ struct SymiApp: App {
         )
 
         let container = try makeContainer(schema: schema, configuration: configuration)
-        let appLogStore = AppLogStore()
+        let appLogStore = AppLogStore(remoteReporter: AppSentryLogReporter.shared)
         let healthContextStore = HealthContextStore()
         let syncCoordinator = SyncCoordinator(
             modelContainer: container,

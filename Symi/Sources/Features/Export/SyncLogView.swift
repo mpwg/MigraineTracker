@@ -99,6 +99,8 @@ struct SyncLogView: View {
             "exclamationmark.triangle"
         case .error:
             "xmark.octagon"
+        case .critical:
+            "exclamationmark.octagon"
         }
     }
 
@@ -111,6 +113,8 @@ struct SyncLogView: View {
         case .warning:
             .orange
         case .error:
+            .red
+        case .critical:
             .red
         }
     }
