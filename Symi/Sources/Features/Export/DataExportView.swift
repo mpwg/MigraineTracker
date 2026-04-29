@@ -7,6 +7,8 @@ struct ReportView: View {
     @State private var reportPreviewRequested = false
     @State private var reportPreviewRequestedAt: ContinuousClock.Instant?
     @State private var viewportHeight: CGFloat = 800
+    @State private var selectedDateRange: ReportDateRange = .lastMonth
+    @State private var isDateSelectionPresented = false
 
     private let clock = ContinuousClock()
 
@@ -47,32 +49,37 @@ struct ReportView: View {
                     Text("Alle wichtigen Einträge klar und verständlich zusammengefasst")
                         .font(.headline)
                         .foregroundStyle(SymiColors.textSecondary.color)
-
-                    Text("Ein Gespräch mit deinem Arzt kann dir Klarheit geben")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(SymiColors.textSecondary.color)
                 }
                 .padding(.top, layout.headerTopPadding)
 
                 VStack(spacing: SymiSpacing.lg) {
-                    ReportInfoCardView()
+                    ReportInfoCardView(
+                        selectedDateRange: selectedDateRange,
+                        openDateSelection: openDateSelection
+                    )
 
                     ReportActionCardView(
-                        isLoading: controller.isLoadingSummary || controller.isPreparingPDF,
-                        errorMessage: controller.exportErrorMessage,
-                        action: openReport
+                        errorMessage: controller.exportErrorMessage
                     )
                 }
                 .padding(.top, layout.cardsTopPadding)
 
                 Text("Kein Ersatz für eine ärztliche Diagnose")
-                    .font(.footnote)
-                    .foregroundStyle(SymiColors.textSecondary.color.opacity(0.58))
+                    .font(.caption)
+                    .foregroundStyle(SymiColors.textSecondary.color.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, SymiSpacing.md)
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.vertical, layout.verticalPadding)
+            .padding(.bottom, 100)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
+        }
+        .overlay(alignment: .bottom) {
+            FloatingReportButton(
+                isLoading: controller.isLoadingSummary || controller.isPreparingPDF,
+                action: openReport
+            )
         }
         .background {
             GeometryReader { proxy in
@@ -108,6 +115,11 @@ struct ReportView: View {
                 reportPreviewRequestedAt = nil
             }
         }
+        .sheet(isPresented: $isDateSelectionPresented) {
+            ReportDateSelectionSheet(selectedDateRange: $selectedDateRange)
+                .presentationDetents([.height(320)])
+                .presentationDragIndicator(.visible)
+        }
         .quickLookPreview($pdfURL)
     }
 
@@ -116,6 +128,10 @@ struct ReportView: View {
         reportPreviewRequested = true
         reportPreviewRequestedAt = clock.now
         controller.createPDF()
+    }
+
+    private func openDateSelection() {
+        isDateSelectionPresented = true
     }
 
     private func presentReportPreview(_ url: URL) {
@@ -145,11 +161,11 @@ private struct ReportLayoutMetrics {
     }
 
     var heroHeight: CGFloat {
-        isCompactHeight ? 96 : 180
+        isCompactHeight ? 96 : 104
     }
 
     var heroMaxWidth: CGFloat {
-        isCompactHeight ? 300 : 430
+        isCompactHeight ? 300 : 340
     }
 
     var heroVerticalPadding: CGFloat {
@@ -173,74 +189,102 @@ private struct ReportLayoutMetrics {
     }
 }
 
-private struct ReportInfoCardView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                Image(systemName: "doc.text")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(SymiColors.sage.color)
-                    .frame(width: 44, height: 44)
-                    .background(SymiColors.mist.color, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+private enum ReportDateRange: String, CaseIterable, Identifiable {
+    case last7Days
+    case lastMonth
+    case last3Months
+    case custom
 
-                Text("Bericht")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(SymiColors.textPrimary.color)
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .last7Days:
+            "Letzte 7 Tage"
+        case .lastMonth:
+            "Letzter Monat"
+        case .last3Months:
+            "Letzte 3 Monate"
+        case .custom:
+            "Benutzerdefiniert"
+        }
+    }
+}
+
+private struct ReportInfoCardView: View {
+    let selectedDateRange: ReportDateRange
+    let openDateSelection: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                HStack(spacing: SymiSpacing.md) {
+                    Image(systemName: "doc.text")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(SymiColors.sage.color)
+                        .frame(width: 36, height: 36)
+                        .background(SymiColors.mist.color, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    Text("Bericht")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(SymiColors.textPrimary.color)
+                }
 
                 Text("Alle wichtigen Einträge kompakt und verständlich aufbereitet")
                     .font(.subheadline)
-                    .foregroundStyle(SymiColors.textSecondary.color)
+                    .foregroundStyle(SymiColors.textSecondary.color.opacity(0.86))
             }
 
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                Text("Letzter Monat")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(SymiColors.textPrimary.color)
+            Button(action: openDateSelection) {
+                HStack(spacing: SymiSpacing.md) {
+                    VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                        Text(selectedDateRange.title)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(SymiColors.textPrimary.color)
 
-                Text("Zeitraum deiner Auswertung")
-                    .font(.subheadline)
-                    .foregroundStyle(SymiColors.textSecondary.color)
+                        Text("Zeitraum deiner Auswertung")
+                            .font(.subheadline)
+                            .foregroundStyle(SymiColors.textSecondary.color.opacity(0.72))
+                    }
+
+                    Spacer(minLength: SymiSpacing.md)
+
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(SymiColors.textSecondary.color.opacity(0.58))
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityHint("Öffnet die Zeitraum-Auswahl")
         }
         .reportCardSurface()
     }
 }
 
 private struct ReportActionCardView: View {
-    let isLoading: Bool
     let errorMessage: String?
-    let action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
-            Label {
-                Text("Hilft dir, deine Symptome besser zu erklären")
-            } icon: {
-                Image(systemName: "heart.text.square")
-                    .foregroundStyle(SymiColors.sage.color)
-            }
-            .font(.footnote)
-            .foregroundStyle(SymiColors.textSecondary.color)
-
-            Button(action: action) {
-                HStack(spacing: SymiSpacing.xs) {
-                    if isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .imageScale(.medium)
-                    }
-
-                    Text(isLoading ? "Bericht wird erstellt" : "Bericht ansehen")
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                Label {
+                    Text("Hilft dir, deine Symptome besser zu erklären")
+                } icon: {
+                    Image(systemName: "heart.text.square")
+                        .foregroundStyle(SymiColors.sage.color)
                 }
+                .font(.footnote)
+                .foregroundStyle(SymiColors.textSecondary.color.opacity(0.82))
+
+                Text("Unterstützt dich im Gespräch mit deinem Arzt")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(SymiColors.textPrimary.color.opacity(0.86))
             }
-            .buttonStyle(ReportPrimaryButtonStyle())
-            .disabled(isLoading)
 
             Text("Der Bericht wird beim Öffnen automatisch erstellt")
                 .font(.footnote.weight(.regular))
-                .foregroundStyle(SymiColors.textSecondary.color.opacity(0.72))
+                .foregroundStyle(SymiColors.textSecondary.color.opacity(0.5))
 
             if let errorMessage {
                 Text(errorMessage)
@@ -249,6 +293,77 @@ private struct ReportActionCardView: View {
             }
         }
         .reportCardSurface()
+    }
+}
+
+private struct FloatingReportButton: View {
+    let isLoading: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: SymiSpacing.xs) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .imageScale(.medium)
+                }
+
+                Text(isLoading ? "Bericht wird erstellt" : "Bericht ansehen")
+            }
+        }
+        .buttonStyle(ReportPrimaryButtonStyle())
+        .disabled(isLoading)
+        .padding(SymiSpacing.sm)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.14), radius: 18, x: 0, y: 10)
+        .padding(.horizontal, SymiSpacing.xxl)
+        .padding(.bottom, SymiSpacing.lg)
+    }
+}
+
+private struct ReportDateSelectionSheet: View {
+    @Binding var selectedDateRange: ReportDateRange
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            Text("Zeitraum")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(SymiColors.textPrimary.color)
+
+            VStack(spacing: SymiSpacing.xs) {
+                ForEach(ReportDateRange.allCases) { range in
+                    Button {
+                        selectedDateRange = range
+                        dismiss()
+                    } label: {
+                        HStack(spacing: SymiSpacing.md) {
+                            Text(range.title)
+                                .font(.body)
+                                .foregroundStyle(SymiColors.textPrimary.color)
+
+                            Spacer()
+
+                            if selectedDateRange == range {
+                                Image(systemName: "checkmark")
+                                    .font(.headline.weight(.semibold))
+                                    .foregroundStyle(SymiColors.primaryPetrol.color)
+                            }
+                        }
+                        .padding(.horizontal, SymiSpacing.lg)
+                        .frame(minHeight: 48)
+                        .background(SymiColors.mist.color.opacity(selectedDateRange == range ? 0.7 : 0), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(SymiSpacing.xxl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(SymiColors.warmBackground.color)
     }
 }
 
