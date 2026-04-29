@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum AppTheme {
+    // Layout
     static let groupedHorizontalInset = SymiSpacing.groupedHorizontalInset
     static let groupedTopInset = SymiSpacing.screenTopInset
     static let groupedRowInsets = EdgeInsets(
@@ -13,6 +14,7 @@ enum AppTheme {
     static let readableContentMaxWidth = SymiSpacing.readableContentMaxWidth
     static let dashboardSpacing = SymiSpacing.dashboardSpacing
 
+    // Brand colors
     static let symiPetrol = SymiColors.primaryPetrol.color
     static let symiSage = SymiColors.sage.color
     static let symiCoral = SymiColors.coral.color
@@ -22,13 +24,7 @@ enum AppTheme {
     static let symiTextSecondary = SymiColors.textSecondary.color
     static let symiOnAccent = SymiColors.onAccent.color
 
-    static let ink = symiPetrol
-    static let ocean = symiPetrol
-    static let seaGlass = symiSage
-    static let foam = symiBackground
-    static let coral = symiCoral
-    static let mist = SymiColors.mist.color
-
+    // Static gradients
     static let appBackground = LinearGradient(
         colors: [
             symiBackground,
@@ -41,8 +37,8 @@ enum AppTheme {
 
     static let heroGradient = LinearGradient(
         colors: [
-            ocean,
-            ink
+            symiPetrol,
+            symiPetrol
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -59,9 +55,9 @@ enum AppTheme {
 
     static let selectedFill = symiSage.opacity(SymiOpacity.selectedFill)
     static let secondaryFill = symiSage.opacity(SymiOpacity.secondaryFill)
-    static let cardBorder = Color.clear
     static let shadowColor = symiPetrol.opacity(SymiOpacity.shadow)
 
+    // Dynamic colors
     static func petrol(for colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? SymiColors.petrolDark.color : SymiColors.primaryPetrol.color
     }
@@ -90,6 +86,7 @@ enum AppTheme {
         SymiColors.textSecondary(for: colorScheme)
     }
 
+    // Dynamic gradients
     static func appBackground(for colorScheme: ColorScheme) -> LinearGradient {
         let colors: [Color] = if colorScheme == .dark {
             [
@@ -132,10 +129,13 @@ enum AppTheme {
         sage(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.pressedFill : SymiOpacity.secondaryFill)
     }
 
+    // Dynamic effects
     static func shadowColor(for colorScheme: ColorScheme) -> Color {
         Color.black.opacity(colorScheme == .dark ? SymiOpacity.backgroundAccent : SymiOpacity.shadow)
     }
 }
+
+// MARK: - Screen Modifiers
 
 private struct BrandScreenModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
@@ -189,6 +189,8 @@ private struct BrandCardModifier: ViewModifier {
     }
 }
 
+// MARK: - Button Styles
+
 struct SymiPrimaryButtonStyle: ButtonStyle {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -222,6 +224,8 @@ struct SymiSecondaryButtonStyle: ButtonStyle {
     }
 }
 
+// MARK: - View Extensions
+
 extension View {
     func brandScreen() -> some View {
         modifier(BrandScreenModifier())
@@ -243,6 +247,8 @@ extension View {
         modifier(BrandCardModifier())
     }
 }
+
+// MARK: - Color Extensions
 
 extension Color {
     static let symiPetrol = AppTheme.symiPetrol

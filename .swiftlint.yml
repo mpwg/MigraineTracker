@@ -55,9 +55,9 @@ nesting:
     error: 3
 
 excluded:
-  - Symi/Sources/Features/InputFlow/Styling/SymiColors.swift
-  - Symi/Sources/Features/InputFlow/Styling/SymiSpacing.swift
-  - Symi/Sources/Features/InputFlow/Styling/SymiTypography.swift
+  - Symi/Sources/Shared/DesignSystem/SymiColors.swift
+  - Symi/Sources/Shared/DesignSystem/SymiSpacing.swift
+  - Symi/Sources/Shared/DesignSystem/SymiTypography.swift
   - Symi/Sources/Features/Export/PDFExportWriter.swift
 
 custom_rules:

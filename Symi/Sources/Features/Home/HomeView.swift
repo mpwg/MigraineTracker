@@ -1,4 +1,5 @@
 import SwiftUI
+// swiftlint:disable file_length
 
 struct HomeView: View {
     let dependencies: HomeFeatureDependencies
@@ -202,8 +203,8 @@ private struct HomeDebugKeyboardShortcuts: View {
             debugButton("Home Early State 2", shortcut: "3") { setEntryCount(2) }
             debugButton("Home Insight State", shortcut: "4") { setEntryCount(3) }
         }
-        .frame(width: 1, height: 1)
-        .opacity(0.01)
+        .frame(width: SymiSize.accessibilityMarker, height: SymiSize.accessibilityMarker)
+        .opacity(SymiOpacity.hiddenDebugControl)
         .accessibilityHidden(true)
     }
 
@@ -281,7 +282,7 @@ private struct OnboardingCard: View {
         VStack(alignment: .leading, spacing: HomeRhythm.xl) {
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 Text("Starte deine Reise")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(SymiTypography.flowTitle)
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -302,7 +303,10 @@ private struct OnboardingCard: View {
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .padding(.horizontal, HomeRhythm.xl)
                     .padding(.vertical, HomeRhythm.sm)
-                    .background(AppTheme.sage(for: colorScheme).opacity(0.10), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+                    .background(
+                        AppTheme.sage(for: colorScheme).opacity(SymiOpacity.shadow),
+                        in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
+                    )
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -350,11 +354,11 @@ private struct PrimaryOnboardingActionRow: View {
             Image(systemName: "plus.circle.fill")
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                .frame(width: 34, height: 34)
-                .background(AppTheme.sage(for: colorScheme).opacity(0.22), in: Circle())
+                .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconWidth)
+                .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.backgroundAccent), in: Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: SymiSpacing.chevronTopPadding) {
                 Text(title)
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
@@ -362,7 +366,7 @@ private struct PrimaryOnboardingActionRow: View {
 
                 Text("Wie fühlst du dich gerade?")
                     .font(.footnote)
-                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(0.72))
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(SymiOpacity.textReadableSecondary))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -372,7 +376,7 @@ private struct PrimaryOnboardingActionRow: View {
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.iconMuted))
                     .accessibilityHidden(true)
                 Spacer(minLength: 0)
             }
@@ -408,10 +412,10 @@ private struct OnboardingContextBlock: View {
     }
 
     private func contextItem(title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: SymiSpacing.micro) {
             Text(title)
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(0.72))
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(SymiOpacity.textReadableSecondary))
                 .fixedSize(horizontal: false, vertical: true)
 
             Text(subtitle)
@@ -428,7 +432,7 @@ private struct PrimaryOnboardingActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
-            .opacity(configuration.isPressed ? 0.88 : 1)
+            .opacity(configuration.isPressed ? SymiOpacity.journalPressed : SymiOpacity.opaque)
             .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
     }
 }
@@ -442,7 +446,7 @@ private struct InsightsCard<Destination: View>: View {
         VStack(alignment: .leading, spacing: HomeRhythm.xl) {
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 Text("Deine Insights")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(SymiTypography.flowTitle)
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -499,9 +503,9 @@ private struct InsightCard: View {
         HStack(alignment: .top, spacing: HomeRhythm.md) {
             Image(systemName: card.systemImage)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(card.tint(for: colorScheme).opacity(0.78))
-                .frame(width: 34, height: 34)
-                .background(card.tint(for: colorScheme).opacity(0.11), in: Circle())
+                .foregroundStyle(card.tint(for: colorScheme).opacity(SymiOpacity.entryDetailDeleteText))
+                .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconWidth)
+                .background(card.tint(for: colorScheme).opacity(SymiOpacity.subtleButtonHighlight), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
@@ -520,8 +524,16 @@ private struct InsightCard: View {
         }
         .padding(prominence == .primary ? HomeRhythm.lg + HomeRhythm.primaryInsightPaddingBoost : HomeRhythm.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(card.tint(for: colorScheme).opacity(backgroundOpacity), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
-        .shadow(color: Color.black.opacity(0.035), radius: prominence == .primary ? 8 : 5, x: 0, y: prominence == .primary ? 3 : 2)
+        .background(
+            card.tint(for: colorScheme).opacity(backgroundOpacity),
+            in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
+        )
+        .shadow(
+            color: Color.black.opacity(SymiOpacity.clearStroke),
+            radius: prominence == .primary ? SymiSpacing.xs : SymiSpacing.compact,
+            x: SymiSpacing.zero,
+            y: prominence == .primary ? SymiSpacing.chevronTopPadding : SymiSpacing.micro
+        )
         .accessibilityElement(children: .combine)
     }
 
@@ -530,7 +542,7 @@ private struct InsightCard: View {
     }
 
     private var backgroundOpacity: Double {
-        prominence == .primary ? 0.18 : 0.07
+        prominence == .primary ? SymiOpacity.secondaryFill : SymiOpacity.insightSecondaryFill
     }
 }
 
@@ -843,8 +855,8 @@ private struct PrimaryButtonLabel: View {
             Image(systemName: "plus")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.symiOnAccent)
-                .frame(width: 34, height: 34)
-                .background(AppTheme.coral(for: colorScheme).opacity(0.82), in: Circle())
+                .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconWidth)
+                .background(AppTheme.coral(for: colorScheme).opacity(SymiOpacity.heroPrimaryWave), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
@@ -1562,7 +1574,7 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
             .background(buttonBackground, in: RoundedRectangle(cornerRadius: SymiRadius.homeActionButton, style: .continuous))
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .shadow(
-                color: Color.black.opacity(colorScheme == .dark ? 0.08 : 0.04),
+                color: Color.black.opacity(colorScheme == .dark ? SymiOpacity.hairline : SymiOpacity.clearStroke),
                 radius: 10,
                 x: SymiShadow.cardXOffset,
                 y: 4
@@ -1619,7 +1631,7 @@ private struct HomeSoftCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(AppTheme.cardBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.10 : 0.04), radius: 10, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? SymiOpacity.shadow : SymiOpacity.clearStroke), radius: 10, x: 0, y: 4)
     }
 }
 
