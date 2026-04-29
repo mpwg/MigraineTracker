@@ -21,7 +21,15 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 [bundle exec] fastlane ios sync_screenshots
 ```
 
-Erzeugt App-Store-Screenshots für iPhone
+Erzeugt App-Store-Screenshots für iPhone und iPad
+
+### ios validate_screenshot_seed
+
+```sh
+[bundle exec] fastlane ios validate_screenshot_seed
+```
+
+Validiert den Screenshot-Seed und den Skala-zuerst-Flow ohne vollständige Screenshot-Erzeugung
 
 ### ios upload_screenshots
 
@@ -29,7 +37,7 @@ Erzeugt App-Store-Screenshots für iPhone
 [bundle exec] fastlane ios upload_screenshots
 ```
 
-Erzeugt und lädt iPhone-Screenshots nach App Store Connect hoch
+Erzeugt und lädt iPhone- und iPad-Screenshots nach App Store Connect hoch
 
 ### ios release_testflight
 

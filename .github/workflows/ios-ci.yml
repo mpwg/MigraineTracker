@@ -182,6 +182,8 @@ jobs:
             -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData-Catalyst" \
             -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            -testLanguage de \
+            -testRegion DE \
             CODE_SIGNING_ALLOWED=NO
 
       - name: xcresult bei Fehler hochladen
@@ -264,6 +266,8 @@ jobs:
             -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData-iPhone" \
             -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            -testLanguage de \
+            -testRegion DE \
             CODE_SIGNING_ALLOWED=NO
 
       - name: xcresult bei Fehler hochladen
@@ -346,6 +350,8 @@ jobs:
             -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData-UI" \
             -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            -testLanguage de \
+            -testRegion DE \
             -only-testing:SymiUITests/HomeRedesignUITests/testAppShellUsesRequestedTabs \
             -only-testing:SymiUITests/HomeRedesignUITests/testHomeQuickEntryCanSaveHeadacheOnlyEntry \
             -only-testing:SymiUITests/EntryFlowUITests/testCompleteFiveStepFlowSavesEntry \

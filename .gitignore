@@ -130,5 +130,4 @@ tmbootpicker.efi
 Symi/Configs/LocalSecrets.xcconfig
 # fastlane/report.xml
 # fastlane/Preview.html
-# fastlane/screenshots/test_output/
- fastlane/test_output/
+fastlane/screenshots/

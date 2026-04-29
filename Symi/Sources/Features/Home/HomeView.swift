@@ -69,7 +69,10 @@ struct HomeView: View {
                     .padding(.bottom, SymiSpacing.lg)
 
                 if homeState == .insights {
-                    HomePrimaryButton(title: "Neuer Eintrag", subtitle: "Starte einen neuen Eintrag") {
+                    HomePrimaryButton(
+                        title: HomeLocalized.text(de: "Neuer Eintrag", en: "New entry"),
+                        subtitle: HomeLocalized.text(de: "Starte einen neuen Eintrag", en: "Start a new entry")
+                    ) {
                         isPresentingEpisodeEditor = true
                     }
                     .accessibilityIdentifier("home-quick-entry")
@@ -112,7 +115,10 @@ struct HomeView: View {
                     .padding(.bottom, SymiSpacing.lg)
 
                 if homeState == .insights {
-                    HomePrimaryButton(title: "Neuer Eintrag", subtitle: "Starte einen neuen Eintrag") {
+                    HomePrimaryButton(
+                        title: HomeLocalized.text(de: "Neuer Eintrag", en: "New entry"),
+                        subtitle: HomeLocalized.text(de: "Starte einen neuen Eintrag", en: "Start a new entry")
+                    ) {
                         isPresentingEpisodeEditor = true
                     }
                     .accessibilityIdentifier("home-quick-entry")
@@ -188,6 +194,16 @@ struct HomeView: View {
         return HomeInsightCardData.makeCards(from: patternPreviewData.cards)
     }
 
+}
+
+private enum HomeLocalized {
+    static var isEnglish: Bool {
+        Locale.current.language.languageCode?.identifier == "en"
+    }
+
+    static func text(de german: String, en english: String) -> String {
+        isEnglish ? english : german
+    }
 }
 
 #if DEBUG
@@ -320,17 +336,20 @@ private struct OnboardingCard: View {
 
     private func remainingEntriesText(for entryCount: Int) -> String {
         let remainingEntries = max(3 - entryCount, 1)
+        if HomeLocalized.isEnglish {
+            return "\(remainingEntries) entr\(remainingEntries == 1 ? "y" : "ies")"
+        }
         return "\(remainingEntries) Eintrag\(remainingEntries == 1 ? "" : "e")"
     }
 
     private var primaryActionTitle: String {
         switch state {
         case .empty:
-            "Jetzt eintragen"
+            HomeLocalized.text(de: "Jetzt eintragen", en: "Log now")
         case .early:
-            "Weiter eintragen"
+            HomeLocalized.text(de: "Weiter eintragen", en: "Keep logging")
         case .insights:
-            "Neuer Eintrag"
+            HomeLocalized.text(de: "Neuer Eintrag", en: "New entry")
         }
     }
 }
@@ -399,12 +418,12 @@ private struct OnboardingContextBlock: View {
 
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 contextItem(
-                    title: "Achte auf mögliche Auslöser",
-                    subtitle: "z. B. Stress, Schlaf oder Wetter"
+                    title: HomeLocalized.text(de: "Achte auf mögliche Auslöser", en: "Watch for possible triggers"),
+                    subtitle: HomeLocalized.text(de: "z. B. Stress, Schlaf oder Wetter", en: "e.g. stress, sleep, or weather")
                 )
                 contextItem(
-                    title: "Notiere, was noch Einfluss hat",
-                    subtitle: "z. B. Medikamente oder Zyklus"
+                    title: HomeLocalized.text(de: "Notiere, was noch Einfluss hat", en: "Note what else has an effect"),
+                    subtitle: HomeLocalized.text(de: "z. B. Medikamente oder Zyklus", en: "e.g. medication or cycle")
                 )
             }
         }
@@ -602,21 +621,27 @@ private struct HomeInsightCardData: Identifiable, Equatable {
     static let fallbackCards = [
         HomeInsightCardData(
             id: "evening",
-            title: "Bei dir treten Schmerzen abends häufiger auf",
-            subtitle: "Vor allem zwischen 18–22 Uhr",
+            title: HomeLocalized.text(
+                de: "Bei dir treten Schmerzen abends häufiger auf",
+                en: "Your pain appears more often in the evening"
+            ),
+            subtitle: HomeLocalized.text(de: "Vor allem zwischen 18–22 Uhr", en: "Mostly between 6-10 PM"),
             systemImage: "moon.stars.fill",
             tint: .petrol
         ),
         HomeInsightCardData(
             id: "sleep",
-            title: "Weniger Schlaf erhöht deine Schmerzintensität",
-            subtitle: "Unter 6h -> +1.3 Punkte",
+            title: HomeLocalized.text(
+                de: "Weniger Schlaf erhöht deine Schmerzintensität",
+                en: "Less sleep raises your pain intensity"
+            ),
+            subtitle: HomeLocalized.text(de: "Unter 6h -> +1.3 Punkte", en: "Under 6h -> +1.3 points"),
             systemImage: "bed.double.fill",
             tint: .sage
         ),
         HomeInsightCardData(
             id: "medication",
-            title: "Medikation hilft in 72% der Fälle",
+            title: HomeLocalized.text(de: "Medikation hilft in 72% der Fälle", en: "Medication helps in 72% of cases"),
             subtitle: nil,
             systemImage: "pills.fill",
             tint: .coral
@@ -680,7 +705,7 @@ private struct HomeMonthCalendarView: View {
         .padding(.vertical, SymiSpacing.xxs)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Monatskalender \(month.formatted(.dateTime.month(.wide).year()))")
+        .accessibilityLabel(calendarAccessibilityLabel)
         .accessibilityIdentifier("home-calendar")
     }
 
@@ -699,7 +724,14 @@ private struct HomeMonthCalendarView: View {
     }
 
     private var weekdaySymbols: [String] {
-        ["MO", "DI", "MI", "DO", "FR", "SA", "SO"]
+        let symbols = calendar.shortStandaloneWeekdaySymbols
+        guard symbols.count == 7 else {
+            return HomeLocalized.isEnglish
+                ? ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+                : ["MO", "DI", "MI", "DO", "FR", "SA", "SO"]
+        }
+
+        return Array(symbols[1...6] + symbols[0...0]).map { $0.uppercased() }
     }
 
     private var dayCells: [HomeCalendarDay] {
@@ -721,6 +753,15 @@ private struct HomeMonthCalendarView: View {
         }
 
         return cells
+    }
+
+    private var calendarAccessibilityLabel: String {
+        let monthText = month.formatted(.dateTime.month(.wide).year())
+        guard calendar.isDate(.now, equalTo: month, toGranularity: .month) else {
+            return "Monatskalender \(monthText)"
+        }
+
+        return "Monatskalender \(monthText), heute markiert"
     }
 }
 
@@ -802,15 +843,17 @@ private struct HomeCalendarDayCell: View {
 
     private var accessibilityLabel: String {
         let dateText = date.formatted(date: .complete, time: .omitted)
-        let stateText = isToday ? "heute" : "Kalendertag"
+        let stateText = isToday ? HomeLocalized.text(de: "heute", en: "today") : HomeLocalized.text(de: "Kalendertag", en: "calendar day")
 
         guard entries.isEmpty == false else {
-            return "\(dateText), \(stateText), keine Einträge"
+            return "\(dateText), \(stateText), \(HomeLocalized.text(de: "keine Einträge", en: "no entries"))"
         }
 
-        let entryText = "\(entries.count) Eintrag\(entries.count == 1 ? "" : "e")"
+        let entryText = HomeLocalized.isEnglish
+            ? "\(entries.count) entr\(entries.count == 1 ? "y" : "ies")"
+            : "\(entries.count) Eintrag\(entries.count == 1 ? "" : "e")"
         let highestIntensity = entries.map(\.intensity).max() ?? 0
-        return "\(dateText), \(stateText), \(entryText), höchste Intensität \(highestIntensity) von 10"
+        return "\(dateText), \(stateText), \(entryText), \(HomeLocalized.text(de: "höchste Intensität", en: "highest intensity")) \(highestIntensity) \(HomeLocalized.text(de: "von", en: "out of")) 10"
     }
 }
 
@@ -1055,13 +1098,22 @@ private struct HomePatternEmptyState: View {
         }
 
         if recordedCount >= HomePatternPreviewData.minimumEpisodeCount {
-            return "Es gibt schon genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist."
+            return HomeLocalized.text(
+                de: "Es gibt schon genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist.",
+                en: "There are enough entries, but nothing in them stands out clearly enough yet."
+            )
         }
 
         if recordedCount == 0 {
-            return "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise."
+            return HomeLocalized.text(
+                de: "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise.",
+                en: "Once you have logged a few pain or migraine entries, Symi shows careful hints here."
+            )
         }
 
+        if HomeLocalized.isEnglish {
+            return "\(recordedCount) of \(HomePatternPreviewData.minimumEpisodeCount) required pain or migraine entries are available. Once there is more data, Symi looks for careful patterns."
+        }
         return "\(recordedCount) von \(HomePatternPreviewData.minimumEpisodeCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern."
     }
 
@@ -1070,6 +1122,9 @@ private struct HomePatternEmptyState: View {
             return emptyState.title
         }
 
+        if HomeLocalized.isEnglish {
+            return recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "No careful pattern visible yet" : "Not enough entries for patterns yet"
+        }
         return recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "Noch kein vorsichtiges Muster sichtbar" : "Noch nicht genug Einträge für Muster"
     }
 
@@ -1148,21 +1203,21 @@ private struct HomeInsightsContent: View {
 
                         if !topTriggers.isEmpty {
                             FrequencyInsightCard(
-                                title: "Häufige Auslöser",
+                                title: HomeLocalized.text(de: "Häufige Auslöser", en: "Frequent triggers"),
                                 systemImage: "tag",
                                 summaries: topTriggers,
                                 tint: AppTheme.coral(for: colorScheme),
-                                detail: "in deinen Einträgen auffällig"
+                                detail: HomeLocalized.text(de: "in deinen Einträgen auffällig", en: "stands out in your entries")
                             )
                         }
 
                         if !topMedications.isEmpty {
                             FrequencyInsightCard(
-                                title: "Medikation",
+                                title: HomeLocalized.text(de: "Medikation", en: "Medication"),
                                 systemImage: "pills",
                                 summaries: topMedications,
                                 tint: AppTheme.petrol(for: colorScheme),
-                                detail: "in diesem Zeitraum dokumentiert"
+                                detail: HomeLocalized.text(de: "in diesem Zeitraum dokumentiert", en: "documented in this period")
                             )
                         }
                     }
@@ -1340,14 +1395,18 @@ private struct AverageIntensityInsightCard: View {
 
     private var intensityDescription: String {
         if averageIntensity < 4 {
-            return "meist leicht in \(entryCount) Einträgen"
+            return HomeLocalized.isEnglish ? "mostly mild in \(entryText)" : "meist leicht in \(entryCount) Einträgen"
         }
 
         if averageIntensity < 7 {
-            return "meist leicht bis mittel in \(entryCount) Einträgen"
+            return HomeLocalized.isEnglish ? "mostly mild to moderate in \(entryText)" : "meist leicht bis mittel in \(entryCount) Einträgen"
         }
 
-        return "häufiger stärker in \(entryCount) Einträgen"
+        return HomeLocalized.isEnglish ? "more often stronger in \(entryText)" : "häufiger stärker in \(entryCount) Einträgen"
+    }
+
+    private var entryText: String {
+        HomeLocalized.isEnglish ? "\(entryCount) entr\(entryCount == 1 ? "y" : "ies")" : "\(entryCount) Einträgen"
     }
 }
 
@@ -1390,7 +1449,7 @@ private struct FrequencyInsightCard: View {
             return ""
         }
 
-        return "\(first.name) ist am häufigsten dokumentiert"
+        return HomeLocalized.isEnglish ? "\(first.name) is documented most often" : "\(first.name) ist am häufigsten dokumentiert"
     }
 }
 

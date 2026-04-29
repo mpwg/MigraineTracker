@@ -86,12 +86,18 @@ struct InputFlowSecondaryAction: View {
     }
 
     var body: some View {
-        Button(title, action: action)
-            .font(SymiTypography.flowSecondaryAction)
-            .foregroundStyle(AppTheme.symiPetrol.opacity(SymiOpacity.secondaryActionText))
-            .frame(minHeight: SymiSize.minInteractiveHeight)
+        Button(action: action) {
+            Text(title)
+                .font(SymiTypography.flowSecondaryAction)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(AppTheme.symiPetrol.opacity(SymiOpacity.secondaryActionText))
+                .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight)
+                .contentShape(Rectangle())
+        }
+            .buttonStyle(.plain)
             .disabled(isDisabled)
             .opacity(isDisabled ? SymiOpacity.disabledContent : SymiOpacity.opaque)
+            .accessibilityLabel(title)
             .accessibilityIdentifier(accessibilityIdentifier ?? "input-flow-secondary")
     }
 }

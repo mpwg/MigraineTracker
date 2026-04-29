@@ -68,6 +68,7 @@ struct InputFlowHeader: View {
                     .font(SymiTypography.flowSubtitle)
                     .foregroundStyle(AppTheme.symiTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("entry-flow-subtitle-\(step.rawValue)")
             }
         }
         .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
