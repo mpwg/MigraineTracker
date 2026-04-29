@@ -179,11 +179,11 @@ private struct ReportLayoutMetrics {
     }
 
     var heroVerticalPadding: CGFloat {
-        isCompactHeight ? -SymiSpacing.md : -SymiSpacing.sm
+        isCompactHeight ? SymiSpacing.zero : SymiSpacing.xs
     }
 
     var headerTopPadding: CGFloat {
-        isCompactHeight ? -SymiSpacing.md : -SymiSpacing.xs
+        isCompactHeight ? SymiSpacing.sm : SymiSpacing.md
     }
 
     var verticalPadding: CGFloat {
