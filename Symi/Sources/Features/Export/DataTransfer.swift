@@ -51,6 +51,7 @@ struct BackupImportResult: Sendable {
 
 struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
     nonisolated static let maximumImportFileSizeInBytes = 10 * 1_024 * 1_024
+    private nonisolated static let importLookupBatchSize = 250
 
     let formatVersion: Int
     let exportedAt: Date
@@ -155,16 +156,15 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
     nonisolated func previewImport(into context: ModelContext) throws -> BackupImportPreview {
         try validateDomainInvariants()
 
-        let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
-        let episodesByID = Dictionary(uniqueKeysWithValues: existingEpisodes.map { ($0.id, $0) })
-        let existingDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
-        let customDefinitionsByKey = Dictionary(
-            uniqueKeysWithValues: existingDefinitions
-                .filter(\.isCustom)
-                .map { ($0.catalogKey, $0) }
+        let episodesByID = try context.episodesByID(Array(Set(episodes.map(\.id))), batchSize: Self.importLookupBatchSize)
+        let customDefinitionsByKey = try context.customMedicationDefinitionsByKey(
+            Array(Set(customMedicationDefinitions.map(\.catalogKey))),
+            batchSize: Self.importLookupBatchSize
         )
-        let existingContinuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
-        let continuousMedicationsByID = Dictionary(uniqueKeysWithValues: existingContinuousMedications.map { ($0.id, $0) })
+        let continuousMedicationsByID = try context.continuousMedicationsByID(
+            Array(Set(continuousMedications.map(\.id))),
+            batchSize: Self.importLookupBatchSize
+        )
 
         var newEpisodes = 0
         var changedEpisodes = 0
@@ -222,17 +222,15 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
     nonisolated func merge(into context: ModelContext, healthContextStore: HealthContextStore) throws {
         try validateDomainInvariants()
 
-        let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
-        let episodesByID = Dictionary(uniqueKeysWithValues: existingEpisodes.map { ($0.id, $0) })
-
-        let existingDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
-        let customDefinitionsByKey = Dictionary(
-            uniqueKeysWithValues: existingDefinitions
-                .filter(\.isCustom)
-                .map { ($0.catalogKey, $0) }
+        let episodesByID = try context.episodesByID(Array(Set(episodes.map(\.id))), batchSize: Self.importLookupBatchSize)
+        let customDefinitionsByKey = try context.customMedicationDefinitionsByKey(
+            Array(Set(customMedicationDefinitions.map(\.catalogKey))),
+            batchSize: Self.importLookupBatchSize
         )
-        let existingContinuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
-        let continuousMedicationsByID = Dictionary(uniqueKeysWithValues: existingContinuousMedications.map { ($0.id, $0) })
+        let continuousMedicationsByID = try context.continuousMedicationsByID(
+            Array(Set(continuousMedications.map(\.id))),
+            batchSize: Self.importLookupBatchSize
+        )
 
         for payload in customMedicationDefinitions {
             if let definition = customDefinitionsByKey[payload.catalogKey] {
@@ -291,6 +289,56 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
         return formatter.string(from: date)
+    }
+}
+
+private extension ModelContext {
+    nonisolated func episodesByID(_ ids: [UUID], batchSize: Int) throws -> [UUID: Episode] {
+        try fetchModelsByKey(ids, batchSize: batchSize) { batchIDs in
+            let descriptor = FetchDescriptor<Episode>(
+                predicate: #Predicate<Episode> { batchIDs.contains($0.id) }
+            )
+            return try fetch(descriptor).map { ($0.id, $0) }
+        }
+    }
+
+    nonisolated func customMedicationDefinitionsByKey(_ keys: [String], batchSize: Int) throws -> [String: MedicationDefinition] {
+        try fetchModelsByKey(keys, batchSize: batchSize) { batchKeys in
+            let descriptor = FetchDescriptor<MedicationDefinition>(
+                predicate: #Predicate<MedicationDefinition> { definition in
+                    definition.isCustom && batchKeys.contains(definition.catalogKey)
+                }
+            )
+            return try fetch(descriptor).map { ($0.catalogKey, $0) }
+        }
+    }
+
+    nonisolated func continuousMedicationsByID(_ ids: [UUID], batchSize: Int) throws -> [UUID: ContinuousMedication] {
+        try fetchModelsByKey(ids, batchSize: batchSize) { batchIDs in
+            let descriptor = FetchDescriptor<ContinuousMedication>(
+                predicate: #Predicate<ContinuousMedication> { batchIDs.contains($0.id) }
+            )
+            return try fetch(descriptor).map { ($0.id, $0) }
+        }
+    }
+
+    nonisolated func fetchModelsByKey<Key: Hashable, Value>(
+        _ keys: [Key],
+        batchSize: Int,
+        fetchBatch: ([Key]) throws -> [(Key, Value)]
+    ) throws -> [Key: Value] {
+        guard !keys.isEmpty else {
+            return [:]
+        }
+
+        var modelsByKey: [Key: Value] = [:]
+        for startIndex in stride(from: 0, to: keys.count, by: batchSize) {
+            let endIndex = Swift.min(startIndex + batchSize, keys.count)
+            for (key, value) in try fetchBatch(Array(keys[startIndex..<endIndex])) {
+                modelsByKey[key] = value
+            }
+        }
+        return modelsByKey
     }
 }
 
