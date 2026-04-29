@@ -78,7 +78,7 @@ enum SymiColors {
     static let entryDetailProgressSageMid = SymiColorValue(hex: 0xC2D19E)
 
     // Dark mode accents
-    static let petrolDark = SymiColorValue(hex: 0x8ECDB8)
+    static let petrolDark = sage
     static let coralDark = SymiColorValue(hex: 0xFFA196)
     static let sageDark = SymiColorValue(hex: 0xA9DEC9)
     static let triggerBlueDark = SymiColorValue(hex: 0x81A0F1)

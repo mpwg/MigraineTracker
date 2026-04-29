@@ -555,7 +555,7 @@ private struct MedicationDefinitionRow: View {
                 HStack(alignment: .center, spacing: SymiSpacing.md) {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .imageScale(.large)
-                        .foregroundStyle(isSelected ? AppTheme.ocean : .primary)
+                        .foregroundStyle(isSelected ? AppTheme.symiPetrol : .primary)
                         .frame(width: SymiSize.productInfoIconWidth, alignment: .center)
 
                     VStack(alignment: .leading, spacing: SymiSpacing.chevronTopPadding) {
@@ -614,7 +614,7 @@ private struct MedicationDefinitionRow: View {
         .overlay {
             RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
                 .stroke(
-                    isSelected ? AppTheme.ocean.opacity(SymiOpacity.selectedStroke) : AppTheme.symiOnAccent.opacity(SymiOpacity.outline),
+                    isSelected ? AppTheme.symiPetrol.opacity(SymiOpacity.selectedStroke) : AppTheme.symiOnAccent.opacity(SymiOpacity.outline),
                     lineWidth: SymiStroke.hairline
                 )
         }

@@ -56,7 +56,7 @@ struct SettingsView: View {
                     get: { controller.isSyncEnabled },
                     set: { controller.setSyncEnabled($0) }
                 ))
-                .tint(AppTheme.ocean)
+                .tint(AppTheme.symiPetrol)
 
                 NavigationLink {
                     ManageCloudDataView(dataExportDependencies: dependencies.dataExport, controller: controller)
@@ -133,7 +133,7 @@ struct SettingsView: View {
                     get: { controller.isUsageDataCollectionAllowed },
                     set: { controller.setUsageDataCollectionAllowed($0) }
                 ))
-                .tint(AppTheme.ocean)
+                .tint(AppTheme.symiPetrol)
             } header: {
                 Text("App verbessern")
             } footer: {
@@ -568,7 +568,7 @@ private struct HealthDataTypeSection: View {
                         }
                     }
                 }
-                .tint(AppTheme.ocean)
+                .tint(AppTheme.symiPetrol)
             }
         }
     }

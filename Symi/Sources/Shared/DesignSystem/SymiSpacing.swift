@@ -304,20 +304,20 @@ nonisolated enum SymiOpacity {
     static let clearStroke: Double = 0.04
     static let glassRegularShadow: Double = 0.045
     static let clearAccent: Double = 0.06
-    static let journalBorder: Double = 0.06
+    static let journalBorder = clearAccent
     static let cardShadow: Double = 0.07
-    static let journalShadow: Double = 0.07
-    static let insightSecondaryFill: Double = 0.07
+    static let journalShadow = cardShadow
+    static let insightSecondaryFill = cardShadow
     static let hairline: Double = 0.08
-    static let faintTrack: Double = 0.08
-    static let glassProminentShadow: Double = 0.08
+    static let faintTrack = hairline
+    static let glassProminentShadow = hairline
     static let shadow: Double = 0.10
-    static let pressedShadow: Double = 0.10
+    static let pressedShadow = shadow
     static let subtleButtonHighlight: Double = 0.11
     static let faintSurface: Double = 0.12
     static let softFill: Double = 0.16
-    static let sliderThumbShadow: Double = 0.18
     static let secondaryFill: Double = 0.18
+    static let sliderThumbShadow = secondaryFill
     static let pressedFill: Double = 0.20
     static let backgroundAccent: Double = 0.22
     static let selectedStroke: Double = 0.24
@@ -325,19 +325,19 @@ nonisolated enum SymiOpacity {
     static let selectedFill: Double = 0.35
     static let outline: Double = 0.45
     static let strongSurface: Double = 0.96
-    static let footerBackground: Double = 0.96
+    static let footerBackground = strongSurface
 
     // Text and icons
     static let textMuted: Double = 0.50
-    static let iconMuted: Double = 0.55
     static let disabledContent: Double = 0.55
+    static let iconMuted = disabledContent
     static let secondaryActionText: Double = 0.66
     static let textReadableSecondary: Double = 0.72
     static let strongText: Double = 0.82
     static let heroSecondaryText: Double = 0.86
 
     // Control state
-    static let disabledFill: Double = 0.55
+    static let disabledFill = disabledContent
     static let disabledTile: Double = 0.58
     static let entryDetailDeletePressed: Double = 0.68
     static let journalSelectedStroke: Double = 0.80
@@ -345,13 +345,13 @@ nonisolated enum SymiOpacity {
     static let pressedContent: Double = 0.92
     static let reportPressedScale: Double = 0.99
     static let reportPrimaryPressedScale: Double = 0.98
-    static let entryDetailDeleteScale: Double = 0.98
+    static let entryDetailDeleteScale = reportPrimaryPressedScale
 
     // Progress and selection
-    static let progressTrackLight: Double = 0.12
-    static let progressTrackDark: Double = 0.22
-    static let progressIndicatorStrokeDark: Double = 0.18
-    static let progressIndicatorStrokeLight: Double = 0.92
+    static let progressTrackLight = faintSurface
+    static let progressTrackDark = backgroundAccent
+    static let progressIndicatorStrokeDark = secondaryFill
+    static let progressIndicatorStrokeLight = pressedContent
     static let stepSelectedFillDark: Double = 0.30
     static let secondaryPressedFill: Double = 0.32
     static let stepBorderLight: Double = 0.36
@@ -359,22 +359,22 @@ nonisolated enum SymiOpacity {
 
     // Brand, hero, and backgrounds
     static let heroSecondaryWave: Double = 0.72
-    static let appBackgroundSurface: Double = 0.72
+    static let appBackgroundSurface = heroSecondaryWave
     static let heroPrimaryWave: Double = 0.82
     static let journalChipFill: Double = 0.84
     static let heroAccentWave: Double = 0.92
-    static let glassBorderDarkMultiplier: Double = 0.22
-    static let glassTintDark: Double = 0.18
-    static let homeActionShadowLight: Double = 0.10
+    static let glassBorderDarkMultiplier = backgroundAccent
+    static let glassTintDark = secondaryFill
+    static let homeActionShadowLight = shadow
     static let homeActionShadowDark: Double = 0.05
     static let homeBackgroundPrimaryLight: Double = 0.16
-    static let homeBackgroundPrimaryDark: Double = 0.08
-    static let homeBackgroundSecondaryLight: Double = 0.10
+    static let homeBackgroundPrimaryDark = hairline
+    static let homeBackgroundSecondaryLight = shadow
     static let homeBackgroundSecondaryDark: Double = 0.05
 
     // Calendar
-    static let calendarHighIntensityDot: Double = 0.72
-    static let calendarMediumIntensityDot: Double = 0.72
+    static let calendarHighIntensityDot = heroSecondaryWave
+    static let calendarMediumIntensityDot = heroSecondaryWave
     static let calendarLowIntensityDot: Double = 0.62
     static let calendarInactiveDayText: Double = 0.60
 
@@ -382,21 +382,21 @@ nonisolated enum SymiOpacity {
     static let entryDetailShadow: Double = 0.022
     static let entryDetailHighlight: Double = 0.74
     static let entryDetailPrimaryText: Double = 0.98
-    static let entryDetailBodyText: Double = 0.82
+    static let entryDetailBodyText = strongText
     static let entryDetailFaceStroke: Double = 0.60
     static let entryDetailProgressTrack: Double = 0.065
-    static let entryDetailProgressStart: Double = 0.98
-    static let entryDetailProgressEnd: Double = 0.98
+    static let entryDetailProgressStart = entryDetailPrimaryText
+    static let entryDetailProgressEnd = entryDetailPrimaryText
     static let entryDetailProgressHighlight: Double = 0.14
     static let entryDetailIcon: Double = 0.62
     static let entryDetailTriggerChipText: Double = 0.84
-    static let entryDetailTriggerChipFill: Double = 0.22
+    static let entryDetailTriggerChipFill = backgroundAccent
     static let entryDetailDeleteText: Double = 0.78
     static let entryDetailSecondaryText: Double = 0.84
-    static let entryDetailTertiaryText: Double = 0.82
+    static let entryDetailTertiaryText = strongText
 
     // Report
-    static let reportPrimaryPressedStart: Double = 0.88
+    static let reportPrimaryPressedStart = journalPressed
     static let reportPrimaryRestingEnd: Double = 0.94
-    static let reportPrimaryPressedEnd: Double = 0.82
+    static let reportPrimaryPressedEnd = strongText
 }

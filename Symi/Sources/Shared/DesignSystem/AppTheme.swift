@@ -24,14 +24,6 @@ enum AppTheme {
     static let symiTextSecondary = SymiColors.textSecondary.color
     static let symiOnAccent = SymiColors.onAccent.color
 
-    // Legacy aliases
-    static let ink = symiPetrol
-    static let ocean = symiPetrol
-    static let seaGlass = symiSage
-    static let foam = symiBackground
-    static let coral = symiCoral
-    static let mist = SymiColors.mist.color
-
     // Static gradients
     static let appBackground = LinearGradient(
         colors: [
@@ -45,8 +37,8 @@ enum AppTheme {
 
     static let heroGradient = LinearGradient(
         colors: [
-            ocean,
-            ink
+            symiPetrol,
+            symiPetrol
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -63,7 +55,6 @@ enum AppTheme {
 
     static let selectedFill = symiSage.opacity(SymiOpacity.selectedFill)
     static let secondaryFill = symiSage.opacity(SymiOpacity.secondaryFill)
-    static let cardBorder = Color.clear
     static let shadowColor = symiPetrol.opacity(SymiOpacity.shadow)
 
     // Dynamic colors
