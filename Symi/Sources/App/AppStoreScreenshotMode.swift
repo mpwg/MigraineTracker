@@ -95,16 +95,13 @@ enum AppStoreScreenshotMode {
             startedAt: startedAt,
             endedAtEnabled: false,
             endedAt: startedAt,
-            painLocation: ScreenshotLocalization.text(de: "rechte Schläfe", en: "right temple"),
-            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
-            notes: ScreenshotLocalization.text(
-                de: "Beispieldaten für den App Store. Nach einer ruhigen Pause wurde es besser.",
-                en: "Sample App Store data. It improved after a quiet break."
-            ),
-            functionalImpact: ScreenshotLocalization.text(de: "Arbeit in ruhiger Umgebung fortgesetzt", en: "Work continued in a quiet environment"),
+            painLocation: "rechte Schläfe",
+            painCharacter: "pochend",
+            notes: "Beispieldaten für den App Store. Nach einer ruhigen Pause wurde es besser.",
+            functionalImpact: "Arbeit in ruhiger Umgebung fortgesetzt",
             menstruationStatus: .unknown,
-            selectedSymptoms: Set(ScreenshotLocalization.list(de: ["Übelkeit", "Lichtempfindlichkeit"], en: ["Nausea", "Light sensitivity"])),
-            selectedTriggers: Set(ScreenshotLocalization.list(de: ["Stress", "Bildschirmzeit"], en: ["Stress", "Screen time"])),
+            selectedSymptoms: Set(["Übelkeit", "Lichtempfindlichkeit"]),
+            selectedTriggers: Set(["Stress", "Bildschirmzeit"]),
             medications: [
                 MedicationSelectionDraft(
                     selectionKey: MedicationSelectionKey.make(
@@ -124,13 +121,13 @@ enum AppStoreScreenshotMode {
     static func sampleWeatherSnapshot(for startedAt: Date) -> WeatherSnapshotData {
         WeatherSnapshotData(
             recordedAt: startedAt,
-            condition: ScreenshotLocalization.text(de: "Leicht bewölkt", en: "Partly cloudy"),
+            condition: "Leicht bewölkt",
             temperature: 17.8,
             humidity: 62,
             pressure: 1016,
             precipitation: 0.0,
             weatherCode: 2,
-            source: ScreenshotLocalization.text(de: "Beispielwetter", en: "Sample weather")
+            source: "Beispielwetter"
         )
     }
 
@@ -145,12 +142,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 3, to: todayMorning),
             type: .migraine,
             intensity: 6,
-            painLocation: ScreenshotLocalization.text(de: "rechte Schläfe", en: "right temple"),
-            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
-            notes: ScreenshotLocalization.text(de: "Beispieldaten für App-Store-Screenshots.", en: "Sample data for App Store screenshots."),
-            symptoms: ScreenshotLocalization.list(de: ["Übelkeit", "Lichtempfindlichkeit"], en: ["Nausea", "Light sensitivity"]),
-            triggers: ScreenshotLocalization.list(de: ["Stress", "Bildschirmzeit"], en: ["Stress", "Screen time"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Ruhiger Vormittag mit Pausen", en: "Quiet morning with breaks"),
+            painLocation: "rechte Schläfe",
+            painCharacter: "pochend",
+            notes: "Beispieldaten für App-Store-Screenshots.",
+            symptoms: ["Übelkeit", "Lichtempfindlichkeit"],
+            triggers: ["Stress", "Bildschirmzeit"],
+            functionalImpact: "Ruhiger Vormittag mit Pausen",
             medications: [
                 MedicationEntry(
                     name: "Paracetamol",
@@ -169,12 +166,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 2, to: threeDaysAgo),
             type: .headache,
             intensity: 4,
-            painLocation: ScreenshotLocalization.text(de: "Stirn", en: "forehead"),
-            painCharacter: ScreenshotLocalization.text(de: "dumpf", en: "dull"),
-            notes: ScreenshotLocalization.text(de: "Nach Wasser und kurzer Pause abgeklungen.", en: "Settled after water and a short break."),
-            symptoms: ScreenshotLocalization.list(de: ["Geräuschempfindlichkeit"], en: ["Sound sensitivity"]),
-            triggers: ScreenshotLocalization.list(de: ["Schlafmangel"], en: ["Lack of sleep"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Kurze Pause am Nachmittag", en: "Short break in the afternoon"),
+            painLocation: "Stirn",
+            painCharacter: "dumpf",
+            notes: "Nach Wasser und kurzer Pause abgeklungen.",
+            symptoms: ["Geräuschempfindlichkeit"],
+            triggers: ["Schlafmangel"],
+            functionalImpact: "Kurze Pause am Nachmittag",
             medications: [
                 MedicationEntry(
                     name: "Ibuprofen",
@@ -192,12 +189,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 5, to: eightDaysAgo),
             type: .migraine,
             intensity: 8,
-            painLocation: ScreenshotLocalization.text(de: "links frontal", en: "left frontal"),
-            painCharacter: ScreenshotLocalization.text(de: "pulsierend", en: "pulsating"),
-            notes: ScreenshotLocalization.text(de: "Rückzug in einen abgedunkelten Raum.", en: "Retreated to a darkened room."),
-            symptoms: ScreenshotLocalization.list(de: ["Aura", "Lichtempfindlichkeit", "Übelkeit"], en: ["Aura", "Light sensitivity", "Nausea"]),
+            painLocation: "links frontal",
+            painCharacter: "pulsierend",
+            notes: "Rückzug in einen abgedunkelten Raum.",
+            symptoms: ["Aura", "Lichtempfindlichkeit", "Übelkeit"],
             triggers: ["Stress"],
-            functionalImpact: ScreenshotLocalization.text(de: "Tagesplanung angepasst", en: "Daily plan adjusted"),
+            functionalImpact: "Tagesplanung angepasst",
             medications: [
                 MedicationEntry(
                     name: "Metoclopramid",
@@ -216,12 +213,12 @@ enum AppStoreScreenshotMode {
             endedAt: calendar.date(byAdding: .hour, value: 1, to: fifteenDaysAgo),
             type: .unclear,
             intensity: 3,
-            painLocation: ScreenshotLocalization.text(de: "Nacken", en: "neck"),
-            painCharacter: ScreenshotLocalization.text(de: "ziehend", en: "pulling"),
-            notes: ScreenshotLocalization.text(de: "Beobachtet und ohne Medikament dokumentiert.", en: "Observed and documented without medication."),
-            symptoms: ScreenshotLocalization.list(de: ["Kiefer-/Aufbissschmerz"], en: ["Jaw/bite pain"]),
-            triggers: ScreenshotLocalization.list(de: ["Bildschirmzeit"], en: ["Screen time"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Späterer Feierabend", en: "Later finish to the workday"),
+            painLocation: "Nacken",
+            painCharacter: "ziehend",
+            notes: "Beobachtet und ohne Medikament dokumentiert.",
+            symptoms: ["Kiefer-/Aufbissschmerz"],
+            triggers: ["Bildschirmzeit"],
+            functionalImpact: "Späterer Feierabend",
             medications: []
         )
         episodeFour.weatherSnapshot = WeatherSnapshot(snapshot: sampleWeatherSnapshot(for: fifteenDaysAgo), episode: episodeFour)
@@ -234,11 +231,8 @@ enum AppStoreScreenshotMode {
             MedicationDefinition(
                 catalogKey: "screenshot:acute",
                 groupID: "screenshot-medications",
-                groupTitle: ScreenshotLocalization.text(de: "Beispielmedikamente", en: "Sample Medications"),
-                groupFooter: ScreenshotLocalization.text(
-                    de: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
-                    en: "These anonymized medication names are only used to create screenshots."
-                ),
+                groupTitle: "Beispielmedikamente",
+                groupFooter: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
                 name: "Paracetamol",
                 category: .paracetamol,
                 suggestedDosage: "500 mg",
@@ -248,11 +242,8 @@ enum AppStoreScreenshotMode {
             MedicationDefinition(
                 catalogKey: "screenshot:support",
                 groupID: "screenshot-medications",
-                groupTitle: ScreenshotLocalization.text(de: "Beispielmedikamente", en: "Sample Medications"),
-                groupFooter: ScreenshotLocalization.text(
-                    de: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
-                    en: "These anonymized medication names are only used to create screenshots."
-                ),
+                groupTitle: "Beispielmedikamente",
+                groupFooter: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
                 name: "Ibuprofen",
                 category: .nsar,
                 suggestedDosage: "400 mg",
@@ -262,11 +253,8 @@ enum AppStoreScreenshotMode {
             MedicationDefinition(
                 catalogKey: "screenshot:reserve",
                 groupID: "screenshot-medications",
-                groupTitle: ScreenshotLocalization.text(de: "Beispielmedikamente", en: "Sample Medications"),
-                groupFooter: ScreenshotLocalization.text(
-                    de: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
-                    en: "These anonymized medication names are only used to create screenshots."
-                ),
+                groupTitle: "Beispielmedikamente",
+                groupFooter: "Diese anonymisierten Medikamentnamen dienen ausschließlich der Screenshot-Erstellung.",
                 name: "Metoclopramid",
                 category: .antiemetic,
                 suggestedDosage: "10 mg",

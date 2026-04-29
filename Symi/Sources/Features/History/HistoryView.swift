@@ -210,15 +210,15 @@ private enum JournalDateRange: String, CaseIterable, Identifiable {
     var displayTitle: String {
         switch self {
         case .all:
-            JournalLocalized.text(de: "Alle", en: "All")
+            "Alle"
         case .today:
-            JournalLocalized.text(de: "Heute", en: "Today")
+            "Heute"
         case .sevenDays:
-            JournalLocalized.text(de: "7 Tage", en: "7 days")
+            "7 Tage"
         case .thirtyDays:
-            JournalLocalized.text(de: "30 Tage", en: "30 days")
+            "30 Tage"
         case .custom:
-            JournalLocalized.text(de: "Custom", en: "Custom")
+            "Custom"
         }
     }
 }
@@ -235,15 +235,15 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
     var displayTitle: String {
         switch self {
         case .all:
-            JournalLocalized.text(de: "Alle", en: "All")
+            "Alle"
         case .light:
-            JournalLocalized.text(de: "Leicht", en: "Mild")
+            "Leicht"
         case .medium:
-            JournalLocalized.text(de: "Mittel", en: "Moderate")
+            "Mittel"
         case .strong:
-            JournalLocalized.text(de: "Stark", en: "Strong")
+            "Stark"
         case .veryStrong:
-            JournalLocalized.text(de: "Sehr stark", en: "Very strong")
+            "Sehr stark"
         }
     }
 
@@ -261,16 +261,6 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
         case .veryStrong:
             level == .veryHigh
         }
-    }
-}
-
-private enum JournalLocalized {
-    static var isEnglish: Bool {
-        Locale.current.language.languageCode?.identifier == "en"
-    }
-
-    static func text(de german: String, en english: String) -> String {
-        isEnglish ? english : german
     }
 }
 
@@ -423,13 +413,13 @@ private struct JournalActiveFilters: View {
                     }
 
                     if filters.requiresNotes {
-                        JournalRemovableChip(title: JournalLocalized.text(de: "Mit Notizen", en: "With notes")) {
+                        JournalRemovableChip(title: "Mit Notizen") {
                             filters.requiresNotes = false
                         }
                     }
 
                     if filters.requiresMedication {
-                        JournalRemovableChip(title: JournalLocalized.text(de: "Medikation", en: "Medication")) {
+                        JournalRemovableChip(title: "Medikation") {
                             filters.requiresMedication = false
                         }
                     }
@@ -463,14 +453,14 @@ private struct JournalFilterBar: View {
                 }
 
                 JournalChip(
-                    title: JournalLocalized.text(de: "Mit Notizen", en: "With notes"),
+                    title: "Mit Notizen",
                     isSelected: filters.requiresNotes
                 ) {
                     filters.requiresNotes.toggle()
                 }
 
                 JournalChip(
-                    title: JournalLocalized.text(de: "Medikation", en: "Medication"),
+                    title: "Medikation",
                     isSelected: filters.requiresMedication
                 ) {
                     filters.requiresMedication.toggle()
@@ -502,7 +492,7 @@ private struct JournalChip: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityValue(isSelected ? JournalLocalized.text(de: "Ausgewählt", en: "Selected") : "")
+        .accessibilityValue(isSelected ? "Ausgewählt" : "")
     }
 }
 
@@ -530,7 +520,7 @@ private struct JournalRemovableChip: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(JournalLocalized.isEnglish ? "Remove \(title)" : "\(title) entfernen")
+        .accessibilityLabel("\(title) entfernen")
     }
 }
 
@@ -750,7 +740,7 @@ private struct JournalDateRangeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityValue(isSelected ? JournalLocalized.text(de: "Ausgewählt", en: "Selected") : "")
+        .accessibilityValue(isSelected ? "Ausgewählt" : "")
     }
 }
 
