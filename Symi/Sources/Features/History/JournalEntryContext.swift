@@ -41,11 +41,11 @@ enum JournalEntryContext {
 
     static func medicationSummary(for episode: EpisodeRecord) -> String? {
         if let medicationName = acuteMedicationNames(for: episode).first {
-            return JournalEntryLocalized.isEnglish ? "\(medicationName) taken" : "\(medicationName) genommen"
+            return "\(medicationName) genommen"
         }
 
         if let medicationName = continuousMedicationNames(for: episode).first {
-            return JournalEntryLocalized.isEnglish ? "Medication recorded: \(medicationName)" : "Medikation erfasst: \(medicationName)"
+            return "Medikation erfasst: \(medicationName)"
         }
 
         return nil

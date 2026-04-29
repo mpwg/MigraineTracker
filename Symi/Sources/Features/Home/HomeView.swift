@@ -322,10 +322,10 @@ private struct OnboardingCard: View {
 
     private func remainingEntriesText(for entryCount: Int) -> String {
         let remainingEntries = max(5 - entryCount, 1)
-        if HomeLocalized.isEnglish {
-            return "\(remainingEntries) entr\(remainingEntries == 1 ? "y" : "ies")"
+        if remainingEntries == 1 {
+            return "1 Eintrag"
         }
-        return "\(remainingEntries) Eintrag\(remainingEntries == 1 ? "" : "e")"
+        return "\(remainingEntries) Einträge"
     }
 
     private var title: String {
@@ -723,9 +723,15 @@ private struct HomeMonthCalendarView: View {
     private var weekdaySymbols: [String] {
         let symbols = calendar.shortStandaloneWeekdaySymbols
         guard symbols.count == 7 else {
-            return HomeLocalized.isEnglish
-                ? ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
-                : ["MO", "DI", "MI", "DO", "FR", "SA", "SO"]
+            return [
+                "MO",
+                "DI",
+                "MI",
+                "DO",
+                "FR",
+                "SA",
+                "SO"
+            ]
         }
 
         return Array(symbols[1...6] + symbols[0...0]).map { $0.uppercased() }
@@ -846,9 +852,9 @@ private struct HomeCalendarDayCell: View {
             return "\(dateText), \(stateText), \(HomeLocalized.text(de: "keine Einträge", en: "no entries"))"
         }
 
-        let entryText = HomeLocalized.isEnglish
-            ? "\(entries.count) entr\(entries.count == 1 ? "y" : "ies")"
-            : "\(entries.count) Eintrag\(entries.count == 1 ? "" : "e")"
+        let entryText = entries.count == 1
+            ? "1 Eintrag"
+            : "\(entries.count) Einträge"
         let highestIntensity = entries.map(\.intensity).max() ?? 0
         return "\(dateText), \(stateText), \(entryText), \(HomeLocalized.text(de: "höchste Intensität", en: "highest intensity")) \(highestIntensity) \(HomeLocalized.text(de: "von", en: "out of")) 10"
     }
@@ -1108,9 +1114,6 @@ private struct HomePatternEmptyState: View {
             )
         }
 
-        if HomeLocalized.isEnglish {
-            return "\(recordedCount) of \(HomePatternPreviewData.minimumEpisodeCount) required pain or migraine entries are available. Once there is more data, Symi looks for careful patterns."
-        }
         return "\(recordedCount) von \(HomePatternPreviewData.minimumEpisodeCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern."
     }
 
@@ -1119,10 +1122,9 @@ private struct HomePatternEmptyState: View {
             return emptyState.title
         }
 
-        if HomeLocalized.isEnglish {
-            return recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "No careful pattern visible yet" : "Not enough entries for patterns yet"
-        }
-        return recordedCount >= HomePatternPreviewData.minimumEpisodeCount ? "Noch kein vorsichtiges Muster sichtbar" : "Noch nicht genug Einträge für Muster"
+        return recordedCount >= HomePatternPreviewData.minimumEpisodeCount
+            ? "Noch kein vorsichtiges Muster sichtbar"
+            : "Noch nicht genug Einträge für Muster"
     }
 
     private var emptyIconSize: CGFloat {
@@ -1392,18 +1394,20 @@ private struct AverageIntensityInsightCard: View {
 
     private var intensityDescription: String {
         if averageIntensity < 4 {
-            return HomeLocalized.isEnglish ? "mostly mild in \(entryText)" : "meist leicht in \(entryCount) Einträgen"
+            return "meist leicht in \(entryText)"
         }
 
         if averageIntensity < 7 {
-            return HomeLocalized.isEnglish ? "mostly mild to moderate in \(entryText)" : "meist leicht bis mittel in \(entryCount) Einträgen"
+            return "meist leicht bis mittel in \(entryText)"
         }
 
-        return HomeLocalized.isEnglish ? "more often stronger in \(entryText)" : "häufiger stärker in \(entryCount) Einträgen"
+        return "häufiger stärker in \(entryText)"
     }
 
     private var entryText: String {
-        HomeLocalized.isEnglish ? "\(entryCount) entr\(entryCount == 1 ? "y" : "ies")" : "\(entryCount) Einträgen"
+        entryCount == 1
+            ? "1 Eintrag"
+            : "\(entryCount) Einträgen"
     }
 }
 
@@ -1446,7 +1450,7 @@ private struct FrequencyInsightCard: View {
             return ""
         }
 
-        return HomeLocalized.isEnglish ? "\(first.name) is documented most often" : "\(first.name) ist am häufigsten dokumentiert"
+        return "\(first.name) ist am häufigsten dokumentiert"
     }
 }
 

@@ -2,7 +2,7 @@
   "sourceLanguage" : "de",
   "strings" : {
     "" : {
-
+      "shouldTranslate" : false
     },
     "/10" : {
       "localizations" : {

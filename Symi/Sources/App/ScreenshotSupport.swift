@@ -57,20 +57,6 @@ enum ScreenshotRoute: String, CaseIterable {
     case privacyInfo = "privacy-info"
 }
 
-enum ScreenshotLocalization {
-    static var isEnglish: Bool {
-        Locale.current.language.languageCode?.identifier == "en"
-    }
-
-    static func text(de german: String, en english: String) -> String {
-        isEnglish ? english : german
-    }
-
-    static func list(de german: [String], en english: [String]) -> [String] {
-        isEnglish ? english : german
-    }
-}
-
 struct ScreenshotSeed {
     let primaryEpisodeID: UUID
     let newEntryDate: Date
@@ -186,15 +172,12 @@ private enum ScreenshotSeedFactory {
             endedAt: todayAtNine.addingTimeInterval(3.5 * 60 * 60),
             type: .migraine,
             intensity: 8,
-            painLocation: ScreenshotLocalization.text(de: "links orbital", en: "left orbital"),
-            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
-            notes: ScreenshotLocalization.text(
-                de: "Screen-Seed: Dunkler Raum, Wasser und kurze Pause haben geholfen.",
-                en: "Screen seed: a dark room, water and a short break helped."
-            ),
-            symptoms: ScreenshotLocalization.list(de: ["Übelkeit", "Lichtempfindlichkeit", "Aura"], en: ["Nausea", "Light sensitivity", "Aura"]),
-            triggers: ScreenshotLocalization.list(de: ["Wetter", "Stress"], en: ["Weather", "Stress"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Arbeit nur eingeschränkt möglich", en: "Work only possible with limitations"),
+            painLocation: "links orbital",
+            painCharacter: "pochend",
+            notes: "Screen-Seed: Dunkler Raum, Wasser und kurze Pause haben geholfen.",
+            symptoms: ["Übelkeit", "Lichtempfindlichkeit", "Aura"],
+            triggers: ["Wetter", "Stress"],
+            functionalImpact: "Arbeit nur eingeschränkt möglich",
             menstruationStatus: .expected,
             medications: [sumatriptan]
         )
@@ -204,12 +187,12 @@ private enum ScreenshotSeedFactory {
             endedAt: fourDaysAgo.addingTimeInterval(2 * 60 * 60),
             type: .headache,
             intensity: 6,
-            painLocation: ScreenshotLocalization.text(de: "beidseitig frontal", en: "bilateral frontal"),
-            painCharacter: ScreenshotLocalization.text(de: "drückend", en: "pressing"),
-            notes: ScreenshotLocalization.text(de: "Viel Bildschirmarbeit am Nachmittag.", en: "A lot of screen work in the afternoon."),
-            symptoms: ScreenshotLocalization.list(de: ["Verspannung"], en: ["Tension"]),
-            triggers: ScreenshotLocalization.list(de: ["Stress", "erhöhte Arbeitsbelastung"], en: ["Stress", "High workload"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Konzentration reduziert", en: "Reduced concentration"),
+            painLocation: "beidseitig frontal",
+            painCharacter: "drückend",
+            notes: "Viel Bildschirmarbeit am Nachmittag.",
+            symptoms: ["Verspannung"],
+            triggers: ["Stress", "erhöhte Arbeitsbelastung"],
+            functionalImpact: "Konzentration reduziert",
             menstruationStatus: .none,
             medications: [magnesium]
         )
@@ -219,12 +202,12 @@ private enum ScreenshotSeedFactory {
             endedAt: twelveDaysAgo.addingTimeInterval(90 * 60),
             type: .unclear,
             intensity: 4,
-            painLocation: ScreenshotLocalization.text(de: "Hinterkopf", en: "back of head"),
-            painCharacter: ScreenshotLocalization.text(de: "dumpf", en: "dull"),
-            notes: ScreenshotLocalization.text(de: "Kurzer Verlauf ohne weitere Auffälligkeiten.", en: "Short episode without other notable issues."),
-            symptoms: ScreenshotLocalization.list(de: ["Müdigkeit"], en: ["Fatigue"]),
-            triggers: ScreenshotLocalization.list(de: ["Schlafdauer"], en: ["Sleep duration"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Leicht eingeschränkt", en: "Slightly limited"),
+            painLocation: "Hinterkopf",
+            painCharacter: "dumpf",
+            notes: "Kurzer Verlauf ohne weitere Auffälligkeiten.",
+            symptoms: ["Müdigkeit"],
+            triggers: ["Schlafdauer"],
+            functionalImpact: "Leicht eingeschränkt",
             menstruationStatus: .unknown,
             medications: [ibuprofen]
         )
@@ -234,12 +217,12 @@ private enum ScreenshotSeedFactory {
             endedAt: eightDaysAgo.addingTimeInterval(2.5 * 60 * 60),
             type: .migraine,
             intensity: 7,
-            painLocation: ScreenshotLocalization.text(de: "rechte Schläfe", en: "right temple"),
-            painCharacter: ScreenshotLocalization.text(de: "pulsierend", en: "pulsating"),
-            notes: ScreenshotLocalization.text(de: "Nach langem Arbeitsblock bewusst Pausen eingeplant.", en: "Planned breaks after a long work block."),
-            symptoms: ScreenshotLocalization.list(de: ["Lichtempfindlichkeit"], en: ["Light sensitivity"]),
-            triggers: ScreenshotLocalization.list(de: ["Stress", "erhöhte Arbeitsbelastung"], en: ["Stress", "High workload"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Ruhiger Nachmittag nötig", en: "Quiet afternoon needed"),
+            painLocation: "rechte Schläfe",
+            painCharacter: "pulsierend",
+            notes: "Nach langem Arbeitsblock bewusst Pausen eingeplant.",
+            symptoms: ["Lichtempfindlichkeit"],
+            triggers: ["Stress", "erhöhte Arbeitsbelastung"],
+            functionalImpact: "Ruhiger Nachmittag nötig",
             menstruationStatus: .none,
             medications: []
         )
@@ -249,12 +232,12 @@ private enum ScreenshotSeedFactory {
             endedAt: eighteenDaysAgo.addingTimeInterval(9 * 60 * 60),
             type: .headache,
             intensity: 5,
-            painLocation: ScreenshotLocalization.text(de: "Stirn", en: "forehead"),
-            painCharacter: ScreenshotLocalization.text(de: "drückend", en: "pressing"),
-            notes: ScreenshotLocalization.text(de: "Nach Sport und Essen rasch besser geworden.", en: "Improved quickly after exercise and food."),
-            symptoms: ScreenshotLocalization.list(de: ["Müdigkeit"], en: ["Fatigue"]),
-            triggers: ScreenshotLocalization.list(de: ["Stress", "Sport"], en: ["Stress", "Exercise"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Kurze Pause reichte", en: "A short break was enough"),
+            painLocation: "Stirn",
+            painCharacter: "drückend",
+            notes: "Nach Sport und Essen rasch besser geworden.",
+            symptoms: ["Müdigkeit"],
+            triggers: ["Stress", "Sport"],
+            functionalImpact: "Kurze Pause reichte",
             menstruationStatus: .none,
             medications: []
         )
@@ -264,12 +247,12 @@ private enum ScreenshotSeedFactory {
             endedAt: twentyFourDaysAgo.addingTimeInterval(15 * 60 * 60),
             type: .migraine,
             intensity: 8,
-            painLocation: ScreenshotLocalization.text(de: "Schläfen", en: "temples"),
-            painCharacter: ScreenshotLocalization.text(de: "pochend", en: "throbbing"),
-            notes: ScreenshotLocalization.text(de: "Wetterwechsel und Zykluskontext notiert.", en: "Weather change and cycle context noted."),
-            symptoms: ScreenshotLocalization.list(de: ["Übelkeit", "Geräuschempfindlichkeit"], en: ["Nausea", "Sound sensitivity"]),
-            triggers: ScreenshotLocalization.list(de: ["Wetter", "Stress", "Regel"], en: ["Weather", "Stress", "Period"]),
-            functionalImpact: ScreenshotLocalization.text(de: "Tagesplanung angepasst", en: "Adjusted daily plans"),
+            painLocation: "Schläfen",
+            painCharacter: "pochend",
+            notes: "Wetterwechsel und Zykluskontext notiert.",
+            symptoms: ["Übelkeit", "Geräuschempfindlichkeit"],
+            triggers: ["Wetter", "Stress", "Regel"],
+            functionalImpact: "Tagesplanung angepasst",
             menstruationStatus: .active,
             medications: []
         )
@@ -277,7 +260,7 @@ private enum ScreenshotSeedFactory {
         let weatherSnapshot = WeatherSnapshot(
             snapshot: WeatherSnapshotData(
                 recordedAt: todayAtNine,
-                condition: ScreenshotLocalization.text(de: "Leichter Regen", en: "Light rain"),
+                condition: "Leichter Regen",
                 temperature: 16.3,
                 humidity: 74,
                 pressure: 1007,
@@ -367,7 +350,7 @@ private struct ScreenshotWeatherService: WeatherService {
 
         return WeatherSnapshotData(
             recordedAt: date,
-            condition: ScreenshotLocalization.text(de: "Leichter Regen", en: "Light rain"),
+            condition: "Leichter Regen",
             temperature: 16.3,
             humidity: 74,
             pressure: 1007,
