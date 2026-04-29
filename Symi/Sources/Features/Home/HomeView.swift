@@ -448,8 +448,10 @@ private struct OnboardingStepRow: View {
 
     private var iconForeground: Color {
         switch status {
-        case .active, .completedDominant:
+        case .active:
             AppTheme.petrol(for: colorScheme)
+        case .completedDominant:
+            AppTheme.textPrimary(for: colorScheme).opacity(0.68)
         case .muted:
             AppTheme.petrol(for: colorScheme)
         }
@@ -457,25 +459,36 @@ private struct OnboardingStepRow: View {
 
     private var iconBackground: Color {
         switch status {
-        case .active, .completedDominant:
+        case .active:
             AppTheme.sage(for: colorScheme).opacity(0.22)
+        case .completedDominant:
+            AppTheme.sage(for: colorScheme).opacity(0.14)
         case .muted:
             AppTheme.sage(for: colorScheme).opacity(0.12)
         }
     }
 
     private var titleColor: Color {
-        AppTheme.petrol(for: colorScheme)
+        switch status {
+        case .active:
+            AppTheme.petrol(for: colorScheme)
+        case .completedDominant:
+            AppTheme.textPrimary(for: colorScheme).opacity(0.74)
+        case .muted:
+            AppTheme.petrol(for: colorScheme)
+        }
     }
 
     private var subtitleColor: Color {
-        isPrimary ? AppTheme.textPrimary(for: colorScheme).opacity(0.72) : AppTheme.textSecondary(for: colorScheme)
+        status == .active ? AppTheme.textPrimary(for: colorScheme).opacity(0.72) : AppTheme.textSecondary(for: colorScheme)
     }
 
     private var titleFont: Font {
         switch status {
-        case .active, .completedDominant:
+        case .active:
             .title3.weight(.semibold)
+        case .completedDominant:
+            .subheadline.weight(.semibold)
         case .muted:
             .footnote.weight(.semibold)
         }
@@ -483,19 +496,28 @@ private struct OnboardingStepRow: View {
 
     private var iconFont: Font {
         switch status {
-        case .active, .completedDominant:
+        case .active:
             .subheadline.weight(.bold)
+        case .completedDominant:
+            .footnote.weight(.bold)
         case .muted:
             .footnote.weight(.bold)
         }
     }
 
     private var iconSize: CGFloat {
-        status == .muted ? 32 : 34
+        status == .active ? 34 : 32
     }
 
     private var rowOpacity: Double {
-        status == .muted ? 0.62 : 1
+        switch status {
+        case .active:
+            1
+        case .completedDominant:
+            0.78
+        case .muted:
+            0.62
+        }
     }
 
     private var isPrimary: Bool {
@@ -637,7 +659,7 @@ private struct InsightCard: View {
     }
 
     private var backgroundOpacity: Double {
-        prominence == .primary ? 0.16 : 0.07
+        prominence == .primary ? 0.18 : 0.07
     }
 }
 
@@ -1739,7 +1761,7 @@ private enum HomeRhythm {
     static let xxl: CGFloat = 24
     static let primaryButtonHeight: CGFloat = 60
     static let primaryStepBottomSpacing: CGFloat = 6
-    static let primaryInsightPaddingBoost: CGFloat = 6
+    static let primaryInsightPaddingBoost: CGFloat = 8
 }
 
 private extension View {
