@@ -31,7 +31,7 @@ struct ReportView: View {
                     .background(
                         RadialGradient(
                             colors: [
-                                SymiColors.sage.color.opacity(0.12),
+                                SymiColors.sage.color.opacity(SymiOpacity.faintSurface),
                                 Color.clear
                             ],
                             center: .center,
@@ -66,22 +66,22 @@ struct ReportView: View {
 
                 Text("Kein Ersatz für eine ärztliche Diagnose")
                     .font(.caption)
-                    .foregroundStyle(SymiColors.textSecondary.color.opacity(0.5))
+                    .foregroundStyle(SymiColors.textSecondary.color.opacity(SymiOpacity.textMuted))
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, SymiSpacing.md)
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.vertical, layout.verticalPadding)
-            .padding(.bottom, 100)
+            .padding(.bottom, SymiSpacing.reportBottomPadding)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
         .overlay(
             LinearGradient(
-                colors: [Color.clear, Color(.systemBackground).opacity(0.7)],
+                colors: [Color.clear, Color(.systemBackground).opacity(SymiOpacity.appBackgroundSurface)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 80)
+            .frame(height: SymiSize.reportFadeHeight)
             .allowsHitTesting(false),
             alignment: .bottom
         )
@@ -171,11 +171,11 @@ private struct ReportLayoutMetrics {
     }
 
     var heroHeight: CGFloat {
-        isCompactHeight ? 96 : 104
+        isCompactHeight ? SymiSize.reportHeroCompactHeight : SymiSize.reportHeroRegularHeight
     }
 
     var heroMaxWidth: CGFloat {
-        isCompactHeight ? 300 : 340
+        isCompactHeight ? SymiSize.reportHeroCompactMaxWidth : SymiSize.reportHeroRegularMaxWidth
     }
 
     var heroVerticalPadding: CGFloat {
@@ -232,8 +232,8 @@ private struct ReportInfoCardView: View {
                     Image(systemName: "doc.text")
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(SymiColors.sage.color)
-                        .frame(width: 36, height: 36)
-                        .background(SymiColors.mist.color, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .frame(width: SymiSize.homeCalendarDayNumber, height: SymiSize.homeCalendarDayNumber)
+                        .background(SymiColors.mist.color, in: RoundedRectangle(cornerRadius: SymiRadius.flowPill, style: .continuous))
 
                     Text("Bericht")
                         .font(.title3.weight(.semibold))
@@ -242,7 +242,7 @@ private struct ReportInfoCardView: View {
 
                 Text("Alle wichtigen Einträge kompakt und verständlich aufbereitet")
                     .font(.subheadline)
-                    .foregroundStyle(SymiColors.textSecondary.color.opacity(0.86))
+                    .foregroundStyle(SymiColors.textSecondary.color.opacity(SymiOpacity.heroSecondaryText))
             }
 
             Button(action: openDateSelection) {
@@ -254,14 +254,14 @@ private struct ReportInfoCardView: View {
 
                         Text("Zeitraum deiner Auswertung")
                             .font(.subheadline)
-                            .foregroundStyle(SymiColors.textSecondary.color.opacity(0.72))
+                            .foregroundStyle(SymiColors.textSecondary.color.opacity(SymiOpacity.textReadableSecondary))
                     }
 
                     Spacer(minLength: SymiSpacing.lg)
 
                     Image(systemName: "chevron.right")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(SymiColors.textSecondary.color.opacity(0.72))
+                        .foregroundStyle(SymiColors.textSecondary.color.opacity(SymiOpacity.textReadableSecondary))
                 }
                 .contentShape(Rectangle())
             }
@@ -284,11 +284,11 @@ private struct ReportActionCardView: View {
                     .foregroundStyle(SymiColors.sage.color)
             }
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(SymiColors.textPrimary.color.opacity(0.86))
+            .foregroundStyle(SymiColors.textPrimary.color.opacity(SymiOpacity.heroSecondaryText))
 
             Text("Der Bericht wird beim Öffnen automatisch erstellt")
                 .font(.footnote.weight(.regular))
-                .foregroundStyle(SymiColors.textSecondary.color.opacity(0.5))
+                .foregroundStyle(SymiColors.textSecondary.color.opacity(SymiOpacity.textMuted))
 
             if let errorMessage {
                 Text(errorMessage)
@@ -311,7 +311,7 @@ private struct FloatingReportButton: View {
                 .ignoresSafeArea()
 
             LinearGradient(
-                colors: [Color.clear, Color(.systemBackground).opacity(0.7)],
+                colors: [Color.clear, Color(.systemBackground).opacity(SymiOpacity.appBackgroundSurface)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -321,7 +321,7 @@ private struct FloatingReportButton: View {
                 HStack(spacing: SymiSpacing.xs) {
                     if isLoading {
                         ProgressView()
-                            .tint(.white)
+                            .tint(SymiColors.onAccent.color)
                     } else {
                         Image(systemName: "doc.text.magnifyingglass")
                             .imageScale(.medium)
@@ -335,12 +335,12 @@ private struct FloatingReportButton: View {
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.bottom, SymiSpacing.lg)
         }
-        .frame(height: 100)
+        .frame(height: SymiSize.reportFloatingButtonHeight)
         .overlay(
-            Divider().opacity(0.15),
+            Divider().opacity(SymiOpacity.softFill),
             alignment: .top
         )
-        .shadow(color: SymiColors.primaryPetrol.color.opacity(0.12), radius: 18, x: 0, y: -8)
+        .shadow(color: SymiColors.primaryPetrol.color.opacity(SymiOpacity.faintSurface), radius: 18, x: 0, y: -8)
     }
 }
 
@@ -374,8 +374,11 @@ private struct ReportDateSelectionSheet: View {
                             }
                         }
                         .padding(.horizontal, SymiSpacing.lg)
-                        .frame(minHeight: 48)
-                        .background(SymiColors.mist.color.opacity(selectedDateRange == range ? 0.7 : 0), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .frame(minHeight: SymiSize.reportDateRowMinHeight)
+                        .background(
+                            SymiColors.mist.color.opacity(selectedDateRange == range ? SymiOpacity.appBackgroundSurface : SymiOpacity.entryDetailTopFadeEnd),
+                            in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -392,8 +395,8 @@ private struct ReportCardSurfaceModifier: ViewModifier {
         content
             .padding(SymiSpacing.xxl)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: SymiColors.primaryPetrol.color.opacity(0.08), radius: 16, x: 0, y: 8)
+            .background(SymiColors.card.color, in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+            .shadow(color: SymiColors.primaryPetrol.color.opacity(SymiOpacity.hairline), radius: 16, x: 0, y: 8)
     }
 }
 
@@ -402,8 +405,8 @@ private struct ReportActionCardSurfaceModifier: ViewModifier {
         content
             .padding(SymiSpacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: SymiColors.primaryPetrol.color.opacity(0.045), radius: 10, x: 0, y: 5)
+            .background(SymiColors.card.color, in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+            .shadow(color: SymiColors.primaryPetrol.color.opacity(SymiOpacity.glassRegularShadow), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -413,11 +416,11 @@ private struct ReportDateRowButtonStyle: ButtonStyle {
             .padding(.horizontal, SymiSpacing.sm)
             .padding(.vertical, SymiSpacing.xs)
             .background(
-                SymiColors.mist.color.opacity(configuration.isPressed ? 0.72 : 0),
-                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                SymiColors.mist.color.opacity(configuration.isPressed ? SymiOpacity.textReadableSecondary : SymiOpacity.entryDetailTopFadeEnd),
+                in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
             )
-            .scaleEffect(configuration.isPressed ? 0.99 : 1)
-            .opacity(configuration.isPressed ? 0.92 : 1)
+            .scaleEffect(configuration.isPressed ? SymiOpacity.reportPressedScale : SymiOpacity.opaque)
+            .opacity(configuration.isPressed ? SymiOpacity.pressedContent : SymiOpacity.opaque)
             .animation(.spring(response: 0.22, dampingFraction: 0.86), value: configuration.isPressed)
     }
 }
@@ -436,22 +439,27 @@ private struct ReportPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(SymiTypography.button)
-            .foregroundStyle(.white)
+            .foregroundStyle(SymiColors.onAccent.color)
             .padding(.vertical, SymiSpacing.lg)
             .frame(maxWidth: .infinity, minHeight: SymiSize.primaryButtonHeight)
             .background(
                 LinearGradient(
                     colors: [
-                        SymiColors.primaryPetrol.color.opacity(configuration.isPressed ? 0.88 : 1),
-                        SymiColors.primaryPetrol.color.opacity(configuration.isPressed ? 0.82 : 0.94)
+                        SymiColors.primaryPetrol.color.opacity(configuration.isPressed ? SymiOpacity.reportPrimaryPressedStart : SymiOpacity.opaque),
+                        SymiColors.primaryPetrol.color.opacity(configuration.isPressed ? SymiOpacity.reportPrimaryPressedEnd : SymiOpacity.reportPrimaryRestingEnd)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
                 in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous)
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .shadow(color: SymiColors.primaryPetrol.color.opacity(configuration.isPressed ? 0.22 : 0.18), radius: configuration.isPressed ? 12 : 10, x: 0, y: configuration.isPressed ? 6 : 5)
+            .scaleEffect(configuration.isPressed ? SymiOpacity.reportPrimaryPressedScale : SymiOpacity.opaque)
+            .shadow(
+                color: SymiColors.primaryPetrol.color.opacity(configuration.isPressed ? SymiOpacity.backgroundAccent : SymiOpacity.secondaryFill),
+                radius: configuration.isPressed ? SymiSpacing.md : SymiSpacing.sm,
+                x: SymiSpacing.zero,
+                y: configuration.isPressed ? SymiSpacing.compact : SymiSpacing.xxs
+            )
             .animation(.spring(response: 0.24, dampingFraction: 0.82), value: configuration.isPressed)
     }
 }

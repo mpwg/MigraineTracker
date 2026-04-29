@@ -62,6 +62,7 @@ nonisolated enum SymiSpacing {
     static let entryDetailDeleteBottomPadding: CGFloat = 38
     static let dataSharingContentBottomPadding: CGFloat = 132
     static let dataSharingBulletIndent: CGFloat = 30
+    static let reportBottomPadding: CGFloat = 100
 }
 
 nonisolated enum SymiRadius {
@@ -205,6 +206,13 @@ nonisolated enum SymiSize {
     static let journalActiveFilterChipMinHeight: CGFloat = 34
     static let journalEntryCardMinHeight: CGFloat = 76
     static let journalEmptyStateMinHeight: CGFloat = 180
+    static let reportHeroCompactHeight: CGFloat = 96
+    static let reportHeroRegularHeight: CGFloat = 104
+    static let reportHeroCompactMaxWidth: CGFloat = 300
+    static let reportHeroRegularMaxWidth: CGFloat = 340
+    static let reportDateRowMinHeight: CGFloat = 48
+    static let reportFloatingButtonHeight: CGFloat = 100
+    static let reportFadeHeight: CGFloat = 80
 }
 
 nonisolated enum SymiStroke {
@@ -299,4 +307,16 @@ nonisolated enum SymiOpacity {
     static let entryDetailDeleteScale: Double = 0.98
     static let entryDetailSecondaryText: Double = 0.84
     static let entryDetailTertiaryText: Double = 0.82
+    static let hiddenDebugControl: Double = 0.01
+    static let subtleButtonHighlight: Double = 0.11
+    static let insightSecondaryFill: Double = 0.07
+    static let textMuted: Double = 0.50
+    static let iconMuted: Double = 0.55
+    static let textReadableSecondary: Double = 0.72
+    static let reportPressedScale: Double = 0.99
+    static let reportPrimaryPressedScale: Double = 0.98
+    static let pressedContent: Double = 0.92
+    static let reportPrimaryPressedStart: Double = 0.88
+    static let reportPrimaryRestingEnd: Double = 0.94
+    static let reportPrimaryPressedEnd: Double = 0.82
 }

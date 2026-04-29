@@ -200,7 +200,11 @@ struct SettingsView: View {
     }
 
     private var syncContractSummary: String {
-        "Sync ist halbautomatisch: Aktivieren startet sofort einen Abgleich; App-Start lädt den gespeicherten Sync-Status und startet den Provider. Danach löst du den Cloud-Abgleich bewusst mit `Jetzt synchronisieren` aus. CloudKit-Subscriptions werden nicht angelegt; stale Stände, ungesyncte Records und Konflikte bleiben sichtbar."
+        [
+            "Sync ist halbautomatisch: Aktivieren startet sofort einen Abgleich; App-Start lädt den gespeicherten Sync-Status und startet den Provider.",
+            "Danach löst du den Cloud-Abgleich bewusst mit `Jetzt synchronisieren` aus.",
+            "CloudKit-Subscriptions werden nicht angelegt; stale Stände, ungesyncte Records und Konflikte bleiben sichtbar."
+        ].joined(separator: " ")
     }
 
     private var statusBadge: some View {
@@ -609,7 +613,11 @@ private struct SyncStatusView: View {
             }
 
             Section("Sync-Vertrag") {
-                Text("Symi arbeitet lokal-first. Bei aktivem iCloud-Sync startet ein neuer Abgleich sofort nach dem Aktivieren und danach nur, wenn du ihn mit `Jetzt synchronisieren` auslöst. Beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet; Push- oder Subscription-gesteuerte Hintergrundabgleiche gibt es derzeit nicht.")
+                Text([
+                    "Symi arbeitet lokal-first.",
+                    "Bei aktivem iCloud-Sync startet ein neuer Abgleich sofort nach dem Aktivieren und danach nur, wenn du ihn mit `Jetzt synchronisieren` auslöst.",
+                    "Beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet; Push- oder Subscription-gesteuerte Hintergrundabgleiche gibt es derzeit nicht."
+                ].joined(separator: " "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .brandGroupedRow()

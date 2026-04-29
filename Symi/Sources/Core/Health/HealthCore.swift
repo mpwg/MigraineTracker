@@ -66,7 +66,15 @@ enum HealthDataCatalog {
         .init(id: .heartRate, direction: .read, category: .heart, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierHeartRate", availabilityNote: nil, rationale: "Herzfrequenz im Umfeld einer Episode kann körperlichen Stress als Kontext sichtbar machen."),
         .init(id: .restingHeartRate, direction: .read, category: .heart, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierRestingHeartRate", availabilityNote: nil, rationale: "Der Ruhepuls ergänzt den Tageskontext, ohne eine medizinische Bewertung vorzunehmen."),
         .init(id: .heartRateVariability, direction: .read, category: .heart, defaultEnabled: true, healthKitIdentifier: "HKQuantityTypeIdentifierHeartRateVariabilitySDNN", availabilityNote: nil, rationale: "HRV kann als neutraler Kontextwert für Stress und Erholung angezeigt werden."),
-        .init(id: .menstrualFlow, direction: .read, category: .cycle, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierMenstrualFlow", availabilityNote: "Ab iOS 18 verfügbar; auf älteren Systemen wird der Typ ausgelassen.", rationale: "Zyklusdaten können bei migränebezogenen Mustern relevant sein, bleiben aber reine Kontextdaten."),
+        .init(
+            id: .menstrualFlow,
+            direction: .read,
+            category: .cycle,
+            defaultEnabled: true,
+            healthKitIdentifier: "HKCategoryTypeIdentifierMenstrualFlow",
+            availabilityNote: "Ab iOS 18 verfügbar; auf älteren Systemen wird der Typ ausgelassen.",
+            rationale: "Zyklusdaten können bei migränebezogenen Mustern relevant sein, bleiben aber reine Kontextdaten."
+        ),
         .init(id: .headache, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierHeadache", availabilityNote: nil, rationale: "Vorhandene Health-Kopfschmerzsymptome werden als externe Quelle kenntlich gemacht."),
         .init(id: .nausea, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierNausea", availabilityNote: nil, rationale: "Übelkeit ist ein häufiges Begleitsymptom von Migräne."),
         .init(id: .dizziness, direction: .read, category: .symptom, defaultEnabled: true, healthKitIdentifier: "HKCategoryTypeIdentifierDizziness", availabilityNote: nil, rationale: "Schwindel kann als Begleitsymptom den Episodenkontext ergänzen."),
