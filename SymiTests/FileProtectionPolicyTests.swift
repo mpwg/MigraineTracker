@@ -74,10 +74,14 @@ struct FileProtectionPolicyTests {
 }
 
 private func expectCompleteProtectionWhenAvailable(at url: URL, fileManager: FileManager = .default) throws {
+    #if !os(iOS) || targetEnvironment(macCatalyst)
+    return
+    #else
     let protection = try fileManager.attributesOfItem(atPath: url.path)[.protectionKey] as? FileProtectionType
     if let protection {
         #expect(protection == ProtectedFileStorage.fileProtectionType)
     }
+    #endif
 }
 
 private func makeTemporaryDirectory() throws -> URL {

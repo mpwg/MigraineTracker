@@ -2,17 +2,23 @@ import Foundation
 
 nonisolated enum ProtectedFileStorage {
     static let fileProtectionType = FileProtectionType.complete
+    private static var supportsFileProtection: Bool {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        true
+        #else
+        false
+        #endif
+    }
 
     static func createProtectedDirectory(
         at url: URL,
         fileManager: FileManager = .default,
         excludedFromBackup: Bool = false
     ) throws {
-        try fileManager.createDirectory(
-            at: url,
-            withIntermediateDirectories: true,
-            attributes: [.protectionKey: fileProtectionType]
-        )
+        let attributes: [FileAttributeKey: Any]? = supportsFileProtection
+            ? [.protectionKey: fileProtectionType]
+            : nil
+        try fileManager.createDirectory(at: url, withIntermediateDirectories: true, attributes: attributes)
         try applyProtection(to: url, fileManager: fileManager, excludedFromBackup: excludedFromBackup)
     }
 
@@ -25,7 +31,9 @@ nonisolated enum ProtectedFileStorage {
             return
         }
 
-        try fileManager.setAttributes([.protectionKey: fileProtectionType], ofItemAtPath: url.path)
+        if supportsFileProtection {
+            try fileManager.setAttributes([.protectionKey: fileProtectionType], ofItemAtPath: url.path)
+        }
         try setBackupExclusion(excludedFromBackup, for: url)
     }
 
