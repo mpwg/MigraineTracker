@@ -1,0 +1,20 @@
+Symi ist ein ruhiges Migräne-Tagebuch für mehr gute Tage. Die App hilft dir, Beschwerden schnell festzuhalten, Muster besser zu verstehen und deine Daten übersichtlich für dich oder ein Gespräch mit Ärztinnen und Ärzten vorzubereiten.
+
+Ein neuer Eintrag ist in wenigen Sekunden erstellt: Art der Beschwerden wählen, Intensität festhalten, Zeitpunkt bestätigen und bei Bedarf Symptome, Trigger, Notizen, Schmerzort, Medikamente und Wetter ergänzen.
+
+Symi bleibt bewusst klar und privat. Deine Daten liegen standardmäßig lokal auf deinem iPhone. iCloud-Synchronisation ist optional und kann bewusst aktiviert werden, wenn du deine Einträge über iCloud sichern oder abgleichen möchtest.
+
+Wichtige Funktionen:
+
+- schnelles Tagebuch für Migräne, Kopfschmerz und unklare Beschwerden
+- Intensität, Zeitpunkt, Symptome, Trigger, Notizen und Schmerzlokalisation
+- Medikamentendokumentation inklusive eigener Vorlagen
+- Wetterkontext über Apple Weather
+- optionaler Apple-Health-Kontext, sofern verfügbar und von dir erlaubt
+- Kalender, Tagesansicht, Detailansicht und Bearbeiten bestehender Einträge
+- PDF-Berichte für frei wählbare Zeiträume
+- JSON5-Backup und Import mit Vorschau
+- optionale iCloud-Synchronisation mit Konfliktübersicht und Sync-Protokoll
+- lokale Verarbeitung ohne Account und ohne eigenes Backend
+
+Symi ist keine Diagnose-App und ersetzt keine medizinische Beratung. Die App unterstützt dich dabei, deine Beobachtungen im Alltag strukturierter zu dokumentieren.

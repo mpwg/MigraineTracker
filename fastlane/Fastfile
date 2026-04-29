@@ -290,6 +290,44 @@ def current_marketing_version
   release_build_settings.fetch("MARKETING_VERSION")
 end
 
+def validate_release_version!(version)
+  UI.user_error!("Version fehlt.") if version.to_s.strip.empty?
+  UI.user_error!("Ungültige Version '#{version}'. Erwartet wird das Format X.Y.Z.") unless version.match?(/^\d+\.\d+\.\d+$/)
+
+  app_version = current_marketing_version
+  UI.user_error!("Version '#{version}' passt nicht zu MARKETING_VERSION '#{app_version}'.") unless app_version == version
+end
+
+def validate_release_artifacts!
+  metadata_files = Dir.glob(File.join(REPO_ROOT, "fastlane", "metadata", "**", "*")).select { |path| File.file?(path) }
+  screenshot_files = Dir.glob(File.join(SCREENSHOT_ROOT, "**", "*")).select { |path| File.file?(path) && File.extname(path).casecmp(".png").zero? }
+
+  UI.user_error!("Keine versionierten Metadaten unter fastlane/metadata gefunden.") if metadata_files.empty?
+  UI.user_error!("Keine versionierten Screenshots unter fastlane/screenshots gefunden.") if screenshot_files.empty?
+
+  SCREENSHOT_LANGUAGES.each do |language_config|
+    language = language_config.fetch(:language)
+    directory = screenshot_language_directory(IOS_SCREENSHOT_OUTPUT, language: language)
+    UI.user_error!("Keine Screenshots für #{language} unter #{directory} gefunden.") if Dir.glob(File.join(directory, "*.png")).empty?
+  end
+end
+
+def app_store_version_exists?(api_key:, version:)
+  require "spaceship"
+
+  Spaceship::ConnectAPI.token = api_key
+  app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+  UI.user_error!("App '#{APP_IDENTIFIER}' wurde in App Store Connect nicht gefunden.") unless app
+
+  app.get_app_store_versions(platform: "IOS").any? { |app_store_version| app_store_version.version_string == version }
+end
+
+def ensure_version_not_released!(api_key:, version:)
+  return unless app_store_version_exists?(api_key: api_key, version: version)
+
+  UI.user_error!("Version #{version} existiert bereits in App Store Connect.")
+end
+
 def current_release_tag
   if ENV["GITHUB_REF_TYPE"] == "tag" && !ENV["GITHUB_REF_NAME"].to_s.empty?
     ENV["GITHUB_REF_NAME"]
@@ -531,12 +569,19 @@ platform :ios do
   end
 
   desc "Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch"
-  lane :release_testflight do
+  lane :beta do |options|
+    changelog = options[:changelog].to_s.strip
+    UI.user_error!("Changelog fehlt.") if changelog.empty?
+
     api_key = app_store_api_key
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
     build_number = next_build_number
+    increment_build_number(
+      xcodeproj: PROJECT_PATH,
+      build_number: build_number
+    )
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
     validate_release_ipa_entitlements!(ipa_path)
 
@@ -544,23 +589,48 @@ platform :ios do
       api_key: api_key,
       app_identifier: APP_IDENTIFIER,
       ipa: ipa_path,
+      changelog: changelog,
       skip_waiting_for_build_processing: true,
       skip_submission: true
     )
   end
 
-  desc "Erzeugt Screenshots, baut eine Distribution-IPA mit match und lädt sie für die manuelle App-Store-Einreichung hoch"
-  lane :release_app_store do
-    ensure_release_tag_matches_version!
+  desc "Validiert Version, Metadaten und Screenshots für einen App-Store-Release"
+  lane :verify_release do |options|
+    version = options[:version].to_s.strip
+
+    validate_release_version!(version)
+    validate_release_artifacts!
+
+    UI.message("Release-Verifikation für Version #{version} erfolgreich.")
+  end
+
+  desc "Prüft, dass eine Version in App Store Connect noch nicht existiert"
+  lane :ensure_version_not_released do |options|
+    version = options[:version].to_s.strip
+
+    validate_release_version!(version)
+    ensure_version_not_released!(api_key: app_store_api_key, version: version)
+
+    UI.message("Version #{version} existiert noch nicht in App Store Connect.")
+  end
+
+  desc "Baut eine Distribution-IPA und lädt sie mit Metadaten und Screenshots für die manuelle App-Store-Einreichung hoch"
+  lane :release do |options|
+    version = options[:version].to_s.strip
+
+    verify_release(version: version)
 
     api_key = app_store_api_key
-    version = current_marketing_version
-    capture_all_screenshots!(pages: screenshot_page_selection)
-    upload_screenshot_sets!(api_key: api_key, version: version)
+    ensure_version_not_released!(api_key: api_key, version: version)
     sync_release_signing!(api_key: api_key)
 
     profile_mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING] || {}
     build_number = next_build_number
+    increment_build_number(
+      xcodeproj: PROJECT_PATH,
+      build_number: build_number
+    )
     ipa_path = build_release_ipa!(build_number: build_number, profile_mapping: profile_mapping)
     validate_release_ipa_entitlements!(ipa_path)
 
@@ -569,14 +639,26 @@ platform :ios do
       app_identifier: APP_IDENTIFIER,
       app_version: version,
       ipa: ipa_path,
+      metadata_path: File.join(REPO_ROOT, "fastlane", "metadata"),
+      screenshots_path: IOS_SCREENSHOT_OUTPUT,
       submit_for_review: false,
       automatic_release: false,
-      force: true,
-      skip_metadata: true,
-      skip_screenshots: true,
+      force: false,
+      skip_metadata: false,
+      skip_screenshots: false,
       platform: "ios",
       precheck_default_rule_level: :warn,
-      run_precheck_before_submit: false
+      run_precheck_before_submit: true
     )
+  end
+
+  desc "Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios beta verwenden"
+  lane :release_testflight do |options|
+    beta(changelog: options[:changelog].to_s.empty? ? "Manueller TestFlight-Build" : options[:changelog])
+  end
+
+  desc "Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios release verwenden"
+  lane :release_app_store do |options|
+    release(version: options[:version].to_s.empty? ? current_marketing_version : options[:version])
   end
 end

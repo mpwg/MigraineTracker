@@ -1,0 +1,5 @@
+Symi ist ein lokal-first Migräne-Tagebuch. Die App stellt keine Diagnose, gibt keine Therapieempfehlungen und ersetzt keine medizinische Beratung.
+
+Gesundheitsdaten bleiben standardmäßig lokal auf dem Gerät. iCloud-Synchronisation ist optional und muss aktiv eingeschaltet werden. Apple-Health-Zugriff ist optional und wird nur nach ausdrücklicher Systemfreigabe verwendet. PDF-Export und Backup werden nur durch direkte Nutzeraktion erzeugt.
+
+Für den Review sind kein Account und keine Zugangsdaten erforderlich.

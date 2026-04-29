@@ -4,8 +4,8 @@ Symi ist ein lokal-first Migräne Tagebuch für mehr gute Tage. Die App kombinie
 
 [![Im App Store laden](https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/white/de-de)](https://apps.apple.com/app/id6761906025)
 
-[![App Store Release](https://github.com/mpwg/Symi/actions/workflows/ios-app-store.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/ios-app-store.yml)
-[![TestFlight Release](https://github.com/mpwg/Symi/actions/workflows/ios-testflight.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/ios-testflight.yml)
+[![App Store Release](https://github.com/mpwg/Symi/actions/workflows/appstore.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/appstore.yml)
+[![TestFlight](https://github.com/mpwg/Symi/actions/workflows/testflight.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/testflight.yml)
 
 [![iOS CI](https://github.com/mpwg/Symi/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/ios-ci.yml)
 [![CodeQL](https://github.com/mpwg/Symi/actions/workflows/codeql.yml/badge.svg)](https://github.com/mpwg/Symi/actions/workflows/codeql.yml)
@@ -102,12 +102,13 @@ CI:
 
 CD:
 
-- Workflow `TestFlight Release` für Builds von `main`
-- Workflow `App Store Release` für Tags im Format `vX.Y.Z`
-- App-Store-Screenshots werden erst im App-Store-Release erzeugt und hochgeladen
+- Workflow `TestFlight` wird manuell auf `release/*` Branches gestartet
+- Workflow `App Store Release` wird manuell auf `release/*` Branches gestartet
+- App-Store-Screenshots und Metadaten sind versionierte Release-Artefakte unter `fastlane/`
 - `fastlane match`, `build_app`, `pilot` und `deliver` für Signing und Distribution; die App-Store-Einreichung bleibt manuell in App Store Connect
+- keine Release-Automatik durch Pushes, Merges oder Tags
 
-Die projektspezifische Release-Einrichtung ist in [docs/Xcode-Cloud.md](/Users/mat/code/Symi/docs/Xcode-Cloud.md) dokumentiert.
+Der manuelle Release-Prozess ist in [docs/Release-Prozess.md](/Users/mat/code/Symi/docs/Release-Prozess.md) dokumentiert. Die projektspezifische Release-Einrichtung ist zusätzlich in [docs/Xcode-Cloud.md](/Users/mat/code/Symi/docs/Xcode-Cloud.md) dokumentiert.
 
 ## Lokale Entwicklung
 
@@ -135,5 +136,6 @@ xcodebuild test -scheme Symi -destination 'platform=iOS Simulator,name=iPhone 16
 - [docs/Apple-Health-Datentypen.md](/Users/mat/code/Symi/docs/Apple-Health-Datentypen.md)
 - [docs/App-Store-Metadaten.md](/Users/mat/code/Symi/docs/App-Store-Metadaten.md)
 - [docs/Historische-Identifier.md](/Users/mat/code/Symi/docs/Historische-Identifier.md)
+- [docs/Release-Prozess.md](/Users/mat/code/Symi/docs/Release-Prozess.md)
 - [docs/Teststrategie-und-Release-Checkliste.md](/Users/mat/code/Symi/docs/Teststrategie-und-Release-Checkliste.md)
 - [Symi Support](https://symiapp.com)
