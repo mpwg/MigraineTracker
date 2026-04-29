@@ -27,6 +27,16 @@
     "/10" : {
 
     },
+    "%@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%@ · %@ · Intensität %lld/10" : {
       "localizations" : {
         "en" : {
@@ -301,22 +311,22 @@
     "Ab" : {
 
     },
-    "Abstürze & Performance" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Crashes & Performance"
-          }
-        }
-      }
-    },
     "Abbrechen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "Abstürze & Performance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crashes & Performance"
           }
         }
       }
@@ -399,6 +409,9 @@
         }
       }
     },
+    "Aktuelle App-Angabe ohne Stärke oder Health-Flow-Sample." : {
+
+    },
     "Alle" : {
       "localizations" : {
         "en" : {
@@ -409,13 +422,13 @@
         }
       }
     },
-    "Alle Details" : {
-
-    },
     "Alle Einträge" : {
 
     },
-    "Alles im Blick" : {
+    "Alle wichtigen Einträge klar und verständlich zusammengefasst" : {
+
+    },
+    "Alle wichtigen Einträge kompakt und verständlich aufbereitet" : {
 
     },
     "Allgemein" : {
@@ -445,6 +458,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save Changes"
+          }
+        }
+      }
+    },
+    "Anonym teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymously"
+          }
+        }
+      }
+    },
+    "Anonyme Nutzungsdaten teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymous Usage Data"
           }
         }
       }
@@ -490,22 +523,12 @@
         }
       }
     },
-    "Anonym teilen" : {
+    "App herunterladen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share Anonymously"
-          }
-        }
-      }
-    },
-    "Anonyme Nutzungsdaten teilen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share Anonymous Usage Data"
+            "value" : "Download the app"
           }
         }
       }
@@ -520,15 +543,8 @@
         }
       }
     },
-    "App herunterladen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download the app"
-          }
-        }
-      }
+    "App-Angabe ohne Health-Flow-Sample." : {
+
     },
     "App-Nutzung" : {
       "localizations" : {
@@ -635,9 +651,6 @@
     "Backup" : {
 
     },
-    "Backup einlesen" : {
-
-    },
     "Backup erstellen" : {
 
     },
@@ -720,8 +733,10 @@
         }
       }
     },
+    "Bereit für dein nächstes Arztgespräch" : {
+
+    },
     "Bericht" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -731,10 +746,13 @@
         }
       }
     },
-    "Berichte erstellen" : {
+    "Bericht ansehen" : {
 
     },
-    "Berichtsdaten werden vorbereitet." : {
+    "Bericht wird erstellt" : {
+
+    },
+    "Berichte erstellen" : {
 
     },
     "Bevor du startest" : {
@@ -748,6 +766,7 @@
       }
     },
     "Bis" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -809,9 +828,6 @@
         }
       }
     },
-    "Das Backup enthält alle Einträge, eigene Medikamentenvorlagen, Wetter-Snapshots und gespeicherten Apple-Health-Kontext, inklusive Papierkorb-Einträgen." : {
-
-    },
     "Das Projekt steht unter der GNU GPL v3." : {
       "localizations" : {
         "en" : {
@@ -846,6 +862,9 @@
         }
       }
     },
+    "Daten" : {
+
+    },
     "Daten exportieren" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -867,9 +886,6 @@
           }
         }
       }
-    },
-    "Daten und Backup" : {
-
     },
     "Daten wiederherstellen" : {
 
@@ -995,6 +1011,9 @@
         }
       }
     },
+    "Der Bericht wird beim Öffnen automatisch erstellt" : {
+
+    },
     "Der PDF-Bericht von %@ wird lokal erzeugt und kann systemweit geteilt werden." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1026,7 +1045,11 @@
         }
       }
     },
+    "Diagnose" : {
+
+    },
     "Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1112,6 +1135,9 @@
     "Diese Aktion löscht den lokalen SwiftData-Store auf diesem Gerät. Eine spätere Migration ist nur möglich, wenn du die Store-Dateien vorher gesichert hast." : {
 
     },
+    "Diese Aktion löscht den lokalen SwiftData-Store auf diesem Gerät. Sichere die Store-Dateien vorher, wenn du sie später wiederherstellen möchtest." : {
+
+    },
     "Diese Episode wird in den Papierkorb verschoben." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1127,6 +1153,9 @@
 
     },
     "Diese Option entfernt die lokalen Store-Dateien erst nach deiner Bestätigung und erstellt danach einen neuen leeren Store." : {
+
+    },
+    "Diese Option entfernt lokale Store-Dateien erst nach deiner Bestätigung und versucht danach einen leeren Neustart." : {
 
     },
     "Dieser Eintrag wird in den Papierkorb verschoben." : {
@@ -1165,6 +1194,9 @@
     "Dosierung, optional" : {
 
     },
+    "Download: %@" : {
+
+    },
     "Du behältst die Kontrolle" : {
       "localizations" : {
         "en" : {
@@ -1189,22 +1221,22 @@
     "Du dokumentierst Zeitpunkt, Intensität, hilfreiche Hinweise und persönliche Notizen ohne Formulargefühl." : {
 
     },
-    "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can change location permission in this app's settings under \"Location\" to \"While Using the App\"."
-          }
-        }
-      }
-    },
     "Du kannst das jederzeit in den Einstellungen ändern." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can change this anytime in Settings."
+          }
+        }
+      }
+    },
+    "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change location permission in this app's settings under \"Location\" to \"While Using the App\"."
           }
         }
       }
@@ -1600,6 +1632,9 @@
         }
       }
     },
+    "Erwartete App-Angabe, keine echte Blutungsprobe." : {
+
+    },
     "Export" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1677,6 +1712,9 @@
         }
       }
     },
+    "Fehlercode" : {
+
+    },
     "Fertig" : {
 
     },
@@ -1717,6 +1755,9 @@
         }
       }
     },
+    "Für dein Arztgespräch" : {
+
+    },
     "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nicht als eigener Tagebucheintrag gespeichert." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1737,6 +1778,9 @@
           }
         }
       }
+    },
+    "Geschrieben werden nur ausreichend präzise, nutzererfasste Symptome. Zyklusangaben aus der App wie „aktuell“ oder „erwartet“ bleiben Kontext und werden nicht als exakte Health-Flow-Samples gespeichert." : {
+
     },
     "Gesundheit" : {
       "localizations" : {
@@ -1820,6 +1864,19 @@
         }
       }
     },
+    "Hilf uns, Symi besser zu machen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help us make Symi better."
+          }
+        }
+      }
+    },
+    "Hilft dir, deine Symptome besser zu erklären" : {
+
+    },
     "Hinweis: %@" : {
 
     },
@@ -1880,16 +1937,6 @@
         }
       }
     },
-    "Hilf uns, Symi besser zu machen." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help us make Symi better."
-          }
-        }
-      }
-    },
     "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
       "localizations" : {
         "en" : {
@@ -1911,22 +1958,22 @@
         }
       }
     },
-    "Jetzt synchronisieren" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync Now"
-          }
-        }
-      }
-    },
     "Jetzt nicht" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not Now"
+          }
+        }
+      }
+    },
+    "Jetzt synchronisieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync Now"
           }
         }
       }
@@ -2065,6 +2112,9 @@
         }
       }
     },
+    "Keine Zyklusangabe aus der App." : {
+
+    },
     "Konflikt lösen" : {
       "localizations" : {
         "en" : {
@@ -2195,6 +2245,9 @@
           }
         }
       }
+    },
+    "Letzter Monat" : {
+
     },
     "Lizenz" : {
       "localizations" : {
@@ -2365,6 +2418,7 @@
 
     },
     "Menstruation %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2440,6 +2494,16 @@
         }
       }
     },
+    "Nein" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        }
+      }
+    },
     "Neuer Eintrag" : {
       "localizations" : {
         "en" : {
@@ -2461,9 +2525,6 @@
         }
       }
     },
-    "Nicht ausgewählt" : {
-
-    },
     "Nicht angegeben" : {
       "localizations" : {
         "en" : {
@@ -2474,15 +2535,8 @@
         }
       }
     },
-    "Nutzungsdaten anonym teilen?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share Anonymous Usage Data?"
-          }
-        }
-      }
+    "Nicht ausgewählt" : {
+
     },
     "Noch kein Eintrag für diesen Tag." : {
       "extractionState" : "stale",
@@ -2539,16 +2593,6 @@
         }
       }
     },
-    "Nein" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No"
-          }
-        }
-      }
-    },
     "Nur ergänzen, wenn du heute etwas genommen hast." : {
       "localizations" : {
         "en" : {
@@ -2575,6 +2619,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync Only"
+          }
+        }
+      }
+    },
+    "Nutzungsdaten anonym teilen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymous Usage Data?"
           }
         }
       }
@@ -2669,11 +2723,25 @@
       }
     },
     "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trashed entries remain local and in the cloud until you intentionally restore them or permanently remove them later."
+          }
+        }
+      }
+    },
+    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Sync läuft halbautomatisch: Aktivierung startet einen Abgleich, danach nutzt du `Jetzt synchronisieren`." : {
+
+    },
+    "Paracetamol" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acetaminophen"
           }
         }
       }
@@ -2710,32 +2778,13 @@
         }
       }
     },
-    "Persönliche Informationen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Personal Information"
-          }
-        }
-      }
-    },
     "PDF" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "PDF"
-          }
-        }
-      }
-    },
-    "Paracetamol" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acetaminophen"
           }
         }
       }
@@ -2752,6 +2801,7 @@
       }
     },
     "PDF teilen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2760,12 +2810,6 @@
           }
         }
       }
-    },
-    "PDF vorbereiten" : {
-
-    },
-    "PDF wird vorbereitet." : {
-
     },
     "PDF-Berichte helfen dir, deine Einträge übersichtlich mitzunehmen. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst." : {
 
@@ -2787,6 +2831,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PDF mode"
+          }
+        }
+      }
+    },
+    "Persönliche Informationen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal Information"
           }
         }
       }
@@ -2883,6 +2937,9 @@
         }
       }
     },
+    "Recovery-Grund" : {
+
+    },
     "Ruhepuls %@ bpm" : {
       "localizations" : {
         "en" : {
@@ -2897,6 +2954,12 @@
 
     },
     "Ruhiger Verlauf der dokumentierten Stärke" : {
+
+    },
+    "Safe-Mode" : {
+
+    },
+    "Safe-Mode aktiv" : {
 
     },
     "Schlaf %@ min" : {
@@ -3028,6 +3091,9 @@
     "Sichern" : {
 
     },
+    "Sichert alle Einträge und Vorlagen" : {
+
+    },
     "Sicherung teilen" : {
 
     },
@@ -3106,9 +3172,6 @@
         }
       }
     },
-    "Standardmäßig startet der Zeitraum am ersten Tag des vorvorherigen Monats und endet inklusive heute." : {
-
-    },
     "Standort für Wetter" : {
       "localizations" : {
         "en" : {
@@ -3151,10 +3214,19 @@
         }
       }
     },
+    "Store" : {
+
+    },
     "Store-Dateien löschen und leer starten" : {
 
     },
     "Store-Dateien sichern" : {
+
+    },
+    "Store-Recovery" : {
+
+    },
+    "Store-Sicherung" : {
 
     },
     "Straße" : {
@@ -3183,6 +3255,12 @@
           }
         }
       }
+    },
+    "Symi arbeitet lokal-first. Bei aktivem iCloud-Sync startet ein neuer Abgleich sofort nach dem Aktivieren und danach nur, wenn du ihn mit `Jetzt synchronisieren` auslöst. Beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet; Push- oder Subscription-gesteuerte Hintergrundabgleiche gibt es derzeit nicht." : {
+
+    },
+    "Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern." : {
+
     },
     "Symi-Bericht" : {
       "localizations" : {
@@ -3250,6 +3328,9 @@
         }
       }
     },
+    "Sync-Hinweis: %@" : {
+
+    },
     "Sync-Protokoll" : {
       "localizations" : {
         "en" : {
@@ -3259,6 +3340,9 @@
           }
         }
       }
+    },
+    "Sync-Vertrag" : {
+
     },
     "Synchronisation" : {
       "localizations" : {
@@ -3339,22 +3423,22 @@
         }
       }
     },
-    "Triptan" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Triptan"
-          }
-        }
-      }
-    },
     "Trigger: %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Triggers: %1$@"
+          }
+        }
+      }
+    },
+    "Triptan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Triptan"
           }
         }
       }
@@ -3389,7 +3473,11 @@
         }
       }
     },
+    "Upload: %@" : {
+
+    },
     "V1 schreibt nur Kopfschmerz und ausgewählte Begleitsymptome. Medikamente, Zyklusdaten und Konfliktlogik sind eigene Folge-Issues." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3453,6 +3541,7 @@
       }
     },
     "Von" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3463,6 +3552,9 @@
       }
     },
     "von %lld" : {
+
+    },
+    "Vorhandene Store-Dateien bleiben unverändert. Du kannst sie für Support oder eine spätere Wiederherstellung sichern." : {
 
     },
     "Vorheriger Monat" : {
@@ -3544,6 +3636,26 @@
     "Was war heute anders?" : {
 
     },
+    "Was wird geteilt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What Is Shared"
+          }
+        }
+      }
+    },
+    "Was wird NICHT geteilt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What Is NOT Shared"
+          }
+        }
+      }
+    },
     "Wechselt den angezeigten Monat im Home-Kalender." : {
 
     },
@@ -3570,29 +3682,6 @@
     },
     "Wenige Angaben reichen. Alles Weitere bleibt optional." : {
 
-    },
-    "Wenn aktiviert, enthält das PDF zusätzlich die detaillierten Einträge mit Medikamenten, Triggern, Wetterdaten, Apple-Health-Kontext und Notizen." : {
-
-    },
-    "Was wird geteilt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What Is Shared"
-          }
-        }
-      }
-    },
-    "Was wird NICHT geteilt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What Is NOT Shared"
-          }
-        }
-      }
     },
     "Wetter" : {
       "localizations" : {
@@ -3737,6 +3826,9 @@
           }
         }
       }
+    },
+    "Zeitraum deiner Auswertung" : {
+
     },
     "Zeitraum: %@ bis %@" : {
       "localizations" : {

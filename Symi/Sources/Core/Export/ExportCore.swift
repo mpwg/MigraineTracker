@@ -181,7 +181,6 @@ final class DataExportController {
                 guard !Task.isCancelled else { return }
                 summary = loadedSummary
                 exportErrorMessage = nil
-                schedulePDFPreparation(delay: .milliseconds(500))
             } catch {
                 guard !Task.isCancelled else { return }
                 summary = ExportPeriodSummary(startDate: requestedStartDate, endDate: requestedEndDate, records: [])

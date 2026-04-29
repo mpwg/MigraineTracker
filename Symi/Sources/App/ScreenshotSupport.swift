@@ -347,7 +347,7 @@ struct ScreenshotRootView: View {
 
         case .export:
             NavigationStack {
-                DataExportView(dependencies: features.dataExport)
+                ReportView(dependencies: features.dataExport)
             }
 
         case .privacyInfo:

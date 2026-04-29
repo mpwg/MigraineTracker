@@ -48,7 +48,7 @@ final class HomeRedesignUITests: XCTestCase {
 
         XCTAssertTrue(app.tabBars.buttons["Tagebuch"].waitForExistence(timeout: 6))
         XCTAssertTrue(app.tabBars.buttons["Insights"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Teilen"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Bericht"].exists)
         XCTAssertTrue(app.tabBars.buttons["Einstellungen"].exists)
         XCTAssertFalse(app.tabBars.buttons["Heute"].exists)
     }

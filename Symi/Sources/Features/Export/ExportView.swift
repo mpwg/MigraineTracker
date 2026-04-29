@@ -113,12 +113,6 @@ struct SettingsView: View {
                     Label("Dauermedikation", systemImage: "pills")
                 }
 
-                NavigationLink {
-                    DataExportView(dependencies: dependencies.dataExport)
-                } label: {
-                    Label("Daten und Backup", systemImage: "square.and.arrow.up")
-                }
-
                 Link(destination: ProductBranding.websiteURL) {
                     Label("symiapp.com", systemImage: "link")
                 }
@@ -128,6 +122,10 @@ struct SettingsView: View {
                 } label: {
                     Label("Datenschutz und Hinweise", systemImage: "hand.raised")
                 }
+            }
+
+            Section("Daten") {
+                BackupSettingsCardView(dependencies: dependencies.dataExport)
             }
 
             Section {
@@ -713,7 +711,7 @@ private struct ManageCloudDataView: View {
                 .disabled(!controller.isSyncEnabled || controller.syncStatus.lastError == nil)
 
                 NavigationLink {
-                    DataExportView(dependencies: dataExportDependencies)
+                    DataBackupSettingsView(dependencies: dataExportDependencies)
                 } label: {
                     Text("Lokales JSON5-Backup erstellen")
                 }
