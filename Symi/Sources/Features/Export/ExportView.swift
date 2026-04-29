@@ -529,7 +529,7 @@ private struct AppleHealthSettingsView: View {
                 }
                 .disabled(!controller.healthAuthorization.isAvailable)
             } footer: {
-                Text("V1 schreibt nur Kopfschmerz und ausgewählte Begleitsymptome. Medikamente, Zyklusdaten und Konfliktlogik sind eigene Folge-Issues.")
+                Text("Geschrieben werden nur ausreichend präzise, nutzererfasste Symptome. Zyklusangaben aus der App wie „aktuell“ oder „erwartet“ bleiben Kontext und werden nicht als exakte Health-Flow-Samples gespeichert.")
             }
         }
         .navigationTitle("Apple Health")

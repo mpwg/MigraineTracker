@@ -89,6 +89,7 @@ nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
         let restingHeartRate: Double?
         let heartRateVariability: Double?
         let menstrualFlow: String?
+        let menstrualFlowSample: HealthMenstrualFlowSampleData?
         let symptoms: [String]
 
         nonisolated init(record: HealthContextRecord) {
@@ -100,6 +101,7 @@ nonisolated struct EpisodeExportRecord: Identifiable, Sendable {
             self.restingHeartRate = record.restingHeartRate
             self.heartRateVariability = record.heartRateVariability
             self.menstrualFlow = record.menstrualFlow
+            self.menstrualFlowSample = record.menstrualFlowSample
             self.symptoms = record.symptoms.map { "\($0.type.displayName): \($0.severity)" }
         }
     }

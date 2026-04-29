@@ -11,7 +11,7 @@ Dieses Dokument beschreibt die Apple-Health-Datentypen, die Symi als schmerzrele
 | Herzwerte | Herzfrequenz | `HKQuantityTypeIdentifierHeartRate` | aktiv | Herzfrequenz rund um eine Episode kann körperlichen Stress als neutralen Kontext sichtbar machen. |
 | Herzwerte | Ruhepuls | `HKQuantityTypeIdentifierRestingHeartRate` | aktiv | Ruhepuls ergänzt den Tageskontext, ohne daraus eine medizinische Bewertung abzuleiten. |
 | Herzwerte | Herzfrequenzvariabilität | `HKQuantityTypeIdentifierHeartRateVariabilitySDNN` | aktiv | HRV kann Hinweise auf Stress und Erholung liefern und bleibt in Symi reine Kontextinformation. |
-| Zyklus | Menstruation | `HKCategoryTypeIdentifierMenstrualFlow` | aktiv | Zyklusdaten können bei migränebezogenen Mustern relevant sein. Der Typ wird erst ab iOS 18 abgefragt. |
+| Zyklus | Menstruation | `HKCategoryTypeIdentifierMenstrualFlow` | aktiv | Echte Health-Flow-Samples können bei migränebezogenen Mustern relevant sein. Der Typ wird erst ab iOS 18 abgefragt und als Kontext mit Quelle, Zeitraum und Genauigkeit gespeichert. |
 | Symptome | Kopfschmerz | `HKCategoryTypeIdentifierHeadache` | aktiv | Vorhandene Kopfschmerzsymptome aus Apple Health werden als externe Quelle kenntlich gemacht. |
 | Symptome | Übelkeit | `HKCategoryTypeIdentifierNausea` | aktiv | Übelkeit ist ein häufiges Begleitsymptom von Migräne. |
 | Symptome | Schwindel | `HKCategoryTypeIdentifierDizziness` | aktiv | Schwindel kann Episoden fachlich ergänzen, ohne Diagnose oder Interpretation. |
@@ -30,6 +30,8 @@ Dieses Dokument beschreibt die Apple-Health-Datentypen, die Symi als schmerzrele
 - Jeder Datentyp hat einen eigenen Schalter. Die Auswahl wird unabhängig von der iOS-Berechtigung gespeichert.
 - Die eigentliche HealthKit-Autorisierung wird erst über `Leserechte anfragen` oder `Schreibrechte anfragen` gestartet.
 - Gelesene Episodenkontexte werden in der UI und im PDF-Export als `Apple Health` mit Quelle ausgewiesen.
+- Zyklusdaten aus Apple Health überschreiben keine App-Angaben. Der App-Status unterscheidet nur `Nicht angegeben`, `Nein`, `Aktuell` und `Erwartet`; echte Flow-Samples bleiben davon getrennte Health-Kontextdaten.
+- App-Angaben wie `Aktuell` oder `Erwartet` sind nicht präzise genug für `HKCategoryTypeIdentifierMenstrualFlow` und werden deshalb nicht nach Apple Health geschrieben.
 
 ## Erweiterung
 

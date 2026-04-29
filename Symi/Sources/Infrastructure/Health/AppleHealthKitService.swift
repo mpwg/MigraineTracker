@@ -79,8 +79,9 @@ final class AppleHealthKitService: HealthService {
         async let averageHeartRate = enabledTypes.contains(.heartRate) ? averageHeartRate(from: draft.startedAt.addingTimeInterval(-3_600), to: draft.startedAt.addingTimeInterval(3_600)) : nil
         async let restingHeartRate = enabledTypes.contains(.restingHeartRate) ? latestQuantityValue(typeID: .restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute()), from: dayStart, to: dayEnd) : nil
         async let hrv = enabledTypes.contains(.heartRateVariability) ? latestQuantityValue(typeID: .heartRateVariabilitySDNN, unit: .secondUnit(with: .milli), from: dayStart, to: dayEnd) : nil
-        async let menstrualFlow = enabledTypes.contains(.menstrualFlow) ? latestMenstrualFlow(from: dayStart, to: dayEnd) : nil
+        async let menstrualFlowSample = enabledTypes.contains(.menstrualFlow) ? latestMenstrualFlow(from: dayStart, to: dayEnd) : nil
         async let symptoms = symptomSamples(enabledTypes: enabledTypes, from: dayStart, to: dayEnd)
+        let resolvedMenstrualFlowSample = try await menstrualFlowSample
 
         let snapshot = HealthContextSnapshotData(
             recordedAt: .now,
@@ -90,7 +91,8 @@ final class AppleHealthKitService: HealthService {
             averageHeartRate: try await averageHeartRate,
             restingHeartRate: try await restingHeartRate,
             heartRateVariability: try await hrv,
-            menstrualFlow: try await menstrualFlow,
+            menstrualFlow: resolvedMenstrualFlowSample?.flow,
+            menstrualFlowSample: resolvedMenstrualFlowSample,
             symptoms: try await symptoms
         )
 
@@ -234,7 +236,7 @@ final class AppleHealthKitService: HealthService {
         return samples.first?.quantity.doubleValue(for: unit)
     }
 
-    private func latestMenstrualFlow(from start: Date, to end: Date) async throws -> String? {
+    private func latestMenstrualFlow(from start: Date, to end: Date) async throws -> HealthMenstrualFlowSampleData? {
         guard #available(iOS 18.0, *) else {
             return nil
         }
@@ -244,18 +246,31 @@ final class AppleHealthKitService: HealthService {
         }
 
         return try await categorySamples(type: type, from: start, to: end).last.map { sample in
-            switch sample.value {
-            case HKCategoryValueVaginalBleeding.light.rawValue:
-                "Leicht"
-            case HKCategoryValueVaginalBleeding.medium.rawValue:
-                "Mittel"
-            case HKCategoryValueVaginalBleeding.heavy.rawValue:
-                "Stark"
-            case HKCategoryValueVaginalBleeding.unspecified.rawValue:
-                "Nicht angegeben"
-            default:
-                "Erfasst"
-            }
+            let mapped = Self.menstrualFlowValue(for: sample.value)
+            return HealthMenstrualFlowSampleData(
+                flow: mapped.flow,
+                precision: mapped.precision,
+                startDate: sample.startDate,
+                endDate: sample.endDate,
+                source: sample.sourceRevision.source.name,
+                isUserEntered: sample.metadata?[HKMetadataKeyWasUserEntered] as? Bool ?? false
+            )
+        }
+    }
+
+    @available(iOS 18.0, *)
+    private static func menstrualFlowValue(for value: Int) -> (flow: String, precision: MenstrualFlowSamplePrecision) {
+        switch value {
+        case HKCategoryValueVaginalBleeding.light.rawValue:
+            ("Leicht", .specified)
+        case HKCategoryValueVaginalBleeding.medium.rawValue:
+            ("Mittel", .specified)
+        case HKCategoryValueVaginalBleeding.heavy.rawValue:
+            ("Stark", .specified)
+        case HKCategoryValueVaginalBleeding.unspecified.rawValue:
+            ("Stärke nicht angegeben", .unspecified)
+        default:
+            ("Erfasst", .unknown)
         }
     }
 

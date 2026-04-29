@@ -277,6 +277,9 @@ private struct EpisodeOptionalDetailsSection: View {
                         Text(status.displayName).tag(status)
                     }
                 }
+                Text(draft.menstruationStatus.accuracyDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 Toggle("Ende angeben", isOn: $draft.endedAtEnabled.animation())
                 if draft.endedAtEnabled {

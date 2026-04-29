@@ -631,8 +631,12 @@ private struct EntryDetailHealthContextCard: View {
         if let heartRateVariability = healthContext.heartRateVariability {
             values.append("HRV: \(heartRateVariability.formatted(.number.precision(.fractionLength(0)))) ms")
         }
-        if let menstrualFlow = healthContext.menstrualFlow {
-            values.append("Menstruation: \(menstrualFlow)")
+        if let menstrualFlowSample = healthContext.menstrualFlowSample {
+            values.append(menstrualFlowSample.displayText)
+            values.append("Zyklusgenauigkeit: \(menstrualFlowSample.accuracyText)")
+        } else if let menstrualFlow = healthContext.menstrualFlow {
+            values.append("Menstruation aus Apple Health: \(menstrualFlow)")
+            values.append("Zyklusgenauigkeit: alter Kontext ohne Sample-Details")
         }
         if !healthContext.symptoms.isEmpty {
             let symptoms = healthContext.symptoms.map { "\($0.type.displayName): \($0.severity)" }

@@ -81,6 +81,10 @@ enum HealthDataCatalog {
     static var allDefinitions: [HealthDataTypeDefinition] {
         readDefinitions + writeDefinitions
     }
+
+    static func canWriteMenstrualFlowSample(from status: MenstruationStatus) -> Bool {
+        status.canWriteMenstrualFlowSample
+    }
 }
 
 public struct HealthSymptomSampleData: @preconcurrency Codable, Equatable, Sendable {
@@ -113,6 +117,76 @@ public struct HealthSymptomSampleData: @preconcurrency Codable, Equatable, Senda
     }
 }
 
+public enum MenstrualFlowSamplePrecision: String, Codable, Sendable {
+    case specified
+    case unspecified
+    case unknown
+
+    nonisolated var displayName: String {
+        switch self {
+        case .specified:
+            "Exakter Health-Flow"
+        case .unspecified:
+            "Health-Flow ohne Stärke"
+        case .unknown:
+            "Unklare Genauigkeit"
+        }
+    }
+}
+
+public struct HealthMenstrualFlowSampleData: @preconcurrency Codable, Equatable, Sendable {
+    public let flow: String
+    public let precision: MenstrualFlowSamplePrecision
+    public let startDate: Date
+    public let endDate: Date
+    public let source: String
+    public let isUserEntered: Bool
+
+    public nonisolated init(
+        flow: String,
+        precision: MenstrualFlowSamplePrecision,
+        startDate: Date,
+        endDate: Date,
+        source: String,
+        isUserEntered: Bool
+    ) {
+        self.flow = flow
+        self.precision = precision
+        self.startDate = startDate
+        self.endDate = endDate
+        self.source = source
+        self.isUserEntered = isUserEntered
+    }
+
+    nonisolated var displayText: String {
+        switch precision {
+        case .specified:
+            "Menstruation: \(flow)"
+        case .unspecified:
+            "Menstruation: Stärke nicht angegeben"
+        case .unknown:
+            "Menstruation: erfasst, Genauigkeit unklar"
+        }
+    }
+
+    nonisolated var accuracyText: String {
+        "\(precision.displayName), Quelle: \(source)"
+    }
+
+    nonisolated var canWriteToAppleHealth: Bool {
+        isUserEntered && precision == .specified
+    }
+
+    public nonisolated static func == (lhs: HealthMenstrualFlowSampleData, rhs: HealthMenstrualFlowSampleData) -> Bool {
+        lhs.flow == rhs.flow &&
+            lhs.precision == rhs.precision &&
+            lhs.startDate == rhs.startDate &&
+            lhs.endDate == rhs.endDate &&
+            lhs.source == rhs.source &&
+            lhs.isUserEntered == rhs.isUserEntered
+    }
+}
+
 public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sendable {
     public let recordedAt: Date
     public let source: String
@@ -122,6 +196,7 @@ public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sen
     public let restingHeartRate: Double?
     public let heartRateVariability: Double?
     public let menstrualFlow: String?
+    public let menstrualFlowSample: HealthMenstrualFlowSampleData?
     public let symptoms: [HealthSymptomSampleData]
 
     public nonisolated init(
@@ -133,6 +208,7 @@ public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sen
         restingHeartRate: Double?,
         heartRateVariability: Double?,
         menstrualFlow: String?,
+        menstrualFlowSample: HealthMenstrualFlowSampleData? = nil,
         symptoms: [HealthSymptomSampleData]
     ) {
         self.recordedAt = recordedAt
@@ -143,6 +219,7 @@ public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sen
         self.restingHeartRate = restingHeartRate
         self.heartRateVariability = heartRateVariability
         self.menstrualFlow = menstrualFlow
+        self.menstrualFlowSample = menstrualFlowSample
         self.symptoms = symptoms
     }
 
@@ -153,6 +230,7 @@ public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sen
         restingHeartRate != nil ||
         heartRateVariability != nil ||
         menstrualFlow != nil ||
+        menstrualFlowSample != nil ||
             !symptoms.isEmpty
     }
 
@@ -165,6 +243,7 @@ public struct HealthContextSnapshotData: @preconcurrency Codable, Equatable, Sen
             lhs.restingHeartRate == rhs.restingHeartRate &&
             lhs.heartRateVariability == rhs.heartRateVariability &&
             lhs.menstrualFlow == rhs.menstrualFlow &&
+            lhs.menstrualFlowSample == rhs.menstrualFlowSample &&
             lhs.symptoms == rhs.symptoms
     }
 }
@@ -178,6 +257,7 @@ struct HealthContextRecord: Equatable, Sendable {
     let restingHeartRate: Double?
     let heartRateVariability: Double?
     let menstrualFlow: String?
+    let menstrualFlowSample: HealthMenstrualFlowSampleData?
     let symptoms: [HealthSymptomSampleData]
 
     nonisolated init(snapshot: HealthContextSnapshotData) {
@@ -189,6 +269,7 @@ struct HealthContextRecord: Equatable, Sendable {
         self.restingHeartRate = snapshot.restingHeartRate
         self.heartRateVariability = snapshot.heartRateVariability
         self.menstrualFlow = snapshot.menstrualFlow
+        self.menstrualFlowSample = snapshot.menstrualFlowSample
         self.symptoms = snapshot.symptoms
     }
 
@@ -199,6 +280,7 @@ struct HealthContextRecord: Equatable, Sendable {
         restingHeartRate != nil ||
         heartRateVariability != nil ||
         menstrualFlow != nil ||
+        menstrualFlowSample != nil ||
             !symptoms.isEmpty
     }
 }
@@ -258,6 +340,7 @@ extension HealthContextSnapshotData {
             restingHeartRate: record.restingHeartRate,
             heartRateVariability: record.heartRateVariability,
             menstrualFlow: record.menstrualFlow,
+            menstrualFlowSample: record.menstrualFlowSample,
             symptoms: record.symptoms
         )
     }
