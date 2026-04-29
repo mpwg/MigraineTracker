@@ -206,6 +206,21 @@ private enum JournalDateRange: String, CaseIterable, Identifiable {
     case custom = "Custom"
 
     var id: String { rawValue }
+
+    var displayTitle: String {
+        switch self {
+        case .all:
+            JournalLocalized.text(de: "Alle", en: "All")
+        case .today:
+            JournalLocalized.text(de: "Heute", en: "Today")
+        case .sevenDays:
+            JournalLocalized.text(de: "7 Tage", en: "7 days")
+        case .thirtyDays:
+            JournalLocalized.text(de: "30 Tage", en: "30 days")
+        case .custom:
+            JournalLocalized.text(de: "Custom", en: "Custom")
+        }
+    }
 }
 
 private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
@@ -216,6 +231,21 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
     case veryStrong = "Sehr stark"
 
     var id: String { rawValue }
+
+    var displayTitle: String {
+        switch self {
+        case .all:
+            JournalLocalized.text(de: "Alle", en: "All")
+        case .light:
+            JournalLocalized.text(de: "Leicht", en: "Mild")
+        case .medium:
+            JournalLocalized.text(de: "Mittel", en: "Moderate")
+        case .strong:
+            JournalLocalized.text(de: "Stark", en: "Strong")
+        case .veryStrong:
+            JournalLocalized.text(de: "Sehr stark", en: "Very strong")
+        }
+    }
 
     func matches(_ intensity: Int) -> Bool {
         let level = PainIntensityLevel(intensity: intensity)
@@ -231,6 +261,16 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
         case .veryStrong:
             level == .veryHigh
         }
+    }
+}
+
+private enum JournalLocalized {
+    static var isEnglish: Bool {
+        Locale.current.language.languageCode?.identifier == "en"
+    }
+
+    static func text(de german: String, en english: String) -> String {
+        isEnglish ? english : german
     }
 }
 
@@ -377,19 +417,19 @@ private struct JournalActiveFilters: View {
                     }
 
                     if filters.intensity != .all {
-                        JournalRemovableChip(title: filters.intensity.rawValue) {
+                        JournalRemovableChip(title: filters.intensity.displayTitle) {
                             filters.intensity = .all
                         }
                     }
 
                     if filters.requiresNotes {
-                        JournalRemovableChip(title: "Mit Notizen") {
+                        JournalRemovableChip(title: JournalLocalized.text(de: "Mit Notizen", en: "With notes")) {
                             filters.requiresNotes = false
                         }
                     }
 
                     if filters.requiresMedication {
-                        JournalRemovableChip(title: "Medikation") {
+                        JournalRemovableChip(title: JournalLocalized.text(de: "Medikation", en: "Medication")) {
                             filters.requiresMedication = false
                         }
                     }
@@ -403,7 +443,7 @@ private struct JournalActiveFilters: View {
             return filters.customStartDate.formatted(date: .abbreviated, time: .omitted)
         }
 
-        return filters.dateRange.rawValue
+        return filters.dateRange.displayTitle
     }
 }
 
@@ -415,7 +455,7 @@ private struct JournalFilterBar: View {
             HStack(spacing: SymiSpacing.xs) {
                 ForEach(JournalIntensityFilter.allCases) { intensity in
                     JournalChip(
-                        title: intensity.rawValue,
+                        title: intensity.displayTitle,
                         isSelected: filters.intensity == intensity
                     ) {
                         filters.intensity = intensity
@@ -423,14 +463,14 @@ private struct JournalFilterBar: View {
                 }
 
                 JournalChip(
-                    title: "Mit Notizen",
+                    title: JournalLocalized.text(de: "Mit Notizen", en: "With notes"),
                     isSelected: filters.requiresNotes
                 ) {
                     filters.requiresNotes.toggle()
                 }
 
                 JournalChip(
-                    title: "Medikation",
+                    title: JournalLocalized.text(de: "Medikation", en: "Medication"),
                     isSelected: filters.requiresMedication
                 ) {
                     filters.requiresMedication.toggle()
@@ -462,7 +502,7 @@ private struct JournalChip: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityValue(isSelected ? "Ausgewählt" : "")
+        .accessibilityValue(isSelected ? JournalLocalized.text(de: "Ausgewählt", en: "Selected") : "")
     }
 }
 
@@ -490,7 +530,7 @@ private struct JournalRemovableChip: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(title) entfernen")
+        .accessibilityLabel(JournalLocalized.isEnglish ? "Remove \(title)" : "\(title) entfernen")
     }
 }
 
@@ -658,7 +698,7 @@ private struct JournalFilterSheet: View {
                 Section("Zeitraum") {
                     ForEach(JournalDateRange.allCases) { range in
                         JournalDateRangeRow(
-                            title: range.rawValue,
+                            title: range.displayTitle,
                             isSelected: filters.dateRange == range
                         ) {
                             filters.dateRange = range
@@ -710,7 +750,7 @@ private struct JournalDateRangeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityValue(isSelected ? "Ausgewählt" : "")
+        .accessibilityValue(isSelected ? JournalLocalized.text(de: "Ausgewählt", en: "Selected") : "")
     }
 }
 

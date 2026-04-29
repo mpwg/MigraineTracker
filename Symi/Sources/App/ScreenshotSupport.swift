@@ -367,7 +367,7 @@ private struct ScreenshotWeatherService: WeatherService {
 
         return WeatherSnapshotData(
             recordedAt: date,
-            condition: "Leichter Regen",
+            condition: ScreenshotLocalization.text(de: "Leichter Regen", en: "Light rain"),
             temperature: 16.3,
             humidity: 74,
             pressure: 1007,

@@ -12,7 +12,7 @@ enum JournalEntryContext {
 
         let contextSegments = contextualSubtitleSegments(for: episode)
         guard !contextSegments.isEmpty else {
-            return "Keine weiteren Details"
+            return JournalEntryLocalized.text(de: "Keine weiteren Details", en: "No further details")
         }
 
         return contextSegments.prefix(2).joined(separator: " • ")
@@ -41,11 +41,11 @@ enum JournalEntryContext {
 
     static func medicationSummary(for episode: EpisodeRecord) -> String? {
         if let medicationName = acuteMedicationNames(for: episode).first {
-            return "\(medicationName) genommen"
+            return JournalEntryLocalized.isEnglish ? "\(medicationName) taken" : "\(medicationName) genommen"
         }
 
         if let medicationName = continuousMedicationNames(for: episode).first {
-            return "Medikation erfasst: \(medicationName)"
+            return JournalEntryLocalized.isEnglish ? "Medication recorded: \(medicationName)" : "Medikation erfasst: \(medicationName)"
         }
 
         return nil
@@ -97,5 +97,15 @@ enum JournalEntryContext {
             .map(\.name)
             .map(\.trimmed)
             .filter { !$0.isEmpty }
+    }
+}
+
+private enum JournalEntryLocalized {
+    static var isEnglish: Bool {
+        Locale.current.language.languageCode?.identifier == "en"
+    }
+
+    static func text(de german: String, en english: String) -> String {
+        isEnglish ? english : german
     }
 }
