@@ -5,6 +5,7 @@
 
     },
     ", Anzahl: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -15,6 +16,7 @@
       }
     },
     ", Wirkung: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -38,6 +40,7 @@
       }
     },
     "%@ · %@ · Intensität %lld/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -78,6 +81,7 @@
       }
     },
     "%@ %% Luftfeuchte" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -128,6 +132,7 @@
       }
     },
     "%@ mm Niederschlag" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -524,6 +529,7 @@
       }
     },
     "App herunterladen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -639,6 +645,7 @@
       }
     },
     "Auswertung" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1169,6 +1176,7 @@
       }
     },
     "Dokumentierte Medikamente: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1249,6 +1257,7 @@
       }
     },
     "Durchschnittliche Intensität: %@/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1421,6 +1430,7 @@
       }
     },
     "Einträge: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1460,6 +1470,7 @@
       }
     },
     "Ende: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1544,6 +1555,7 @@
       }
     },
     "Episodentypen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1821,6 +1833,7 @@
       }
     },
     "Häufige Symptome: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1831,6 +1844,7 @@
       }
     },
     "Häufige Trigger: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1841,6 +1855,7 @@
       }
     },
     "Herzfrequenz %@ bpm" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2364,6 +2379,7 @@
       }
     },
     "Medikamente: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2568,6 +2584,7 @@
       }
     },
     "Notiz: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2941,6 +2958,7 @@
 
     },
     "Ruhepuls %@ bpm" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2963,6 +2981,7 @@
 
     },
     "Schlaf %@ min" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3014,6 +3033,7 @@
       }
     },
     "Schmerztage im Zeitraum: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3065,6 +3085,7 @@
       }
     },
     "Schritte %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3186,6 +3207,7 @@
 
     },
     "Stärkste Episode: %@ · %lld/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3299,6 +3321,7 @@
       }
     },
     "Symptome %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3424,6 +3447,7 @@
       }
     },
     "Trigger: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3717,6 +3741,7 @@
       }
     },
     "Wetter: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3834,6 +3859,7 @@
 
     },
     "Zeitraum: %@ bis %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
