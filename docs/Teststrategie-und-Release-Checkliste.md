@@ -15,16 +15,15 @@ Automatisierte Gates im Projekt:
 
 1. Workflow `iOS CI` bei jedem `pull_request` auf `main`
 2. Workflow `iOS CI` bei jedem `push` auf `main`
-3. Workflow `iOS CI` jede Nacht um `02:30 UTC`
-4. Swift-Builds, Tests und Release-Archive laufen in GitHub Actions mit Xcode 26.4
-5. schnelles PR-Gate aus SwiftLint/Design-Token-Regeln und `SymiTests` auf `Mac Catalyst`
-6. Ausführung von `SymiTests` auf einem `iPhone 17`-Simulator bei Änderungen an App-, Shared-, Core-, Sync-, Persistence-, Health-, Export-, History-, Home-, Capture-, InputFlow-, Ressourcen- oder kritischen Testdateien sowie immer auf `main`, bei manuellem Start und im nächtlichen Lauf
-7. UI-Smoke auf einem `iPhone 17`-Simulator bei Änderungen an App-Shell, Home, Capture, InputFlow, History, Export, UI-Tests, App-Ressourcen, Fastlane-Screenshot-Konfiguration oder Projektdateien sowie immer auf `main`, bei manuellem Start und im nächtlichen Lauf
-8. Upload der `xcresult`-Bundles nur bei Fehlern für nachvollziehbare Fehlerdiagnose in GitHub
-9. Workflow `TestFlight Release` per manuellem GitHub-Actions-Start für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
-10. optionaler `TestFlight Release`-Input `build_number`; leer bedeutet automatische fastlane-Buildnummer
-11. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Screenshot-Erstellung, Distribution-Signing via `match` und Upload via `deliver`
-12. Die finale Einreichung erfolgt manuell in App Store Connect über `Submit`
+3. Swift-Builds, Tests und Release-Archive laufen in GitHub Actions mit Xcode 26.4
+4. schnelles PR-Gate aus SwiftLint/Design-Token-Regeln und `SymiTests` auf `Mac Catalyst`
+5. Ausführung von `SymiTests` auf einem `iPhone 17`-Simulator bei Änderungen an App-, Shared-, Core-, Sync-, Persistence-, Health-, Export-, History-, Home-, Capture-, InputFlow-, Ressourcen- oder kritischen Testdateien sowie immer auf `main` und bei manuellem Start
+6. UI-Smoke auf einem `iPhone 17`-Simulator bei Änderungen an App-Shell, Home, Capture, InputFlow, History, Export, UI-Tests, App-Ressourcen, Fastlane-Screenshot-Konfiguration oder Projektdateien sowie immer auf `main` und bei manuellem Start
+7. Upload der `xcresult`-Bundles nur bei Fehlern für nachvollziehbare Fehlerdiagnose in GitHub
+8. Workflow `TestFlight Release` per manuellem GitHub-Actions-Start für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
+9. optionaler `TestFlight Release`-Input `build_number`; leer bedeutet automatische fastlane-Buildnummer
+10. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Screenshot-Erstellung, Distribution-Signing via `match` und Upload via `deliver`
+11. Die finale Einreichung erfolgt manuell in App Store Connect über `Submit`
 
 Lokale Vorab-Prüfung vor einem Tag-Release:
 
@@ -101,7 +100,7 @@ Der UI-Smoke-Job läuft bei Änderungen an:
 - `fastlane/Snapfile`
 - `.github/workflows/ios-ci.yml`
 
-Auf `main`, bei manuellem Start und im nächtlichen Lauf werden iPhone-Unit-Tests und UI-Smokes immer ausgeführt. Damit laufen die kritischen Journeys regelmäßig unabhängig davon, ob ein Pull Request von der Pfadliste erfasst wurde.
+Auf `main` und bei manuellem Start werden iPhone-Unit-Tests und UI-Smokes immer ausgeführt. Damit können die kritischen Journeys vor Release vollständig validiert werden, auch wenn ein Pull Request nicht von der Pfadliste erfasst wurde.
 
 Damit sind die fehleranfälligen Regeln des MVP reproduzierbar abgesichert, während die schwere App-Store-Screenshot-Erzeugung getrennt vom schnellen PR-Gate bleibt.
 
