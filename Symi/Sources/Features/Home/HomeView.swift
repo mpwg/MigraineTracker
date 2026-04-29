@@ -404,7 +404,7 @@ private struct OnboardingStepRow: View {
     }
 
     private var rowContent: some View {
-        HStack(alignment: .top, spacing: HomeRhythm.md) {
+        HStack(alignment: .center, spacing: HomeRhythm.lg) {
             Image(systemName: iconName)
                 .font(iconFont)
                 .foregroundStyle(iconForeground)
@@ -412,7 +412,7 @@ private struct OnboardingStepRow: View {
                 .background(iconBackground, in: Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(step.title)
                     .font(titleFont)
                     .foregroundStyle(titleColor)
@@ -429,10 +429,15 @@ private struct OnboardingStepRow: View {
             if action != nil {
                 Spacer(minLength: HomeRhythm.sm)
 
-                Image(systemName: "chevron.right")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
-                    .accessibilityHidden(true)
+                VStack {
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
+                        .accessibilityHidden(true)
+                    Spacer(minLength: 0)
+                }
+                .frame(minHeight: SymiSize.minInteractiveHeight)
             }
         }
         .padding(.vertical, isPrimary ? HomeRhythm.sm : HomeRhythm.xs / 2)
