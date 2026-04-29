@@ -153,6 +153,8 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
     }
 
     nonisolated func previewImport(into context: ModelContext) throws -> BackupImportPreview {
+        try validateDomainInvariants()
+
         let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
         let episodesByID = Dictionary(uniqueKeysWithValues: existingEpisodes.map { ($0.id, $0) })
         let existingDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
@@ -218,6 +220,8 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
     }
 
     nonisolated func merge(into context: ModelContext, healthContextStore: HealthContextStore) throws {
+        try validateDomainInvariants()
+
         let existingEpisodes = try context.fetch(FetchDescriptor<Episode>())
         let episodesByID = Dictionary(uniqueKeysWithValues: existingEpisodes.map { ($0.id, $0) })
 
@@ -256,6 +260,22 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
 
         try context.save()
         try mergeEpisodeSidecars(into: healthContextStore)
+    }
+
+    private nonisolated func validateDomainInvariants() throws {
+        var issues: [String] = []
+
+        for (index, payload) in episodes.enumerated() {
+            issues.append(contentsOf: payload.domainValidationIssues(path: "episodes[\(index)]"))
+        }
+
+        for (index, payload) in continuousMedications.enumerated() {
+            issues.append(contentsOf: payload.domainValidationIssues(path: "continuousMedications[\(index)]"))
+        }
+
+        guard issues.isEmpty else {
+            throw DomainValidationError.invalid(issues: issues)
+        }
     }
 
     private nonisolated func mergeEpisodeSidecars(into healthContextStore: HealthContextStore) throws {
@@ -498,6 +518,11 @@ struct EpisodePayload: Codable, Sendable {
 
         try healthContextStore.save(healthContext, for: id)
     }
+
+    nonisolated func domainValidationIssues(path: String) -> [String] {
+        let episode = makeModel()
+        return DomainValidator.episodeIssues(for: episode, path: path)
+    }
 }
 
 struct MedicationEntryPayload: @preconcurrency Codable, Sendable {
@@ -738,6 +763,10 @@ struct ContinuousMedicationPayload: Codable, Sendable {
         medication.endDate = endDate
         medication.createdAt = createdAt
         medication.updatedAt = updatedAt
+    }
+
+    nonisolated func domainValidationIssues(path: String) -> [String] {
+        DomainValidator.continuousMedicationIssues(for: makeModel(), path: path)
     }
 }
 

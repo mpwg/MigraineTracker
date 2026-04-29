@@ -90,6 +90,8 @@ final class StartupMaintenanceService {
                     didChange = true
                 }
             }
+
+            try DomainValidator.validate(episode)
         }
 
         let definitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
@@ -99,6 +101,11 @@ final class StartupMaintenanceService {
                 definition.categoryRaw = normalizedCategory
                 didChange = true
             }
+        }
+
+        let continuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
+        for medication in continuousMedications {
+            try DomainValidator.validate(medication)
         }
 
         if didChange {
