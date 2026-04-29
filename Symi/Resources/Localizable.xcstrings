@@ -733,9 +733,6 @@
         }
       }
     },
-    "Bereit für dein nächstes Arztgespräch" : {
-
-    },
     "Bericht" : {
       "localizations" : {
         "en" : {
@@ -1158,6 +1155,9 @@
     "Diese Option entfernt lokale Store-Dateien erst nach deiner Bestätigung und versucht danach einen leeren Neustart." : {
 
     },
+    "Dieser Bericht ersetzt keine medizinische Diagnose" : {
+
+    },
     "Dieser Eintrag wird in den Papierkorb verschoben." : {
 
     },
@@ -1301,6 +1301,9 @@
           }
         }
       }
+    },
+    "Ein Gespräch mit deinem Arzt kann dir Klarheit geben" : {
+
     },
     "Eingenommen" : {
 

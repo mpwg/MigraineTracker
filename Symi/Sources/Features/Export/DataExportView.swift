@@ -16,6 +16,13 @@ struct ReportView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
+                Image("DoctorConversationHero")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 140)
+                    .accessibilityHidden(true)
+
                 VStack(alignment: .leading, spacing: SymiSpacing.xs) {
                     Text("Für dein Arztgespräch")
                         .font(.largeTitle.weight(.semibold))
@@ -25,7 +32,7 @@ struct ReportView: View {
                         .font(.headline)
                         .foregroundStyle(SymiColors.textSecondary.color)
 
-                    Text("Bereit für dein nächstes Arztgespräch")
+                    Text("Ein Gespräch mit deinem Arzt kann dir Klarheit geben")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(SymiColors.textSecondary.color)
                 }
@@ -35,6 +42,11 @@ struct ReportView: View {
                     errorMessage: controller.exportErrorMessage,
                     action: openReport
                 )
+
+                Text("Dieser Bericht ersetzt keine medizinische Diagnose")
+                    .font(.footnote)
+                    .foregroundStyle(SymiColors.textSecondary.color.opacity(0.78))
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.vertical, SymiSpacing.xxxl)
