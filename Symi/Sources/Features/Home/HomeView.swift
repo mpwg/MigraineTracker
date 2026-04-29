@@ -170,10 +170,7 @@ struct HomeView: View {
     }
 
     private var homeState: HomeState {
-        let state = mapToHomeState(entryCount: entryCount)
-        print("Entry count:", entryCount)
-        print("Home state:", state)
-        return state
+        mapToHomeState(entryCount: entryCount)
     }
 
     private var entryCount: Int {

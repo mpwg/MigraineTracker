@@ -83,7 +83,7 @@ struct SymiApp: App {
         )
 
         let container = try makeContainer(schema: schema, configuration: configuration)
-        let appLogStore = AppLogStore()
+        let appLogStore = AppLogStore(remoteReporter: AppTelemetryGateway.sentryLogReporter)
         let healthContextStore = HealthContextStore()
         let syncCoordinator = SyncCoordinator(
             modelContainer: container,
@@ -376,6 +376,8 @@ private struct AppRootView: View {
 
 @MainActor
 enum AppTelemetryGateway {
+    static let sentryLogReporter = AppSentryLogReporter(client: SentrySDKLogClient())
+
     static func startSentry(dsn: String) {
         SentrySDK.start { options in
             options.dsn = dsn
@@ -399,11 +401,50 @@ enum AppTelemetryGateway {
         SentrySDK.close()
     }
 
+    static func setSentryLogReportingEnabled(_ enabled: Bool) {
+        sentryLogReporter.setEnabled(enabled)
+    }
+
     static func startTelemetryDeck(appID: String) {
         TelemetryDeck.initialize(config: .init(appID: appID))
     }
 
     static func stopTelemetryDeck() {
         TelemetryDeck.terminate()
+    }
+}
+
+private struct SentrySDKLogClient: AppSentryClient {
+    func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb) {
+        let sentryBreadcrumb = Breadcrumb(level: breadcrumb.level.sentryLevel, category: breadcrumb.category)
+        sentryBreadcrumb.message = breadcrumb.message
+        sentryBreadcrumb.type = "log"
+        sentryBreadcrumb.data = breadcrumb.data
+        SentrySDK.addBreadcrumb(sentryBreadcrumb)
+    }
+
+    func captureEvent(_ event: AppRemoteLogEvent) {
+        let sentryEvent = Event(level: event.level.sentryLevel)
+        sentryEvent.message = SentryMessage(formatted: event.message)
+        sentryEvent.logger = "Symi.AppLog"
+        sentryEvent.extra = event.extra
+        SentrySDK.capture(event: sentryEvent)
+    }
+}
+
+private extension AppRemoteLogLevel {
+    var sentryLevel: SentryLevel {
+        switch self {
+        case .debug:
+            .debug
+        case .info:
+            .info
+        case .warning:
+            .warning
+        case .error:
+            .error
+        case .fatal:
+            .fatal
+        }
     }
 }
