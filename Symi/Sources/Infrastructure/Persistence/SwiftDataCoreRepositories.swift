@@ -124,6 +124,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, Sendable {
             target.weatherSnapshot = WeatherSnapshot(snapshot: weatherSnapshot, episode: target)
         }
 
+        try DomainValidator.validate(target)
         try context.save()
         try healthContextStore.save(healthContext, for: target.id)
         return target.id
@@ -227,6 +228,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
             context.insert(medication)
         }
 
+        try DomainValidator.validate(medication)
         try context.save()
         return ContinuousMedicationRecord(medication: medication)
     }

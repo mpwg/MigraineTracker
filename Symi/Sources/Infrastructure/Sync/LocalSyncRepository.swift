@@ -18,6 +18,9 @@ struct LocalSyncRepository {
             .filter(\.isCustom)
         let continuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
 
+        try episodes.forEach(DomainValidator.validate)
+        try continuousMedications.forEach(DomainValidator.validate)
+
         return episodes.map { $0.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore) } +
             customDefinitions.map { $0.syncEnvelope(deviceID: deviceID) } +
             continuousMedications.map { $0.syncEnvelope(deviceID: deviceID) }
@@ -144,6 +147,8 @@ struct LocalSyncRepository {
             context.insert(target)
         }
 
+        try DomainValidator.validate(target)
+
         if payload.includesHealthContext {
             try healthContextStore.save(payload.healthContext, for: episodeID)
         }
@@ -216,6 +221,8 @@ struct LocalSyncRepository {
         if existing == nil {
             context.insert(target)
         }
+
+        try DomainValidator.validate(target)
     }
 }
 
@@ -297,15 +304,119 @@ enum RemoteSyncPayloadValidator {
             if let weatherSnapshot = payload.weatherSnapshot {
                 validateUUID(weatherSnapshot.id, field: "episode.weatherSnapshot.id", into: &issues)
             }
+
+            issues.append(contentsOf: domainIssues(for: payload, path: "episode"))
         case .medicationDefinition(let payload):
             validateDocumentID(envelope.documentID, expectedPrefix: "medicationDefinition", payloadID: payload.catalogKey, into: &issues)
             validateKnownValue(payload.category, field: "medicationDefinition.category", allowedValues: medicationCategoryValues, into: &issues)
         case .continuousMedication(let payload):
             validateUUID(payload.id, field: "continuousMedication.id", into: &issues)
             validateDocumentID(envelope.documentID, expectedPrefix: "continuousMedication", payloadID: payload.id, into: &issues)
+            issues.append(contentsOf: domainIssues(for: payload, path: "continuousMedication"))
         }
 
         return issues
+    }
+
+    private static func domainIssues(for payload: SyncEpisodePayload, path: String) -> [String] {
+        guard let episodeID = UUID(uuidString: payload.id) else {
+            return []
+        }
+
+        let episode = Episode(
+            id: episodeID,
+            startedAt: payload.startedAt,
+            endedAt: payload.endedAt,
+            type: EpisodeType(storageValue: payload.type),
+            intensity: payload.intensity,
+            painLocation: payload.painLocation,
+            painCharacter: payload.painCharacter,
+            notes: payload.notes,
+            symptoms: payload.symptoms,
+            triggers: payload.triggers,
+            functionalImpact: payload.functionalImpact,
+            menstruationStatus: MenstruationStatus(storageValue: payload.menstruationStatus)
+        )
+
+        episode.medications = payload.medications.compactMap { medication in
+            guard let medicationID = UUID(uuidString: medication.id) else {
+                return nil
+            }
+
+            return MedicationEntry(
+                id: medicationID,
+                name: medication.name,
+                category: MedicationCategory(storageValue: medication.category),
+                dosage: medication.dosage,
+                quantity: medication.quantity,
+                takenAt: medication.takenAt,
+                effectiveness: MedicationEffectiveness(storageValue: medication.effectiveness),
+                reliefStartedAt: medication.reliefStartedAt,
+                isRepeatDose: medication.isRepeatDose,
+                episode: episode
+            )
+        }
+
+        episode.continuousMedicationChecks = payload.continuousMedicationChecks.compactMap { check in
+            guard
+                let checkID = UUID(uuidString: check.id),
+                let medicationID = UUID(uuidString: check.continuousMedicationID)
+            else {
+                return nil
+            }
+
+            return ContinuousMedicationCheck(
+                id: checkID,
+                continuousMedicationID: medicationID,
+                name: check.name,
+                dosage: check.dosage,
+                frequency: check.frequency,
+                wasTaken: check.wasTaken,
+                episode: episode
+            )
+        }
+
+        if
+            let weather = payload.weatherSnapshot,
+            let weatherID = UUID(uuidString: weather.id) {
+            episode.weatherSnapshot = WeatherSnapshot(
+                id: weatherID,
+                recordedAt: weather.recordedAt,
+                temperature: weather.temperature,
+                condition: weather.condition,
+                humidity: weather.humidity,
+                pressure: weather.pressure,
+                precipitation: weather.precipitation,
+                weatherCode: weather.weatherCode,
+                source: weather.source,
+                dayRangeStart: weather.dayRangeStart,
+                dayRangeEnd: weather.dayRangeEnd,
+                contextRangeStart: weather.contextRangeStart,
+                contextRangeEnd: weather.contextRangeEnd,
+                contextPointsStorage: WeatherSnapshot.encodeContextPoints(weather.contextPoints),
+                episode: episode
+            )
+        }
+
+        return DomainValidator.episodeIssues(for: episode, path: path)
+    }
+
+    private static func domainIssues(for payload: SyncContinuousMedicationPayload, path: String) -> [String] {
+        guard let medicationID = UUID(uuidString: payload.id) else {
+            return []
+        }
+
+        let medication = ContinuousMedication(
+            id: medicationID,
+            name: payload.name,
+            dosage: payload.dosage,
+            frequency: payload.frequency,
+            startDate: payload.startDate,
+            endDate: payload.endDate,
+            createdAt: payload.createdAt
+        )
+
+        return DomainValidator.continuousMedicationIssues(for: medication, path: path)
     }
 
     private static func validateUUID(_ value: String, field: String, into issues: inout [String]) {
