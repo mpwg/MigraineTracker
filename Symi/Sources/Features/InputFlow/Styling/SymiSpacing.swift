@@ -60,6 +60,8 @@ nonisolated enum SymiSpacing {
     static let entryDetailTriggerChipVerticalPadding: CGFloat = 9
     static let entryDetailMedicationCardPadding: CGFloat = 22
     static let entryDetailDeleteBottomPadding: CGFloat = 38
+    static let dataSharingContentBottomPadding: CGFloat = 132
+    static let dataSharingBulletIndent: CGFloat = 30
 }
 
 nonisolated enum SymiRadius {
@@ -197,6 +199,8 @@ nonisolated enum SymiSize {
     static let weatherFooterLogoMaxWidth: CGFloat = 220
     static let weatherFooterLogoMinHeight: CGFloat = 32
     static let weatherFooterLogoMaxHeight: CGFloat = 56
+    static let dataSharingPrimaryButtonHeight: CGFloat = 52
+    static let dataSharingBulletSize: CGFloat = 6
     static let journalAccentBarWidth: CGFloat = 4
     static let journalActiveFilterChipMinHeight: CGFloat = 34
     static let journalEntryCardMinHeight: CGFloat = 76

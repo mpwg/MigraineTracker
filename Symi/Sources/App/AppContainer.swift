@@ -14,7 +14,8 @@ final class AppContainer {
         weatherService: any WeatherService = AppleWeatherKitWeatherService(),
         locationService: any LocationService = SystemLocationService(),
         healthService: any HealthService = AppleHealthKitService(),
-        healthContextStore: HealthContextStore = HealthContextStore()
+        healthContextStore: HealthContextStore = HealthContextStore(),
+        usageDataConsentService: UsageDataConsentService = AppTelemetryService.shared
     ) {
         let episodeWeatherContextService = EpisodeWeatherContextService(
             weatherService: weatherService,
@@ -92,7 +93,8 @@ final class AppContainer {
                     continuousMedicationRepository: continuousMedicationRepository,
                     syncService: syncService,
                     appLogService: appLogStore,
-                    healthService: healthService
+                    healthService: healthService,
+                    usageDataConsentService: usageDataConsentService
                 )
             },
             dataExport: dataExport
