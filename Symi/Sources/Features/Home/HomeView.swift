@@ -317,7 +317,7 @@ private struct OnboardingCard: View {
                     OnboardingStepRow(
                         step: step,
                         status: status(for: step),
-                        action: step.number == 1 ? onCreateEntry : nil
+                        action: action(for: step)
                     )
                 }
             }
@@ -330,6 +330,13 @@ private struct OnboardingCard: View {
                     .padding(.vertical, HomeRhythm.sm)
                     .background(AppTheme.sage(for: colorScheme).opacity(0.10), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
                     .fixedSize(horizontal: false, vertical: true)
+
+                Button(action: onCreateEntry) {
+                    CompactEntryButtonLabel(title: "Weiter eintragen")
+                }
+                .buttonStyle(OnboardingStepButtonStyle())
+                .accessibilityIdentifier("home-quick-entry")
+                .accessibilityHint("Startet einen neuen Eintrag.")
             }
 
         }
@@ -346,6 +353,14 @@ private struct OnboardingCard: View {
         }
 
         return step.number == 1 ? .active : .muted
+    }
+
+    private func action(for step: OnboardingStepData) -> (() -> Void)? {
+        guard state == .empty, step.number == 1 else {
+            return nil
+        }
+
+        return onCreateEntry
     }
 
     private func remainingEntriesText(for entryCount: Int) -> String {
@@ -482,6 +497,32 @@ private struct OnboardingStepButtonStyle: ButtonStyle {
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .opacity(configuration.isPressed ? 0.88 : 1)
             .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
+    }
+}
+
+private struct CompactEntryButtonLabel: View {
+    let title: String
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: HomeRhythm.md) {
+            Image(systemName: "plus")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(AppTheme.coral(for: colorScheme))
+                .frame(width: 30, height: 30)
+                .background(AppTheme.coral(for: colorScheme).opacity(0.14), in: Circle())
+                .accessibilityHidden(true)
+
+            Text(title)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(AppTheme.symiOnAccent)
+
+            Spacer(minLength: HomeRhythm.sm)
+        }
+        .padding(.horizontal, HomeRhythm.lg)
+        .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
+        .background(AppTheme.petrol(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
     }
 }
 
