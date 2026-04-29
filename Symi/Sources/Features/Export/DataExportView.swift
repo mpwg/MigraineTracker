@@ -75,6 +75,16 @@ struct ReportView: View {
             .padding(.bottom, 100)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
+        .overlay(
+            LinearGradient(
+                colors: [Color.clear, Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 80)
+            .allowsHitTesting(false),
+            alignment: .bottom
+        )
         .overlay(alignment: .bottom) {
             FloatingReportButton(
                 isLoading: controller.isLoadingSummary || controller.isPreparingPDF,
@@ -236,7 +246,7 @@ private struct ReportInfoCardView: View {
             }
 
             Button(action: openDateSelection) {
-                HStack(spacing: SymiSpacing.md) {
+                HStack(spacing: SymiSpacing.lg) {
                     VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                         Text(selectedDateRange.title)
                             .font(.title3.weight(.semibold))
@@ -247,7 +257,7 @@ private struct ReportInfoCardView: View {
                             .foregroundStyle(SymiColors.textSecondary.color.opacity(0.72))
                     }
 
-                    Spacer(minLength: SymiSpacing.md)
+                    Spacer(minLength: SymiSpacing.lg)
 
                     Image(systemName: "chevron.right")
                         .font(.footnote.weight(.semibold))
@@ -255,7 +265,7 @@ private struct ReportInfoCardView: View {
                 }
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ReportDateRowButtonStyle())
             .accessibilityHint("Öffnet die Zeitraum-Auswahl")
         }
         .reportCardSurface()
@@ -286,7 +296,7 @@ private struct ReportActionCardView: View {
                     .foregroundStyle(AppTheme.symiCoral)
             }
         }
-        .reportCardSurface()
+        .reportActionCardSurface()
     }
 }
 
@@ -298,6 +308,14 @@ private struct FloatingReportButton: View {
         ZStack {
             Rectangle()
                 .fill(.ultraThinMaterial)
+                .ignoresSafeArea()
+
+            LinearGradient(
+                colors: [Color.clear, Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .allowsHitTesting(false)
 
             Button(action: action) {
                 HStack(spacing: SymiSpacing.xs) {
@@ -315,7 +333,7 @@ private struct FloatingReportButton: View {
             .buttonStyle(ReportPrimaryButtonStyle())
             .disabled(isLoading)
             .padding(.horizontal, SymiSpacing.xxl)
-            .padding(.bottom, SymiSpacing.md)
+            .padding(.bottom, SymiSpacing.lg)
         }
         .frame(height: 100)
         .shadow(color: SymiColors.primaryPetrol.color.opacity(0.12), radius: 18, x: 0, y: -8)
@@ -375,9 +393,37 @@ private struct ReportCardSurfaceModifier: ViewModifier {
     }
 }
 
+private struct ReportActionCardSurfaceModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(SymiSpacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: SymiColors.primaryPetrol.color.opacity(0.045), radius: 10, x: 0, y: 5)
+    }
+}
+
+private struct ReportDateRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, SymiSpacing.sm)
+            .padding(.vertical, SymiSpacing.xs)
+            .background(
+                SymiColors.mist.color.opacity(configuration.isPressed ? 0.72 : 0),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+            .scaleEffect(configuration.isPressed ? 0.99 : 1)
+            .animation(.spring(response: 0.22, dampingFraction: 0.86), value: configuration.isPressed)
+    }
+}
+
 private extension View {
     func reportCardSurface() -> some View {
         modifier(ReportCardSurfaceModifier())
+    }
+
+    func reportActionCardSurface() -> some View {
+        modifier(ReportActionCardSurfaceModifier())
     }
 }
 
