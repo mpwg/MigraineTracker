@@ -1,31 +1,28 @@
 import SwiftUI
 
-enum AppSection: String, CaseIterable, Identifiable {
-    case diary
+enum Tab: String, CaseIterable, Identifiable {
+    case journal
     case insights
-    case export
+    case report
     case settings
-    case information
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .diary: "Tagebuch"
+        case .journal: "Tagebuch"
         case .insights: "Insights"
-        case .export: "Teilen"
+        case .report: "Bericht"
         case .settings: "Einstellungen"
-        case .information: "Hinweise"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .diary: "book.pages"
+        case .journal: "book.pages"
         case .insights: "sparkle.magnifyingglass"
-        case .export: "square.and.arrow.up"
+        case .report: "doc.text"
         case .settings: "gearshape"
-        case .information: "hand.raised"
         }
     }
 }
@@ -35,7 +32,7 @@ struct AppShellView: View {
     private var features: AppFeatureDependencies { appContainer.featureDependencies }
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var selectedSection: AppSection = .diary
+    @State private var selectedTab: Tab = .journal
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
@@ -55,18 +52,46 @@ struct AppShellView: View {
     }
 
     private var compactRoot: some View {
-        TabView(selection: $selectedSection) {
-            ForEach([AppSection.diary, .insights, .export, .settings]) { section in
-                NavigationStack {
-                    content(for: section)
-                }
-                .tabItem {
-                    Label(section.title, systemImage: section.systemImage)
-                }
-                .accessibilityLabel("\(section.title) Tab")
-                .accessibilityIdentifier("tab-\(section.rawValue)")
-                .tag(section)
+        TabView(selection: $selectedTab) {
+            NavigationStack {
+                content(for: .journal)
             }
+            .tabItem {
+                Label(Tab.journal.title, systemImage: Tab.journal.systemImage)
+            }
+            .accessibilityLabel("\(Tab.journal.title) Tab")
+            .accessibilityIdentifier("tab-\(Tab.journal.rawValue)")
+            .tag(Tab.journal)
+
+            NavigationStack {
+                content(for: .insights)
+            }
+            .tabItem {
+                Label(Tab.insights.title, systemImage: Tab.insights.systemImage)
+            }
+            .accessibilityLabel("\(Tab.insights.title) Tab")
+            .accessibilityIdentifier("tab-\(Tab.insights.rawValue)")
+            .tag(Tab.insights)
+
+            NavigationStack {
+                content(for: .report)
+            }
+            .tabItem {
+                Label(Tab.report.title, systemImage: Tab.report.systemImage)
+            }
+            .accessibilityLabel("\(Tab.report.title) Tab")
+            .accessibilityIdentifier("tab-\(Tab.report.rawValue)")
+            .tag(Tab.report)
+
+            NavigationStack {
+                content(for: .settings)
+            }
+            .tabItem {
+                Label(Tab.settings.title, systemImage: Tab.settings.systemImage)
+            }
+            .accessibilityLabel("\(Tab.settings.title) Tab")
+            .accessibilityIdentifier("tab-\(Tab.settings.rawValue)")
+            .tag(Tab.settings)
         }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
@@ -75,55 +100,53 @@ struct AppShellView: View {
     private var regularRoot: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             List {
-                ForEach(AppSection.allCases) { section in
+                ForEach(Tab.allCases) { tab in
                     Button {
-                        selectedSection = section
+                        selectedTab = tab
                         columnVisibility = .all
                     } label: {
-                        Label(section.title, systemImage: section.systemImage)
+                        Label(tab.title, systemImage: tab.systemImage)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)
-                    .listRowBackground(selectedSection == section ? AppTheme.selectedFill(for: colorScheme) : Color.clear)
-                    .accessibilityLabel("\(section.title) Bereich")
-                    .accessibilityValue(selectedSection == section ? "Ausgewählt" : "")
-                    .accessibilityIdentifier("sidebar-\(section.rawValue)")
+                    .listRowBackground(selectedTab == tab ? AppTheme.selectedFill(for: colorScheme) : Color.clear)
+                    .accessibilityLabel("\(tab.title) Bereich")
+                    .accessibilityValue(selectedTab == tab ? "Ausgewählt" : "")
+                    .accessibilityIdentifier("sidebar-\(tab.rawValue)")
                 }
             }
             .navigationTitle(ProductBranding.displayName)
             .navigationSplitViewColumnWidth(min: 220, ideal: 250)
         } detail: {
             NavigationStack {
-                regularContent(for: selectedSection)
+                regularContent(for: selectedTab)
             }
         }
         .navigationSplitViewStyle(.balanced)
     }
 
     @ViewBuilder
-    private func content(for section: AppSection) -> some View {
-        switch section {
-        case .diary:
+    private func content(for tab: Tab) -> some View {
+        switch tab {
+        case .journal:
             HomeView(dependencies: features.home)
         case .insights:
             InsightsView(dependencies: features.insights)
-        case .export:
-            DataExportView(dependencies: features.dataExport)
+        case .report:
+            ReportView(dependencies: features.dataExport)
         case .settings:
             SettingsView(dependencies: features.settings, showsCloseButton: false)
-        case .information:
-            ProductInformationView(mode: .standard)
         }
     }
 
     @ViewBuilder
-    private func regularContent(for section: AppSection) -> some View {
-        switch section {
-        case .diary, .insights:
-            content(for: section)
-        case .export, .settings, .information:
+    private func regularContent(for tab: Tab) -> some View {
+        switch tab {
+        case .journal, .insights:
+            content(for: tab)
+        case .report, .settings:
             RegularDetailSurface {
-                content(for: section)
+                content(for: tab)
             }
         }
     }
