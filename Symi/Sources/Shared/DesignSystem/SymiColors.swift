@@ -43,9 +43,12 @@ struct SymiColorValue: Equatable, Sendable {
 }
 
 enum SymiColors {
+    // Brand palette
     static let primaryPetrol = SymiColorValue(hex: 0x0F3D3E)
     static let sage = SymiColorValue(hex: 0x8ECDB8)
     static let coral = SymiColorValue(hex: 0xFF8A7A)
+
+    // Core surfaces and text
     static let warmBackground = SymiColorValue(hex: 0xF6F4EF)
     static let card = SymiColorValue(hex: 0xFFFEFB)
     static let textPrimary = SymiColorValue(hex: 0x1C1C1E)
@@ -53,21 +56,28 @@ enum SymiColors {
     static let mist = SymiColorValue(hex: 0xECF7F4)
     static let onAccent = SymiColorValue(hex: 0xFFFFFF)
 
+    // Journal
     static let journalInk = SymiColorValue(hex: 0x143F3F)
     static let journalSelectedChipFill = SymiColorValue(hex: 0xDDEFE7)
+
+    // Health and intensity
     static let intensityLight = SymiColorValue(hex: 0x4E9D7D)
     static let intensityMedium = SymiColorValue(hex: 0xC1842F)
     static let intensityStrong = SymiColorValue(hex: 0xD85C4A)
 
+    // Input flow accents
     static let triggerBlue = SymiColorValue(hex: 0x4A78D9)
     static let noteAmber = SymiColorValue(hex: 0xD18A2B)
     static let reviewPurple = SymiColorValue(hex: 0x8A65D6)
+
+    // Entry detail
     static let entryDetailCard = SymiColorValue(hex: 0xFFFFFB)
     static let entryDetailIconFill = SymiColorValue(hex: 0xECF3E4)
     static let entryDetailFaceFill = SymiColorValue(hex: 0xF6EAD5)
     static let entryDetailProgressWarmMid = SymiColorValue(hex: 0xE6BA75)
     static let entryDetailProgressSageMid = SymiColorValue(hex: 0xC2D19E)
 
+    // Dark mode accents
     static let petrolDark = SymiColorValue(hex: 0x8ECDB8)
     static let coralDark = SymiColorValue(hex: 0xFFA196)
     static let sageDark = SymiColorValue(hex: 0xA9DEC9)
@@ -75,6 +85,7 @@ enum SymiColors {
     static let noteAmberDark = SymiColorValue(hex: 0xF0B867)
     static let reviewPurpleDark = SymiColorValue(hex: 0xB096F2)
 
+    // Dark mode surfaces and text
     static let darkBackgroundTop = SymiColorValue(hex: 0x14171A)
     static let darkBackgroundMiddle = SymiColorValue(hex: 0x0F1A1A)
     static let darkBackgroundBottom = SymiColorValue(hex: 0x1A1714)
@@ -102,6 +113,8 @@ enum SymiColors {
         Color.primary.opacity(colorScheme == .dark ? SymiOpacity.softFill : SymiOpacity.hairline)
     }
 }
+
+// MARK: - Semantic Color Tokens
 
 enum ColorToken {
     enum Text {
@@ -175,6 +188,8 @@ enum ColorToken {
         }
     }
 }
+
+// MARK: - Pain Tokens
 
 struct PainToken {
     let level: PainIntensityLevel
