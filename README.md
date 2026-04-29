@@ -74,7 +74,7 @@ Die App bleibt klar migränefokussiert, fühlt sich aber bewusst nicht wie ein m
 - PDF-Erzeugung lokal auf dem Gerät
 - optionale, manuell ausgelöste iCloud-Synchronisation getrennt von der lokalen Kernnutzung
 
-Interne technische Kennungen wie `Symi`, Bundle-ID, Scheme und iCloud-Container bestehen derzeit aus Migrations- und Release-Gründen weiter, obwohl die sichtbare Produktmarke auf `Symi` umgestellt ist.
+Interne Apple-Developer-Identifier wie Bundle ID und iCloud-Container bestehen aus Migrations- und Release-Gründen weiterhin unter `MigraineTracker`, obwohl die sichtbare Produktmarke auf `Symi` umgestellt ist. Diese historischen Kennungen sind in [docs/Historische-Identifier.md](/Users/mat/code/Symi/docs/Historische-Identifier.md) dokumentiert.
 
 ## Datenschutz und medizinische Einordnung
 
@@ -133,5 +133,6 @@ xcodebuild test -scheme Symi -destination 'platform=iOS Simulator,name=iPhone 16
 - [docs/MVP-Konzept.md](/Users/mat/code/Symi/docs/MVP-Konzept.md)
 - [docs/Insight-Engine.md](/Users/mat/code/Symi/docs/Insight-Engine.md)
 - [docs/App-Store-Metadaten.md](/Users/mat/code/Symi/docs/App-Store-Metadaten.md)
+- [docs/Historische-Identifier.md](/Users/mat/code/Symi/docs/Historische-Identifier.md)
 - [docs/Teststrategie-und-Release-Checkliste.md](/Users/mat/code/Symi/docs/Teststrategie-und-Release-Checkliste.md)
 - [Symi Support](https://symiapp.com)

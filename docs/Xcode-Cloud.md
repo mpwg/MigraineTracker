@@ -18,6 +18,7 @@ Es gibt genau drei relevante Workflows:
 Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erfüllt sein:
 
 - das Bundle `eu.mpwg.MigraineTracker` existiert bereits in `App Store Connect`
+- die Bundle ID `eu.mpwg.MigraineTracker` ist ein historischer Identifier und wird trotz sichtbarer Produktmarke `Symi` nicht umbenannt
 - in `GitHub Actions` sind diese Secrets gesetzt:
   - `APPLE_DEVELOPER_TEAM_ID`
   - `APP_STORE_CONNECT_ISSUER_ID`
@@ -32,14 +33,19 @@ Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erf
   - `TELEMETRY_APP_ID`
 - das Shared Scheme `Symi` ist versioniert
 - das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile für `eu.mpwg.MigraineTracker`
-- die vorhandenen Entitlements für Push und iCloud bleiben aktiv
+- die vorhandenen Entitlements für Push, WeatherKit, HealthKit und iCloud bleiben aktiv
+- der iCloud-Container bleibt `iCloud.eu.mpwg.MigraineTracker`; es wird kein paralleler `Symi`-Container für Releases angelegt
 - der verwendete App-Store-Connect-Schlüssel ist ein Team-Key, kein Individual Key
 
 Aus dem Projekt bestätigt:
 
 - `DEVELOPMENT_TEAM = $(APPLE_DEVELOPER_TEAM_ID)`
+- `PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTracker` für die iOS-App
 - `Debug` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Development`
 - `Release` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Production`
+- `Symi/Symi.entitlements` referenziert `iCloud.eu.mpwg.MigraineTracker`
+
+Die historischen Apple-Developer-Identifier und die Regeln für eine mögliche spätere Migration sind in [Historische Identifier](/Users/mat/code/Symi/docs/Historische-Identifier.md) festgehalten.
 
 Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `match` Distribution-Zertifikate und Provisioning Profiles in ein temporäres Keychain und bauen anschließend reproduzierbar mit manuellem Distribution-Signing.
 Die GitHub-Workflows wählen für Swift-Builds explizit Xcode 26.4 aus.
