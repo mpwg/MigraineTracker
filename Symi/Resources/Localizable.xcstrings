@@ -524,6 +524,7 @@
       }
     },
     "App herunterladen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

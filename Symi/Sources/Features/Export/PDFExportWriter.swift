@@ -21,7 +21,7 @@ nonisolated enum PDFExportWriter {
 
     private static func writeRawPDF(summary: ExportPeriodSummary, mode: PDFReportMode, to url: URL, layout: PDFLayout) throws {
         var mediaBox = layout.pageRect
-        let documentTitle = localized("Symi")
+        let documentTitle = localized("Symi – Gesundheitsbericht")
         let metadata = [
             kCGPDFContextCreator: ProductBranding.displayName,
             kCGPDFContextAuthor: ProductBranding.displayName,
@@ -37,11 +37,10 @@ nonisolated enum PDFExportWriter {
         var page = PDFPageContext(
             context: context,
             layout: layout,
-            headerTitle: localized("Symi"),
+            headerTitle: documentTitle,
             headerLogo: brandLogo(),
-            footerTitle: localized("App herunterladen"),
-            footerLinkLabel: localized("App Store"),
-            footerURL: ProductBranding.appStoreURL.absoluteString,
+            footerTitle: localized("Erstellt mit Symi"),
+            footerBody: localized("Symi hilft, Symptome besser zu verstehen"),
             footerQRCode: appStoreQRCode()
         )
         page.beginPage()
@@ -83,7 +82,7 @@ nonisolated enum PDFExportWriter {
             }
         }
 
-        page.endPage()
+        page.endPage(includeMarketingFooter: true)
         context.closePDF()
     }
 
@@ -91,7 +90,7 @@ nonisolated enum PDFExportWriter {
         guard let document = PDFDocument(url: url), document.pageCount > 0 else {
             throw PDFExportError.documentValidationFailed
         }
-        let documentTitle = localized("Symi")
+        let documentTitle = localized("Symi – Gesundheitsbericht")
 
         document.documentAttributes = [
             PDFDocumentAttribute.titleAttribute: documentTitle,
@@ -412,7 +411,7 @@ nonisolated private struct PDFLayout {
     let pageRect: CGRect
     let margin: CGFloat = 40
     let logoSize: CGFloat = 44
-    let qrCodeSize: CGFloat = 78
+    let qrCodeSize: CGFloat = 48
     let titleFont = CTFontCreateWithName("Helvetica-Bold" as CFString, 22, nil)
     let sectionFont = CTFontCreateWithName("Helvetica-Bold" as CFString, 15, nil)
     let brandFont = CTFontCreateWithName("Helvetica-Bold" as CFString, 12, nil)
@@ -423,24 +422,21 @@ nonisolated private struct PDFLayout {
     let chartFillColor = CGColor(red: 0.19, green: 0.49, blue: 0.53, alpha: 1)
     let chartTrackColor = CGColor(red: 0.88, green: 0.93, blue: 0.93, alpha: 1)
     let brandFillColor = CGColor(red: 0.96, green: 0.98, blue: 0.98, alpha: 1)
-    let brandStrokeColor = CGColor(red: 0.68, green: 0.77, blue: 0.77, alpha: 1)
+    let brandStrokeColor = CGColor(red: 0.76, green: 0.82, blue: 0.82, alpha: 1)
     let separatorColor = CGColor(gray: 0.82, alpha: 1)
     let lineSpacing: CGFloat = 5
-    let footerHeight: CGFloat = 108
+    let footerHeight: CGFloat = 72
     let headerTopInset: CGFloat = 72
     let footerTopInset: CGFloat = 10
     let headerHeight: CGFloat = 48
     let headerTextTopOffset: CGFloat = 2
     let headerTextGap: CGFloat = 12
-    let panelHeight: CGFloat = 92
-    let panelInset: CGFloat = 12
-    let panelTextInset: CGFloat = 14
-    let panelTitleTopOffset: CGFloat = 14
-    let panelTitleHeight: CGFloat = 16
-    let panelBodyTopOffset: CGFloat = 34
-    let panelBodyHeight: CGFloat = 18
-    let panelLinkTopOffset: CGFloat = 48
-    let panelLinkHeight: CGFloat = 30
+    let footerContentHeight: CGFloat = 56
+    let footerTextInset: CGFloat = 10
+    let footerTitleTopOffset: CGFloat = 10
+    let footerTitleHeight: CGFloat = 14
+    let footerBodyTopOffset: CGFloat = 27
+    let footerBodyHeight: CGFloat = 20
     let chartMaxRows = 8
     let chartRowHeight: CGFloat = 18
     let chartTitleHeight: CGFloat = 24
@@ -452,12 +448,11 @@ nonisolated private struct PDFLayout {
     let chartBarHeight: CGFloat = 8
     let chartMinFillWidth: CGFloat = 2
     let separatorHeight: CGFloat = 1
-    let panelCornerRadius: CGFloat = 6
 
     var contentWidth: CGFloat { pageRect.width - (margin * 2) }
     var topY: CGFloat { margin + headerTopInset }
     var bottomY: CGFloat { pageRect.height - margin - footerHeight }
-    var footerTopY: CGFloat { pageRect.height - margin - footerHeight + footerTopInset }
+    var footerTopY: CGFloat { pageRect.height - margin - footerContentHeight }
 
     init(pageRect: CGRect) {
         self.pageRect = pageRect
@@ -470,8 +465,7 @@ nonisolated private struct PDFPageContext {
     let headerTitle: String
     let headerLogo: CGImage?
     let footerTitle: String
-    let footerLinkLabel: String
-    let footerURL: String
+    let footerBody: String
     let footerQRCode: CGImage?
     var cursorY: CGFloat = 0
 
@@ -481,8 +475,7 @@ nonisolated private struct PDFPageContext {
         headerTitle: String,
         headerLogo: CGImage?,
         footerTitle: String,
-        footerLinkLabel: String,
-        footerURL: String,
+        footerBody: String,
         footerQRCode: CGImage?
     ) {
         self.context = context
@@ -490,8 +483,7 @@ nonisolated private struct PDFPageContext {
         self.headerTitle = headerTitle
         self.headerLogo = headerLogo
         self.footerTitle = footerTitle
-        self.footerLinkLabel = footerLinkLabel
-        self.footerURL = footerURL
+        self.footerBody = footerBody
         self.footerQRCode = footerQRCode
         self.cursorY = layout.topY
     }
@@ -535,7 +527,7 @@ nonisolated private struct PDFPageContext {
 
         cursorY = headerTop + layout.headerHeight
         drawSeparator()
-        addSpacing(layout.panelTextInset)
+        addSpacing(layout.footerTextInset)
     }
 
     mutating func drawSectionTitle(_ text: String) throws {
@@ -546,13 +538,18 @@ nonisolated private struct PDFPageContext {
         try draw(text: text, font: layout.bodyFont, extraSpacing: layout.lineSpacing)
     }
 
-    mutating func drawAppStorePanel(title: String, body: String, linkLabel: String, url: String, qrCode: CGImage?) throws {
-        let panelRect = CGRect(x: layout.margin, y: layout.footerTopY, width: layout.contentWidth, height: layout.panelHeight)
-        drawPanelBackground(panelRect)
+    mutating func drawReportBrandFooter(title: String, body: String, qrCode: CGImage?) throws {
+        let footerRect = CGRect(
+            x: layout.margin,
+            y: layout.footerTopY,
+            width: layout.contentWidth,
+            height: layout.footerContentHeight
+        )
+        drawSeparator(at: footerRect.minY)
 
         let qrRect = CGRect(
-            x: panelRect.maxX - layout.qrCodeSize - layout.panelInset,
-            y: panelRect.minY + layout.panelInset,
+            x: footerRect.maxX - layout.qrCodeSize,
+            y: footerRect.minY + ((layout.footerContentHeight - layout.qrCodeSize) / 2),
             width: layout.qrCodeSize,
             height: layout.qrCodeSize
         )
@@ -560,46 +557,34 @@ nonisolated private struct PDFPageContext {
             drawImage(qrCode, in: qrRect)
         }
 
-        let textX = panelRect.minX + layout.panelTextInset
-        let textWidth = qrRect.minX - textX - layout.panelTextInset
+        let textX = footerRect.minX + layout.footerTextInset
+        let textWidth = qrRect.minX - textX - layout.footerTextInset
         try draw(
             text: title,
-            font: layout.brandFont,
-            color: layout.textColor,
+            font: layout.smallFont,
+            color: layout.mutedTextColor,
             rect: CGRect(
                 x: textX,
-                y: panelRect.minY + layout.panelTitleTopOffset,
+                y: footerRect.minY + layout.footerTitleTopOffset,
                 width: textWidth,
-                height: layout.panelTitleHeight
+                height: layout.footerTitleHeight
             ),
             extraSpacing: 0
         )
         if !body.isEmpty {
             try draw(
                 text: body,
-                font: layout.bodyFont,
-                color: layout.textColor,
+                font: layout.smallFont,
+                color: layout.mutedTextColor,
                 rect: CGRect(
                     x: textX,
-                    y: panelRect.minY + layout.panelBodyTopOffset,
+                    y: footerRect.minY + layout.footerBodyTopOffset,
                     width: textWidth,
-                    height: layout.panelBodyHeight
+                    height: layout.footerBodyHeight
                 ),
                 extraSpacing: 0
             )
         }
-        try draw(
-            text: "\(linkLabel): \(url)",
-            font: layout.smallFont,
-            color: layout.mutedTextColor,
-            rect: CGRect(
-                x: textX,
-                y: panelRect.minY + layout.panelLinkTopOffset,
-                width: textWidth,
-                height: layout.panelLinkHeight
-            ),
-            extraSpacing: 0
-        )
     }
 
     mutating func drawHorizontalBarChart(title: String, rows: [PDFChartRow], maximumValue: Int? = nil) throws {
@@ -661,7 +646,7 @@ nonisolated private struct PDFPageContext {
         } + 19
 
         if cursorY + estimatedHeight > layout.bottomY {
-            endPage()
+            endPage(includeMarketingFooter: false)
             beginPage()
         }
 
@@ -709,7 +694,7 @@ nonisolated private struct PDFPageContext {
 
     private mutating func ensureSpace(_ height: CGFloat) {
         if cursorY + height > layout.bottomY {
-            endPage()
+            endPage(includeMarketingFooter: false)
             beginPage()
         }
     }
@@ -732,23 +717,6 @@ nonisolated private struct PDFPageContext {
         context.restoreGState()
     }
 
-    private func drawPanelBackground(_ rect: CGRect) {
-        let path = unsafe CGPath(
-            roundedRect: pdfRect(fromTopLeftRect: rect),
-            cornerWidth: layout.panelCornerRadius,
-            cornerHeight: layout.panelCornerRadius,
-            transform: nil
-        )
-        context.saveGState()
-        context.setFillColor(layout.brandFillColor)
-        context.addPath(path)
-        context.fillPath()
-        context.setStrokeColor(layout.brandStrokeColor)
-        context.addPath(path)
-        context.strokePath()
-        context.restoreGState()
-    }
-
     private func drawRect(_ rect: CGRect, color: CGColor) {
         context.saveGState()
         context.setFillColor(color)
@@ -757,10 +725,14 @@ nonisolated private struct PDFPageContext {
     }
 
     private func drawSeparator() {
+        drawSeparator(at: cursorY)
+    }
+
+    private func drawSeparator(at y: CGFloat) {
         let separatorRect = pdfRect(
             fromTopLeftRect: CGRect(
                 x: layout.margin,
-                y: cursorY,
+                y: y,
                 width: layout.contentWidth,
                 height: layout.separatorHeight
             )
@@ -799,14 +771,14 @@ nonisolated private struct PDFPageContext {
         )
     }
 
-    mutating func endPage() {
-        try? drawAppStorePanel(
-            title: footerTitle,
-            body: "",
-            linkLabel: footerLinkLabel,
-            url: footerURL,
-            qrCode: footerQRCode
-        )
+    mutating func endPage(includeMarketingFooter: Bool) {
+        if includeMarketingFooter {
+            try? drawReportBrandFooter(
+                title: footerTitle,
+                body: footerBody,
+                qrCode: footerQRCode
+            )
+        }
         context.endPDFPage()
     }
 }
