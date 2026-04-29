@@ -82,6 +82,47 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func appMenstruationStatusNeverQualifiesAsHealthFlowSample() {
+        for status in MenstruationStatus.allCases {
+            #expect(!HealthDataCatalog.canWriteMenstrualFlowSample(from: status))
+            #expect(!status.canWriteMenstrualFlowSample)
+            #expect(!status.accuracyDescription.isEmpty)
+        }
+
+        #expect(!HealthDataCatalog.writeDefinitions.contains { $0.id == .menstrualFlow })
+    }
+
+    @Test
+    func healthMenstrualFlowSampleKeepsSourceAndPrecisionSeparateFromAppStatus() {
+        let sample = HealthMenstrualFlowSampleData(
+            flow: "Mittel",
+            precision: .specified,
+            startDate: Date(timeIntervalSince1970: 1_000),
+            endDate: Date(timeIntervalSince1970: 2_000),
+            source: "Apple Health",
+            isUserEntered: true
+        )
+        let snapshot = HealthContextSnapshotData(
+            recordedAt: Date(timeIntervalSince1970: 3_000),
+            source: "Apple Health",
+            sleepMinutes: nil,
+            stepCount: nil,
+            averageHeartRate: nil,
+            restingHeartRate: nil,
+            heartRateVariability: nil,
+            menstrualFlow: sample.flow,
+            menstrualFlowSample: sample,
+            symptoms: []
+        )
+
+        #expect(sample.canWriteToAppleHealth)
+        #expect(snapshot.hasVisibleData)
+        #expect(snapshot.menstrualFlowSample?.precision == .specified)
+        #expect(MenstruationStatus.active.displayName == "Aktuell")
+        #expect(!MenstruationStatus.active.canWriteMenstrualFlowSample)
+    }
+
+    @Test
     func painIntensityLevelUsesCentralBoundaryBuckets() {
         let expectations: [(Int, PainIntensityLevel, String, String?)] = [
             (0, .none, "Nicht bewertet", nil),

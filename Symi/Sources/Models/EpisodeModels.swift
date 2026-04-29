@@ -59,6 +59,23 @@ enum MenstruationStatus: String, CaseIterable, Codable, Identifiable {
         }
     }
 
+    nonisolated var accuracyDescription: String {
+        switch self {
+        case .unknown:
+            String(localized: "Keine Zyklusangabe aus der App.")
+        case .none:
+            String(localized: "App-Angabe ohne Health-Flow-Sample.")
+        case .active:
+            String(localized: "Aktuelle App-Angabe ohne Stärke oder Health-Flow-Sample.")
+        case .expected:
+            String(localized: "Erwartete App-Angabe, keine echte Blutungsprobe.")
+        }
+    }
+
+    nonisolated var canWriteMenstrualFlowSample: Bool {
+        false
+    }
+
     nonisolated init(storageValue: String) {
         switch storageValue {
         case Self.unknown.rawValue, "Nicht angegeben":

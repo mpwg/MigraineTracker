@@ -214,8 +214,12 @@ nonisolated enum PDFExportWriter {
             if let heartRateVariability = health.heartRateVariability {
                 parts.append("HRV \(heartRateVariability.formatted(.number.precision(.fractionLength(0)))) ms")
             }
-            if let menstrualFlow = health.menstrualFlow {
-                parts.append(formatted("Menstruation %@", menstrualFlow))
+            if let menstrualFlowSample = health.menstrualFlowSample {
+                parts.append(menstrualFlowSample.displayText)
+                parts.append(formatted("Zyklusgenauigkeit: %@", menstrualFlowSample.accuracyText))
+            } else if let menstrualFlow = health.menstrualFlow {
+                parts.append(formatted("Menstruation aus Apple Health %@", menstrualFlow))
+                parts.append("Zyklusgenauigkeit: alter Kontext ohne Sample-Details")
             }
             if !health.symptoms.isEmpty {
                 parts.append(formatted("Symptome %@", health.symptoms.joined(separator: ", ")))
