@@ -18,6 +18,7 @@ SCREENSHOT_SCHEME = "SymiScreenshots"
 SCREENSHOT_TEST_TARGET = "SymiUITests"
 SCREENSHOT_TEST_IDENTIFIER = "SymiUITests/SymiScreenshotTests/testCaptureMainStoreScreens"
 SCREENSHOT_SEED_TEST_IDENTIFIER = "SymiUITests/SymiScreenshotTests/testDefaultSeedShowsScaleFirstNewEntryFlow"
+SCREENSHOT_PAGE_SELECTION_ENV = "SYMI_SCREENSHOT_PAGES"
 SCREENSHOT_LANGUAGES = [
   { language: "de-DE", locale: "de_DE" },
   { language: "en-US", locale: "en_US" }
@@ -34,6 +35,13 @@ MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
 def screenshot_ios_version
   configured_version = ENV["SCREENSHOT_IOS_VERSION"].to_s.strip
   configured_version.empty? ? nil : configured_version
+end
+
+def screenshot_page_selection(options = {})
+  configured_pages = options[:pages].to_s.strip unless options.nil?
+  configured_pages = ENV[SCREENSHOT_PAGE_SELECTION_ENV].to_s.strip if configured_pages.to_s.empty?
+  configured_pages = ENV["SCREENSHOT_PAGES"].to_s.strip if configured_pages.to_s.empty?
+  configured_pages.empty? ? "store" : configured_pages
 end
 
 def include_mac_screenshots?
@@ -110,16 +118,17 @@ def clear_ios_status_bar!(device)
   sh("xcrun simctl status_bar #{device.udid.shellescape} clear || true")
 end
 
-def run_screenshot_test!(destination:, result_bundle_path:, language:)
+def run_screenshot_test!(destination:, result_bundle_path:, language:, pages:)
   run_ui_test!(
     destination: destination,
     result_bundle_path: result_bundle_path,
     language: language,
-    test_identifier: SCREENSHOT_TEST_IDENTIFIER
+    test_identifier: SCREENSHOT_TEST_IDENTIFIER,
+    pages: pages
   )
 end
 
-def run_ui_test!(destination:, result_bundle_path:, language:, test_identifier:)
+def run_ui_test!(destination:, result_bundle_path:, language:, test_identifier:, pages: "store")
   FileUtils.rm_rf(result_bundle_path)
   FileUtils.mkdir_p(File.dirname(result_bundle_path))
 
@@ -139,7 +148,8 @@ def run_ui_test!(destination:, result_bundle_path:, language:, test_identifier:)
       {
         "FASTLANE_SNAPSHOT" => "YES",
         "FASTLANE_LANGUAGE" => language,
-        "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET
+        "TEST_TARGET_NAME" => SCREENSHOT_TEST_TARGET,
+        SCREENSHOT_PAGE_SELECTION_ENV => pages
       },
       command
     )
@@ -392,11 +402,12 @@ def next_build_number
   Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
 end
 
-def capture_screenshot_set!(devices:, output_directory:, override_status_bar:, language_config:)
+def capture_screenshot_set!(devices:, output_directory:, override_status_bar:, language_config:, pages:)
   language = language_config.fetch(:language)
   locale = language_config.fetch(:locale)
   FileUtils.mkdir_p(output_directory)
   write_snapshot_configuration_files!(language: language, locale: locale)
+  UI.message("Erzeuge Screenshot-Seiten '#{pages}' für #{language}.")
 
   devices.each do |device_name|
     device = resolve_simulator_for_capture(device_name)
@@ -405,14 +416,15 @@ def capture_screenshot_set!(devices:, output_directory:, override_status_bar:, l
     run_screenshot_test!(
       destination: "platform=iOS Simulator,id=#{device.udid}",
       result_bundle_path: screenshot_result_bundle_path(output_directory, device_name, language: language),
-      language: language
+      language: language,
+      pages: pages
     )
     copy_device_screenshots!(device_name: device_name, output_directory: output_directory, language: language)
     clear_ios_status_bar!(device) if override_status_bar
   end
 end
 
-def capture_all_screenshots!
+def capture_all_screenshots!(pages: screenshot_page_selection)
   FileUtils.mkdir_p(SCREENSHOT_ROOT)
   FileUtils.rm_rf(IOS_SCREENSHOT_OUTPUT)
   FileUtils.mkdir_p(IOS_SCREENSHOT_OUTPUT)
@@ -422,7 +434,8 @@ def capture_all_screenshots!
       devices: IOS_SCREENSHOT_DEVICES,
       output_directory: IOS_SCREENSHOT_OUTPUT,
       override_status_bar: true,
-      language_config: language_config
+      language_config: language_config,
+      pages: pages
     )
   end
 end
@@ -499,8 +512,8 @@ platform :ios do
   end
 
   desc "Erzeugt App-Store-Screenshots für iPhone"
-  lane :sync_screenshots do
-    capture_all_screenshots!
+  lane :sync_screenshots do |options|
+    capture_all_screenshots!(pages: screenshot_page_selection(options))
   end
 
   desc "Validiert den Screenshot-Seed und den Skala-zuerst-Flow ohne vollständige Screenshot-Erzeugung"
@@ -541,7 +554,7 @@ platform :ios do
 
     api_key = app_store_api_key
     version = current_marketing_version
-    capture_all_screenshots!
+    capture_all_screenshots!(pages: screenshot_page_selection)
     upload_screenshot_sets!(api_key: api_key, version: version)
     sync_release_signing!(api_key: api_key)
 

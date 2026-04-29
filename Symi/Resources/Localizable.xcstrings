@@ -3299,9 +3299,6 @@
         }
       }
     },
-    "Symi arbeitet lokal-first. Bei aktivem iCloud-Sync startet ein neuer Abgleich sofort nach dem Aktivieren und danach nur, wenn du ihn mit `Jetzt synchronisieren` auslöst. Beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet; Push- oder Subscription-gesteuerte Hintergrundabgleiche gibt es derzeit nicht." : {
-
-    },
     "Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern." : {
 
     },
