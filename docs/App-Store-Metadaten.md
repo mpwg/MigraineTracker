@@ -26,13 +26,13 @@ https://symiapp.com/privacy
 
 ## Marketing-Notizen
 
-- Plattform: nur iPhone
+- Plattform: iPhone und iPad
 - Sprache: nur Deutsch
 - Speicherung: nur lokal auf dem Gerät
 - Kein Account, kein Backend, keine Synchronisation
 - Kein Apple Health im MVP
 
-## Screenshot-Plan für deutsches iPhone-Listing
+## Screenshot-Plan für deutsches iPhone- und iPad-Listing
 
 Benötigte Screenshots vorbereiten:
 
@@ -58,7 +58,7 @@ Für reproduzierbare App-Store-Screenshots kann die App mit `APP_STORE_SCREENSHO
 
 Der Modus ersetzt dabei den normalen Datenspeicher nicht dauerhaft, sondern verwendet eine getrennte Store-Datei nur für die Screenshot-Erstellung.
 
-Die Fastlane-Lane `ios sync_screenshots` erzeugt standardmäßig die fünf Store-Screenshots. Über `pages` kann in einem einzigen UI-Testdurchgang gesteuert werden, welche Seiten aufgenommen werden:
+Die Fastlane-Lane `ios sync_screenshots` erzeugt standardmäßig die fünf Store-Screenshots für `iPhone 15 Pro Max` und `iPad Pro 13-inch (M4)`. Über `pages` kann in einem einzigen UI-Testdurchgang gesteuert werden, welche Seiten aufgenommen werden:
 
 - `bundle exec fastlane ios sync_screenshots pages:store` erzeugt die Store-Auswahl
 - `bundle exec fastlane ios sync_screenshots pages:all` erzeugt alle Screenshot-Routen

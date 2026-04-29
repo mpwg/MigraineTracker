@@ -28,7 +28,8 @@ SCREENSHOT_ROOT = File.join(REPO_ROOT, "fastlane", "screenshots")
 IOS_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "ios")
 MAC_SCREENSHOT_OUTPUT = File.join(SCREENSHOT_ROOT, "macos")
 IOS_SCREENSHOT_DEVICES = [
-  "iPhone 15 Pro Max"
+  "iPhone 15 Pro Max",
+  "iPad Pro 13-inch (M4)"
 ].freeze
 MAC_SCREENSHOT_DEVICES = ["Mac"].freeze
 
@@ -511,7 +512,7 @@ platform :ios do
     write_local_secrets!
   end
 
-  desc "Erzeugt App-Store-Screenshots für iPhone"
+  desc "Erzeugt App-Store-Screenshots für iPhone und iPad"
   lane :sync_screenshots do |options|
     capture_all_screenshots!(pages: screenshot_page_selection(options))
   end
@@ -521,7 +522,7 @@ platform :ios do
     validate_screenshot_seed!
   end
 
-  desc "Erzeugt und lädt iPhone-Screenshots nach App Store Connect hoch"
+  desc "Erzeugt und lädt iPhone- und iPad-Screenshots nach App Store Connect hoch"
   lane :upload_screenshots do
     api_key = app_store_api_key
     version = current_marketing_version
