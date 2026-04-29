@@ -1,8 +1,6 @@
 import Foundation
 import Observation
 import OSLog
-import Sentry
-import TelemetryDeck
 
 enum UsageDataConsent: Equatable {
     case undecided
@@ -97,41 +95,26 @@ final class AppTelemetryService: UsageDataConsentService {
         }
 
         if !isSentryStarted, let sentryDSN = Self.sentryDSN {
-            SentrySDK.start { options in
-                options.dsn = sentryDSN
-
-                options.sendDefaultPii = false
-                options.tracesSampleRate = 0.2
-
-                options.configureProfiling = {
-                    $0.sessionSampleRate = 0.05
-                    $0.lifecycle = .trace
-                }
-
-                options.attachScreenshot = false
-                options.attachViewHierarchy = false
-                options.debug = false
-                options.enableLogs = false
-            }
+            AppTelemetryGateway.startSentry(dsn: sentryDSN)
             isSentryStarted = true
         } else if Self.sentryDSN == nil {
             Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
         }
 
         if !isTelemetryDeckStarted, let telemetryAppID = Self.telemetryAppID {
-            TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
+            AppTelemetryGateway.startTelemetryDeck(appID: telemetryAppID)
             isTelemetryDeckStarted = true
         }
     }
 
     private func stopTelemetry() {
         if isSentryStarted {
-            SentrySDK.close()
+            AppTelemetryGateway.stopSentry()
             isSentryStarted = false
         }
 
         if isTelemetryDeckStarted {
-            TelemetryDeck.terminate()
+            AppTelemetryGateway.stopTelemetryDeck()
             isTelemetryDeckStarted = false
         }
     }

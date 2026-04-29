@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
 import OSLog
+import Sentry
+import TelemetryDeck
 
 @main
 struct SymiApp: App {
@@ -275,17 +277,21 @@ private struct AppRootView: View {
                 telemetryService.configureIfPermitted(launchConfiguration: launchConfiguration)
                 presentUsageDataConsentPromptIfNeeded()
             }
-            .sheet(isPresented: $isUsageDataConsentPromptPresented, onDismiss: {
-                if telemetryService.shouldAskForUsageDataConsent {
-                    telemetryService.setUsageDataCollectionAllowed(false)
-                }
-            }) {
+            .sheet(
+                isPresented: $isUsageDataConsentPromptPresented,
+                onDismiss: {
+                    if telemetryService.shouldAskForUsageDataConsent {
+                        telemetryService.setUsageDataCollectionAllowed(false)
+                    }
+                },
+                content: {
                 DataSharingSheet {
                     telemetryService.setUsageDataCollectionAllowed(true)
                 }
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
-            }
+                }
+            )
     }
 
     @ViewBuilder
@@ -365,5 +371,39 @@ private struct AppRootView: View {
         }
 
         isUsageDataConsentPromptPresented = true
+    }
+}
+
+@MainActor
+enum AppTelemetryGateway {
+    static func startSentry(dsn: String) {
+        SentrySDK.start { options in
+            options.dsn = dsn
+
+            options.sendDefaultPii = false
+            options.tracesSampleRate = 0.2
+
+            options.configureProfiling = {
+                $0.sessionSampleRate = 0.05
+                $0.lifecycle = .trace
+            }
+
+            options.attachScreenshot = false
+            options.attachViewHierarchy = false
+            options.debug = false
+            options.enableLogs = false
+        }
+    }
+
+    static func stopSentry() {
+        SentrySDK.close()
+    }
+
+    static func startTelemetryDeck(appID: String) {
+        TelemetryDeck.initialize(config: .init(appID: appID))
+    }
+
+    static func stopTelemetryDeck() {
+        TelemetryDeck.terminate()
     }
 }

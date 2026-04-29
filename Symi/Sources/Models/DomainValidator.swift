@@ -36,7 +36,16 @@ nonisolated enum DomainValidator {
     static func episodeIssues(for episode: Episode, path: String = "episode") -> [String] {
         var issues: [String] = []
 
-        appendDateRangeIssue(start: episode.startedAt, end: episode.endedAt, path: path, startField: "startedAt", endField: "endedAt", into: &issues)
+        appendDateRangeIssue(
+            DateRangeValidation(
+                start: episode.startedAt,
+                end: episode.endedAt,
+                path: path,
+                startField: "startedAt",
+                endField: "endedAt"
+            ),
+            into: &issues
+        )
 
         if !intensityRange.contains(episode.intensity) {
             issues.append("\(path).intensity muss zwischen \(intensityRange.lowerBound) und \(intensityRange.upperBound) liegen")
@@ -78,7 +87,16 @@ nonisolated enum DomainValidator {
             issues.append("\(path).name darf nicht leer sein")
         }
 
-        appendDateRangeIssue(start: medication.startDate, end: medication.endDate, path: path, startField: "startDate", endField: "endDate", into: &issues)
+        appendDateRangeIssue(
+            DateRangeValidation(
+                start: medication.startDate,
+                end: medication.endDate,
+                path: path,
+                startField: "startDate",
+                endField: "endDate"
+            ),
+            into: &issues
+        )
         return issues
     }
 
@@ -101,13 +119,30 @@ nonisolated enum DomainValidator {
             issues.append("\(path).source darf nicht leer sein")
         }
 
-        appendDateRangeIssue(start: snapshot.dayRangeStart, end: snapshot.dayRangeEnd, path: path, startField: "dayRangeStart", endField: "dayRangeEnd", into: &issues)
-        appendDateRangeIssue(start: snapshot.contextRangeStart, end: snapshot.contextRangeEnd, path: path, startField: "contextRangeStart", endField: "contextRangeEnd", into: &issues)
+        appendDateRangeIssue(
+            DateRangeValidation(
+                start: snapshot.dayRangeStart,
+                end: snapshot.dayRangeEnd,
+                path: path,
+                startField: "dayRangeStart",
+                endField: "dayRangeEnd"
+            ),
+            into: &issues
+        )
+        appendDateRangeIssue(
+            DateRangeValidation(
+                start: snapshot.contextRangeStart,
+                end: snapshot.contextRangeEnd,
+                path: path,
+                startField: "contextRangeStart",
+                endField: "contextRangeEnd"
+            ),
+            into: &issues
+        )
 
-        for (index, point) in snapshot.contextPoints.enumerated() {
-            if point.condition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                issues.append("\(path).contextPoints[\(index)].condition darf nicht leer sein")
-            }
+        for (index, point) in snapshot.contextPoints.enumerated()
+            where point.condition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            issues.append("\(path).contextPoints[\(index)].condition darf nicht leer sein")
         }
 
         return issues
@@ -119,18 +154,21 @@ nonisolated enum DomainValidator {
         }
     }
 
-    private static func appendDateRangeIssue(
-        start: Date?,
-        end: Date?,
-        path: String,
-        startField: String,
-        endField: String,
-        into issues: inout [String]
-    ) {
+    private static func appendDateRangeIssue(_ range: DateRangeValidation, into issues: inout [String]) {
+        let start = range.start
+        let end = range.end
         guard let start, let end, end < start else {
             return
         }
 
-        issues.append("\(path).\(endField) darf nicht vor \(path).\(startField) liegen")
+        issues.append("\(range.path).\(range.endField) darf nicht vor \(range.path).\(range.startField) liegen")
+    }
+
+    private struct DateRangeValidation {
+        let start: Date?
+        let end: Date?
+        let path: String
+        let startField: String
+        let endField: String
     }
 }
