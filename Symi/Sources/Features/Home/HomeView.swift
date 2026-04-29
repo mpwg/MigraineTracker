@@ -277,27 +277,6 @@ private struct OnboardingCard: View {
     let onCreateEntry: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
-    private let steps = [
-        OnboardingStepData(
-            number: 1,
-            title: "Ersten Eintrag erstellen",
-            subtitle: "Wie fühlst du dich gerade?",
-            systemImage: "plus.circle.fill"
-        ),
-        OnboardingStepData(
-            number: 2,
-            title: "Trigger hinzufügen",
-            subtitle: "Was könnte deine Schmerzen auslösen?",
-            systemImage: "tag.fill"
-        ),
-        OnboardingStepData(
-            number: 3,
-            title: "Insights entdecken",
-            subtitle: "Erkenne Muster in deinem Verlauf",
-            systemImage: "sparkles"
-        )
-    ]
-
     var body: some View {
         VStack(alignment: .leading, spacing: HomeRhythm.xl) {
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
@@ -312,14 +291,9 @@ private struct OnboardingCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
-                ForEach(steps) { step in
-                    OnboardingStepRow(
-                        step: step,
-                        status: status(for: step),
-                        action: action(for: step)
-                    )
-                }
+            VStack(alignment: .leading, spacing: HomeRhythm.md) {
+                PrimaryOnboardingActionRow(action: onCreateEntry)
+                OnboardingContextBlock()
             }
 
             if case .early(let entryCount) = state {
@@ -330,13 +304,6 @@ private struct OnboardingCard: View {
                     .padding(.vertical, HomeRhythm.sm)
                     .background(AppTheme.sage(for: colorScheme).opacity(0.10), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
                     .fixedSize(horizontal: false, vertical: true)
-
-                Button(action: onCreateEntry) {
-                    CompactEntryButtonLabel(title: "Weiter eintragen")
-                }
-                .buttonStyle(OnboardingStepButtonStyle())
-                .accessibilityIdentifier("home-quick-entry")
-                .accessibilityHint("Startet einen neuen Eintrag.")
             }
 
         }
@@ -347,190 +314,103 @@ private struct OnboardingCard: View {
         .accessibilityElement(children: .contain)
     }
 
-    private func status(for step: OnboardingStepData) -> OnboardingStepStatus {
-        if case .early = state, step.number == 1 {
-            return .completedDominant
-        }
-
-        return step.number == 1 ? .active : .muted
-    }
-
-    private func action(for step: OnboardingStepData) -> (() -> Void)? {
-        guard state == .empty, step.number == 1 else {
-            return nil
-        }
-
-        return onCreateEntry
-    }
-
     private func remainingEntriesText(for entryCount: Int) -> String {
         let remainingEntries = max(3 - entryCount, 1)
         return "\(remainingEntries) Eintrag\(remainingEntries == 1 ? "" : "e")"
     }
 }
 
-private struct OnboardingStepData: Identifiable {
-    let number: Int
-    let title: String
-    let subtitle: String
-    let systemImage: String
-
-    var id: Int { number }
-}
-
-private enum OnboardingStepStatus {
-    case active
-    case completedDominant
-    case muted
-}
-
-private struct OnboardingStepRow: View {
-    let step: OnboardingStepData
-    let status: OnboardingStepStatus
-    let action: (() -> Void)?
+private struct PrimaryOnboardingActionRow: View {
+    let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        if let action {
-            Button(action: action) {
-                rowContent
-            }
-            .buttonStyle(OnboardingStepButtonStyle())
-            .accessibilityIdentifier("home-quick-entry")
-            .accessibilityHint("Startet einen neuen Eintrag.")
-        } else {
+        Button(action: action) {
             rowContent
         }
+        .buttonStyle(PrimaryOnboardingActionButtonStyle())
+        .accessibilityIdentifier("home-quick-entry")
+        .accessibilityHint("Startet einen neuen Eintrag.")
     }
 
     private var rowContent: some View {
         HStack(alignment: .center, spacing: HomeRhythm.lg) {
-            Image(systemName: iconName)
-                .font(iconFont)
-                .foregroundStyle(iconForeground)
-                .frame(width: iconSize, height: iconSize)
-                .background(iconBackground, in: Circle())
+            Image(systemName: "plus.circle.fill")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                .frame(width: 34, height: 34)
+                .background(AppTheme.sage(for: colorScheme).opacity(0.22), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(step.title)
-                    .font(titleFont)
-                    .foregroundStyle(titleColor)
+                Text("Ersten Eintrag erstellen")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
 
-                if status != .muted || step.number == 1 {
-                    Text(step.subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(subtitleColor)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text("Wie fühlst du dich gerade?")
+                    .font(.footnote)
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            if action != nil {
-                Spacer(minLength: HomeRhythm.sm)
+            Spacer(minLength: HomeRhythm.sm)
 
-                VStack {
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
-                        .accessibilityHidden(true)
-                    Spacer(minLength: 0)
-                }
-                .frame(minHeight: SymiSize.minInteractiveHeight)
+            VStack {
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
+                    .accessibilityHidden(true)
+                Spacer(minLength: 0)
             }
+            .frame(minHeight: SymiSize.minInteractiveHeight)
         }
-        .padding(.vertical, isPrimary ? HomeRhythm.sm : HomeRhythm.xs / 2)
-        .frame(maxWidth: .infinity, minHeight: isPrimary ? SymiSize.minInteractiveHeight : 0, alignment: .leading)
+        .padding(.vertical, HomeRhythm.sm)
+        .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
         .contentShape(Rectangle())
-        .opacity(rowOpacity)
-        .padding(.bottom, isPrimary ? HomeRhythm.primaryStepBottomSpacing : 0)
-    }
-
-    private var iconName: String {
-        status == .completedDominant ? "checkmark" : step.systemImage
-    }
-
-    private var iconForeground: Color {
-        switch status {
-        case .active:
-            AppTheme.petrol(for: colorScheme)
-        case .completedDominant:
-            AppTheme.textPrimary(for: colorScheme).opacity(0.85)
-        case .muted:
-            AppTheme.petrol(for: colorScheme)
-        }
-    }
-
-    private var iconBackground: Color {
-        switch status {
-        case .active:
-            AppTheme.sage(for: colorScheme).opacity(0.22)
-        case .completedDominant:
-            AppTheme.sage(for: colorScheme).opacity(0.18)
-        case .muted:
-            AppTheme.sage(for: colorScheme).opacity(0.12)
-        }
-    }
-
-    private var titleColor: Color {
-        switch status {
-        case .active:
-            AppTheme.petrol(for: colorScheme)
-        case .completedDominant:
-            AppTheme.textPrimary(for: colorScheme)
-        case .muted:
-            AppTheme.petrol(for: colorScheme)
-        }
-    }
-
-    private var subtitleColor: Color {
-        status == .active ? AppTheme.textPrimary(for: colorScheme).opacity(0.72) : AppTheme.textSecondary(for: colorScheme)
-    }
-
-    private var titleFont: Font {
-        switch status {
-        case .active:
-            .title3.weight(.semibold)
-        case .completedDominant:
-            .subheadline.weight(.semibold)
-        case .muted:
-            .footnote.weight(.semibold)
-        }
-    }
-
-    private var iconFont: Font {
-        switch status {
-        case .active:
-            .subheadline.weight(.bold)
-        case .completedDominant:
-            .footnote.weight(.bold)
-        case .muted:
-            .footnote.weight(.bold)
-        }
-    }
-
-    private var iconSize: CGFloat {
-        status == .active ? 34 : 32
-    }
-
-    private var rowOpacity: Double {
-        switch status {
-        case .active:
-            1
-        case .completedDominant:
-            0.80
-        case .muted:
-            0.62
-        }
-    }
-
-    private var isPrimary: Bool {
-        status == .active || status == .completedDominant
     }
 }
 
-private struct OnboardingStepButtonStyle: ButtonStyle {
+private struct OnboardingContextBlock: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: HomeRhythm.sm) {
+            Text("Für bessere Insights")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
+                contextItem(
+                    title: "Trigger festhalten",
+                    subtitle: "z. B. Stress, Schlaf oder Wetter"
+                )
+                contextItem(
+                    title: "Mehr Kontext erfassen",
+                    subtitle: "z. B. Medikamente oder Zyklus"
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func contextItem(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(0.72))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct PrimaryOnboardingActionButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
@@ -538,33 +418,6 @@ private struct OnboardingStepButtonStyle: ButtonStyle {
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .opacity(configuration.isPressed ? 0.88 : 1)
             .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
-    }
-}
-
-private struct CompactEntryButtonLabel: View {
-    let title: String
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        HStack(spacing: HomeRhythm.md) {
-            Image(systemName: "plus")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(SymiColors.coral.color)
-                .frame(width: 30, height: 30)
-                .background(AppTheme.symiOnAccent, in: Circle())
-                .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 1)
-                .accessibilityHidden(true)
-
-            Text(title)
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(AppTheme.symiOnAccent)
-
-            Spacer(minLength: HomeRhythm.sm)
-        }
-        .padding(.horizontal, HomeRhythm.lg)
-        .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
-        .background(AppTheme.petrol(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
     }
 }
 
@@ -1766,7 +1619,6 @@ private enum HomeRhythm {
     static let xl: CGFloat = 20
     static let xxl: CGFloat = 24
     static let primaryButtonHeight: CGFloat = 60
-    static let primaryStepBottomSpacing: CGFloat = 6
     static let primaryInsightPaddingBoost: CGFloat = 8
 }
 
