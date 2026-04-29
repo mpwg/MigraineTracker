@@ -395,11 +395,11 @@ private struct OnboardingContextBlock: View {
 
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 contextItem(
-                    title: "Trigger festhalten",
+                    title: "Achte auf mögliche Auslöser",
                     subtitle: "z. B. Stress, Schlaf oder Wetter"
                 )
                 contextItem(
-                    title: "Mehr Kontext erfassen",
+                    title: "Notiere, was noch Einfluss hat",
                     subtitle: "z. B. Medikamente oder Zyklus"
                 )
             }
