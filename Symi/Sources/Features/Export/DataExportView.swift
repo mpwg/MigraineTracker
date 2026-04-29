@@ -52,7 +52,7 @@ struct ReportView: View {
                 }
                 .padding(.top, layout.headerTopPadding)
 
-                VStack(spacing: SymiSpacing.lg) {
+                VStack(spacing: SymiSpacing.xxl) {
                     ReportInfoCardView(
                         selectedDateRange: selectedDateRange,
                         openDateSelection: openDateSelection
@@ -77,7 +77,7 @@ struct ReportView: View {
         }
         .overlay(
             LinearGradient(
-                colors: [Color.clear, Color(.systemBackground)],
+                colors: [Color.clear, Color(.systemBackground).opacity(0.7)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -261,7 +261,7 @@ private struct ReportInfoCardView: View {
 
                     Image(systemName: "chevron.right")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(SymiColors.textSecondary.color.opacity(0.58))
+                        .foregroundStyle(SymiColors.textSecondary.color.opacity(0.72))
                 }
                 .contentShape(Rectangle())
             }
@@ -311,7 +311,7 @@ private struct FloatingReportButton: View {
                 .ignoresSafeArea()
 
             LinearGradient(
-                colors: [Color.clear, Color(.systemBackground)],
+                colors: [Color.clear, Color(.systemBackground).opacity(0.7)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -336,6 +336,10 @@ private struct FloatingReportButton: View {
             .padding(.bottom, SymiSpacing.lg)
         }
         .frame(height: 100)
+        .overlay(
+            Divider().opacity(0.15),
+            alignment: .top
+        )
         .shadow(color: SymiColors.primaryPetrol.color.opacity(0.12), radius: 18, x: 0, y: -8)
     }
 }
@@ -413,6 +417,7 @@ private struct ReportDateRowButtonStyle: ButtonStyle {
                 in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )
             .scaleEffect(configuration.isPressed ? 0.99 : 1)
+            .opacity(configuration.isPressed ? 0.92 : 1)
             .animation(.spring(response: 0.22, dampingFraction: 0.86), value: configuration.isPressed)
     }
 }
