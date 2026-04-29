@@ -421,9 +421,18 @@ private struct OnboardingStepRow: View {
                 if status != .muted || step.number == 1 {
                     Text(step.subtitle)
                         .font(.footnote)
-                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                        .foregroundStyle(subtitleColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+            }
+
+            if action != nil {
+                Spacer(minLength: HomeRhythm.sm)
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.38))
+                    .accessibilityHidden(true)
             }
         }
         .padding(.vertical, isPrimary ? HomeRhythm.sm : HomeRhythm.xs / 2)
@@ -457,6 +466,10 @@ private struct OnboardingStepRow: View {
 
     private var titleColor: Color {
         AppTheme.petrol(for: colorScheme)
+    }
+
+    private var subtitleColor: Color {
+        isPrimary ? AppTheme.textPrimary(for: colorScheme).opacity(0.72) : AppTheme.textSecondary(for: colorScheme)
     }
 
     private var titleFont: Font {
@@ -511,7 +524,7 @@ private struct CompactEntryButtonLabel: View {
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(SymiColors.coral.color)
                 .frame(width: 30, height: 30)
-                .background(SymiColors.coral.color.opacity(0.14), in: Circle())
+                .background(AppTheme.symiOnAccent.opacity(0.96), in: Circle())
                 .accessibilityHidden(true)
 
             Text(title)
@@ -624,7 +637,7 @@ private struct InsightCard: View {
     }
 
     private var backgroundOpacity: Double {
-        prominence == .primary ? 0.14 : 0.07
+        prominence == .primary ? 0.16 : 0.07
     }
 }
 
@@ -1725,8 +1738,8 @@ private enum HomeRhythm {
     static let xl: CGFloat = 20
     static let xxl: CGFloat = 24
     static let primaryButtonHeight: CGFloat = 60
-    static let primaryStepBottomSpacing: CGFloat = 4
-    static let primaryInsightPaddingBoost: CGFloat = 4
+    static let primaryStepBottomSpacing: CGFloat = 6
+    static let primaryInsightPaddingBoost: CGFloat = 6
 }
 
 private extension View {
