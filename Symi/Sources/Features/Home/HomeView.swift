@@ -259,7 +259,7 @@ private struct HomeHeroSection<InsightsDestination: View>: View {
         }
         .id(state.animationID)
         .transition(heroTransition)
-        .animation(reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.86), value: state)
+        .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: state)
         .accessibilityIdentifier("home-patterns-section")
     }
 
@@ -299,8 +299,8 @@ private struct OnboardingCard: View {
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xl) {
-            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+        VStack(alignment: .leading, spacing: HomeRhythm.xl) {
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 Text("Starte deine Reise")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
@@ -312,7 +312,7 @@ private struct OnboardingCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            VStack(alignment: .leading, spacing: HomeRhythm.md) {
                 ForEach(steps) { step in
                     OnboardingStepRow(
                         step: step,
@@ -323,11 +323,11 @@ private struct OnboardingCard: View {
 
             if case .early(let entryCount) = state {
                 Text("Nur noch \(remainingEntriesText(for: entryCount)) bis zu deinen ersten Insights")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
-                    .padding(.horizontal, SymiSpacing.md)
-                    .padding(.vertical, SymiSpacing.sm)
-                    .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface), in: Capsule())
+                    .padding(.horizontal, HomeRhythm.lg)
+                    .padding(.vertical, HomeRhythm.sm)
+                    .background(AppTheme.sage(for: colorScheme).opacity(0.10), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -338,10 +338,9 @@ private struct OnboardingCard: View {
             .accessibilityIdentifier("home-quick-entry")
             .accessibilityHint("Startet einen neuen Eintrag.")
         }
-        .padding(SymiSpacing.xxxl)
+        .padding(HomeRhythm.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.cardBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.heroCard, style: .continuous))
-        .shadow(color: AppTheme.shadowColor(for: colorScheme), radius: 18, x: 0, y: 8)
+        .homeSoftCard()
         .accessibilityElement(children: .contain)
     }
 
@@ -391,7 +390,7 @@ private struct OnboardingStepRow: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .top, spacing: SymiSpacing.md) {
+        HStack(alignment: .top, spacing: HomeRhythm.md) {
             Image(systemName: iconName)
                 .font(iconFont)
                 .foregroundStyle(iconForeground)
@@ -399,7 +398,7 @@ private struct OnboardingStepRow: View {
                 .background(iconBackground, in: Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+            VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
                 Text(step.title)
                     .font(titleFont)
                     .foregroundStyle(titleColor)
@@ -413,6 +412,7 @@ private struct OnboardingStepRow: View {
                 }
             }
         }
+        .opacity(rowOpacity)
     }
 
     private var iconName: String {
@@ -422,50 +422,49 @@ private struct OnboardingStepRow: View {
     private var iconForeground: Color {
         switch status {
         case .active, .completedDominant:
-            AppTheme.symiOnAccent
+            AppTheme.petrol(for: colorScheme)
         case .muted:
-            AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.disabledContent)
+            AppTheme.petrol(for: colorScheme)
         }
     }
 
     private var iconBackground: Color {
         switch status {
         case .active, .completedDominant:
-            AppTheme.petrol(for: colorScheme)
+            AppTheme.sage(for: colorScheme).opacity(0.22)
         case .muted:
-            AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface)
+            AppTheme.sage(for: colorScheme).opacity(0.10)
         }
     }
 
     private var titleColor: Color {
-        status == .muted ? AppTheme.textSecondary(for: colorScheme) : AppTheme.textPrimary(for: colorScheme)
+        status == .muted ? AppTheme.textSecondary(for: colorScheme) : AppTheme.petrol(for: colorScheme)
     }
 
     private var titleFont: Font {
         switch status {
         case .active, .completedDominant:
-            .headline.weight(.semibold)
+            .title3.weight(.semibold)
         case .muted:
-            .subheadline.weight(.semibold)
+            .footnote.weight(.semibold)
         }
     }
 
     private var iconFont: Font {
         switch status {
         case .active, .completedDominant:
-            .body.weight(.bold)
-        case .muted:
             .subheadline.weight(.bold)
+        case .muted:
+            .footnote.weight(.bold)
         }
     }
 
     private var iconSize: CGFloat {
-        switch status {
-        case .active, .completedDominant:
-            40
-        case .muted:
-            34
-        }
+        36
+    }
+
+    private var rowOpacity: Double {
+        status == .muted ? 0.58 : 1
     }
 }
 
@@ -475,8 +474,8 @@ private struct InsightsCard<Destination: View>: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xl) {
-            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+        VStack(alignment: .leading, spacing: HomeRhythm.xl) {
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 Text("Deine Insights")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
@@ -487,7 +486,7 @@ private struct InsightsCard<Destination: View>: View {
                     .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
             }
 
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            VStack(alignment: .leading, spacing: HomeRhythm.md) {
                 ForEach(Array(visibleCards.enumerated()), id: \.element.id) { index, card in
                     InsightCard(card: card, prominence: index == 0 ? .primary : .secondary)
                 }
@@ -510,10 +509,9 @@ private struct InsightsCard<Destination: View>: View {
             .buttonStyle(.plain)
             .accessibilityHint("Öffnet die Insights-Ansicht.")
         }
-        .padding(SymiSpacing.xxxl)
+        .padding(HomeRhythm.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.cardBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.heroCard, style: .continuous))
-        .shadow(color: AppTheme.shadowColor(for: colorScheme), radius: 18, x: 0, y: 8)
+        .homeSoftCard()
         .accessibilityElement(children: .contain)
     }
 
@@ -533,15 +531,15 @@ private struct InsightCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .top, spacing: SymiSpacing.md) {
+        HStack(alignment: .top, spacing: HomeRhythm.md) {
             Image(systemName: card.systemImage)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(card.tint(for: colorScheme))
+                .foregroundStyle(card.tint(for: colorScheme).opacity(0.78))
                 .frame(width: 34, height: 34)
-                .background(card.tint(for: colorScheme).opacity(SymiOpacity.clearAccent), in: Circle())
+                .background(card.tint(for: colorScheme).opacity(0.11), in: Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+            VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
                 Text(card.title)
                     .font(titleFont)
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
@@ -555,14 +553,19 @@ private struct InsightCard: View {
                 }
             }
         }
-        .padding(prominence == .primary ? SymiSpacing.xl : SymiSpacing.md)
+        .padding(prominence == .primary ? HomeRhythm.lg : HomeRhythm.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(card.tint(for: colorScheme).opacity(SymiOpacity.clearAccent), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+        .background(card.tint(for: colorScheme).opacity(backgroundOpacity), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+        .shadow(color: Color.black.opacity(0.035), radius: prominence == .primary ? 8 : 5, x: 0, y: prominence == .primary ? 3 : 2)
         .accessibilityElement(children: .combine)
     }
 
     private var titleFont: Font {
         prominence == .primary ? .headline.weight(.semibold) : .subheadline.weight(.semibold)
+    }
+
+    private var backgroundOpacity: Double {
+        prominence == .primary ? 0.14 : 0.07
     }
 }
 
@@ -871,15 +874,15 @@ private struct PrimaryButtonLabel: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .center, spacing: SymiSpacing.md) {
+        HStack(alignment: .center, spacing: HomeRhythm.md) {
             Image(systemName: "plus")
-                .font(.title2.weight(.semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(AppTheme.symiOnAccent)
-                .frame(width: SymiSize.homeQuickEntryIcon, height: SymiSize.homeQuickEntryIcon)
-                .background(AppTheme.coral(for: colorScheme), in: Circle())
+                .frame(width: 38, height: 38)
+                .background(AppTheme.coral(for: colorScheme).opacity(0.68), in: Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+            VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
                 Text(title)
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(AppTheme.symiOnAccent)
@@ -897,7 +900,7 @@ private struct PrimaryButtonLabel: View {
 
             Spacer(minLength: SymiSpacing.xs)
         }
-        .padding(.horizontal, SymiSpacing.lg)
+        .padding(.horizontal, HomeRhythm.lg)
         .frame(maxWidth: .infinity, minHeight: SymiSize.homeQuickEntryButtonMinHeight, alignment: .leading)
     }
 }
@@ -1594,12 +1597,12 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
             .background(buttonBackground, in: RoundedRectangle(cornerRadius: SymiRadius.homeActionButton, style: .continuous))
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.homeActionShadowDark : SymiOpacity.homeActionShadowLight),
-                radius: 16,
+                color: Color.black.opacity(colorScheme == .dark ? 0.08 : 0.04),
+                radius: 10,
                 x: SymiShadow.cardXOffset,
-                y: 5
+                y: 4
             )
-            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: configuration.isPressed)
     }
 
     private var buttonBackground: LinearGradient {
@@ -1645,6 +1648,24 @@ private struct HomeSurfaceModifier: ViewModifier {
     }
 }
 
+private struct HomeSoftCardModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background(AppTheme.cardBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.10 : 0.04), radius: 10, x: 0, y: 4)
+    }
+}
+
+private enum HomeRhythm {
+    static let xs: CGFloat = 8
+    static let sm: CGFloat = 8
+    static let md: CGFloat = 12
+    static let lg: CGFloat = 16
+    static let xl: CGFloat = 24
+}
+
 private extension View {
     func homeScreen() -> some View {
         modifier(HomeScreenModifier())
@@ -1652,6 +1673,10 @@ private extension View {
 
     func homeSurface() -> some View {
         modifier(HomeSurfaceModifier())
+    }
+
+    func homeSoftCard() -> some View {
+        modifier(HomeSoftCardModifier())
     }
 }
 

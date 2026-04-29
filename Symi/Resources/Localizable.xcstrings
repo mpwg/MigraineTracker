@@ -1749,16 +1749,6 @@
     "Flow-Schritt %@" : {
 
     },
-    "Fortschritt %lld von %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Fortschritt %1$lld von %2$lld"
-          }
-        }
-      }
-    },
     "Frequenz, optional" : {
 
     },
@@ -2576,9 +2566,6 @@
     "Nicht ausgewählt" : {
 
     },
-    "Noch %lld Einträge bis zu deinen ersten Insights" : {
-
-    },
     "Noch kein Eintrag für diesen Tag." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2654,6 +2641,9 @@
           }
         }
       }
+    },
+    "Nur noch %@ bis zu deinen ersten Insights" : {
+
     },
     "Nur Sync" : {
       "localizations" : {
