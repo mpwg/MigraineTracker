@@ -3,6 +3,8 @@ import SwiftData
 
 @MainActor
 struct LocalSyncRepository {
+    private static let fetchBatchSize = 250
+
     let modelContainer: ModelContainer
     let healthContextStore: HealthContextStore
 
@@ -13,22 +15,65 @@ struct LocalSyncRepository {
 
     func allEnvelopes(deviceID: String) throws -> [SyncDocumentEnvelope] {
         let context = ModelContext(modelContainer)
-        let episodes = try context.fetch(FetchDescriptor<Episode>())
-        let customDefinitions = try context.fetch(FetchDescriptor<MedicationDefinition>())
-            .filter(\.isCustom)
-        let continuousMedications = try context.fetch(FetchDescriptor<ContinuousMedication>())
+        var envelopes: [SyncDocumentEnvelope] = []
 
-        try episodes.forEach(DomainValidator.validate)
-        try continuousMedications.forEach(DomainValidator.validate)
+        try context.fetchBatches(
+            FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.updatedAt, order: .reverse)]),
+            batchSize: Self.fetchBatchSize
+        ) { episodes in
+            try episodes.forEach(DomainValidator.validate)
+            envelopes += episodes.map { $0.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore) }
+        }
 
-        return episodes.map { $0.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore) } +
-            customDefinitions.map { $0.syncEnvelope(deviceID: deviceID) } +
-            continuousMedications.map { $0.syncEnvelope(deviceID: deviceID) }
+        try context.fetchBatches(
+            FetchDescriptor<MedicationDefinition>(
+                predicate: #Predicate<MedicationDefinition> { $0.isCustom },
+                sortBy: [SortDescriptor(\MedicationDefinition.updatedAt, order: .reverse)]
+            ),
+            batchSize: Self.fetchBatchSize
+        ) { definitions in
+            envelopes += definitions.map { $0.syncEnvelope(deviceID: deviceID) }
+        }
+
+        try context.fetchBatches(
+            FetchDescriptor<ContinuousMedication>(
+                sortBy: [SortDescriptor(\ContinuousMedication.updatedAt, order: .reverse)]
+            ),
+            batchSize: Self.fetchBatchSize
+        ) { medications in
+            try medications.forEach(DomainValidator.validate)
+            envelopes += medications.map { $0.syncEnvelope(deviceID: deviceID) }
+        }
+
+        return envelopes
     }
 
     func envelope(documentID: String, deviceID: String) throws -> SyncDocumentEnvelope? {
-        let envelopes = try allEnvelopes(deviceID: deviceID)
-        return envelopes.first { $0.documentID == documentID }
+        let context = ModelContext(modelContainer)
+        guard let key = SyncDocumentKey(documentID: documentID) else {
+            return nil
+        }
+
+        switch key.entityType {
+        case .episode:
+            let episodeID = key.id
+            let descriptor = FetchDescriptor<Episode>(
+                predicate: #Predicate<Episode> { $0.id == episodeID }
+            )
+            return try context.fetch(descriptor).first?.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore)
+        case .medicationDefinition:
+            let catalogKey = key.rawID
+            let descriptor = FetchDescriptor<MedicationDefinition>(
+                predicate: #Predicate<MedicationDefinition> { $0.catalogKey == catalogKey && $0.isCustom }
+            )
+            return try context.fetch(descriptor).first?.syncEnvelope(deviceID: deviceID)
+        case .continuousMedication:
+            let medicationID = key.id
+            let descriptor = FetchDescriptor<ContinuousMedication>(
+                predicate: #Predicate<ContinuousMedication> { $0.id == medicationID }
+            )
+            return try context.fetch(descriptor).first?.syncEnvelope(deviceID: deviceID)
+        }
     }
 
     func validate(remote envelope: SyncDocumentEnvelope) throws {
@@ -58,7 +103,10 @@ struct LocalSyncRepository {
         in context: ModelContext
     ) throws {
         let episodeID = try RemoteSyncPayloadValidator.uuid(payload.id, field: "episode.id")
-        let existing = try context.fetch(FetchDescriptor<Episode>()).first { $0.id == episodeID }
+        let existingDescriptor = FetchDescriptor<Episode>(
+            predicate: #Predicate<Episode> { $0.id == episodeID }
+        )
+        let existing = try context.fetch(existingDescriptor).first
         let target = existing ?? Episode(
             id: episodeID,
             startedAt: payload.startedAt,
@@ -159,7 +207,11 @@ struct LocalSyncRepository {
         from envelope: SyncDocumentEnvelope,
         in context: ModelContext
     ) throws {
-        let existing = try context.fetch(FetchDescriptor<MedicationDefinition>()).first { $0.catalogKey == payload.catalogKey }
+        let catalogKey = payload.catalogKey
+        let existingDescriptor = FetchDescriptor<MedicationDefinition>(
+            predicate: #Predicate<MedicationDefinition> { $0.catalogKey == catalogKey }
+        )
+        let existing = try context.fetch(existingDescriptor).first
         let target = existing ?? MedicationDefinition(
             catalogKey: payload.catalogKey,
             groupID: payload.groupID,
@@ -198,7 +250,10 @@ struct LocalSyncRepository {
         in context: ModelContext
     ) throws {
         let medicationID = try RemoteSyncPayloadValidator.uuid(payload.id, field: "continuousMedication.id")
-        let existing = try context.fetch(FetchDescriptor<ContinuousMedication>()).first { $0.id == medicationID }
+        let existingDescriptor = FetchDescriptor<ContinuousMedication>(
+            predicate: #Predicate<ContinuousMedication> { $0.id == medicationID }
+        )
+        let existing = try context.fetch(existingDescriptor).first
         let target = existing ?? ContinuousMedication(
             id: medicationID,
             name: payload.name,
@@ -223,6 +278,64 @@ struct LocalSyncRepository {
         }
 
         try DomainValidator.validate(target)
+    }
+}
+
+private struct SyncDocumentKey {
+    let entityType: SyncEntityType
+    let rawID: String
+    let id: UUID
+
+    init?(documentID: String) {
+        let parts = documentID.split(separator: ":", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else {
+            return nil
+        }
+
+        let entityType: SyncEntityType
+        switch parts[0] {
+        case "episode":
+            entityType = .episode
+        case "medicationDefinition":
+            entityType = .medicationDefinition
+        case "continuousMedication":
+            entityType = .continuousMedication
+        default:
+            return nil
+        }
+
+        self.entityType = entityType
+        self.rawID = parts[1]
+        self.id = UUID(uuidString: parts[1]) ?? UUID()
+    }
+}
+
+private extension ModelContext {
+    nonisolated func fetchBatches<T: PersistentModel>(
+        _ descriptor: FetchDescriptor<T>,
+        batchSize: Int,
+        handleBatch: ([T]) throws -> Void
+    ) throws {
+        var descriptor = descriptor
+        var offset = 0
+
+        while true {
+            descriptor.fetchLimit = batchSize
+            descriptor.fetchOffset = offset
+            let batch = try fetch(descriptor)
+
+            guard !batch.isEmpty else {
+                return
+            }
+
+            try handleBatch(batch)
+
+            if batch.count < batchSize {
+                return
+            }
+
+            offset += batch.count
+        }
     }
 }
 

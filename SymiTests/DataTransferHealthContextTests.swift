@@ -230,6 +230,49 @@ struct DataTransferHealthContextTests {
 
         #expect(didThrow)
     }
+
+    @Test
+    func backupImportAndSyncHandleSeveralThousandRecords() throws {
+        let sourceContainer = try makeInMemoryContainer()
+        let sourceHealthStore = HealthContextStore(baseURL: try makeTemporaryDirectory())
+        let seedCounts = try seedLargeDataSet(in: sourceContainer)
+        let sourceRepository = SwiftDataExportRepository(
+            modelContainer: sourceContainer,
+            healthContextStore: sourceHealthStore
+        )
+
+        let backupURL = try sourceRepository.createBackup()
+        let targetContainer = try makeInMemoryContainer()
+        let targetRepository = SwiftDataExportRepository(
+            modelContainer: targetContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        )
+
+        let preview = try targetRepository.previewBackupImport(from: backupURL)
+        _ = try targetRepository.importBackup(from: backupURL)
+        let importedContext = ModelContext(targetContainer)
+        let importedEpisodes = try importedContext.fetch(FetchDescriptor<Episode>())
+        let importedDefinitions = try importedContext.fetch(
+            FetchDescriptor<MedicationDefinition>(
+                predicate: #Predicate<MedicationDefinition> { $0.isCustom }
+            )
+        )
+        let importedContinuousMedications = try importedContext.fetch(FetchDescriptor<ContinuousMedication>())
+        let syncEnvelopes = try LocalSyncRepository(
+            modelContainer: targetContainer,
+            healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
+        ).allEnvelopes(deviceID: "large-test-device")
+
+        #expect(preview.newEpisodes == seedCounts.episodes)
+        #expect(preview.newMedicationDefinitions == seedCounts.customDefinitions)
+        #expect(preview.newContinuousMedications == seedCounts.continuousMedications)
+        #expect(importedEpisodes.count == seedCounts.episodes)
+        #expect(importedDefinitions.count == seedCounts.customDefinitions)
+        #expect(importedContinuousMedications.count == seedCounts.continuousMedications)
+        #expect(importedEpisodes.compactMap(\.weatherSnapshot).count == seedCounts.episodes)
+        #expect(importedEpisodes.flatMap(\.medications).count == seedCounts.episodes)
+        #expect(syncEnvelopes.count == seedCounts.episodes + seedCounts.customDefinitions + seedCounts.continuousMedications)
+    }
 }
 
 private func makeInMemoryContainer() throws -> ModelContainer {
@@ -420,4 +463,130 @@ private func makeTemporaryDirectory() throws -> URL {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     return directory
+}
+
+private func seedLargeDataSet(in container: ModelContainer) throws -> (
+    episodes: Int,
+    customDefinitions: Int,
+    continuousMedications: Int
+) {
+    let context = ModelContext(container)
+    let episodeCount = 2_100
+    let customDefinitionCount = 32
+    let continuousMedicationCount = 48
+    let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
+    var continuousMedicationIDs: [UUID] = []
+
+    for index in 0..<customDefinitionCount {
+        context.insert(
+            MedicationDefinition(
+                catalogKey: "custom:large-\(index)",
+                groupID: "custom-medications",
+                groupTitle: "Eigene Medikamente",
+                name: "Eigenes Medikament \(index)",
+                category: .other,
+                suggestedDosage: "\(index + 1) mg",
+                sortOrder: index,
+                isCustom: true,
+                createdAt: baseDate,
+                updatedAt: baseDate.addingTimeInterval(TimeInterval(index))
+            )
+        )
+    }
+
+    for index in 0..<continuousMedicationCount {
+        let medicationID = deterministicUUID(offset: 10_000 + index)
+        continuousMedicationIDs.append(medicationID)
+        context.insert(
+            ContinuousMedication(
+                id: medicationID,
+                name: "Prophylaxe \(index)",
+                dosage: "\(index + 1) mg",
+                frequency: "täglich",
+                startDate: baseDate.addingTimeInterval(TimeInterval(-index * 86_400)),
+                updatedAt: baseDate.addingTimeInterval(TimeInterval(index))
+            )
+        )
+    }
+
+    for index in 0..<episodeCount {
+        let startedAt = baseDate.addingTimeInterval(TimeInterval(index * 3_600))
+        let episode = Episode(
+            id: deterministicUUID(offset: 20_000 + index),
+            startedAt: startedAt,
+            endedAt: startedAt.addingTimeInterval(3_600),
+            updatedAt: startedAt.addingTimeInterval(60),
+            type: index.isMultiple(of: 2) ? .migraine : .headache,
+            intensity: (index % 10) + 1,
+            painLocation: "Stirn",
+            painCharacter: "Pulsierend",
+            notes: "Großer Datensatz \(index)",
+            symptoms: ["Übelkeit"],
+            triggers: ["Stress"],
+            functionalImpact: "Eingeschränkt",
+            menstruationStatus: .none
+        )
+        episode.medications = [
+            MedicationEntry(
+                id: deterministicUUID(offset: 30_000 + index),
+                name: "Sumatriptan",
+                category: .triptan,
+                dosage: "50 mg",
+                quantity: 1,
+                takenAt: startedAt.addingTimeInterval(900),
+                effectiveness: .good,
+                episode: episode
+            )
+        ]
+        episode.continuousMedicationChecks = [
+            ContinuousMedicationCheck(
+                id: deterministicUUID(offset: 40_000 + index),
+                continuousMedicationID: continuousMedicationIDs[index % continuousMedicationIDs.count],
+                name: "Prophylaxe \(index % continuousMedicationIDs.count)",
+                dosage: "1 mg",
+                frequency: "täglich",
+                wasTaken: !index.isMultiple(of: 3),
+                episode: episode
+            )
+        ]
+        episode.weatherSnapshot = WeatherSnapshot(
+            id: deterministicUUID(offset: 50_000 + index),
+            recordedAt: startedAt,
+            temperature: Double(index % 30),
+            condition: "Bewölkt",
+            humidity: Double(50 + (index % 40)),
+            pressure: Double(990 + (index % 30)),
+            precipitation: Double(index % 3),
+            weatherCode: 3,
+            source: "Test",
+            dayRangeStart: Calendar.current.startOfDay(for: startedAt),
+            dayRangeEnd: Calendar.current.startOfDay(for: startedAt).addingTimeInterval(86_400),
+            contextRangeStart: Calendar.current.startOfDay(for: startedAt).addingTimeInterval(-43_200),
+            contextRangeEnd: Calendar.current.startOfDay(for: startedAt).addingTimeInterval(129_600),
+            contextPointsStorage: WeatherSnapshot.encodeContextPoints([
+                WeatherContextPointData(
+                    recordedAt: startedAt,
+                    condition: "Bewölkt",
+                    temperature: Double(index % 30),
+                    humidity: Double(50 + (index % 40)),
+                    pressure: Double(990 + (index % 30)),
+                    precipitation: Double(index % 3),
+                    weatherCode: 3
+                )
+            ]),
+            episode: episode
+        )
+        context.insert(episode)
+
+        if index.isMultiple(of: 250) {
+            try context.save()
+        }
+    }
+
+    try context.save()
+    return (episodeCount, customDefinitionCount, continuousMedicationCount)
+}
+
+private func deterministicUUID(offset: Int) -> UUID {
+    UUID(uuidString: "00000000-0000-0000-0000-\(String(format: "%012d", offset))")!
 }

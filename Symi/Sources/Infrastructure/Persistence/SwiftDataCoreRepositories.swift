@@ -192,13 +192,12 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
     nonisolated func fetchActive(on date: Date) throws -> [ContinuousMedicationRecord] {
         let dayStart = Calendar.current.startOfDay(for: date)
         let descriptor = FetchDescriptor<ContinuousMedication>(
+            predicate: #Predicate<ContinuousMedication> { medication in
+                medication.startDate <= dayStart && (medication.endDate == nil || medication.endDate! >= dayStart)
+            },
             sortBy: [SortDescriptor(\ContinuousMedication.name)]
         )
-        return try readContext().fetch(descriptor)
-            .filter { medication in
-                medication.startDate <= dayStart && (medication.endDate == nil || (medication.endDate ?? .distantPast) >= dayStart)
-            }
-            .map(ContinuousMedicationRecord.init)
+        return try readContext().fetch(descriptor).map(ContinuousMedicationRecord.init)
     }
 
     @discardableResult
@@ -355,6 +354,8 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository, S
 }
 
 final class SwiftDataExportRepository: ExportRepository, Sendable {
+    private nonisolated static let fetchBatchSize = 250
+
     private let modelContainer: ModelContainer
     private let healthContextStore: HealthContextStore
 
@@ -383,23 +384,40 @@ final class SwiftDataExportRepository: ExportRepository, Sendable {
 
     nonisolated func createBackup() throws -> URL {
         let readContext = readContext()
-        let episodes = try readContext.fetch(FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]))
-        let definitions = try readContext.fetch(
+        var episodes: [EpisodePayload] = []
+        var definitions: [MedicationDefinitionPayload] = []
+        var continuousMedications: [ContinuousMedicationPayload] = []
+
+        try readContext.fetchBatches(
+            FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]),
+            batchSize: Self.fetchBatchSize
+        ) { batch in
+            episodes += batch.map { EpisodePayload(episode: $0, healthContext: healthContextStore.load(for: $0.id)) }
+        }
+
+        try readContext.fetchBatches(
             FetchDescriptor<MedicationDefinition>(
                 predicate: #Predicate<MedicationDefinition> { $0.isCustom },
                 sortBy: [SortDescriptor(\MedicationDefinition.sortOrder)]
-            )
-        )
-        let continuousMedications = try readContext.fetch(
+            ),
+            batchSize: Self.fetchBatchSize
+        ) { batch in
+            definitions += batch.map(MedicationDefinitionPayload.init)
+        }
+
+        try readContext.fetchBatches(
             FetchDescriptor<ContinuousMedication>(
                 sortBy: [SortDescriptor(\ContinuousMedication.startDate, order: .reverse), SortDescriptor(\ContinuousMedication.name)]
-            )
-        )
+            ),
+            batchSize: Self.fetchBatchSize
+        ) { batch in
+            continuousMedications += batch.map(ContinuousMedicationPayload.init)
+        }
+
         let snapshot = DataTransferSnapshot(
             episodes: episodes,
             customMedicationDefinitions: definitions,
-            continuousMedications: continuousMedications,
-            healthContextStore: healthContextStore
+            continuousMedications: continuousMedications
         )
         return try snapshot.writeToTemporaryFile()
     }
@@ -424,6 +442,35 @@ final class SwiftDataExportRepository: ExportRepository, Sendable {
 
     nonisolated private func writeContext() -> ModelContext {
         ModelContext(modelContainer)
+    }
+}
+
+private extension ModelContext {
+    nonisolated func fetchBatches<T: PersistentModel>(
+        _ descriptor: FetchDescriptor<T>,
+        batchSize: Int,
+        handleBatch: ([T]) throws -> Void
+    ) throws {
+        var descriptor = descriptor
+        var offset = 0
+
+        while true {
+            descriptor.fetchLimit = batchSize
+            descriptor.fetchOffset = offset
+            let batch = try fetch(descriptor)
+
+            guard !batch.isEmpty else {
+                return
+            }
+
+            try handleBatch(batch)
+
+            if batch.count < batchSize {
+                return
+            }
+
+            offset += batch.count
+        }
     }
 }
 
