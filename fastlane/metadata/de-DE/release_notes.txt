@@ -1,0 +1,9 @@
+Symi 2.0 ist ein großes Update für ein ruhigeres, vollständigeres Migräne-Tagebuch.
+
+- optionale iCloud-Synchronisation mit Konfliktübersicht und Sync-Protokoll
+- Apple-Health-Kontext, wenn du den Zugriff erlaubst und die Daten verfügbar sind
+- verbesserte PDF-Berichte für Arztgespräche und persönliche Auswertungen
+- JSON5-Backup und Import mit Vorschau
+- überarbeiteter Startbereich und schnellerer Eintragsfluss
+- robusterer Datenschutz für exportierte Gesundheitsdaten
+- viele Verbesserungen an Stabilität, Migrationen und lokaler Datenintegrität

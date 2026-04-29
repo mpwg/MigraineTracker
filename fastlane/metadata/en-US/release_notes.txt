@@ -1,0 +1,9 @@
+Symi 2.0 is a major update for a calmer, more complete migraine journal.
+
+- optional iCloud sync with conflict overview and sync log
+- Apple Health context when you allow access and data is available
+- improved PDF reports for doctor conversations and personal review
+- JSON5 backup and import with preview
+- redesigned home area and faster entry flow
+- stronger privacy handling for exported health data
+- many stability, migration, and local data integrity improvements

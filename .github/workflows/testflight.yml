@@ -1,11 +1,11 @@
-name: TestFlight Release
+name: TestFlight
 
 on:
   workflow_dispatch:
     inputs:
-      build_number:
-        description: "Optionale Buildnummer. Leer lassen für automatische fastlane-Buildnummer."
-        required: false
+      changelog:
+        description: "Changelog für diesen TestFlight-Build"
+        required: true
         type: string
 
 concurrency:
@@ -13,7 +13,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  upload-to-testflight:
+  testflight:
+    name: TestFlight hochladen
     runs-on: macos-26
     timeout-minutes: 90
     permissions:
@@ -29,18 +30,47 @@ jobs:
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
       MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-      BUILD_NUMBER: ${{ inputs.build_number }}
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      CI: "1"
+
     steps:
+      - name: Release-Kontext ausgeben
+        run: |
+          echo "Workflow: TestFlight"
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "Actor: ${GITHUB_ACTOR}"
+
+      - name: Release-Branch validieren
+        run: |
+          # TestFlight-Builds gehören in den expliziten Release-Prozess.
+          # Dadurch werden Uploads von main, develop oder Feature-Branches verhindert.
+          if [[ "${GITHUB_REF_NAME}" != release/* ]]; then
+            echo "FEHLER: Dieser Workflow darf nur auf release/* Branches laufen."
+            echo "Aktueller Branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Changelog validieren
+        run: |
+          # Jeder TestFlight-Build braucht nachvollziehbare Notizen.
+          if [[ -z "${{ inputs.changelog }}" ]]; then
+            echo "FEHLER: changelog ist erforderlich."
+            exit 1
+          fi
+        shell: bash
+
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Xcode 26.4 auswählen
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '26.4'
+          xcode-version: "26.4"
 
       - name: Release-Secrets validieren
         run: |
+          # Fehlende Secrets sollen vor Build und Signing klar scheitern.
           missing=()
           required=(
             APPLE_DEVELOPER_TEAM_ID
@@ -60,7 +90,7 @@ jobs:
           done
 
           if (( ${#missing[@]} > 0 )); then
-            printf 'Fehlende GitHub-Secrets: %s\n' "${missing[*]}" >&2
+            printf 'FEHLER: Fehlende GitHub-Secrets: %s\n' "${missing[*]}" >&2
             exit 1
           fi
         shell: bash
@@ -76,5 +106,8 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
-      - name: Release mit fastlane nach TestFlight hochladen
-        run: bundle exec fastlane ios release_testflight
+      - name: TestFlight-Build hochladen
+        run: |
+          echo "Starte expliziten TestFlight-Upload von ${GITHUB_REF_NAME}."
+          bundle exec fastlane ios beta changelog:"${{ inputs.changelog }}"
+        shell: bash

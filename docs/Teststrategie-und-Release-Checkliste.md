@@ -20,12 +20,12 @@ Automatisierte Gates im Projekt:
 5. Ausführung von `SymiTests` auf einem `iPhone 17`-Simulator bei Änderungen an App-, Shared-, Core-, Sync-, Persistence-, Health-, Export-, History-, Home-, Capture-, InputFlow-, Ressourcen- oder kritischen Testdateien sowie immer auf `main` und bei manuellem Start
 6. UI-Smoke auf einem `iPhone 17`-Simulator bei Änderungen an App-Shell, Home, Capture, InputFlow, History, Export, UI-Tests, App-Ressourcen, Fastlane-Screenshot-Konfiguration oder Projektdateien sowie immer auf `main` und bei manuellem Start
 7. Upload der `xcresult`-Bundles nur bei Fehlern für nachvollziehbare Fehlerdiagnose in GitHub
-8. Workflow `TestFlight Release` per manuellem GitHub-Actions-Start für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
-9. optionaler `TestFlight Release`-Input `build_number`; leer bedeutet automatische fastlane-Buildnummer
-10. Workflow `App Store Release` bei Git-Tags `vX.Y.Z` für Screenshot-Erstellung, Distribution-Signing via `match` und Upload via `deliver`
+8. Workflow `TestFlight` per manuellem GitHub-Actions-Start auf `release/*` für Distribution-Signing via `match`, Build via `build_app` und Verteilung via `pilot`
+9. Workflow `App Store Release` per manuellem GitHub-Actions-Start auf `release/*` mit Version und expliziter Bestätigung `YES`
+10. App-Store-Metadaten und Screenshots liegen als versionierte Artefakte unter `fastlane/metadata` und `fastlane/screenshots`
 11. Die finale Einreichung erfolgt manuell in App Store Connect über `Submit`
 
-Lokale Vorab-Prüfung vor einem Tag-Release:
+Lokale Vorab-Prüfung vor einem Release:
 
 1. Unit-Tests auf Catalyst ausführen:
    `xcodebuild test -project Symi.xcodeproj -scheme SymiTests -destination 'platform=macOS,arch=arm64,variant=Mac Catalyst'`
@@ -37,7 +37,7 @@ Lokale Vorab-Prüfung vor einem Tag-Release:
    `bundle exec fastlane ios validate_screenshot_seed`
 5. App im `Release`-Build in Xcode archivieren oder per `xcodebuild archive` bauen
 6. Signing und Provisioning gegen die historischen Identifier `eu.mpwg.MigraineTracker` und `iCloud.eu.mpwg.MigraineTracker` prüfen; Details stehen in [Historische Identifier](/Users/mat/code/Symi/docs/Historische-Identifier.md)
-7. offene Fehler in `GitHub Actions` oder `TestFlight` vor dem Tagging beseitigen
+7. offene Fehler in `GitHub Actions` oder `TestFlight` vor dem App-Store-Upload beseitigen
 
 ## Automatisierte Testabdeckung
 
@@ -145,8 +145,8 @@ Vor einem Release-Kandidaten einmal vollständig prüfen:
 
 Ein Release-Kandidat ist freigabefähig, wenn:
 
-- der Workflow `iOS CI` auf `main` erfolgreich läuft
-- der Workflow `TestFlight Release` für den gewünschten Build manuell erfolgreich läuft
+- der Workflow `iOS CI` auf `main` oder dem Release-Branch erfolgreich läuft
+- der Workflow `TestFlight` für den gewünschten `release/*` Branch manuell erfolgreich läuft
 - die manuelle Checkliste ohne Blocker abgeschlossen ist
 - keine irreführenden medizinischen Aussagen oder Berechtigungstexte sichtbar sind
 
@@ -156,7 +156,8 @@ Die Projektregeln für Releases sind:
 
 - `main` ist der einzige automatische Integrationspfad
 - Pull Requests und `main` werden über `GitHub Actions` validiert
-- `TestFlight` wird bewusst über den manuell gestarteten Workflow `TestFlight Release` verteilt
-- der `App Store` wird nur über Git-Tags im Format `vX.Y.Z` ausgelöst
+- `TestFlight` wird bewusst über den manuell gestarteten Workflow `TestFlight` auf `release/*` verteilt
+- der `App Store` wird bewusst über den manuell gestarteten Workflow `App Store Release` auf `release/*` hochgeladen
+- Git-Tags dokumentieren nur den ausgelieferten Stand und lösen keinen Release-Workflow aus
 - `fastlane match`, `build_app`, `pilot` und `deliver` sind die Release-Werkzeuge für Distribution
 - technische Apple-Developer-Identifier bleiben für Release und Provisioning auf `eu.mpwg.MigraineTracker`; `Symi` ist die sichtbare Produktmarke

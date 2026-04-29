@@ -39,13 +39,45 @@ Validiert den Screenshot-Seed und den Skala-zuerst-Flow ohne vollständige Scree
 
 Erzeugt und lädt iPhone- und iPad-Screenshots nach App Store Connect hoch
 
+### ios beta
+
+```sh
+[bundle exec] fastlane ios beta
+```
+
+Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch
+
+### ios verify_release
+
+```sh
+[bundle exec] fastlane ios verify_release
+```
+
+Validiert Version, Metadaten und Screenshots für einen App-Store-Release
+
+### ios ensure_version_not_released
+
+```sh
+[bundle exec] fastlane ios ensure_version_not_released
+```
+
+Prüft, dass eine Version in App Store Connect noch nicht existiert
+
+### ios release
+
+```sh
+[bundle exec] fastlane ios release
+```
+
+Baut eine Distribution-IPA und lädt sie mit Metadaten und Screenshots für die manuelle App-Store-Einreichung hoch
+
 ### ios release_testflight
 
 ```sh
 [bundle exec] fastlane ios release_testflight
 ```
 
-Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch
+Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios beta verwenden
 
 ### ios release_app_store
 
@@ -53,7 +85,7 @@ Baut eine Distribution-IPA mit match und lädt sie nach TestFlight hoch
 [bundle exec] fastlane ios release_app_store
 ```
 
-Erzeugt Screenshots, baut eine Distribution-IPA mit match und lädt sie für die manuelle App-Store-Einreichung hoch
+Kompatibilitätsalias für ältere lokale Aufrufe: bitte ios release verwenden
 
 ----
 

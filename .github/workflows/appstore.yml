@@ -1,0 +1,171 @@
+name: App Store Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "App-Store-Version, zum Beispiel 2.0.0"
+        required: true
+        type: string
+      confirm_release:
+        description: 'Zum Bestätigen exakt "YES" eingeben'
+        required: true
+        type: string
+
+concurrency:
+  group: app-store-release
+  cancel-in-progress: false
+
+jobs:
+  appstore:
+    name: App Store hochladen
+    runs-on: macos-26
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      TELEMETRY_APP_ID: ${{ secrets.TELEMETRY_APP_ID }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      SNAPSHOT_SIMULATOR_WAIT_FOR_BOOT_TIMEOUT: "10"
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      CI: "1"
+
+    steps:
+      - name: Release-Kontext ausgeben
+        run: |
+          echo "Workflow: App Store Release"
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "Actor: ${GITHUB_ACTOR}"
+          echo "Version: ${{ inputs.version }}"
+
+      - name: Release-Branch validieren
+        run: |
+          # App-Store-Releases dürfen nur aus vorbereiteten Release-Branches kommen.
+          # main wird erst nach erfolgreichem Release aktualisiert.
+          if [[ "${GITHUB_REF_NAME}" != release/* ]]; then
+            echo "FEHLER: Dieser Workflow darf nur auf release/* Branches laufen."
+            echo "Aktueller Branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Explizite Freigabe validieren
+        run: |
+          # Diese absichtliche Hürde verhindert versehentliche Produktions-Uploads.
+          if [[ "${{ inputs.confirm_release }}" != "YES" ]]; then
+            echo 'FEHLER: confirm_release muss exakt "YES" sein.'
+            exit 1
+          fi
+        shell: bash
+
+      - name: Version validieren
+        run: |
+          # Die Version kommt bewusst als manueller Workflow-Input.
+          # Sie wird nicht aus Branch-Namen oder Tags abgeleitet.
+          if [[ -z "${{ inputs.version }}" ]]; then
+            echo "FEHLER: version ist erforderlich."
+            exit 1
+          fi
+
+          if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "FEHLER: version muss das Format X.Y.Z haben."
+            exit 1
+          fi
+        shell: bash
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Release-Artefakte prüfen
+        run: |
+          # Metadaten und Screenshots sind Teil des versionierten Release-Zustands.
+          # Ohne diese Dateien wird kein App-Store-Upload gestartet.
+          if [[ ! -d "fastlane/metadata" ]]; then
+            echo "FEHLER: fastlane/metadata fehlt."
+            exit 1
+          fi
+
+          if [[ ! -d "fastlane/screenshots" ]]; then
+            echo "FEHLER: fastlane/screenshots fehlt."
+            exit 1
+          fi
+
+          if ! find fastlane/metadata -type f | grep -q .; then
+            echo "FEHLER: fastlane/metadata enthält keine Dateien."
+            exit 1
+          fi
+
+          if ! find fastlane/screenshots -type f -name '*.png' | grep -q .; then
+            echo "FEHLER: fastlane/screenshots enthält keine PNG-Screenshots."
+            exit 1
+          fi
+        shell: bash
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
+      - name: Release-Secrets validieren
+        run: |
+          # Fehlende Secrets sollen vor Build, App-Store-Prüfung und Signing klar scheitern.
+          missing=()
+          required=(
+            APPLE_DEVELOPER_TEAM_ID
+            APP_STORE_CONNECT_ISSUER_ID
+            APP_STORE_CONNECT_KEY_ID
+            APP_STORE_CONNECT_PRIVATE_KEY
+            SENTRY_DSN
+            MATCH_GIT_URL
+            MATCH_PASSWORD
+            MATCH_GIT_BASIC_AUTHORIZATION
+          )
+
+          for name in "${required[@]}"; do
+            if [[ -z "${!name}" ]]; then
+              missing+=("$name")
+            fi
+          done
+
+          if (( ${#missing[@]} > 0 )); then
+            printf 'FEHLER: Fehlende GitHub-Secrets: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+        shell: bash
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Ruby und Bundler einrichten
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Version und Artefakte mit fastlane prüfen
+        run: |
+          bundle exec fastlane ios verify_release version:"${{ inputs.version }}"
+        shell: bash
+
+      - name: App-Store-Version auf Duplikat prüfen
+        run: |
+          bundle exec fastlane ios ensure_version_not_released version:"${{ inputs.version }}"
+        shell: bash
+
+      - name: App-Store-Release hochladen
+        run: |
+          echo "Starte expliziten App-Store-Upload für Version ${{ inputs.version }} von ${GITHUB_REF_NAME}."
+          bundle exec fastlane ios release version:"${{ inputs.version }}"
+        shell: bash

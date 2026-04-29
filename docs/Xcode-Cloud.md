@@ -2,167 +2,105 @@
 
 ## Zielbild
 
-Dieses Projekt verwendet `GitHub Actions` als einzigen CI/CD-Kanal:
+Dieses Projekt verwendet `GitHub Actions` als CI/CD-Kanal:
 
-- `GitHub Actions` ist der CI-Kanal für Builds, Unit-Tests und PR-Feedback
-- `GitHub Actions` ist auch der CD-Kanal für signierte Archive, `TestFlight` und tag-gesteuerte App-Store-Uploads über `fastlane`
+- `iOS CI` prüft Pull Requests, `main` und manuelle CI-Läufe.
+- `TestFlight` verteilt signierte Beta-Builds ausschließlich per manuellem Start.
+- `App Store Release` lädt produktive Builds ausschließlich per manuellem Start hoch.
+- Es gibt keine Release-Automatik durch Pushes, Merges oder Tags.
 
-Es gibt genau drei relevante Workflows:
-
-1. `iOS CI`
-2. `TestFlight Release`
-3. `App Store Release`
+Der konkrete Ablauf steht in [Release-Prozess](/Users/mat/code/Symi/docs/Release-Prozess.md).
 
 ## Vorbedingungen
 
-Vor der Einrichtung in `App Store Connect` und `GitHub` müssen diese Punkte erfüllt sein:
+- Das Bundle `eu.mpwg.MigraineTracker` existiert in App Store Connect.
+- Die Bundle ID `eu.mpwg.MigraineTracker` bleibt aus Release- und Migrationsgründen bestehen.
+- Das Shared Scheme `Symi` ist versioniert.
+- Das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile.
+- Die vorhandenen Entitlements für Push, WeatherKit, HealthKit und iCloud bleiben aktiv.
+- Der iCloud-Container bleibt `iCloud.eu.mpwg.MigraineTracker`.
+- Der App-Store-Connect-Schlüssel ist ein Team-Key.
 
-- das Bundle `eu.mpwg.MigraineTracker` existiert bereits in `App Store Connect`
-- die Bundle ID `eu.mpwg.MigraineTracker` ist ein historischer Identifier und wird trotz sichtbarer Produktmarke `Symi` nicht umbenannt
-- in `GitHub Actions` sind diese Secrets gesetzt:
-  - `APPLE_DEVELOPER_TEAM_ID`
-  - `APP_STORE_CONNECT_ISSUER_ID`
-  - `APP_STORE_CONNECT_KEY_ID`
-  - `APP_STORE_CONNECT_PRIVATE_KEY`
-  - `MATCH_GIT_URL`
-  - `MATCH_PASSWORD`
-  - `SENTRY_DSN`
-- optional:
-  - `MATCH_GIT_BRANCH`
-  - `MATCH_GIT_BASIC_AUTHORIZATION`
-  - `TELEMETRY_APP_ID`
-- das Shared Scheme `Symi` ist versioniert
-- das Match-Repository enthält ein gültiges `appstore`-Zertifikat und ein passendes Provisioning Profile für `eu.mpwg.MigraineTracker`
-- die vorhandenen Entitlements für Push, WeatherKit, HealthKit und iCloud bleiben aktiv
-- der iCloud-Container bleibt `iCloud.eu.mpwg.MigraineTracker`; es wird kein paralleler `Symi`-Container für Releases angelegt
-- der verwendete App-Store-Connect-Schlüssel ist ein Team-Key, kein Individual Key
+Erforderliche GitHub-Secrets:
 
-Aus dem Projekt bestätigt:
+- `APPLE_DEVELOPER_TEAM_ID`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_KEY_ID`
+- `APP_STORE_CONNECT_PRIVATE_KEY`
+- `MATCH_GIT_URL`
+- `MATCH_PASSWORD`
+- `MATCH_GIT_BASIC_AUTHORIZATION`
+- `SENTRY_DSN`
 
-- `DEVELOPMENT_TEAM = $(APPLE_DEVELOPER_TEAM_ID)`
-- `PRODUCT_BUNDLE_IDENTIFIER = eu.mpwg.MigraineTracker` für die iOS-App
-- `Debug` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Development`
-- `Release` verwendet `ICLOUD_CONTAINER_ENVIRONMENT = Production`
-- `Symi/Symi.entitlements` referenziert `iCloud.eu.mpwg.MigraineTracker`
+Optionale GitHub-Secrets:
 
-Die historischen Apple-Developer-Identifier und die Regeln für eine mögliche spätere Migration sind in [Historische Identifier](/Users/mat/code/Symi/docs/Historische-Identifier.md) festgehalten.
+- `MATCH_GIT_BRANCH`
+- `TELEMETRY_APP_ID`
 
-Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `match` Distribution-Zertifikate und Provisioning Profiles in ein temporäres Keychain und bauen anschließend reproduzierbar mit manuellem Distribution-Signing.
-Die GitHub-Workflows wählen für Swift-Builds explizit Xcode 26.4 aus.
+## Branch-Regeln
 
-## Zuständigkeiten
+- `main` ist Produktionswahrheit und wird erst nach erfolgreichem Release aktualisiert.
+- `develop` ist optional.
+- `release/*` ist der einzige erlaubte Branch-Typ für TestFlight und App Store.
+- Versionen werden nicht aus Branch-Namen abgeleitet.
 
-`GitHub Actions` ist für die übliche Entwicklungsarbeit zuständig:
+## Workflows
 
-- `pull_request` auf `main`
-- `push` auf `main`
-- Xcode 26.4 für Swift-Builds, Tests und Release-Archive
-- schnelles PR-Gate aus SwiftLint und Catalyst-Unit-Tests
-- iPhone-Simulator-Tests und UI-Smoke bei risiko-relevanten Änderungen, auf `main` oder per manuellem Start
-- Upload von `xcresult`-Bundles nur bei Fehlern
+### iOS CI
 
-Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distribution:
-
-- manueller Start zu `TestFlight`
-- Git-Tags `vX.Y.Z` zum `App Store`
-- Distribution-Signing über `fastlane match`
-
-## Workflow 1: iOS CI
-
-Dieser Workflow liefert schnelles Entwickler-Feedback.
-
-- Name: `iOS CI`
-- Startbedingung: `pull_request` auf `main`, `push` auf `main` und manueller Start
-- Scheme: `Symi`
-- Aktionen:
-  - SwiftLint/Design-Token-Regeln
-  - Unit-Tests auf `Mac Catalyst`
-  - Unit-Tests auf einem `iPhone 17`-Simulator bei risiko-relevanten App-, Shared-, Core-, Sync-, Persistence-, Ressourcen- oder Teständerungen sowie immer auf `main` und bei manuellem Start
-  - zentrale UI-Smokes auf einem `iPhone 17`-Simulator bei App-Shell-, Home-, Capture-, InputFlow-, History-, Export-, Ressourcen-, Fastlane- oder UI-Test-Änderungen sowie immer auf `main` und bei manuellem Start
-  - Upload der jeweiligen `xcresult`-Bundles nur bei Fehlern
-
-## Workflow 2: TestFlight Release
-
-Dieser Workflow ist für bewusst ausgelöste Beta-Verteilung zuständig.
-
-- Name: `TestFlight Release`
-- Startbedingung: manueller Start über `workflow_dispatch`
-- Scheme: `Symi`
-- Aktionen:
-  - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
-  - `match(type: "appstore")`
-  - optionale manuelle Buildnummer übernehmen oder automatisch bestimmen
-  - `build_app(export_method: "app-store")`
-  - Upload nach `TestFlight` mit `pilot`
-
-Dieser Workflow ist ausschließlich für produktive Releases zuständig.
-
-- Name: `App Store Release`
-- Startbedingung: `push` auf Git-Tags
-- Tag-Muster: `v*`
-- Scheme: `Symi`
-- Aktionen:
-  - Validierung des Tags `vX.Y.Z`
-  - Abgleich mit `MARKETING_VERSION`
-  - App-Store-Screenshots erzeugen und nach App Store Connect hochladen
-  - `setup_ci` für temporäres Keychain und `match`-Readonly-Modus
-  - `match(type: "appstore")`
-  - Buildnummer wie im TestFlight-Lauf bestimmen
-  - `build_app(export_method: "app-store")`
-  - Upload des Builds nach App Store Connect über `deliver`
-
-Konfiguration:
-
-- Produktion wird nie durch einen normalen Push auf `main` veröffentlicht
-- ein Release wird nur durch ein Versions-Tag wie `v1.2.0` ausgelöst
-- der Workflow baut den getaggten Commit neu und promotet nicht einen vorhandenen `TestFlight`-Build
-- die Zertifikate und Profile werden nicht mehr über Xcode-Automatik erzeugt, sondern über `match` synchronisiert
-- die App-Version im Projekt bleibt führend; der Tag ändert sie nicht
-
-## Versionierte CI-Skripte
-
-Das Repo enthält die Release-Logik jetzt vollständig in `fastlane/Fastfile`.
-
-- Lane `ios testflight` übernimmt Secrets, Signierung, Buildnummer, Build und Upload nach `TestFlight`
-- Lane `ios release_app_store` validiert zusätzlich den Tag, erzeugt Screenshots, lädt Screenshots und IPA mit `deliver` hoch und reicht die Version nicht automatisch ein
-- `match` nutzt standardmäßig ein separates Git-Repository; auf CI läuft es über `setup_ci` im `readonly`-Modus
-
-## Release-Ablauf
+- Datei: `.github/workflows/ios-ci.yml`
+- Start: `pull_request`, `push` auf `main`, manueller Start
+- Zweck: Build, Tests, UI-Smokes und schnelle Rückmeldung
 
 ### TestFlight
 
-1. Änderungen nach `main` mergen
-2. `GitHub Actions` führt `iOS CI` aus
-3. Workflow `TestFlight Release` in GitHub Actions manuell starten
-4. `fastlane` synchronisiert Distribution-Signing mit `match`
-5. `fastlane pilot` lädt die signierte IPA nach `TestFlight`
+- Datei: `.github/workflows/testflight.yml`
+- Start: ausschließlich `workflow_dispatch`
+- Pflicht-Input: `changelog`
+- Guardrails:
+  - Branch muss `release/*` sein
+  - Changelog darf nicht leer sein
+  - Release-Secrets müssen vorhanden sein
+- Fastlane-Lane: `bundle exec fastlane ios beta`
 
-### App Store
+### App Store Release
 
-1. Release-Commit auf `main` auswählen
-2. Git-Tag im Format `vX.Y.Z` erzeugen, zum Beispiel `v1.2.0`
-3. Tag auf `origin` pushen
-4. `GitHub Actions` startet `App Store Release`
-5. der Workflow validiert `MARKETING_VERSION = X.Y.Z`
-6. `fastlane` erzeugt die App-Store-Screenshots und lädt sie hoch
-7. `fastlane` synchronisiert Distribution-Signing mit `match`
-8. `fastlane deliver` lädt den Build hoch
-9. App Store Connect öffnen, Build und Metadaten prüfen und manuell auf `Submit` klicken
+- Datei: `.github/workflows/appstore.yml`
+- Start: ausschließlich `workflow_dispatch`
+- Pflicht-Inputs:
+  - `version`
+  - `confirm_release`, exakt `YES`
+- Guardrails:
+  - Branch muss `release/*` sein
+  - Version muss im Format `X.Y.Z` sein
+  - Version muss zur `MARKETING_VERSION` im Xcode-Projekt passen
+  - Version darf in App Store Connect noch nicht existieren
+  - `fastlane/metadata` muss versionierte Dateien enthalten
+  - `fastlane/screenshots` muss PNG-Screenshots enthalten
+  - Release-Secrets müssen vorhanden sein
+- Fastlane-Lanes:
+  - `bundle exec fastlane ios verify_release`
+  - `bundle exec fastlane ios ensure_version_not_released`
+  - `bundle exec fastlane ios release`
 
-Beispiel:
+## Fastlane
 
-```sh
-git tag v1.2.0
-git push origin v1.2.0
-```
+Die Release-Lanes erzeugen in CI ein lokales Secrets-`xcconfig`, laden über `match` Distribution-Zertifikate und Provisioning Profiles in ein temporäres Keychain und bauen anschließend mit manuellem Distribution-Signing.
 
-## Abnahme nach der Einrichtung
+Wichtige Lanes:
 
-Die GitHub-Actions-Einrichtung gilt als korrekt, wenn:
+- `ios beta`: Buildnummer setzen, Release-IPA bauen, Entitlements prüfen, nach TestFlight hochladen
+- `ios verify_release`: Version, Metadaten und Screenshots prüfen
+- `ios release`: Version erneut prüfen, Duplikat in App Store Connect verhindern, Release-IPA bauen, Metadaten und Screenshots mit `deliver` hochladen
 
-- `GitHub Actions` bei `pull_request` und `push` auf `main` erfolgreich läuft
-- `iOS CI` das schnelle PR-Gate aus SwiftLint und Catalyst-Unit-Tests ausführt
-- `iOS CI` iPhone- und UI-Gates bei risiko-relevanten Änderungen, auf `main` und per manuellem Start ausführt
-- ein manueller Start von `TestFlight Release` einen `TestFlight`-Build erzeugt
-- ein Tag wie `v1.2.0` ausschließlich den Workflow `App Store Release` startet
-- der Tag-Workflow Screenshots und ein veröffentlichbares Archiv in App Store Connect hochlädt, aber die Version nicht automatisch einreicht
+Die App-Store-Einreichung und Veröffentlichung bleiben manuell in App Store Connect.
+
+## Abnahme
+
+Die Einrichtung gilt als korrekt, wenn:
+
+- `iOS CI` auf Pull Requests und `main` erfolgreich läuft
+- `TestFlight` nur auf einem `release/*` Branch startet
+- `App Store Release` nur auf einem `release/*` Branch mit `confirm_release=YES` startet
+- ein Git-Tag keinen Release-Workflow startet
+- App Store Connect nach dem Upload eine prüfbare Version mit Build, Metadaten und Screenshots enthält

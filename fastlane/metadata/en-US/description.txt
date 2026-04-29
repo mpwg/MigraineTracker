@@ -1,0 +1,20 @@
+Symi is a calm migraine journal for more good days. It helps you log episodes quickly, understand patterns more clearly, and prepare your notes for yourself or for conversations with your doctor.
+
+A new entry takes only a few seconds: choose the type of episode, record the intensity, confirm the time, and optionally add symptoms, triggers, notes, pain location, medication, and weather context.
+
+Symi is designed to stay clear and private. Your data is stored locally on your iPhone by default. iCloud sync is optional and can be enabled deliberately if you want to back up or sync your journal through iCloud.
+
+Key features:
+
+- fast journal entries for migraine, headache, and unclear episodes
+- intensity, time, symptoms, triggers, notes, and pain location
+- medication logging with custom templates
+- weather context through Apple Weather
+- optional Apple Health context when available and permitted by you
+- calendar, day view, detail view, and editing for existing entries
+- PDF reports for custom date ranges
+- JSON5 backup and import with preview
+- optional iCloud sync with conflict overview and sync log
+- local processing without an account and without a custom backend
+
+Symi is not a diagnostic app and does not replace medical advice. It supports you in documenting your everyday observations in a clearer, more structured way.
