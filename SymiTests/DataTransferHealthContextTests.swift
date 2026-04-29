@@ -25,7 +25,7 @@ struct DataTransferHealthContextTests {
 
         let targetContainer = try makeInMemoryContainer()
         let targetHealthStore = HealthContextStore(baseURL: try makeTemporaryDirectory())
-        try SwiftDataExportRepository(
+        _ = try SwiftDataExportRepository(
             modelContainer: targetContainer,
             healthContextStore: targetHealthStore
         ).importBackup(from: backupURL)
@@ -66,7 +66,7 @@ struct DataTransferHealthContextTests {
 
         let legacyBackupURL = try makeLegacyGermanBackupURL(episodeID: episodeID)
         let targetContainer = try makeInMemoryContainer()
-        try SwiftDataExportRepository(
+        _ = try SwiftDataExportRepository(
             modelContainer: targetContainer,
             healthContextStore: HealthContextStore(baseURL: try makeTemporaryDirectory())
         ).importBackup(from: legacyBackupURL)
@@ -98,7 +98,7 @@ struct DataTransferHealthContextTests {
         try seedEpisode(id: episodeID, notes: "Bestehender Eintrag", in: targetContainer)
         try targetHealthStore.save(existingHealthContext, for: episodeID)
 
-        try SwiftDataExportRepository(
+        _ = try SwiftDataExportRepository(
             modelContainer: targetContainer,
             healthContextStore: targetHealthStore
         ).importBackup(from: backupURL)
@@ -125,7 +125,7 @@ struct DataTransferHealthContextTests {
         try seedEpisode(id: episodeID, in: targetContainer)
         try targetHealthStore.save(makeHealthContext(), for: episodeID)
 
-        try SwiftDataExportRepository(
+        _ = try SwiftDataExportRepository(
             modelContainer: targetContainer,
             healthContextStore: targetHealthStore
         ).importBackup(from: explicitNullBackupURL)
@@ -220,7 +220,7 @@ struct DataTransferHealthContextTests {
 
         var didThrow = false
         do {
-            try SwiftDataExportRepository(
+            _ = try SwiftDataExportRepository(
                 modelContainer: try makeInMemoryContainer(),
                 healthContextStore: blockedHealthStore
             ).importBackup(from: backupURL)

@@ -114,11 +114,11 @@ struct SymiApp: App {
                 let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)
                 return .app(
                     AppRuntimeEnvironment(
-                        modelContainer: environment.0,
-                        appContainer: environment.1,
-                        appLogStore: environment.2,
-                        syncCoordinator: environment.3,
-                        screenshotSeed: environment.4
+                        modelContainer: environment.modelContainer,
+                        appContainer: environment.appContainer,
+                        appLogStore: environment.appLogStore,
+                        syncCoordinator: environment.syncCoordinator,
+                        screenshotSeed: environment.seed
                     )
                 )
             }

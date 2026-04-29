@@ -76,9 +76,17 @@ struct ScreenshotSeed {
     let newEntryDate: Date
 }
 
+struct ScreenshotEnvironment {
+    let modelContainer: ModelContainer
+    let appContainer: AppContainer
+    let appLogStore: AppLogStore
+    let syncCoordinator: SyncCoordinator
+    let seed: ScreenshotSeed
+}
+
 enum ScreenshotBootstrap {
     @MainActor
-    static func makeEnvironment(seedName: String) throws -> (ModelContainer, AppContainer, AppLogStore, SyncCoordinator, ScreenshotSeed) {
+    static func makeEnvironment(seedName: String) throws -> ScreenshotEnvironment {
         let schema = Schema(versionedSchema: SymiSchemaV6.self)
         let storeURL = FileManager.default.temporaryDirectory.appending(path: "Symi-Screenshots-\(UUID().uuidString).store")
         let configuration = ModelConfiguration(
@@ -113,7 +121,13 @@ enum ScreenshotBootstrap {
             healthContextStore: healthContextStore
         )
 
-        return (container, appContainer, appLogStore, syncCoordinator, seed)
+        return ScreenshotEnvironment(
+            modelContainer: container,
+            appContainer: appContainer,
+            appLogStore: appLogStore,
+            syncCoordinator: syncCoordinator,
+            seed: seed
+        )
     }
 }
 

@@ -224,9 +224,20 @@ final class SyncCoordinator {
     }
 
     private func recordForUpload(recordID: CKRecord.ID) async -> CKRecord? {
-        guard let envelope = try? repository.envelope(documentID: recordID.recordName, deviceID: deviceID) else {
-            await log(level: .warning, operation: "coordinator.recordForUpload.missingEnvelope", message: "Kein lokales Dokument für Upload gefunden.", metadata: [
-                "recordID": recordID.recordName
+        let envelope: SyncDocumentEnvelope
+        do {
+            guard let fetchedEnvelope = try repository.envelope(documentID: recordID.recordName, deviceID: deviceID) else {
+                await log(level: .warning, operation: "coordinator.recordForUpload.missingEnvelope", message: "Kein lokales Dokument für Upload gefunden.", metadata: [
+                    "recordID": recordID.recordName
+                ])
+                return nil
+            }
+            envelope = fetchedEnvelope
+        } catch {
+            await stateStore.setLastError(error.localizedDescription)
+            await log(level: .error, operation: "coordinator.recordForUpload.error", message: "Lokales Dokument für Upload konnte nicht geladen werden.", metadata: [
+                "recordID": recordID.recordName,
+                "error": error.localizedDescription
             ])
             return nil
         }
@@ -319,7 +330,17 @@ final class SyncCoordinator {
         }
 
         let shadow = await stateStore.shadow(for: remoteEnvelope.documentID)
-        let localEnvelope = try? repository.envelope(documentID: remoteEnvelope.documentID, deviceID: deviceID)
+        let localEnvelope: SyncDocumentEnvelope?
+        do {
+            localEnvelope = try repository.envelope(documentID: remoteEnvelope.documentID, deviceID: deviceID)
+        } catch {
+            await stateStore.setLastError(error.localizedDescription)
+            await log(level: .error, operation: "coordinator.applyRemoteRecord.localEnvelopeError", message: "Lokaler Vergleichsstand konnte nicht geladen werden.", metadata: [
+                "documentID": remoteEnvelope.documentID,
+                "error": error.localizedDescription
+            ])
+            return
+        }
 
         do {
             try repository.validate(remote: remoteEnvelope)
@@ -414,7 +435,19 @@ final class SyncCoordinator {
     }
 
     private func handleRemoteDeletion(recordID: CKRecord.ID) async {
-        guard let localEnvelope = try? repository.envelope(documentID: recordID.recordName, deviceID: deviceID) else {
+        let localEnvelope: SyncDocumentEnvelope?
+        do {
+            localEnvelope = try repository.envelope(documentID: recordID.recordName, deviceID: deviceID)
+        } catch {
+            await stateStore.setLastError(error.localizedDescription)
+            await log(level: .error, operation: "coordinator.handleRemoteDeletion.loadError", message: "Lokaler Stand für Remote-Löschung konnte nicht geladen werden.", metadata: [
+                "recordID": recordID.recordName,
+                "error": error.localizedDescription
+            ])
+            return
+        }
+
+        guard let localEnvelope else {
             await log(level: .debug, operation: "coordinator.handleRemoteDeletion.skip", message: "Remote-Löschung ignoriert, da lokal kein Dokument existiert.", metadata: [
                 "recordID": recordID.recordName
             ])
@@ -518,7 +551,7 @@ final class SyncCoordinator {
     private func buildStatusSnapshot(baseState: SyncServiceState, isSyncing: Bool) async -> SyncStatusSnapshot {
         let shadows = await stateStore.shadows()
         let conflictList = await stateStore.conflicts()
-        let lastError = await stateStore.lastError()
+        var lastError = await stateStore.lastError()
         let pendingRecordCount = await provider?.queuedChangeCount ?? 0
         let accountState = await provider?.accountAvailability ?? (isEnabled ? .needsAttention : .disabled)
 
@@ -537,7 +570,17 @@ final class SyncCoordinator {
             effectiveState = baseState
         }
 
-        let localEnvelopes = (try? repository.allEnvelopes(deviceID: deviceID)) ?? []
+        let localEnvelopes: [SyncDocumentEnvelope]
+        do {
+            localEnvelopes = try repository.allEnvelopes(deviceID: deviceID)
+        } catch {
+            lastError = error.localizedDescription
+            await stateStore.setLastError(error.localizedDescription)
+            await log(level: .error, operation: "coordinator.buildStatusSnapshot.localEnvelopeError", message: "Lokale Sync-Dokumente konnten für den Status nicht geladen werden.", metadata: [
+                "error": error.localizedDescription
+            ])
+            localEnvelopes = []
+        }
         let pendingLocalCount = SyncUploadPlanner.pendingRecordNames(
             envelopes: localEnvelopes,
             shadows: shadows,

@@ -1,21 +1,58 @@
 included:
   - Symi
+  - SymiTests
+  - SymiUITests
 
-only_rules:
-  - no_magic_padding
-  - no_magic_corner_radius
-  - no_direct_swiftui_colors
-  - no_direct_white_black_background
-  - no_free_shadow_values
-  - no_magic_frame_sizes
-  - no_magic_spacing
-  - no_magic_offsets
-  - no_magic_line_width
-  - no_magic_opacity
-  - no_magic_font_size
-  - no_magic_minimum_scale_factor
-  - no_magic_minimum_column_width
-  - no_magic_animation_duration
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - first_where
+  - private_swiftui_state
+  - redundant_nil_coalescing
+  - unhandled_throwing_task
+  - weak_delegate
+
+line_length:
+  warning: 300
+  error: 360
+  ignores_comments: true
+  ignores_urls: true
+  ignores_function_declarations: true
+
+file_length:
+  warning: 1600
+  error: 2000
+
+type_body_length:
+  warning: 700
+  error: 900
+
+function_body_length:
+  warning: 180
+  error: 240
+
+cyclomatic_complexity:
+  warning: 15
+  error: 20
+  ignores_case_statements: true
+
+large_tuple:
+  warning: 4
+  error: 5
+
+identifier_name:
+  min_length:
+    warning: 1
+
+type_name:
+  max_length:
+    warning: 60
+    error: 80
+
+nesting:
+  type_level:
+    warning: 2
+    error: 3
 
 excluded:
   - Symi/Sources/Features/InputFlow/Styling/SymiColors.swift
@@ -24,6 +61,34 @@ excluded:
   - Symi/Sources/Features/Export/PDFExportWriter.swift
 
 custom_rules:
+  no_unchecked_sendable:
+    name: "Kein @unchecked Sendable"
+    regex: '@unchecked\s+Sendable'
+    message: "Modelliere Thread-Safety über Actor, @MainActor oder sendable State statt @unchecked Sendable."
+    severity: error
+
+  no_product_fatal_error:
+    name: "Kein fatalError im Produktcode"
+    included: ".*/Symi/Sources/.*\\.swift"
+    regex: '\bfatalError\s*\('
+    message: "Produktiver Startup-/Runtime-Code muss einen recoverable Fehlerpfad statt fatalError verwenden."
+    severity: error
+
+  no_direct_telemetry_calls:
+    name: "Keine direkten Telemetrie-Aufrufe außerhalb der App-Konfiguration"
+    included: ".*/Symi/Sources/.*\\.swift"
+    excluded: ".*/Symi/Sources/App/SymiApp.swift"
+    regex: '\b(?:SentrySDK|TelemetryDeck)\.'
+    message: "Telemetrie nur über den zentralen, privacy-geprüften Gateway konfigurieren."
+    severity: error
+
+  no_sync_try_question_mark:
+    name: "Keine stummen try?-Fehler in Sync-Pfaden"
+    included: "Symi/Sources/(Features/Sync|Infrastructure/Sync)/.*\\.swift"
+    regex: '\btry\?'
+    message: "Sync-/Import-/Persistenzfehler müssen sichtbar geloggt oder als Status modelliert werden."
+    severity: error
+
   no_magic_padding:
     name: "Keine rohen Padding-Werte"
     regex: '\.padding\((?:\.(?:horizontal|vertical|top|bottom|leading|trailing),\s*)?\d+(?:\.\d+)?\)'

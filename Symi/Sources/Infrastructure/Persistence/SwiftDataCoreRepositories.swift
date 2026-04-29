@@ -61,8 +61,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, Sendable {
 
         if
             let id = draft.id,
-            let existing = try fetchEpisode(id: id, in: context)
-        {
+            let existing = try fetchEpisode(id: id, in: context) {
             target = existing
         } else {
             target = Episode(startedAt: draft.startedAt, intensity: draft.normalizedIntensity)

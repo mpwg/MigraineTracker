@@ -276,7 +276,6 @@ extension CloudKitSyncProvider: CKSyncEngineDelegate {
                 await log(level: .info, operation: "provider.event.accountChange", message: "iCloud-Account ist wieder verfügbar.", metadata: [
                     "changeType": "\(change.changeType)"
                 ])
-                break
             @unknown default:
                 await log(level: .warning, operation: "provider.event.accountChange.unknown", message: "Unbekannte iCloud-Änderung erkannt.")
                 await eventHandler(.didEncounterError("Unbekannte iCloud-Änderung erkannt."))
@@ -285,7 +284,6 @@ extension CloudKitSyncProvider: CKSyncEngineDelegate {
             await log(level: .debug, operation: "provider.event.fetchedDatabaseChanges", message: "Datenbankweite Änderungen wurden verarbeitet.")
         @unknown default:
             await log(level: .warning, operation: "provider.event.unknown", message: "Unbekanntes CKSyncEngine-Ereignis empfangen.")
-            break
         }
     }
 
@@ -344,10 +342,14 @@ enum CloudKitRecordCodec {
             recordID: recordID
         )
 
-        guard
-            let data = try? encodedPayloadData(for: envelope),
-            let payloadString = String(data: data, encoding: .utf8)
-        else {
+        let data: Data
+        do {
+            data = try encodedPayloadData(for: envelope)
+        } catch {
+            return nil
+        }
+
+        guard let payloadString = String(data: data, encoding: .utf8) else {
             return nil
         }
 
@@ -375,7 +377,10 @@ enum CloudKitRecordCodec {
             return nil
         }
 
-        guard let envelope = try? decoder.decode(SyncDocumentEnvelope.self, from: data) else {
+        let envelope: SyncDocumentEnvelope
+        do {
+            envelope = try decoder.decode(SyncDocumentEnvelope.self, from: data)
+        } catch {
             return nil
         }
 
@@ -391,7 +396,11 @@ enum CloudKitRecordCodec {
     }
 
     static func payloadByteCount(for envelope: SyncDocumentEnvelope) -> Int? {
-        try? encoder.encode(envelope).count
+        do {
+            return try encoder.encode(envelope).count
+        } catch {
+            return nil
+        }
     }
 
     static func systemFields(for record: CKRecord) -> Data? {

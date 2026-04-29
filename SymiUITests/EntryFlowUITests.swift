@@ -151,7 +151,7 @@ final class EntryFlowUITests: XCTestCase {
             app.buttons["entry-daypart-morgens"],
             app.buttons["entry-daypart-mittags"],
             app.buttons["entry-daypart-abends"],
-            app.buttons["entry-daypart-nacht"],
+            app.buttons["entry-daypart-nacht"]
         ]
         XCTAssertTrue(dayPartButtons.contains { $0.exists })
         XCTAssertTrue(app.buttons["entry-flow-next"].exists)
