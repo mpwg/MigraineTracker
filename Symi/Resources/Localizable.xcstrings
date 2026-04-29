@@ -1,28 +1,8 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
-    "" : {},
-    ", Anzahl: %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ", quantity: %1$lld"
-          }
-        }
-      }
-    },
-    ", Wirkung: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ", effect: %1$@"
-          }
-        }
-      }
+    "" : {
+
     },
     "/10" : {
       "localizations" : {
@@ -46,34 +26,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
-          }
-        }
-      }
-    },
-    "%@ · %@ · Intensität %lld/10" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@ · Intensity %3$lld/10"
-          }
-        }
-      }
-    },
-    "%@ · Intensität %lld/10" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · Intensität %2$lld/10"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · Intensity %2$lld/10"
           }
         }
       }
@@ -104,17 +56,6 @@
         }
       }
     },
-    "%@ %% Luftfeuchte" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ %% humidity"
-          }
-        }
-      }
-    },
     "%@ abwählen" : {
       "localizations" : {
         "en" : {
@@ -131,17 +72,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ range"
-          }
-        }
-      }
-    },
-    "%@ Bericht" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ report"
           }
         }
       }
@@ -172,17 +102,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ is your calm migraine diary. You record what happened and decide which additional data you want to include."
-          }
-        }
-      }
-    },
-    "%@ mm Niederschlag" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ mm precipitation"
           }
         }
       }
@@ -275,23 +194,6 @@
         }
       }
     },
-    "%lld Eintrag%@ · Höchste Intensität %lld/10" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld Eintrag%2$@ · Höchste Intensität %3$lld/10"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld entr%2$@ · Highest intensity %3$lld/10"
-          }
-        }
-      }
-    },
     "%lld Einträge im gewählten Zeitraum" : {
       "localizations" : {
         "en" : {
@@ -364,39 +266,6 @@
         }
       }
     },
-    "2 Stunden" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 hours"
-          }
-        }
-      }
-    },
-    "24 Stunden" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "24 hours"
-          }
-        }
-      }
-    },
-    "30 Minuten" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "30 minutes"
-          }
-        }
-      }
-    },
     "Ab" : {
       "localizations" : {
         "en" : {
@@ -433,17 +302,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conflicting fields: %1$@"
-          }
-        }
-      }
-    },
-    "Adresse" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Address"
           }
         }
       }
@@ -508,17 +366,6 @@
         }
       }
     },
-    "Aktuell ausgewählt." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Currently selected."
-          }
-        }
-      }
-    },
     "Aktuelle App-Angabe ohne Stärke oder Health-Flow-Sample." : {
       "localizations" : {
         "en" : {
@@ -575,17 +422,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "General"
-          }
-        }
-      }
-    },
-    "Als Wiederholungseinnahme dokumentiert" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documented as a repeat dose"
           }
         }
       }
@@ -650,28 +486,6 @@
         }
       }
     },
-    "Anzahl: %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quantity: %lld"
-          }
-        }
-      }
-    },
-    "App herunterladen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download the app"
-          }
-        }
-      }
-    },
     "App verbessern" : {
       "localizations" : {
         "en" : {
@@ -722,34 +536,12 @@
         }
       }
     },
-    "Apple Health wird nur genutzt, wenn du einzelne Datentypen freigibst. Wenn ein Health-Datentyp auf deinem Gerät nicht verfügbar ist, wird er ausgelassen." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Health is used only if you allow individual data types. If a Health data type is not available on your device, it is skipped."
-          }
-        }
-      }
-    },
     "Apple Health wird nur genutzt, wenn du einzelne Informationen freigibst." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Health is used only if you share individual information."
-          }
-        }
-      }
-    },
-    "Apple Health wird nur nach deiner Freigabe pro Datentyp genutzt. Nicht auf deiner iOS-Version verfügbare HealthKit-Daten werden nicht erzwungen." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Health is used only after you grant access per data type. HealthKit data that is not available on your iOS version is not forced."
           }
         }
       }
@@ -780,17 +572,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selected"
-          }
-        }
-      }
-    },
-    "Auswertung" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Analysis"
           }
         }
       }
@@ -975,39 +756,6 @@
         }
       }
     },
-    "Bis" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To"
-          }
-        }
-      }
-    },
-    "Bisher dokumentiert" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Logged So Far"
-          }
-        }
-      }
-    },
-    "Bundesland" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "State"
-          }
-        }
-      }
-    },
     "Cloud hat recht" : {
       "localizations" : {
         "en" : {
@@ -1068,17 +816,6 @@
         }
       }
     },
-    "Das Wetter wird mit deinem ungefähren Standort über Apple Weather geladen. Der Eintrag wird auch ohne Wetter gespeichert, wenn keine Freigabe vorliegt." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weather is loaded with your approximate location via Apple Weather. The entry is still saved without weather if permission is not granted."
-          }
-        }
-      }
-    },
     "Daten" : {
       "localizations" : {
         "en" : {
@@ -1089,56 +826,12 @@
         }
       }
     },
-    "Daten exportieren" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export Data"
-          }
-        }
-      }
-    },
-    "Daten sichern" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back Up Data"
-          }
-        }
-      }
-    },
     "Daten wiederherstellen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Restore Data"
-          }
-        }
-      }
-    },
-    "Datenexport" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data Export"
-          }
-        }
-      }
-    },
-    "Datenschutz" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacy"
           }
         }
       }
@@ -1243,17 +936,6 @@
         }
       }
     },
-    "Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your entries stay local on this device and help you keep track of patterns, triggers and routines that work."
-          }
-        }
-      }
-    },
     "Deine Insights" : {
       "localizations" : {
         "en" : {
@@ -1304,17 +986,6 @@
         }
       }
     },
-    "Der PDF-Bericht von %@ wird lokal erzeugt und kann systemweit geteilt werden." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The PDF report from %1$@ is created locally and can be shared system-wide."
-          }
-        }
-      }
-    },
     "Detaillierte Einträge" : {
       "localizations" : {
         "en" : {
@@ -1345,17 +1016,6 @@
         }
       }
     },
-    "Die App bleibt lokal vollständig nutzbar. iCloud-Sync ist optional, arbeitet getrennt von SwiftData und kann jederzeit wieder deaktiviert werden." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app remains fully usable locally. iCloud sync is optional, works separately from SwiftData and can be disabled again at any time."
-          }
-        }
-      }
-    },
     "Die App funktioniert auch ohne iCloud. Wenn du Sync aktivierst, werden deine App-Daten über deinen eigenen iCloud-Account abgeglichen." : {
       "localizations" : {
         "en" : {
@@ -1372,17 +1032,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The app helps you record your own observations and find them again later."
-          }
-        }
-      }
-    },
-    "Die App ist aktuell für iPhone, deutsche Sprache und iOS 17.6 oder neuer ausgelegt." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app is currently designed for iPhone, German language and iOS 17.6 or later."
           }
         }
       }
@@ -1407,28 +1056,6 @@
         }
       }
     },
-    "Die Liste zeigt Beispieldaten für den Screenshot-Modus." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The list shows sample data for screenshot mode."
-          }
-        }
-      }
-    },
-    "Die Treffer sind nach relevanten Fachgebieten gruppiert und innerhalb der Gruppen nach PLZ und Name sortiert." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Results are grouped by relevant specialties and sorted within groups by postal code and name."
-          }
-        }
-      }
-    },
     "Diese Aktion löscht den lokalen SwiftData-Store auf diesem Gerät. Eine spätere Migration ist nur möglich, wenn du die Store-Dateien vorher gesichert hast." : {
       "localizations" : {
         "en" : {
@@ -1445,17 +1072,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This action deletes the local SwiftData store on this device. Back up the store files first if you want to restore them later."
-          }
-        }
-      }
-    },
-    "Diese Episode wird in den Papierkorb verschoben." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This episode will be moved to the trash."
           }
         }
       }
@@ -1510,17 +1126,6 @@
         }
       }
     },
-    "Dokumentierte Medikamente: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documented medications: %1$@"
-          }
-        }
-      }
-    },
     "Dosierung" : {
       "localizations" : {
         "en" : {
@@ -1561,17 +1166,6 @@
         }
       }
     },
-    "Du dokumentierst Zeitpunkt, Dauer, Intensität, Symptome, mögliche Auslöser, Medikamente und persönliche Notizen." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You document timing, duration, intensity, symptoms, possible triggers, medication and personal notes."
-          }
-        }
-      }
-    },
     "Du dokumentierst Zeitpunkt, Intensität, hilfreiche Hinweise und persönliche Notizen ohne Formulargefühl." : {
       "localizations" : {
         "en" : {
@@ -1608,28 +1202,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can decide whether and to what extent you share your health data with this app. It is never shared with third parties."
-          }
-        }
-      }
-    },
-    "Durchschnittliche Intensität: %@/10" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Average intensity: %1$@/10"
-          }
-        }
-      }
-    },
-    "E-Mail" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Email"
           }
         }
       }
@@ -1774,45 +1346,12 @@
         }
       }
     },
-    "Einträge im Zeitraum: %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entries in period: %lld"
-          }
-        }
-      }
-    },
     "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden auf diesem Gerät gespeichert." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entries, medication, notes, triggers, symptoms, weather snapshots and read Apple Health context are stored on this device."
-          }
-        }
-      }
-    },
-    "Einträge, Medikamente, Notizen, Trigger, Symptome, Wetter-Snapshots und gelesener Apple-Health-Kontext werden zuerst auf diesem Gerät gespeichert." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entries, medication, notes, triggers, symptoms, weather snapshots and read Apple Health context are stored on this device first."
-          }
-        }
-      }
-    },
-    "Einträge: %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entries: %1$lld"
           }
         }
       }
@@ -1867,28 +1406,6 @@
         }
       }
     },
-    "Ende: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "End: %1$@"
-          }
-        }
-      }
-    },
-    "Endzeit angeben" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Specify End Time"
-          }
-        }
-      }
-    },
     "Entfernen" : {
       "localizations" : {
         "en" : {
@@ -1919,116 +1436,6 @@
         }
       }
     },
-    "Episode löschen?" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Episode?"
-          }
-        }
-      }
-    },
-    "Episode nicht gefunden" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode Not Found"
-          }
-        }
-      }
-    },
-    "Episodendetail" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode Details"
-          }
-        }
-      }
-    },
-    "Episodentypen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode types"
-          }
-        }
-      }
-    },
-    "Erinnerung" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminder"
-          }
-        }
-      }
-    },
-    "Erinnerung aktivieren" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable Reminder"
-          }
-        }
-      }
-    },
-    "Erinnerung: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminder: %1$@"
-          }
-        }
-      }
-    },
-    "Erinnerungen bleiben lokal" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminders Stay Local"
-          }
-        }
-      }
-    },
-    "Erstelle einen PDF-Bericht oder ein JSON5-Backup für einen frei wählbaren Zeitraum." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create a PDF report or JSON5 backup for a freely selectable period."
-          }
-        }
-      }
-    },
-    "Erstellt mit %@." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Created with %1$@."
-          }
-        }
-      }
-    },
     "Erwartet" : {
       "localizations" : {
         "en" : {
@@ -2049,34 +1456,12 @@
         }
       }
     },
-    "Export" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export"
-          }
-        }
-      }
-    },
     "Export nur mit deiner Aktion" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Export Only When You Choose"
-          }
-        }
-      }
-    },
-    "Fachgebiet" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Specialty"
           }
         }
       }
@@ -2107,28 +1492,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retry Error"
-          }
-        }
-      }
-    },
-    "Fehler, Ideen und Verbesserungsvorschläge kannst du als GitHub-Issue einreichen." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You can submit bugs, ideas and suggestions as GitHub issues."
-          }
-        }
-      }
-    },
-    "Fehler: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Error: %1$@"
           }
         }
       }
@@ -2193,17 +1556,6 @@
         }
       }
     },
-    "Für %@ ist noch nichts dokumentiert." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing has been documented for %1$@ yet."
-          }
-        }
-      }
-    },
     "Für bessere Insights" : {
       "localizations" : {
         "en" : {
@@ -2220,17 +1572,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For Your Doctor Visit"
-          }
-        }
-      }
-    },
-    "Für Wetterdaten fragt die App nach deinem ungefähren Standort. Die Koordinaten werden nicht als eigener Tagebucheintrag gespeichert." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "For weather data, the app asks for your approximate location. Coordinates are not stored as their own diary entry."
           }
         }
       }
@@ -2275,67 +1616,12 @@
         }
       }
     },
-    "GitHub-Issues öffnen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open GitHub Issues"
-          }
-        }
-      }
-    },
     "Gut" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Good"
-          }
-        }
-      }
-    },
-    "Häufige Symptome: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Common symptoms: %1$@"
-          }
-        }
-      }
-    },
-    "Häufige Trigger: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Common triggers: %1$@"
-          }
-        }
-      }
-    },
-    "Herzfrequenz %@ bpm" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heart rate %1$@ bpm"
-          }
-        }
-      }
-    },
-    "Heute" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today"
           }
         }
       }
@@ -2420,17 +1706,6 @@
         }
       }
     },
-    "Intensität %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Intensity %lld"
-          }
-        }
-      }
-    },
     "Intensität im Verlauf" : {
       "localizations" : {
         "en" : {
@@ -2451,17 +1726,6 @@
         }
       }
     },
-    "iPhone und Deutsch" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone and German"
-          }
-        }
-      }
-    },
     "Jetzt nicht" : {
       "localizations" : {
         "en" : {
@@ -2478,50 +1742,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync Now"
-          }
-        }
-      }
-    },
-    "JSON5 erstellen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create JSON5"
-          }
-        }
-      }
-    },
-    "JSON5 importieren" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import JSON5"
-          }
-        }
-      }
-    },
-    "JSON5 teilen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share JSON5"
-          }
-        }
-      }
-    },
-    "JSON5-Export enthält alle Einträge sowie eigene Medikamentenvorlagen, inklusive Papierkorb-Einträgen." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "JSON5 export contains all entries and custom medication templates, including trashed entries."
           }
         }
       }
@@ -2616,17 +1836,6 @@
         }
       }
     },
-    "Keine Einträge im Zeitraum" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Entries in Period"
-          }
-        }
-      }
-    },
     "Keine gelöschten Einträge." : {
       "localizations" : {
         "en" : {
@@ -2683,17 +1892,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conflicts"
-          }
-        }
-      }
-    },
-    "Kontakt" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contact"
           }
         }
       }
@@ -2764,17 +1962,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read"
-          }
-        }
-      }
-    },
-    "Lesen und Schreiben sind getrennt. Du kannst jeden Health-Datentyp einzeln erlauben und später wieder deaktivieren." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reading and writing are separate. You can allow each Health data type individually and turn it off again later."
           }
         }
       }
@@ -2889,17 +2076,6 @@
         }
       }
     },
-    "Manche Health-Datentypen gibt es erst auf neueren iOS-Versionen. Die App bleibt nutzbar und zeigt einfach nur die verfügbaren Werte." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some Health data types exist only on newer iOS versions. The app remains usable and simply shows the available values."
-          }
-        }
-      }
-    },
     "Medikament" : {
       "localizations" : {
         "en" : {
@@ -2950,17 +2126,6 @@
         }
       }
     },
-    "Medikamente: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medications: %1$@"
-          }
-        }
-      }
-    },
     "Medikation" : {
       "localizations" : {
         "en" : {
@@ -2971,34 +2136,12 @@
         }
       }
     },
-    "Medizinische Einordnung" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medical Context"
-          }
-        }
-      }
-    },
     "Medizinischer Hinweis" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Medical Note"
-          }
-        }
-      }
-    },
-    "Mehr" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More"
           }
         }
       }
@@ -3029,17 +2172,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discover More Insights"
-          }
-        }
-      }
-    },
-    "Menstruation %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menstruation %1$@"
           }
         }
       }
@@ -3114,17 +2246,6 @@
         }
       }
     },
-    "Nach Name, Fachgebiet oder Ort suchen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search by name, specialty or place"
-          }
-        }
-      }
-    },
     "Nächster Monat" : {
       "localizations" : {
         "en" : {
@@ -3165,17 +2286,6 @@
         }
       }
     },
-    "Nicht alles ist überall verfügbar" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not Everything Is Available Everywhere"
-          }
-        }
-      }
-    },
     "Nicht angegeben" : {
       "localizations" : {
         "en" : {
@@ -3196,45 +2306,12 @@
         }
       }
     },
-    "Noch kein Eintrag für diesen Tag." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No entry for this day yet."
-          }
-        }
-      }
-    },
-    "Noch keine Einträge an diesem Tag" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Entries on This Day Yet"
-          }
-        }
-      }
-    },
     "Notiz" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Note"
-          }
-        }
-      }
-    },
-    "Notiz: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Note: %1$@"
           }
         }
       }
@@ -3349,17 +2426,6 @@
         }
       }
     },
-    "Öffnet einen neuen Tagebuch-Eintrag mit dem aktuell ausgewählten Kalendertag." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens a new diary entry for the currently selected calendar day."
-          }
-        }
-      }
-    },
     "OK" : {
       "localizations" : {
         "en" : {
@@ -3390,45 +2456,12 @@
         }
       }
     },
-    "Optionaler Hinweis" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Optional Note"
-          }
-        }
-      }
-    },
-    "Ort" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Place"
-          }
-        }
-      }
-    },
     "Papierkorb" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trash"
-          }
-        }
-      }
-    },
-    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trashed entries remain local and in the cloud until you intentionally restore them or permanently remove them later."
           }
         }
       }
@@ -3463,61 +2496,6 @@
         }
       }
     },
-    "Passe den Suchbegriff an oder nutze die manuelle Anlage." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust the search term or use manual creation."
-          }
-        }
-      }
-    },
-    "Passe den Zeitraum an, damit ein Bericht aus deinem Tagebuch erstellt werden kann." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust the period so a report can be created from your diary."
-          }
-        }
-      }
-    },
-    "PDF" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF"
-          }
-        }
-      }
-    },
-    "PDF erstellen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create PDF"
-          }
-        }
-      }
-    },
-    "PDF teilen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share PDF"
-          }
-        }
-      }
-    },
     "PDF-Berichte helfen dir, deine Einträge übersichtlich mitzunehmen. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst." : {
       "localizations" : {
         "en" : {
@@ -3538,45 +2516,12 @@
         }
       }
     },
-    "PDF-Modus" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF mode"
-          }
-        }
-      }
-    },
     "Persönliche Informationen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Personal Information"
-          }
-        }
-      }
-    },
-    "PLZ" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Postal Code"
-          }
-        }
-      }
-    },
-    "Praxis / Ort" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Practice / Place"
           }
         }
       }
@@ -3661,16 +2606,8 @@
         }
       }
     },
-    "Ruhepuls %@ bpm" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resting heart rate %1$@ bpm"
-          }
-        }
-      }
+    "Remove %@" : {
+
     },
     "ruhig" : {
       "localizations" : {
@@ -3712,17 +2649,6 @@
         }
       }
     },
-    "Schlaf %@ min" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sleep %1$@ min"
-          }
-        }
-      }
-    },
     "Schließen" : {
       "localizations" : {
         "en" : {
@@ -3743,45 +2669,12 @@
         }
       }
     },
-    "Schmerzereignisse festhalten" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record Pain Events"
-          }
-        }
-      }
-    },
     "Schmerzlokalisation" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pain Location"
-          }
-        }
-      }
-    },
-    "Schmerztage im Zeitraum: %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pain days in period: %1$lld"
-          }
-        }
-      }
-    },
-    "Schneller Eintrag" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick Entry"
           }
         }
       }
@@ -3818,28 +2711,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Step %1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "Schritte %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Steps %1$@"
-          }
-        }
-      }
-    },
-    "Setzt die Intensität auf %lld von 10." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sets intensity to %lld out of 10."
           }
         }
       }
@@ -3904,34 +2775,12 @@
         }
       }
     },
-    "Sie ersetzt keine medizinische Diagnose, keine Therapieentscheidung und keinen Notfallkontakt." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It does not replace medical diagnosis, treatment decisions or emergency contacts."
-          }
-        }
-      }
-    },
     "Skala" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scale"
-          }
-        }
-      }
-    },
-    "So entsteht schnell ein hilfreicher Tagebuch-Eintrag. Alles Weitere ist optional." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This quickly creates a useful diary entry. Everything else is optional."
           }
         }
       }
@@ -3976,17 +2825,6 @@
         }
       }
     },
-    "Stammdaten" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Master Data"
-          }
-        }
-      }
-    },
     "Standort für Wetter" : {
       "localizations" : {
         "en" : {
@@ -4003,17 +2841,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "strong"
-          }
-        }
-      }
-    },
-    "Stärkste Episode: %@ · %lld/10" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strongest episode: %1$@ · %2$lld/10"
           }
         }
       }
@@ -4118,17 +2945,6 @@
         }
       }
     },
-    "Straße" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Street"
-          }
-        }
-      }
-    },
     "Suche" : {
       "localizations" : {
         "en" : {
@@ -4219,17 +3035,6 @@
         }
       }
     },
-    "Symptome %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Symptoms %1$@"
-          }
-        }
-      }
-    },
     "Symptome: %@" : {
       "localizations" : {
         "en" : {
@@ -4300,28 +3105,6 @@
         }
       }
     },
-    "Tagebuch öffnen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Diary"
-          }
-        }
-      }
-    },
-    "Tagebuchübersicht" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diary overview"
-          }
-        }
-      }
-    },
     "Tagesbereich" : {
       "localizations" : {
         "en" : {
@@ -4342,17 +3125,6 @@
         }
       }
     },
-    "Telefon" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Phone"
-          }
-        }
-      }
-    },
     "Tippe doppelt, um diesen Schritt zu bearbeiten." : {
       "localizations" : {
         "en" : {
@@ -4369,17 +3141,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Triggers"
-          }
-        }
-      }
-    },
-    "Trigger: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Triggers: %1$@"
           }
         }
       }
@@ -4444,17 +3205,6 @@
         }
       }
     },
-    "V1 schreibt nur Kopfschmerz und ausgewählte Begleitsymptome. Medikamente, Zyklusdaten und Konfliktlogik sind eigene Folge-Issues." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "V1 writes only headache and selected accompanying symptoms. Medication, cycle data and conflict logic are separate follow-up issues."
-          }
-        }
-      }
-    },
     "Verbindung" : {
       "localizations" : {
         "en" : {
@@ -4465,56 +3215,12 @@
         }
       }
     },
-    "Version 1" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version 1"
-          }
-        }
-      }
-    },
-    "Version 2 schreibt nur einfache Symptomdaten wie Kopfschmerz und ausgewählte Begleitsymptome. Notizen und Medikamente bleiben in der App." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version 2 writes only simple symptom data such as headache and selected accompanying symptoms. Notes and medication stay in the app."
-          }
-        }
-      }
-    },
-    "Version und Plattform" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version and Platform"
-          }
-        }
-      }
-    },
     "Verstanden" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Understood"
-          }
-        }
-      }
-    },
-    "Von" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "From"
           }
         }
       }
@@ -4549,28 +3255,6 @@
         }
       }
     },
-    "Vorlauf" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lead Time"
-          }
-        }
-      }
-    },
-    "Vorschau" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preview"
-          }
-        }
-      }
-    },
     "Wählt diese Option aus." : {
       "localizations" : {
         "en" : {
@@ -4587,17 +3271,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selects this medication."
-          }
-        }
-      }
-    },
-    "Was die App macht" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What the App Does"
           }
         }
       }
@@ -4672,17 +3345,6 @@
         }
       }
     },
-    "Weitere Funktionen können folgen. Medizinische Auswertungen, zusätzliche Plattformen und komplexere Health-Abgleiche werden separat konzipiert." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More features may follow. Medical analysis, additional platforms and more complex Health syncing will be designed separately."
-          }
-        }
-      }
-    },
     "Wenige Angaben reichen. Alles Weitere bleibt optional." : {
       "localizations" : {
         "en" : {
@@ -4719,28 +3381,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing Weather"
-          }
-        }
-      }
-    },
-    "Wetter: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weather: %1$@"
-          }
-        }
-      }
-    },
-    "Wetterdaten" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weather Data"
           }
         }
       }
@@ -4805,39 +3445,6 @@
         }
       }
     },
-    "Wirkung: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effect: %1$@"
-          }
-        }
-      }
-    },
-    "Wirkungseintritt: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onset of relief: %1$@"
-          }
-        }
-      }
-    },
-    "Zeigt die Episoden dieses Tages darunter an." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows this day's episodes below."
-          }
-        }
-      }
-    },
     "Zeitraum" : {
       "localizations" : {
         "en" : {
@@ -4858,17 +3465,6 @@
         }
       }
     },
-    "Zeitraum: %@ bis %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Period: %1$@ to %2$@"
-          }
-        }
-      }
-    },
     "Zu heutigem Eintrag hinzufügen" : {
       "localizations" : {
         "en" : {
@@ -4885,17 +3481,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Back"
-          }
-        }
-      }
-    },
-    "Zusammenhänge besser erkennen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "See Patterns More Clearly"
           }
         }
       }

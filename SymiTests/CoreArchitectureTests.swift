@@ -700,6 +700,15 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func homeStateMapsDirectlyFromEntryCount() {
+        #expect(mapToHomeState(entryCount: 0) == .empty)
+        #expect(mapToHomeState(entryCount: 1) == .early)
+        #expect(mapToHomeState(entryCount: 4) == .early)
+        #expect(mapToHomeState(entryCount: 5) == .insights)
+        #expect(mapToHomeState(entryCount: 42) == .insights)
+    }
+
+    @Test
     func loadSettingsUseCaseCountsActiveTrashAndConflicts() async throws {
         let episodeRepository = EpisodeRepositoryMock()
         let medicationRepository = MedicationCatalogRepositoryMock()
