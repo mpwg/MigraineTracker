@@ -1,0 +1,88 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - "release/**"
+  pull_request:
+    branches:
+      - "release/**"
+  workflow_dispatch:
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  SWIFTPM_CACHE_PATH: ${{ github.workspace }}/.swiftpm-cache
+
+jobs:
+  analyze:
+    name: CodeQL (Swift)
+    runs-on: macos-26
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Xcode 26.4 auswählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
+      - name: Xcode-Version ausgeben
+        run: |
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Lokale CodeQL-Konfiguration erzeugen
+        run: |
+          mkdir -p Symi/Configs
+          cat > Symi/Configs/LocalSecrets.xcconfig <<EOF
+          APPLE_DEVELOPER_TEAM_ID =
+          SENTRY_DSN =
+          TELEMETRY_APP_ID =
+          EOF
+
+      - name: SwiftPM-Cache wiederherstellen
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ env.SWIFTPM_CACHE_PATH }}
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: swiftpm-macos-26-xcode-26_4-codeql-${{ hashFiles('Symi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            swiftpm-macos-26-xcode-26_4-codeql-
+            swiftpm-macos-26-xcode-26_4-
+
+      - name: CodeQL initialisieren
+        uses: github/codeql-action/init@v4
+        with:
+          languages: swift
+          build-mode: manual
+
+      - name: Swift Packages auflösen
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project Symi.xcodeproj \
+            -scheme Symi \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}"
+
+      - name: App für CodeQL bauen
+        run: |
+          xcodebuild build \
+            -project Symi.xcodeproj \
+            -scheme Symi \
+            -clonedSourcePackagesDirPath "${SWIFTPM_CACHE_PATH}" \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData-CodeQL" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: CodeQL auswerten
+        uses: github/codeql-action/analyze@v4
