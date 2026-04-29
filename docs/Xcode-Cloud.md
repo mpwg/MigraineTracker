@@ -52,7 +52,7 @@ Die GitHub-Workflows wählen für Swift-Builds explizit Xcode 26.4 aus.
 - `push` auf `main`
 - Xcode 26.4 für Swift-Builds, Tests und Release-Archive
 - schnelles PR-Gate aus SwiftLint und Catalyst-Unit-Tests
-- iPhone-Simulator-Tests und UI-Smoke bei relevanten Änderungen, auf `main` oder per manuellem Start
+- iPhone-Simulator-Tests und UI-Smoke bei risiko-relevanten Änderungen, auf `main`, per manuellem Start oder im nächtlichen Lauf
 - Upload von `xcresult`-Bundles nur bei Fehlern
 
 Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distribution:
@@ -66,13 +66,13 @@ Die Release-Workflows in `GitHub Actions` übernehmen zusätzlich die Distributi
 Dieser Workflow liefert schnelles Entwickler-Feedback.
 
 - Name: `iOS CI`
-- Startbedingung: `pull_request` auf `main`, `push` auf `main` und manueller Start
+- Startbedingung: `pull_request` auf `main`, `push` auf `main`, nächtlicher Zeitplan und manueller Start
 - Scheme: `Symi`
 - Aktionen:
   - SwiftLint/Design-Token-Regeln
   - Unit-Tests auf `Mac Catalyst`
-  - Unit-Tests auf einem `iPhone 17`-Simulator bei Persistence-, Migration-, Backup- oder Import-Änderungen sowie auf `main`
-  - fokussierter UI-Smoke auf einem `iPhone 17`-Simulator bei Home-, Capture- oder UI-Test-Änderungen sowie auf `main`
+  - Unit-Tests auf einem `iPhone 17`-Simulator bei risiko-relevanten App-, Shared-, Core-, Sync-, Persistence-, Ressourcen- oder Teständerungen sowie immer auf `main`, bei manuellem Start und im nächtlichen Lauf
+  - zentrale UI-Smokes auf einem `iPhone 17`-Simulator bei App-Shell-, Home-, Capture-, InputFlow-, History-, Export-, Ressourcen-, Fastlane- oder UI-Test-Änderungen sowie immer auf `main`, bei manuellem Start und im nächtlichen Lauf
   - Upload der jeweiligen `xcresult`-Bundles nur bei Fehlern
 
 ## Workflow 2: TestFlight Release
@@ -156,7 +156,7 @@ Die GitHub-Actions-Einrichtung gilt als korrekt, wenn:
 
 - `GitHub Actions` bei `pull_request` und `push` auf `main` erfolgreich läuft
 - `iOS CI` das schnelle PR-Gate aus SwiftLint und Catalyst-Unit-Tests ausführt
-- `iOS CI` iPhone- und UI-Gates bei relevanten Änderungen oder auf `main` ausführt
+- `iOS CI` iPhone- und UI-Gates bei risiko-relevanten Änderungen, auf `main`, per manuellem Start und im nächtlichen Lauf ausführt
 - ein manueller Start von `TestFlight Release` einen `TestFlight`-Build erzeugt
 - ein Tag wie `v1.2.0` ausschließlich den Workflow `App Store Release` startet
 - der Tag-Workflow Screenshots und ein veröffentlichbares Archiv in App Store Connect hochlädt, aber die Version nicht automatisch einreicht

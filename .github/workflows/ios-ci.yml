@@ -27,6 +27,8 @@ on:
       - "fastlane/Fastfile"
       - "fastlane/Snapfile"
       - ".github/workflows/ios-ci.yml"
+  schedule:
+    - cron: "30 2 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -63,7 +65,7 @@ jobs:
             exit 0
           fi
 
-          if [[ "${{ github.event_name }}" == "push" ]]; then
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "schedule" ]]; then
             echo "iphone_tests=true" >> "$GITHUB_OUTPUT"
             echo "ui_smoke=true" >> "$GITHUB_OUTPUT"
             exit 0
@@ -75,13 +77,13 @@ jobs:
 
           printf 'Geänderte Dateien:\n%s\n' "${changed_files}"
 
-          if printf '%s\n' "${changed_files}" | grep -Eq '^(Symi/Sources/(Models|Infrastructure/Persistence|Infrastructure/Health|Core/Export|Features/Export|App/(SymiApp|StoreRecovery|StartupMaintenanceService)\.swift)|SymiTests/(SwiftDataMigrationTests|DataTransferHealthContextTests|PersistentStoreRecoveryTests)\.swift|Symi\.xcodeproj/|\.github/workflows/ios-ci\.yml$)'; then
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(Symi/Sources/(App|Shared|Models|Core|Infrastructure/(Persistence|Health|Sync)|Features/(Export|Sync|History|Home|Capture|InputFlow))|Symi/Resources/(Data|Localizable\.xcstrings|PrivacyInfo\.xcprivacy)|SymiTests/(SwiftDataMigrationTests|DataTransferHealthContextTests|PersistentStoreRecoveryTests|SyncMergeEngineTests|CoreArchitectureTests|DomainValidatorTests|ExportSummaryMetricsTests|FileProtectionPolicyTests)\.swift|Symi\.xcodeproj/|\.github/workflows/ios-ci\.yml$)'; then
             echo "iphone_tests=true" >> "$GITHUB_OUTPUT"
           else
             echo "iphone_tests=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if printf '%s\n' "${changed_files}" | grep -Eq '^(SymiUITests/|Symi/Sources/Features/(Home|Capture)/|Symi/Sources/App/ScreenshotSupport\.swift|Symi\.xcodeproj/|fastlane/(Fastfile|Snapfile)$|\.github/workflows/ios-ci\.yml$)'; then
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(SymiUITests/|Symi/Sources/(App/(AppShellView|ScreenshotSupport)\.swift|Features/(Home|Capture|InputFlow|History|Export)|Core/(Episodes|History|Export)|Shared/(AppTheme|ProductBranding|LiquidGlassStyle)\.swift)|Symi/Resources/(Assets\.xcassets|Localizable\.xcstrings)|Symi\.xcodeproj/|fastlane/(Fastfile|Snapfile)$|\.github/workflows/ios-ci\.yml$)'; then
             echo "ui_smoke=true" >> "$GITHUB_OUTPUT"
           else
             echo "ui_smoke=false" >> "$GITHUB_OUTPUT"
@@ -337,7 +339,7 @@ jobs:
           xcrun simctl boot "${TEST_DEVICE_NAME}" || true
           xcrun simctl bootstatus "${TEST_DEVICE_NAME}" -b
 
-      - name: Home-zu-Speichern-Smoke ausführen
+      - name: Zentrale UI-Smokes ausführen
         run: |
           xcodebuild test \
             -project Symi.xcodeproj \
@@ -346,7 +348,11 @@ jobs:
             -destination "${TEST_DESTINATION}" \
             -derivedDataPath "${RUNNER_TEMP}/DerivedData-UI" \
             -resultBundlePath "${RESULT_BUNDLE_PATH}" \
+            -only-testing:SymiUITests/HomeRedesignUITests/testAppShellUsesRequestedTabs \
             -only-testing:SymiUITests/HomeRedesignUITests/testHomeQuickEntryCanSaveHeadacheOnlyEntry \
+            -only-testing:SymiUITests/EntryFlowUITests/testCompleteFiveStepFlowSavesEntry \
+            -only-testing:SymiUITests/EntryFlowUITests/testOptionalStepsCanBeSkippedAndStillSavedWithoutWeather \
+            -only-testing:SymiUITests/SymiScreenshotTests/testDefaultSeedShowsScaleFirstNewEntryFlow \
             CODE_SIGNING_ALLOWED=NO
 
       - name: xcresult bei Fehler hochladen
