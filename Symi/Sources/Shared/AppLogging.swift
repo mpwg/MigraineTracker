@@ -1,5 +1,4 @@
 import Foundation
-import Sentry
 
 public enum AppLogCategory: String, Codable, CaseIterable, Sendable {
     case sync
@@ -131,7 +130,7 @@ public actor AppLogStore {
         operation: String,
         message: String,
         metadata: [String: String] = [:]
-    ) {
+    ) async {
         let entry = AppLogEntry(
             category: category,
             level: level,
@@ -143,7 +142,7 @@ public actor AppLogStore {
         )
         entries.append(entry)
         pruneAndPersist()
-        remoteReporter?.record(entry)
+        await remoteReporter?.record(entry)
     }
 
     public func recentEntries(filter: AppLogFilter = .all, limit: Int = 200) -> [AppLogEntry] {
@@ -279,7 +278,7 @@ public actor AppLogStore {
 }
 
 public protocol AppLogRemoteReporting: Sendable {
-    nonisolated func record(_ entry: AppLogEntry)
+    func record(_ entry: AppLogEntry) async
 }
 
 public enum AppRemoteLogLevel: String, Equatable, Sendable {
@@ -304,31 +303,27 @@ public struct AppRemoteLogEvent: Equatable, Sendable {
 }
 
 public protocol AppSentryClient: Sendable {
-    nonisolated func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb)
-    nonisolated func captureEvent(_ event: AppRemoteLogEvent)
+    func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb) async
+    func captureEvent(_ event: AppRemoteLogEvent) async
 }
 
-public final class AppSentryLogReporter: AppLogRemoteReporting, @unchecked Sendable {
-    public nonisolated static let shared = AppSentryLogReporter(client: SentrySDKLogClient())
-
-    private let lock = NSLock()
+@MainActor
+public final class AppSentryLogReporter: AppLogRemoteReporting {
     private let client: AppSentryClient
     private let sanitizer: AppLogSanitizing
-    nonisolated(unsafe) private var isEnabled = false
+    private var isEnabled = false
 
-    public nonisolated init(client: AppSentryClient, sanitizer: AppLogSanitizing = AppLogSanitizer()) {
+    public init(client: AppSentryClient, sanitizer: AppLogSanitizing = AppLogSanitizer()) {
         self.client = client
         self.sanitizer = sanitizer
     }
 
-    public nonisolated func setEnabled(_ enabled: Bool) {
-        lock.withLock {
-            unsafe isEnabled = enabled
-        }
+    public func setEnabled(_ enabled: Bool) {
+        isEnabled = enabled
     }
 
-    public nonisolated func record(_ entry: AppLogEntry) {
-        guard lock.withLock({ unsafe isEnabled }) else {
+    public func record(_ entry: AppLogEntry) async {
+        guard isEnabled else {
             return
         }
 
@@ -340,13 +335,13 @@ public final class AppSentryLogReporter: AppLogRemoteReporting, @unchecked Senda
             message: sanitizedEntry.message,
             data: context
         )
-        client.addBreadcrumb(breadcrumb)
+        await client.addBreadcrumb(breadcrumb)
 
         guard sanitizedEntry.level.sendsSentryEvent else {
             return
         }
 
-        client.captureEvent(
+        await client.captureEvent(
             AppRemoteLogEvent(
                 level: sanitizedEntry.level.remoteLevel,
                 message: sanitizedEntry.message,
@@ -439,24 +434,6 @@ public struct AppLogSanitizer: AppLogSanitizing {
     }
 }
 
-private struct SentrySDKLogClient: AppSentryClient {
-    nonisolated func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb) {
-        let sentryBreadcrumb = Breadcrumb(level: breadcrumb.level.sentryLevel, category: breadcrumb.category)
-        sentryBreadcrumb.message = breadcrumb.message
-        sentryBreadcrumb.type = "log"
-        sentryBreadcrumb.data = breadcrumb.data
-        SentrySDK.addBreadcrumb(sentryBreadcrumb)
-    }
-
-    nonisolated func captureEvent(_ event: AppRemoteLogEvent) {
-        let sentryEvent = Event(level: event.level.sentryLevel)
-        sentryEvent.message = SentryMessage(formatted: event.message)
-        sentryEvent.logger = "Symi.AppLog"
-        sentryEvent.extra = event.extra
-        SentrySDK.capture(event: sentryEvent)
-    }
-}
-
 private extension AppLogLevel {
     nonisolated var remoteLevel: AppRemoteLogLevel {
         switch self {
@@ -475,22 +452,5 @@ private extension AppLogLevel {
 
     nonisolated var sendsSentryEvent: Bool {
         self == .error || self == .critical
-    }
-}
-
-private extension AppRemoteLogLevel {
-    nonisolated var sentryLevel: SentryLevel {
-        switch self {
-        case .debug:
-            .debug
-        case .info:
-            .info
-        case .warning:
-            .warning
-        case .error:
-            .error
-        case .fatal:
-            .fatal
-        }
     }
 }

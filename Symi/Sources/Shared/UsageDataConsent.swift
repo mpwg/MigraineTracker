@@ -96,7 +96,7 @@ final class AppTelemetryService: UsageDataConsentService {
 
         if !isSentryStarted, let sentryDSN = Self.sentryDSN {
             AppTelemetryGateway.startSentry(dsn: sentryDSN)
-            AppSentryLogReporter.shared.setEnabled(true)
+            AppTelemetryGateway.setSentryLogReportingEnabled(true)
             isSentryStarted = true
         } else if Self.sentryDSN == nil {
             Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
@@ -110,7 +110,7 @@ final class AppTelemetryService: UsageDataConsentService {
 
     private func stopTelemetry() {
         if isSentryStarted {
-            AppSentryLogReporter.shared.setEnabled(false)
+            AppTelemetryGateway.setSentryLogReportingEnabled(false)
             AppTelemetryGateway.stopSentry()
             isSentryStarted = false
         }

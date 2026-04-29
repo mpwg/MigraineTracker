@@ -70,8 +70,8 @@ struct AppLogStoreTests {
     @Test
     func sentryReporterCreatesBreadcrumbForInfoLog() async throws {
         let client = CapturingSentryClient()
-        let reporter = AppSentryLogReporter(client: client)
-        reporter.setEnabled(true)
+        let reporter = await AppSentryLogReporter(client: client)
+        await reporter.setEnabled(true)
         let store = AppLogStore(
             fileManager: .default,
             baseDirectoryURL: try makeTemporaryDirectory(),
@@ -82,18 +82,20 @@ struct AppLogStoreTests {
 
         await store.log(level: .info, category: .sync, operation: "sync.info", message: "Info", metadata: ["count": "1"])
 
-        #expect(client.breadcrumbs.count == 1)
-        #expect(client.events.isEmpty)
-        #expect(client.breadcrumbs.first?.level == .info)
-        #expect(client.breadcrumbs.first?.category == "sync")
-        #expect(client.breadcrumbs.first?.data["operation"] == "sync.info")
+        let breadcrumbs = await client.breadcrumbs
+        let events = await client.events
+        #expect(breadcrumbs.count == 1)
+        #expect(events.isEmpty)
+        #expect(breadcrumbs.first?.level == .info)
+        #expect(breadcrumbs.first?.category == "sync")
+        #expect(breadcrumbs.first?.data["operation"] == "sync.info")
     }
 
     @Test
     func sentryReporterCreatesEventForErrorLog() async throws {
         let client = CapturingSentryClient()
-        let reporter = AppSentryLogReporter(client: client)
-        reporter.setEnabled(true)
+        let reporter = await AppSentryLogReporter(client: client)
+        await reporter.setEnabled(true)
         let store = AppLogStore(
             fileManager: .default,
             baseDirectoryURL: try makeTemporaryDirectory(),
@@ -104,17 +106,19 @@ struct AppLogStoreTests {
 
         await store.log(level: .error, category: .sync, operation: "sync.error", message: "Fehler")
 
-        #expect(client.breadcrumbs.count == 1)
-        #expect(client.events.count == 1)
-        #expect(client.events.first?.level == .error)
-        #expect(client.events.first?.message == "Fehler")
+        let breadcrumbs = await client.breadcrumbs
+        let events = await client.events
+        #expect(breadcrumbs.count == 1)
+        #expect(events.count == 1)
+        #expect(events.first?.level == .error)
+        #expect(events.first?.message == "Fehler")
     }
 
     @Test
     func sentryReporterMapsCriticalLogsToFatalEvents() async throws {
         let client = CapturingSentryClient()
-        let reporter = AppSentryLogReporter(client: client)
-        reporter.setEnabled(true)
+        let reporter = await AppSentryLogReporter(client: client)
+        await reporter.setEnabled(true)
         let store = AppLogStore(
             fileManager: .default,
             baseDirectoryURL: try makeTemporaryDirectory(),
@@ -125,15 +129,17 @@ struct AppLogStoreTests {
 
         await store.log(level: .critical, category: .app, operation: "startup.failure", message: "Start fehlgeschlagen")
 
-        #expect(client.breadcrumbs.first?.level == .fatal)
-        #expect(client.events.first?.level == .fatal)
+        let breadcrumbs = await client.breadcrumbs
+        let events = await client.events
+        #expect(breadcrumbs.first?.level == .fatal)
+        #expect(events.first?.level == .fatal)
     }
 
     @Test
     func sentryReporterRedactsSensitiveMetadataAndText() async throws {
         let client = CapturingSentryClient()
-        let reporter = AppSentryLogReporter(client: client)
-        reporter.setEnabled(true)
+        let reporter = await AppSentryLogReporter(client: client)
+        await reporter.setEnabled(true)
         let store = AppLogStore(
             fileManager: .default,
             baseDirectoryURL: try makeTemporaryDirectory(),
@@ -154,7 +160,7 @@ struct AppLogStoreTests {
             ]
         )
 
-        let event = try #require(client.events.first)
+        let event = try #require((await client.events).first)
         #expect(event.message == "Kontakt [redacted] wegen [redacted]")
         #expect(event.extra["medicationName"] == "[redacted]")
         #expect(event.extra["note"] == "[redacted]")
@@ -164,7 +170,7 @@ struct AppLogStoreTests {
     @Test
     func sentryReporterDoesNothingWhenDisabled() async throws {
         let client = CapturingSentryClient()
-        let reporter = AppSentryLogReporter(client: client)
+        let reporter = await AppSentryLogReporter(client: client)
         let store = AppLogStore(
             fileManager: .default,
             baseDirectoryURL: try makeTemporaryDirectory(),
@@ -175,8 +181,10 @@ struct AppLogStoreTests {
 
         await store.log(level: .error, category: .sync, operation: "sync.error", message: "Fehler")
 
-        #expect(client.breadcrumbs.isEmpty)
-        #expect(client.events.isEmpty)
+        let breadcrumbs = await client.breadcrumbs
+        let events = await client.events
+        #expect(breadcrumbs.isEmpty)
+        #expect(events.isEmpty)
     }
 }
 
@@ -186,28 +194,23 @@ private func makeTemporaryDirectory() throws -> URL {
     return directory
 }
 
-private final class CapturingSentryClient: AppSentryClient, @unchecked Sendable {
-    private let lock = NSLock()
+private actor CapturingSentryClient: AppSentryClient {
     private var capturedBreadcrumbs: [AppRemoteLogBreadcrumb] = []
     private var capturedEvents: [AppRemoteLogEvent] = []
 
     var breadcrumbs: [AppRemoteLogBreadcrumb] {
-        lock.withLock { capturedBreadcrumbs }
+        capturedBreadcrumbs
     }
 
     var events: [AppRemoteLogEvent] {
-        lock.withLock { capturedEvents }
+        capturedEvents
     }
 
     func addBreadcrumb(_ breadcrumb: AppRemoteLogBreadcrumb) {
-        lock.withLock {
-            capturedBreadcrumbs.append(breadcrumb)
-        }
+        capturedBreadcrumbs.append(breadcrumb)
     }
 
     func captureEvent(_ event: AppRemoteLogEvent) {
-        lock.withLock {
-            capturedEvents.append(event)
-        }
+        capturedEvents.append(event)
     }
 }
