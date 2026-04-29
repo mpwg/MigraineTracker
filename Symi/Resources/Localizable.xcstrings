@@ -301,6 +301,16 @@
     "Ab" : {
 
     },
+    "Abstürze & Performance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crashes & Performance"
+          }
+        }
+      }
+    },
     "Abbrechen" : {
       "localizations" : {
         "en" : {
@@ -480,12 +490,52 @@
         }
       }
     },
+    "Anonym teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymously"
+          }
+        }
+      }
+    },
+    "Anonyme Nutzungsdaten teilen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymous Usage Data"
+          }
+        }
+      }
+    },
+    "App verbessern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improve the App"
+          }
+        }
+      }
+    },
     "App herunterladen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download the app"
+          }
+        }
+      }
+    },
+    "App-Nutzung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Usage"
           }
         }
       }
@@ -908,6 +958,16 @@
         }
       }
     },
+    "Deine Einträge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Entries"
+          }
+        }
+      }
+    },
     "Deine Einträge bleiben lokal auf diesem Gerät und helfen dir, Muster, Auslöser und wirksame Routinen besser im Blick zu behalten." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1135,6 +1195,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can change location permission in this app's settings under \"Location\" to \"While Using the App\"."
+          }
+        }
+      }
+    },
+    "Du kannst das jederzeit in den Einstellungen ändern." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change this anytime in Settings."
           }
         }
       }
@@ -1678,6 +1748,16 @@
         }
       }
     },
+    "Gesundheitsdaten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Health Data"
+          }
+        }
+      }
+    },
     "GitHub-Issues öffnen" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1800,6 +1880,16 @@
         }
       }
     },
+    "Hilf uns, Symi besser zu machen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help us make Symi better."
+          }
+        }
+      }
+    },
     "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
       "localizations" : {
         "en" : {
@@ -1827,6 +1917,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync Now"
+          }
+        }
+      }
+    },
+    "Jetzt nicht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Now"
           }
         }
       }
@@ -2374,6 +2474,16 @@
         }
       }
     },
+    "Nutzungsdaten anonym teilen?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Anonymous Usage Data?"
+          }
+        }
+      }
+    },
     "Noch kein Eintrag für diesen Tag." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2596,6 +2706,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adjust the period so a report can be created from your diary."
+          }
+        }
+      }
+    },
+    "Persönliche Informationen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal Information"
           }
         }
       }
@@ -3453,6 +3573,26 @@
     },
     "Wenn aktiviert, enthält das PDF zusätzlich die detaillierten Einträge mit Medikamenten, Triggern, Wetterdaten, Apple-Health-Kontext und Notizen." : {
 
+    },
+    "Was wird geteilt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What Is Shared"
+          }
+        }
+      }
+    },
+    "Was wird NICHT geteilt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What Is NOT Shared"
+          }
+        }
+      }
     },
     "Wetter" : {
       "localizations" : {

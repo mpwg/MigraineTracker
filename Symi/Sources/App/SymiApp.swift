@@ -1,7 +1,4 @@
 import SwiftUI
-import Sentry
-import TelemetryDeck
-
 import SwiftData
 import OSLog
 
@@ -10,12 +7,12 @@ struct SymiApp: App {
     private static let logger = Logger(subsystem: "Symi", category: "Persistence")
     private let launchConfiguration: AppLaunchConfiguration
     private let initialStartupState: AppStartupState
+    @State private var telemetryService = AppTelemetryService.shared
 
     init() {
         let launchConfiguration = AppLaunchConfiguration.current
         self.launchConfiguration = launchConfiguration
 
-        Self.configureTelemetry(for: launchConfiguration)
         self.initialStartupState = Self.makeInitialStartupState(launchConfiguration: launchConfiguration)
     }
 
@@ -23,7 +20,8 @@ struct SymiApp: App {
         WindowGroup {
             AppRootView(
                 launchConfiguration: launchConfiguration,
-                initialStartupState: initialStartupState
+                initialStartupState: initialStartupState,
+                telemetryService: telemetryService
             )
         }
         #if targetEnvironment(macCatalyst)
@@ -169,33 +167,6 @@ struct SymiApp: App {
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 
-    private static func configureTelemetry(for launchConfiguration: AppLaunchConfiguration) {
-        if !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests, let sentryDSN = Self.sentryDSN {
-            SentrySDK.start { options in
-                options.dsn = sentryDSN
-
-                options.sendDefaultPii = false
-                options.tracesSampleRate = 0.2
-
-                options.configureProfiling = {
-                    $0.sessionSampleRate = 0.05
-                    $0.lifecycle = .trace
-                }
-
-                options.attachScreenshot = false
-                options.attachViewHierarchy = false
-                options.debug = false
-                options.enableLogs = false
-            }
-        } else {
-            Self.logger.notice("Sentry ist deaktiviert, weil keine gültige DSN in der App-Konfiguration gefunden wurde.")
-        }
-
-        if !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests, let telemetryAppID = Self.telemetryAppID {
-            TelemetryDeck.initialize(config: .init(appID: telemetryAppID))
-        }
-    }
-
     static func defaultStoreURL(
         applicationSupportDirectoryURL: URL? = nil,
         fileManager: FileManager = .default
@@ -238,31 +209,6 @@ struct SymiApp: App {
 
     private static func unitTestStoreURL() -> URL {
         FileManager.default.temporaryDirectory.appending(path: "Symi-UnitTests-\(UUID().uuidString).store")
-    }
-
-    private static var sentryDSN: String? {
-        normalize(Bundle.main.object(forInfoDictionaryKey: "SENTRY_DSN") as? String)
-    }
-
-    private static var telemetryAppID: String? {
-        normalize(Bundle.main.object(forInfoDictionaryKey: "TELEMETRY_APP_ID") as? String)
-    }
-
-    private static func normalize(_ value: String?) -> String? {
-        guard let value else {
-            return nil
-        }
-
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty {
-            return nil
-        }
-
-        if trimmed.hasPrefix("$("), trimmed.hasSuffix(")") {
-            return nil
-        }
-
-        return trimmed
     }
 
     static func sanitizedSummary(for error: Error) -> String {
@@ -309,14 +255,41 @@ struct StoreRecoveryEnvironment {
 
 private struct AppRootView: View {
     let launchConfiguration: AppLaunchConfiguration
+    @Bindable var telemetryService: AppTelemetryService
     @State private var startupState: AppStartupState
+    @State private var isUsageDataConsentPromptPresented = false
 
-    init(launchConfiguration: AppLaunchConfiguration, initialStartupState: AppStartupState) {
+    init(
+        launchConfiguration: AppLaunchConfiguration,
+        initialStartupState: AppStartupState,
+        telemetryService: AppTelemetryService
+    ) {
         self.launchConfiguration = launchConfiguration
+        self.telemetryService = telemetryService
         _startupState = State(initialValue: initialStartupState)
     }
 
     var body: some View {
+        rootContent
+            .task {
+                telemetryService.configureIfPermitted(launchConfiguration: launchConfiguration)
+                presentUsageDataConsentPromptIfNeeded()
+            }
+            .sheet(isPresented: $isUsageDataConsentPromptPresented, onDismiss: {
+                if telemetryService.shouldAskForUsageDataConsent {
+                    telemetryService.setUsageDataCollectionAllowed(false)
+                }
+            }) {
+                DataSharingSheet {
+                    telemetryService.setUsageDataCollectionAllowed(true)
+                }
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+    }
+
+    @ViewBuilder
+    private var rootContent: some View {
         switch startupState {
         case .app(let environment):
             appContent(environment: environment)
@@ -336,6 +309,7 @@ private struct AppRootView: View {
                 },
                 didRecover: { recoveredEnvironment in
                     startupState = .app(recoveredEnvironment)
+                    presentUsageDataConsentPromptIfNeeded()
                 }
             )
             .modelContainer(environment.fallbackContainer)
@@ -362,6 +336,7 @@ private struct AppRootView: View {
                 },
                 didRecover: { recoveredEnvironment in
                     startupState = .app(recoveredEnvironment)
+                    presentUsageDataConsentPromptIfNeeded()
                 }
             )
         }
@@ -378,5 +353,17 @@ private struct AppRootView: View {
         } else {
             AppShellView(appContainer: environment.appContainer)
         }
+    }
+
+    private func presentUsageDataConsentPromptIfNeeded() {
+        guard !launchConfiguration.isScreenshotMode, !launchConfiguration.isRunningTests else {
+            return
+        }
+
+        guard case .app = startupState, telemetryService.shouldAskForUsageDataConsent else {
+            return
+        }
+
+        isUsageDataConsentPromptPresented = true
     }
 }
