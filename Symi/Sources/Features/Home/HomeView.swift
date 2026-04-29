@@ -705,7 +705,7 @@ private struct HomeMonthCalendarView: View {
         .padding(.vertical, SymiSpacing.xxs)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Monatskalender \(month.formatted(.dateTime.month(.wide).year()))")
+        .accessibilityLabel(calendarAccessibilityLabel)
         .accessibilityIdentifier("home-calendar")
     }
 
@@ -753,6 +753,15 @@ private struct HomeMonthCalendarView: View {
         }
 
         return cells
+    }
+
+    private var calendarAccessibilityLabel: String {
+        let monthText = month.formatted(.dateTime.month(.wide).year())
+        guard calendar.isDate(.now, equalTo: month, toGranularity: .month) else {
+            return "Monatskalender \(monthText)"
+        }
+
+        return "Monatskalender \(monthText), heute markiert"
     }
 }
 

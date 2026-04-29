@@ -139,7 +139,7 @@ final class SymiScreenshotTests: XCTestCase {
 
         XCTAssertTrue(app.descendants(matching: .any)["entry-flow-step-headache"].waitForExistence(timeout: 6))
         XCTAssertTrue(app.descendants(matching: .any)["entry-intensity-card"].exists)
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Wie stark ist es gerade?")).firstMatch.exists)
+        XCTAssertTrue(app.descendants(matching: .any)["entry-flow-subtitle-headache"].exists)
         XCTAssertTrue(app.buttons["entry-flow-save-headache-only"].exists)
     }
 
