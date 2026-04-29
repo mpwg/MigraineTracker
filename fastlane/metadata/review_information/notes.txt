@@ -3,3 +3,18 @@ Symi ist ein lokal-first Migräne-Tagebuch. Die App stellt keine Diagnose, gibt 
 Gesundheitsdaten bleiben standardmäßig lokal auf dem Gerät. iCloud-Synchronisation ist optional und muss aktiv eingeschaltet werden. Apple-Health-Zugriff ist optional und wird nur nach ausdrücklicher Systemfreigabe verwendet. PDF-Export und Backup werden nur durch direkte Nutzeraktion erzeugt.
 
 Für den Review sind kein Account und keine Zugangsdaten erforderlich.
+
+Review Notes - WeatherKit Usage
+
+1. Does the app include any WeatherKit functionality?
+   Yes, the app uses WeatherKit.
+
+2. Steps to access the WeatherKit functionality in the app:
+
+- Open the app
+- Tap "New Entry"
+- Proceed through the entry flow by tapping "Next" until reaching Step 5
+- After confirming the current condition/state in Step 5, the app automatically retrieves the current weather data for the user's location using WeatherKit
+- This weather information is attached to the entry and later used to provide insights and identify potential correlations, for example between weather and symptoms
+
+No direct user interaction with WeatherKit is required, as the data is collected automatically during the entry creation process.
