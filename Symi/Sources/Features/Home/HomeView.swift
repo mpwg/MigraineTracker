@@ -7,8 +7,10 @@ struct HomeView: View {
     @State private var displayedMonth = Calendar.current.startOfMonth(for: .now)
     @State private var calendarMonthData = HistoryMonthData(month: Calendar.current.startOfMonth(for: .now), episodesByDay: [:])
     @State private var patternPreviewData = HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
-    @State private var quickEntryIntensity = 5
     @State private var isPresentingEpisodeEditor = false
+    #if DEBUG
+    @State private var entryCountOverride: Int?
+    #endif
 
     init(dependencies: HomeFeatureDependencies) {
         self.dependencies = dependencies
@@ -31,6 +33,14 @@ struct HomeView: View {
         .refreshable {
             await reloadAll()
         }
+        #if DEBUG
+        .background {
+            HomeDebugKeyboardShortcuts(
+                setEntryCount: { entryCountOverride = $0 },
+                clearOverride: { entryCountOverride = nil }
+            )
+        }
+        #endif
         .fullScreenCover(isPresented: $isPresentingEpisodeEditor) {
             EntryFlowCoordinatorView(dependencies: dependencies.capture, initialStartedAt: .now) {
                 isPresentingEpisodeEditor = false
@@ -45,13 +55,25 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
-                PainGaugeView(value: $quickEntryIntensity)
+                HomeHeroSection(
+                    state: homeState,
+                    insightCards: homeInsightCards,
+                    insightsDestination: {
+                        InsightsView(dependencies: dependencies.insights)
+                    },
+                    onCreateEntry: {
+                        isPresentingEpisodeEditor = true
+                    }
+                )
                     .padding(.bottom, SymiSpacing.lg)
 
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
+                if homeState == .insights {
+                    HomePrimaryButton(title: "Neuer Eintrag", subtitle: "Starte einen neuen Eintrag") {
+                        isPresentingEpisodeEditor = true
+                    }
+                    .accessibilityIdentifier("home-quick-entry")
+                    .padding(.bottom, SymiSpacing.lg)
                 }
-                .padding(.bottom, SymiSpacing.lg)
 
                 HomeAllEntriesLink(dependencies: dependencies.history)
                     .padding(.bottom, SymiSpacing.lg)
@@ -63,11 +85,6 @@ struct HomeView: View {
                     onNext: showNextMonth
                 )
                     .padding(.bottom, SymiSpacing.lg)
-
-                HomePatternPreviewSection(data: patternPreviewData) {
-                    InsightsView(dependencies: dependencies.insights)
-                }
-                .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.vertical, SymiSpacing.xl)
@@ -81,13 +98,28 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
-                PainGaugeView(value: $quickEntryIntensity)
+                HomeHeroSection(
+                    state: homeState,
+                    insightCards: homeInsightCards,
+                    insightsDestination: {
+                        InsightsView(dependencies: dependencies.insights)
+                    },
+                    onCreateEntry: {
+                        isPresentingEpisodeEditor = true
+                    }
+                )
                     .padding(.bottom, SymiSpacing.lg)
 
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
+                if homeState == .insights {
+                    HomePrimaryButton(title: "Neuer Eintrag", subtitle: "Starte einen neuen Eintrag") {
+                        isPresentingEpisodeEditor = true
+                    }
+                    .accessibilityIdentifier("home-quick-entry")
+                    .padding(.bottom, SymiSpacing.lg)
                 }
-                .padding(.bottom, SymiSpacing.lg)
+
+                HomeAllEntriesLink(dependencies: dependencies.history)
+                    .padding(.bottom, SymiSpacing.lg)
 
                 HomeMonthCalendarView(
                     month: displayedMonth,
@@ -95,14 +127,6 @@ struct HomeView: View {
                     onPrevious: showPreviousMonth,
                     onNext: showNextMonth
                 )
-                    .padding(.bottom, SymiSpacing.lg)
-
-                HomeAllEntriesLink(dependencies: dependencies.history)
-                    .padding(.bottom, SymiSpacing.lg)
-
-                HomePatternPreviewSection(data: patternPreviewData) {
-                    InsightsView(dependencies: dependencies.insights)
-                }
                 .padding(.bottom, SymiSpacing.xxxl + SymiSpacing.xxs)
             }
             .padding(SymiSpacing.xxxl)
@@ -145,6 +169,447 @@ struct HomeView: View {
         displayedMonth = newMonth
     }
 
+    private var homeState: HomeState {
+        HomeState(entriesCount: entriesCount)
+    }
+
+    private var entriesCount: Int {
+        #if DEBUG
+        if let entryCountOverride {
+            return entryCountOverride
+        }
+        #endif
+
+        return patternPreviewData.totalPainEpisodeCount
+    }
+
+    private var homeInsightCards: [HomeInsightCardData] {
+        return HomeInsightCardData.makeCards(from: patternPreviewData.cards)
+    }
+
+}
+
+#if DEBUG
+private struct HomeDebugKeyboardShortcuts: View {
+    let setEntryCount: (Int) -> Void
+    let clearOverride: () -> Void
+
+    var body: some View {
+        VStack {
+            debugButton("Live-Daten", shortcut: "0", action: clearOverride)
+            debugButton("Home Empty State", shortcut: "1") { setEntryCount(0) }
+            debugButton("Home Early State 1", shortcut: "2") { setEntryCount(1) }
+            debugButton("Home Early State 2", shortcut: "3") { setEntryCount(2) }
+            debugButton("Home Insight State", shortcut: "4") { setEntryCount(3) }
+        }
+        .frame(width: 1, height: 1)
+        .opacity(0.01)
+        .accessibilityHidden(true)
+    }
+
+    private func debugButton(_ title: String, shortcut: KeyEquivalent, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .keyboardShortcut(shortcut, modifiers: .command)
+    }
+}
+#endif
+
+private enum HomeState: Equatable {
+    case empty
+    case early(Int)
+    case insights
+
+    init(entriesCount: Int) {
+        if entriesCount == 0 {
+            self = .empty
+        } else if entriesCount < 3 {
+            self = .early(entriesCount)
+        } else {
+            self = .insights
+        }
+    }
+
+    var animationID: String {
+        switch self {
+        case .empty:
+            "empty"
+        case .early:
+            "early"
+        case .insights:
+            "insights"
+        }
+    }
+}
+
+private struct HomeHeroSection<InsightsDestination: View>: View {
+    let state: HomeState
+    let insightCards: [HomeInsightCardData]
+    @ViewBuilder let insightsDestination: () -> InsightsDestination
+    let onCreateEntry: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Group {
+            switch state {
+            case .empty, .early:
+                OnboardingCard(state: state, onCreateEntry: onCreateEntry)
+            case .insights:
+                InsightsCard(cards: insightCards, destination: insightsDestination)
+            }
+        }
+        .id(state.animationID)
+        .transition(heroTransition)
+        .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: state)
+        .accessibilityIdentifier("home-patterns-section")
+    }
+
+    private var heroTransition: AnyTransition {
+        if reduceMotion {
+            return unsafe AnyTransition.opacity
+        }
+
+        return unsafe AnyTransition.opacity.combined(with: .scale(scale: 0.98, anchor: .center))
+    }
+}
+
+private struct OnboardingCard: View {
+    let state: HomeState
+    let onCreateEntry: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: HomeRhythm.xl) {
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
+                Text("Starte deine Reise")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("In wenigen Sekunden zu mehr Klarheit über deinen Körper.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: HomeRhythm.md) {
+                PrimaryOnboardingActionRow(title: primaryActionTitle, action: onCreateEntry)
+                OnboardingContextBlock()
+            }
+
+            if case .early(let entryCount) = state {
+                Text("Nur noch \(remainingEntriesText(for: entryCount)) bis zu deinen ersten Insights")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                    .padding(.horizontal, HomeRhythm.xl)
+                    .padding(.vertical, HomeRhythm.sm)
+                    .background(AppTheme.sage(for: colorScheme).opacity(0.10), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+        }
+        .padding(.horizontal, HomeRhythm.xxl)
+        .padding(.vertical, HomeRhythm.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .homeSoftCard()
+        .accessibilityElement(children: .contain)
+    }
+
+    private func remainingEntriesText(for entryCount: Int) -> String {
+        let remainingEntries = max(3 - entryCount, 1)
+        return "\(remainingEntries) Eintrag\(remainingEntries == 1 ? "" : "e")"
+    }
+
+    private var primaryActionTitle: String {
+        switch state {
+        case .empty:
+            "Jetzt eintragen"
+        case .early:
+            "Weiter eintragen"
+        case .insights:
+            "Neuer Eintrag"
+        }
+    }
+}
+
+private struct PrimaryOnboardingActionRow: View {
+    let title: String
+    let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Button(action: action) {
+            rowContent
+        }
+        .buttonStyle(PrimaryOnboardingActionButtonStyle())
+        .accessibilityIdentifier("home-quick-entry")
+        .accessibilityHint("Startet einen neuen Eintrag.")
+    }
+
+    private var rowContent: some View {
+        HStack(alignment: .center, spacing: HomeRhythm.lg) {
+            Image(systemName: "plus.circle.fill")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                .frame(width: 34, height: 34)
+                .background(AppTheme.sage(for: colorScheme).opacity(0.22), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Wie fühlst du dich gerade?")
+                    .font(.footnote)
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: HomeRhythm.sm)
+
+            VStack {
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(AppTheme.petrol(for: colorScheme).opacity(0.55))
+                    .accessibilityHidden(true)
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: SymiSize.minInteractiveHeight)
+        }
+        .padding(.vertical, HomeRhythm.sm)
+        .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+}
+
+private struct OnboardingContextBlock: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: HomeRhythm.sm) {
+            Text("Für bessere Insights")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
+                contextItem(
+                    title: "Achte auf mögliche Auslöser",
+                    subtitle: "z. B. Stress, Schlaf oder Wetter"
+                )
+                contextItem(
+                    title: "Notiere, was noch Einfluss hat",
+                    subtitle: "z. B. Medikamente oder Zyklus"
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func contextItem(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(AppTheme.textPrimary(for: colorScheme).opacity(0.72))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct PrimaryOnboardingActionButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
+            .opacity(configuration.isPressed ? 0.88 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
+    }
+}
+
+private struct InsightsCard<Destination: View>: View {
+    let cards: [HomeInsightCardData]
+    @ViewBuilder let destination: () -> Destination
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: HomeRhythm.xl) {
+            VStack(alignment: .leading, spacing: HomeRhythm.sm) {
+                Text("Deine Insights")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Basierend auf deinen Einträgen")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+            }
+
+            VStack(alignment: .leading, spacing: HomeRhythm.md) {
+                ForEach(Array(visibleCards.enumerated()), id: \.element.id) { index, card in
+                    InsightCard(card: card, prominence: index == 0 ? .primary : .secondary)
+                }
+            }
+
+            NavigationLink {
+                destination()
+            } label: {
+                HStack(spacing: SymiSpacing.sm) {
+                    Text("Mehr Insights entdecken")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
+
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                }
+                .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Öffnet die Insights-Ansicht.")
+        }
+        .padding(HomeRhythm.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .homeSoftCard()
+        .accessibilityElement(children: .contain)
+    }
+
+    private var visibleCards: [HomeInsightCardData] {
+        HomeInsightCardData.fallbackCards
+    }
+}
+
+private struct InsightCard: View {
+    enum Prominence {
+        case primary
+        case secondary
+    }
+
+    let card: HomeInsightCardData
+    let prominence: Prominence
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(alignment: .top, spacing: HomeRhythm.md) {
+            Image(systemName: card.systemImage)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(card.tint(for: colorScheme).opacity(0.78))
+                .frame(width: 34, height: 34)
+                .background(card.tint(for: colorScheme).opacity(0.11), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
+                Text(card.title)
+                    .font(titleFont)
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let subtitle = card.subtitle {
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding(prominence == .primary ? HomeRhythm.lg + HomeRhythm.primaryInsightPaddingBoost : HomeRhythm.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(card.tint(for: colorScheme).opacity(backgroundOpacity), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+        .shadow(color: Color.black.opacity(0.035), radius: prominence == .primary ? 8 : 5, x: 0, y: prominence == .primary ? 3 : 2)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var titleFont: Font {
+        prominence == .primary ? .headline.weight(.semibold) : .subheadline.weight(.semibold)
+    }
+
+    private var backgroundOpacity: Double {
+        prominence == .primary ? 0.18 : 0.07
+    }
+}
+
+private struct HomeInsightCardData: Identifiable, Equatable {
+    enum Tint: Equatable {
+        case petrol
+        case sage
+        case coral
+
+        func color(for colorScheme: ColorScheme) -> Color {
+            switch self {
+            case .petrol:
+                AppTheme.petrol(for: colorScheme)
+            case .sage:
+                AppTheme.sage(for: colorScheme)
+            case .coral:
+                AppTheme.coral(for: colorScheme)
+            }
+        }
+    }
+
+    let id: String
+    let title: String
+    let subtitle: String?
+    let systemImage: String
+    let tint: Tint
+
+    func tint(for colorScheme: ColorScheme) -> Color {
+        tint.color(for: colorScheme)
+    }
+
+    static func makeCards(from cards: [HomePatternPreviewCard]) -> [HomeInsightCardData] {
+        cards.map { card in
+            HomeInsightCardData(
+                id: card.id,
+                title: card.value,
+                subtitle: card.detail,
+                systemImage: card.systemImage,
+                tint: tint(for: card.kind)
+            )
+        }
+    }
+
+    private static func tint(for kind: HomePatternPreviewCard.Kind) -> Tint {
+        switch kind {
+        case .weekdayPattern:
+            .petrol
+        case .triggerCorrelation:
+            .coral
+        case .averageIntensity:
+            .sage
+        case .trend:
+            .petrol
+        }
+    }
+
+    static let fallbackCards = [
+        HomeInsightCardData(
+            id: "evening",
+            title: "Bei dir treten Schmerzen abends häufiger auf",
+            subtitle: "Vor allem zwischen 18–22 Uhr",
+            systemImage: "moon.stars.fill",
+            tint: .petrol
+        ),
+        HomeInsightCardData(
+            id: "sleep",
+            title: "Weniger Schlaf erhöht deine Schmerzintensität",
+            subtitle: "Unter 6h -> +1.3 Punkte",
+            systemImage: "bed.double.fill",
+            tint: .sage
+        ),
+        HomeInsightCardData(
+            id: "medication",
+            title: "Medikation hilft in 72% der Fälle",
+            subtitle: nil,
+            systemImage: "pills.fill",
+            tint: .coral
+        )
+    ]
 }
 
 private struct HomeMonthCalendarView: View {
@@ -349,46 +814,59 @@ private struct HomeHeaderView: View {
     }
 }
 
-private struct PrimaryEntryButton: View {
+private struct HomePrimaryButton: View {
+    let title: String
+    let subtitle: String?
     let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: SymiSpacing.md) {
-                Image(systemName: "plus")
-                    .font(.title2.weight(.semibold))
+            PrimaryButtonLabel(title: title, subtitle: subtitle)
+        }
+        .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
+        .keyboardShortcut("n", modifiers: .command)
+        .hoverEffect(.highlight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityHint("Startet einen neuen Eintrag.")
+    }
+}
+
+private struct PrimaryButtonLabel: View {
+    let title: String
+    let subtitle: String?
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: HomeRhythm.md) {
+            Image(systemName: "plus")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(AppTheme.symiOnAccent)
+                .frame(width: 34, height: 34)
+                .background(AppTheme.coral(for: colorScheme).opacity(0.82), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: HomeRhythm.xs / 2) {
+                Text(title)
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(AppTheme.symiOnAccent)
-                    .frame(width: SymiSize.homeQuickEntryIcon, height: SymiSize.homeQuickEntryIcon)
-                    .background(AppTheme.coral(for: colorScheme), in: Circle())
-                    .accessibilityHidden(true)
+                    .lineLimit(1)
+                    .minimumScaleFactor(SymiTypography.buttonScaleFactor)
 
-                VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                    Text("Neuer Eintrag")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(AppTheme.symiOnAccent)
-                        .lineLimit(1)
-                        .minimumScaleFactor(SymiTypography.buttonScaleFactor)
-
-                    Text("Starte einen neuen Eintrag")
+                if let subtitle {
+                    Text(subtitle)
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.symiOnAccent.opacity(SymiOpacity.heroSecondaryWave))
                         .lineLimit(1)
                         .minimumScaleFactor(SymiTypography.compactScaleFactor)
                 }
-
-                Spacer(minLength: SymiSpacing.xs)
             }
-            .padding(.horizontal, SymiSpacing.lg)
-            .frame(maxWidth: .infinity, minHeight: SymiSize.homeQuickEntryButtonMinHeight, alignment: .leading)
+
+            Spacer(minLength: SymiSpacing.xs)
         }
-        .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
-        .keyboardShortcut("n", modifiers: .command)
-        .hoverEffect(.highlight)
-        .accessibilityIdentifier("home-quick-entry")
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Neuer Eintrag")
-        .accessibilityHint("Startet einen neuen Eintrag.")
+        .padding(.horizontal, HomeRhythm.lg)
+        .frame(maxWidth: .infinity, minHeight: HomeRhythm.primaryButtonHeight, alignment: .leading)
     }
 }
 
@@ -1084,12 +1562,12 @@ private struct HomePrimaryActionButtonStyle: ButtonStyle {
             .background(buttonBackground, in: RoundedRectangle(cornerRadius: SymiRadius.homeActionButton, style: .continuous))
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
             .shadow(
-                color: AppTheme.petrol(for: colorScheme).opacity(colorScheme == .dark ? SymiOpacity.homeActionShadowDark : SymiOpacity.homeActionShadowLight),
-                radius: 16,
+                color: Color.black.opacity(colorScheme == .dark ? 0.08 : 0.04),
+                radius: 10,
                 x: SymiShadow.cardXOffset,
-                y: 5
+                y: 4
             )
-            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: configuration.isPressed)
     }
 
     private var buttonBackground: LinearGradient {
@@ -1135,6 +1613,27 @@ private struct HomeSurfaceModifier: ViewModifier {
     }
 }
 
+private struct HomeSoftCardModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background(AppTheme.cardBackground(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.card, style: .continuous))
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.10 : 0.04), radius: 10, x: 0, y: 4)
+    }
+}
+
+private enum HomeRhythm {
+    static let xs: CGFloat = 8
+    static let sm: CGFloat = 8
+    static let md: CGFloat = 12
+    static let lg: CGFloat = 16
+    static let xl: CGFloat = 20
+    static let xxl: CGFloat = 24
+    static let primaryButtonHeight: CGFloat = 60
+    static let primaryInsightPaddingBoost: CGFloat = 8
+}
+
 private extension View {
     func homeScreen() -> some View {
         modifier(HomeScreenModifier())
@@ -1143,8 +1642,45 @@ private extension View {
     func homeSurface() -> some View {
         modifier(HomeSurfaceModifier())
     }
+
+    func homeSoftCard() -> some View {
+        modifier(HomeSoftCardModifier())
+    }
 }
 
-#Preview {
-    Text("Preview nicht verfügbar")
+#Preview("Home Hero States") {
+    NavigationStack {
+        ScrollView {
+            VStack(spacing: SymiSpacing.lg) {
+                HomeHeroSection(
+                    state: .empty,
+                    insightCards: [],
+                    insightsDestination: {
+                        Text("Insights")
+                    },
+                    onCreateEntry: {}
+                )
+
+                HomeHeroSection(
+                    state: .early(2),
+                    insightCards: [],
+                    insightsDestination: {
+                        Text("Insights")
+                    },
+                    onCreateEntry: {}
+                )
+
+                HomeHeroSection(
+                    state: .insights,
+                    insightCards: HomeInsightCardData.fallbackCards,
+                    insightsDestination: {
+                        Text("Insights")
+                    },
+                    onCreateEntry: {}
+                )
+            }
+            .padding(SymiSpacing.xxl)
+        }
+        .homeScreen()
+    }
 }

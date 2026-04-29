@@ -664,6 +664,9 @@
     "Backup teilen" : {
 
     },
+    "Basierend auf deinen Einträgen" : {
+
+    },
     "Bearbeiten" : {
       "localizations" : {
         "en" : {
@@ -998,6 +1001,9 @@
           }
         }
       }
+    },
+    "Deine Insights" : {
+
     },
     "Deine Muster" : {
 
@@ -1631,6 +1637,9 @@
         }
       }
     },
+    "Ersten Eintrag erstellen" : {
+
+    },
     "Erwartet" : {
       "localizations" : {
         "en" : {
@@ -1763,6 +1772,9 @@
           }
         }
       }
+    },
+    "Für bessere Insights" : {
+
     },
     "Für dein Arztgespräch" : {
 
@@ -1910,6 +1922,9 @@
       }
     },
     "In Sekunden eintragen" : {
+
+    },
+    "In wenigen Sekunden zu mehr Klarheit über deinen Körper." : {
 
     },
     "Insights" : {
@@ -2430,6 +2445,9 @@
     "Mehr gute Tage" : {
 
     },
+    "Mehr Insights entdecken" : {
+
+    },
     "Menstruation %@" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2626,6 +2644,9 @@
           }
         }
       }
+    },
+    "Nur noch %@ bis zu deinen ersten Insights" : {
+
     },
     "Nur Sync" : {
       "localizations" : {
@@ -3220,6 +3241,9 @@
     "Startdatum" : {
 
     },
+    "Starte deine Reise" : {
+
+    },
     "Starte einen neuen Eintrag" : {
 
     },
@@ -3801,6 +3825,9 @@
           }
         }
       }
+    },
+    "Wie fühlst du dich gerade?" : {
+
     },
     "Wiederherstellen" : {
       "localizations" : {
