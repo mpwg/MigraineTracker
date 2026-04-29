@@ -305,8 +305,6 @@ nonisolated private struct PDFLayout {
     let sectionGap: CGFloat = 10
     let lineSpacing: CGFloat = 4
     let separatorHeight: CGFloat = 0.7
-    let prominentStrokeWidth: CGFloat = 1.4
-
     var contentWidth: CGFloat { pageRect.width - (margin * 2) }
     var topY: CGFloat { margin + headerHeight + 12 }
     var bottomY: CGFloat { pageRect.height - margin - footerHeight }
@@ -391,15 +389,23 @@ nonisolated private struct PDFPageContext {
     }
 
     mutating func drawInsightBlock(text: String) throws {
-        let cardHeight: CGFloat = 54
+        let cardHeight: CGFloat = 62
         ensureSpace(cardHeight)
         let cardRect = CGRect(x: layout.margin, y: cursorY, width: layout.contentWidth, height: cardHeight)
-        drawRoundedRect(cardRect, fill: layout.insightFillColor, stroke: CGColor(gray: 0.86, alpha: 1), radius: 8)
+        drawRoundedRect(cardRect, fill: layout.insightFillColor, stroke: nil, radius: 8)
+        drawCircle(CGRect(x: cardRect.minX + 16, y: cardRect.minY + 15, width: 7, height: 7), fill: layout.sageColor)
+        try draw(
+            text: "Einschätzung",
+            font: layout.labelFont,
+            color: layout.primaryColor,
+            rect: CGRect(x: cardRect.minX + 30, y: cardRect.minY + 12, width: cardRect.width - 46, height: 12),
+            preserveCursor: true
+        )
         try draw(
             text: text,
             font: layout.bodyFont,
             color: layout.textColor,
-            rect: cardRect.insetBy(dx: 16, dy: 13),
+            rect: CGRect(x: cardRect.minX + 30, y: cardRect.minY + 29, width: cardRect.width - 46, height: 22),
             preserveCursor: true
         )
         cursorY = cardRect.maxY
@@ -639,16 +645,16 @@ nonisolated private struct PDFPageContext {
 
     private func drawCard(_ rect: CGRect) {
         drawShadow(rect, radius: layout.cardRadius)
-        drawRoundedRect(rect, fill: layout.cardColor, stroke: CGColor(gray: 0.88, alpha: 1), radius: layout.cardRadius)
+        drawRoundedRect(rect, fill: layout.cardColor, stroke: nil, radius: layout.cardRadius)
     }
 
     private func drawProminentCard(_ rect: CGRect) {
         drawShadow(rect, radius: layout.cardRadius)
-        drawRoundedRect(rect, fill: layout.cardColor, stroke: layout.primaryColor, radius: layout.cardRadius, lineWidth: layout.prominentStrokeWidth)
+        drawRoundedRect(rect, fill: layout.cardColor, stroke: nil, radius: layout.cardRadius)
     }
 
     private func drawLightCard(_ rect: CGRect) {
-        drawRoundedRect(rect, fill: layout.cardColor, stroke: CGColor(gray: 0.9, alpha: 1), radius: layout.cardRadius)
+        drawRoundedRect(rect, fill: layout.cardColor, stroke: nil, radius: layout.cardRadius)
     }
 
     private mutating func drawTimelineAxes(in rect: CGRect) {
@@ -701,13 +707,16 @@ nonisolated private struct PDFPageContext {
 
         for (index, point) in points.enumerated() {
             let isMaximum = records[index].intensity == maxIntensity
-            let outerSize: CGFloat = isMaximum ? 15 : 11
-            let innerSize: CGFloat = isMaximum ? 8 : 6
+            let isLast = index == records.count - 1
+            let outerSize: CGFloat = isMaximum ? 15 : (isLast ? 13 : 11)
+            let innerSize: CGFloat = isMaximum ? 8 : (isLast ? 7 : 6)
             drawCircle(CGRect(x: point.x - (outerSize / 2), y: point.y - (outerSize / 2), width: outerSize, height: outerSize), fill: layout.primaryColor)
-            drawCircle(CGRect(x: point.x - (innerSize / 2), y: point.y - (innerSize / 2), width: innerSize, height: innerSize), fill: layout.sageColor)
+            drawCircle(CGRect(x: point.x - (innerSize / 2), y: point.y - (innerSize / 2), width: innerSize, height: innerSize), fill: isLast ? layout.cardColor : layout.sageColor)
             try? draw(text: "\(records[index].intensity)", font: layout.smallFont, color: layout.primaryColor, rect: CGRect(x: point.x - 8, y: point.y - 20, width: 16, height: 10), preserveCursor: true)
             if isMaximum {
                 try? draw(text: "Max", font: layout.smallFont, color: layout.primaryColor, rect: CGRect(x: point.x + 7, y: point.y - 18, width: 24, height: 10), preserveCursor: true)
+            } else if isLast {
+                try? draw(text: "Aktuell", font: layout.smallFont, color: layout.primaryColor, rect: CGRect(x: point.x + 7, y: point.y - 18, width: 34, height: 10), preserveCursor: true)
             }
             if index == 0 || index == records.count - 1 || index % 4 == 0 {
                 try? draw(text: records[index].startedAt.formatted(.dateTime.day().month()), font: layout.smallFont, color: layout.mutedTextColor, rect: CGRect(x: point.x - 18, y: rect.maxY + 9, width: 36, height: 12), preserveCursor: true)
@@ -716,12 +725,12 @@ nonisolated private struct PDFPageContext {
     }
 
     private mutating func drawPatternList(title: String, values: [PDFPatternItem], x: CGFloat, y: CGFloat, width: CGFloat) throws -> CGFloat {
-        try draw(text: title, font: layout.labelFont, color: layout.primaryColor, rect: CGRect(x: x, y: y, width: width, height: 11), preserveCursor: true)
+        try draw(text: title, font: layout.smallFont, color: layout.mutedTextColor, rect: CGRect(x: x, y: y, width: width, height: 11), preserveCursor: true)
         let bulletText = values.isEmpty
             ? "–"
             : values.map { "• \($0.label) (\($0.count)x)" }.joined(separator: "\n")
-        let bulletHeight = max(12, height(for: bulletText, font: layout.smallFont, width: width))
-        try draw(text: bulletText, font: layout.smallFont, color: layout.mutedTextColor, rect: CGRect(x: x, y: y + 15, width: width, height: bulletHeight), preserveCursor: true)
+        let bulletHeight = max(12, height(for: bulletText, font: layout.bodyFont, width: width))
+        try draw(text: bulletText, font: layout.bodyFont, color: layout.textColor, rect: CGRect(x: x, y: y + 14, width: width, height: bulletHeight), preserveCursor: true)
         return y + 15 + bulletHeight
     }
 
