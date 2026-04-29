@@ -103,6 +103,7 @@ final class SettingsController {
     private let syncService: SyncService
     private let appLogService: AppLogService
     private let healthService: HealthService
+    private let usageDataConsentService: UsageDataConsentService
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var restoreTask: Task<Void, Never>?
     @ObservationIgnored private var logRefreshTask: Task<Void, Never>?
@@ -114,7 +115,8 @@ final class SettingsController {
         continuousMedicationRepository: ContinuousMedicationRepository,
         syncService: SyncService,
         appLogService: AppLogService,
-        healthService: HealthService
+        healthService: HealthService,
+        usageDataConsentService: UsageDataConsentService
     ) {
         self.episodeRepository = episodeRepository
         self.medicationRepository = medicationRepository
@@ -122,6 +124,7 @@ final class SettingsController {
         self.syncService = syncService
         self.appLogService = appLogService
         self.healthService = healthService
+        self.usageDataConsentService = usageDataConsentService
         self.loadSettingsUseCase = LoadSettingsUseCase(
             episodeRepository: episodeRepository,
             medicationRepository: medicationRepository,
@@ -155,6 +158,10 @@ final class SettingsController {
 
     var healthWriteDefinitions: [HealthDataTypeDefinition] {
         healthService.writeDefinitions
+    }
+
+    var isUsageDataCollectionAllowed: Bool {
+        usageDataConsentService.usageDataConsent == .allowed
     }
 
     func load() {
@@ -334,5 +341,9 @@ final class SettingsController {
     func requestHealthWriteAuthorization() async {
         try? await healthService.requestWriteAuthorization()
         healthSettingsRevision += 1
+    }
+
+    func setUsageDataCollectionAllowed(_ allowed: Bool) {
+        usageDataConsentService.setUsageDataCollectionAllowed(allowed)
     }
 }

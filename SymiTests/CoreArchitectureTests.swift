@@ -158,6 +158,25 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func usageDataConsentStorePersistsExplicitDecisions() {
+        let suiteName = "UsageDataConsentStoreTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = UsageDataConsentStore(defaults: defaults)
+
+        #expect(store.consent == .undecided)
+
+        store.setConsent(.allowed)
+        #expect(store.consent == .allowed)
+
+        store.setConsent(.denied)
+        #expect(store.consent == .denied)
+
+        store.setConsent(.undecided)
+        #expect(store.consent == .undecided)
+    }
+
+    @Test
     func featureSourcesDoNotWireAppContainerOrInfrastructureImplementations() throws {
         let featureFiles = try swiftSourceFiles(in: "Symi/Sources/Features")
         #expect(!featureFiles.isEmpty)

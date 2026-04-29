@@ -117,6 +117,18 @@ struct SettingsView: View {
                 }
             }
 
+            Section {
+                Toggle("Anonyme Nutzungsdaten teilen", isOn: Binding(
+                    get: { controller.isUsageDataCollectionAllowed },
+                    set: { controller.setUsageDataCollectionAllowed($0) }
+                ))
+                .tint(AppTheme.ocean)
+            } header: {
+                Text("App verbessern")
+            } footer: {
+                Text("Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern.")
+            }
+
             Section("Übersicht") {
                 LabeledContent("Aktive Episoden", value: "\(controller.summary.activeEpisodeCount)")
                 LabeledContent("Papierkorb", value: "\(controller.summary.trashCount)")
