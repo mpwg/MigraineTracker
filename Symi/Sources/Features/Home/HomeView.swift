@@ -316,7 +316,8 @@ private struct OnboardingCard: View {
                 ForEach(steps) { step in
                     OnboardingStepRow(
                         step: step,
-                        status: status(for: step)
+                        status: status(for: step),
+                        action: step.number == 1 ? onCreateEntry : nil
                     )
                 }
             }
@@ -331,12 +332,6 @@ private struct OnboardingCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Button(action: onCreateEntry) {
-                PrimaryButtonLabel(title: ctaTitle, subtitle: nil)
-            }
-            .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
-            .accessibilityIdentifier("home-quick-entry")
-            .accessibilityHint("Startet einen neuen Eintrag.")
         }
         .padding(.horizontal, HomeRhythm.xxl)
         .padding(.vertical, HomeRhythm.xl)
@@ -351,17 +346,6 @@ private struct OnboardingCard: View {
         }
 
         return step.number == 1 ? .active : .muted
-    }
-
-    private var ctaTitle: String {
-        switch state {
-        case .empty:
-            "Ersten Eintrag erstellen"
-        case .early:
-            "Weiter eintragen"
-        case .insights:
-            "Neuer Eintrag"
-        }
     }
 
     private func remainingEntriesText(for entryCount: Int) -> String {
@@ -388,9 +372,23 @@ private enum OnboardingStepStatus {
 private struct OnboardingStepRow: View {
     let step: OnboardingStepData
     let status: OnboardingStepStatus
+    let action: (() -> Void)?
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        if let action {
+            Button(action: action) {
+                rowContent
+            }
+            .buttonStyle(OnboardingStepButtonStyle())
+            .accessibilityIdentifier("home-quick-entry")
+            .accessibilityHint("Startet einen neuen Eintrag.")
+        } else {
+            rowContent
+        }
+    }
+
+    private var rowContent: some View {
         HStack(alignment: .top, spacing: HomeRhythm.md) {
             Image(systemName: iconName)
                 .font(iconFont)
@@ -413,6 +411,9 @@ private struct OnboardingStepRow: View {
                 }
             }
         }
+        .padding(.vertical, isPrimary ? HomeRhythm.sm : HomeRhythm.xs / 2)
+        .frame(maxWidth: .infinity, minHeight: isPrimary ? SymiSize.minInteractiveHeight : 0, alignment: .leading)
+        .contentShape(Rectangle())
         .opacity(rowOpacity)
     }
 
@@ -466,6 +467,21 @@ private struct OnboardingStepRow: View {
 
     private var rowOpacity: Double {
         status == .muted ? 0.62 : 1
+    }
+
+    private var isPrimary: Bool {
+        status == .active || status == .completedDominant
+    }
+}
+
+private struct OnboardingStepButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.97 : 1))
+            .opacity(configuration.isPressed ? 0.88 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.82), value: configuration.isPressed)
     }
 }
 
