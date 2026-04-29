@@ -89,7 +89,7 @@ jobs:
 
   lint:
     name: SwiftLint
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
