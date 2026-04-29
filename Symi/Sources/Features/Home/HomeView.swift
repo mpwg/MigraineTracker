@@ -9,7 +9,7 @@ struct HomeView: View {
     @State private var patternPreviewData = HomePatternPreviewData(totalPainEpisodeCount: 0, cards: [])
     @State private var isPresentingEpisodeEditor = false
     #if DEBUG
-    @State private var heroPreviewOverride: HomeHeroPreviewOverride?
+    @State private var entryCountOverride: Int?
     #endif
 
     init(dependencies: HomeFeatureDependencies) {
@@ -36,8 +36,8 @@ struct HomeView: View {
         #if DEBUG
         .background {
             HomeDebugKeyboardShortcuts(
-                setOverride: { heroPreviewOverride = $0 },
-                clearOverride: { heroPreviewOverride = nil }
+                setEntryCount: { entryCountOverride = $0 },
+                clearOverride: { entryCountOverride = nil }
             )
         }
         #endif
@@ -55,8 +55,8 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
-                HeroCard(
-                    state: homeHeroState,
+                HomeHeroSection(
+                    state: homeState,
                     insightCards: homeInsightCards,
                     insightsDestination: {
                         InsightsView(dependencies: dependencies.insights)
@@ -67,10 +67,13 @@ struct HomeView: View {
                 )
                     .padding(.bottom, SymiSpacing.lg)
 
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
+                if homeState == .insights {
+                    HomePrimaryButton(title: "Neuer Eintrag", subtitle: "Starte einen neuen Eintrag") {
+                        isPresentingEpisodeEditor = true
+                    }
+                    .accessibilityIdentifier("home-quick-entry")
+                    .padding(.bottom, SymiSpacing.lg)
                 }
-                .padding(.bottom, SymiSpacing.lg)
 
                 HomeAllEntriesLink(dependencies: dependencies.history)
                     .padding(.bottom, SymiSpacing.lg)
@@ -95,8 +98,8 @@ struct HomeView: View {
                 HomeHeaderView()
                     .padding(.bottom, SymiSpacing.lg)
 
-                HeroCard(
-                    state: homeHeroState,
+                HomeHeroSection(
+                    state: homeState,
                     insightCards: homeInsightCards,
                     insightsDestination: {
                         InsightsView(dependencies: dependencies.insights)
@@ -107,10 +110,13 @@ struct HomeView: View {
                 )
                     .padding(.bottom, SymiSpacing.lg)
 
-                PrimaryEntryButton {
-                    isPresentingEpisodeEditor = true
+                if homeState == .insights {
+                    HomePrimaryButton(title: "Neuer Eintrag", subtitle: "Starte einen neuen Eintrag") {
+                        isPresentingEpisodeEditor = true
+                    }
+                    .accessibilityIdentifier("home-quick-entry")
+                    .padding(.bottom, SymiSpacing.lg)
                 }
-                .padding(.bottom, SymiSpacing.lg)
 
                 HomeAllEntriesLink(dependencies: dependencies.history)
                     .padding(.bottom, SymiSpacing.lg)
@@ -163,64 +169,38 @@ struct HomeView: View {
         displayedMonth = newMonth
     }
 
-    private var homeHeroState: HomeHeroState {
+    private var homeState: HomeState {
+        HomeState(entriesCount: entriesCount)
+    }
+
+    private var entriesCount: Int {
         #if DEBUG
-        if let heroPreviewOverride {
-            return heroPreviewOverride.state
+        if let entryCountOverride {
+            return entryCountOverride
         }
         #endif
 
-        return HomeHeroState(entryCount: patternPreviewData.totalPainEpisodeCount)
+        return patternPreviewData.totalPainEpisodeCount
     }
 
     private var homeInsightCards: [HomeInsightCardData] {
-        #if DEBUG
-        if let heroPreviewOverride {
-            return heroPreviewOverride.insightCards
-        }
-        #endif
-
         return HomeInsightCardData.makeCards(from: patternPreviewData.cards)
     }
 
 }
 
 #if DEBUG
-private enum HomeHeroPreviewOverride: Equatable {
-    case empty
-    case earlyOne
-    case earlyTwo
-    case insights
-
-    var state: HomeHeroState {
-        switch self {
-        case .empty:
-            .empty
-        case .earlyOne:
-            .early(entryCount: 1)
-        case .earlyTwo:
-            .early(entryCount: 2)
-        case .insights:
-            .insights(entryCount: HomePatternPreviewData.minimumEpisodeCount)
-        }
-    }
-
-    var insightCards: [HomeInsightCardData] {
-        self == .insights ? HomeInsightCardData.fallbackCards : []
-    }
-}
-
 private struct HomeDebugKeyboardShortcuts: View {
-    let setOverride: (HomeHeroPreviewOverride) -> Void
+    let setEntryCount: (Int) -> Void
     let clearOverride: () -> Void
 
     var body: some View {
         VStack {
             debugButton("Live-Daten", shortcut: "0", action: clearOverride)
-            debugButton("Home Empty State", shortcut: "1") { setOverride(.empty) }
-            debugButton("Home Early State 1", shortcut: "2") { setOverride(.earlyOne) }
-            debugButton("Home Early State 2", shortcut: "3") { setOverride(.earlyTwo) }
-            debugButton("Home Insight State", shortcut: "4") { setOverride(.insights) }
+            debugButton("Home Empty State", shortcut: "1") { setEntryCount(0) }
+            debugButton("Home Early State 1", shortcut: "2") { setEntryCount(1) }
+            debugButton("Home Early State 2", shortcut: "3") { setEntryCount(2) }
+            debugButton("Home Insight State", shortcut: "4") { setEntryCount(3) }
         }
         .frame(width: 1, height: 1)
         .opacity(0.01)
@@ -234,27 +214,18 @@ private struct HomeDebugKeyboardShortcuts: View {
 }
 #endif
 
-private enum HomeHeroState: Equatable {
+private enum HomeState: Equatable {
     case empty
-    case early(entryCount: Int)
-    case insights(entryCount: Int)
+    case early(Int)
+    case insights
 
-    init(entryCount: Int) {
-        if entryCount == 0 {
+    init(entriesCount: Int) {
+        if entriesCount == 0 {
             self = .empty
-        } else if entryCount < HomePatternPreviewData.minimumEpisodeCount {
-            self = .early(entryCount: entryCount)
+        } else if entriesCount < 3 {
+            self = .early(entriesCount)
         } else {
-            self = .insights(entryCount: entryCount)
-        }
-    }
-
-    var progressCount: Int {
-        switch self {
-        case .empty:
-            0
-        case .early(let entryCount), .insights(let entryCount):
-            min(entryCount, HomePatternPreviewData.minimumEpisodeCount)
+            self = .insights
         }
     }
 
@@ -270,65 +241,39 @@ private enum HomeHeroState: Equatable {
     }
 }
 
-private struct HeroCard<InsightsDestination: View>: View {
-    let state: HomeHeroState
+private struct HomeHeroSection<InsightsDestination: View>: View {
+    let state: HomeState
     let insightCards: [HomeInsightCardData]
     @ViewBuilder let insightsDestination: () -> InsightsDestination
     let onCreateEntry: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var displayedState: HomeHeroState?
-    @State private var isChangingState = false
 
     var body: some View {
         Group {
-            switch visibleState {
+            switch state {
             case .empty, .early:
-                OnboardingCard(state: visibleState, onCreateEntry: onCreateEntry)
+                OnboardingCard(state: state, onCreateEntry: onCreateEntry)
             case .insights:
-                InsightsHeroCard(cards: insightCards, destination: insightsDestination)
+                InsightsCard(cards: insightCards, destination: insightsDestination)
             }
         }
-        .id(visibleState.animationID)
-        .opacity(isChangingState ? 0 : 1)
-        .scaleEffect(reduceMotion || !isChangingState ? 1 : 0.98)
+        .id(state.animationID)
+        .transition(heroTransition)
+        .animation(reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.86), value: state)
         .accessibilityIdentifier("home-patterns-section")
-        .onAppear {
-            displayedState = state
-        }
-        .onChange(of: state) { _, newState in
-            animateStateChange(to: newState)
-        }
     }
 
-    private var visibleState: HomeHeroState {
-        displayedState ?? state
-    }
-
-    private func animateStateChange(to newState: HomeHeroState) {
-        guard displayedState != newState else {
-            return
+    private var heroTransition: AnyTransition {
+        if reduceMotion {
+            return unsafe AnyTransition.opacity
         }
 
-        guard reduceMotion == false else {
-            displayedState = newState
-            return
-        }
-
-        withAnimation(.easeOut(duration: 0.12)) {
-            isChangingState = true
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-            displayedState = newState
-            withAnimation(.easeIn(duration: 0.16)) {
-                isChangingState = false
-            }
-        }
+        return unsafe AnyTransition.opacity.combined(with: .scale(scale: 0.98, anchor: .center))
     }
 }
 
 private struct OnboardingCard: View {
-    let state: HomeHeroState
+    let state: HomeState
     let onCreateEntry: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
@@ -356,16 +301,10 @@ private struct OnboardingCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.xl) {
             VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Starte deine Reise")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer(minLength: SymiSpacing.sm)
-
-                    ProgressBadge(progress: state.progressCount)
-                }
+                Text("Starte deine Reise")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text("In wenigen Sekunden zu mehr Klarheit über deinen Körper.")
                     .font(.subheadline)
@@ -383,7 +322,7 @@ private struct OnboardingCard: View {
             }
 
             if case .early(let entryCount) = state {
-                Text("Noch \(max(HomePatternPreviewData.minimumEpisodeCount - entryCount, 1)) Einträge bis zu deinen ersten Insights")
+                Text("Nur noch \(remainingEntriesText(for: entryCount)) bis zu deinen ersten Insights")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppTheme.petrol(for: colorScheme))
                     .padding(.horizontal, SymiSpacing.md)
@@ -393,13 +332,10 @@ private struct OnboardingCard: View {
             }
 
             Button(action: onCreateEntry) {
-                Label(state.progressCount == 0 ? "Ersten Eintrag erstellen" : "Weiter eintragen", systemImage: "plus")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(AppTheme.symiOnAccent)
-                    .frame(maxWidth: .infinity, minHeight: 52)
-                    .background(AppTheme.petrol(for: colorScheme), in: RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+                PrimaryButtonLabel(title: ctaTitle, subtitle: nil)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
+            .accessibilityIdentifier("home-quick-entry")
             .accessibilityHint("Startet einen neuen Eintrag.")
         }
         .padding(SymiSpacing.xxxl)
@@ -410,11 +346,27 @@ private struct OnboardingCard: View {
     }
 
     private func status(for step: OnboardingStepData) -> OnboardingStepStatus {
-        if state.progressCount >= step.number {
-            return .completed
+        if case .early = state, step.number == 1 {
+            return .completedDominant
         }
 
         return step.number == 1 ? .active : .muted
+    }
+
+    private var ctaTitle: String {
+        switch state {
+        case .empty:
+            "Ersten Eintrag erstellen"
+        case .early:
+            "Weiter eintragen"
+        case .insights:
+            "Neuer Eintrag"
+        }
+    }
+
+    private func remainingEntriesText(for entryCount: Int) -> String {
+        let remainingEntries = max(3 - entryCount, 1)
+        return "\(remainingEntries) Eintrag\(remainingEntries == 1 ? "" : "e")"
     }
 }
 
@@ -429,7 +381,7 @@ private struct OnboardingStepData: Identifiable {
 
 private enum OnboardingStepStatus {
     case active
-    case completed
+    case completedDominant
     case muted
 }
 
@@ -441,33 +393,35 @@ private struct OnboardingStepRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: SymiSpacing.md) {
             Image(systemName: iconName)
-                .font(.subheadline.weight(.bold))
+                .font(iconFont)
                 .foregroundStyle(iconForeground)
-                .frame(width: 34, height: 34)
+                .frame(width: iconSize, height: iconSize)
                 .background(iconBackground, in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text(step.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(titleFont)
                     .foregroundStyle(titleColor)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text(step.subtitle)
-                    .font(.footnote)
-                    .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-                    .fixedSize(horizontal: false, vertical: true)
+                if status != .muted || step.number == 1 {
+                    Text(step.subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
 
     private var iconName: String {
-        status == .completed ? "checkmark" : step.systemImage
+        status == .completedDominant ? "checkmark" : step.systemImage
     }
 
     private var iconForeground: Color {
         switch status {
-        case .active, .completed:
+        case .active, .completedDominant:
             AppTheme.symiOnAccent
         case .muted:
             AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.disabledContent)
@@ -476,10 +430,8 @@ private struct OnboardingStepRow: View {
 
     private var iconBackground: Color {
         switch status {
-        case .active:
+        case .active, .completedDominant:
             AppTheme.petrol(for: colorScheme)
-        case .completed:
-            AppTheme.sage(for: colorScheme)
         case .muted:
             AppTheme.sage(for: colorScheme).opacity(SymiOpacity.faintSurface)
         }
@@ -488,24 +440,36 @@ private struct OnboardingStepRow: View {
     private var titleColor: Color {
         status == .muted ? AppTheme.textSecondary(for: colorScheme) : AppTheme.textPrimary(for: colorScheme)
     }
-}
 
-private struct ProgressBadge: View {
-    let progress: Int
-    @Environment(\.colorScheme) private var colorScheme
+    private var titleFont: Font {
+        switch status {
+        case .active, .completedDominant:
+            .headline.weight(.semibold)
+        case .muted:
+            .subheadline.weight(.semibold)
+        }
+    }
 
-    var body: some View {
-        Text("\(progress)/\(HomePatternPreviewData.minimumEpisodeCount)")
-            .font(.caption.weight(.bold))
-            .foregroundStyle(AppTheme.petrol(for: colorScheme))
-            .padding(.horizontal, SymiSpacing.sm)
-            .padding(.vertical, SymiSpacing.compact)
-            .background(AppTheme.sage(for: colorScheme).opacity(SymiOpacity.secondaryFill), in: Capsule())
-            .accessibilityLabel("Fortschritt \(progress) von \(HomePatternPreviewData.minimumEpisodeCount)")
+    private var iconFont: Font {
+        switch status {
+        case .active, .completedDominant:
+            .body.weight(.bold)
+        case .muted:
+            .subheadline.weight(.bold)
+        }
+    }
+
+    private var iconSize: CGFloat {
+        switch status {
+        case .active, .completedDominant:
+            40
+        case .muted:
+            34
+        }
     }
 }
 
-private struct InsightsHeroCard<Destination: View>: View {
+private struct InsightsCard<Destination: View>: View {
     let cards: [HomeInsightCardData]
     @ViewBuilder let destination: () -> Destination
     @Environment(\.colorScheme) private var colorScheme
@@ -524,8 +488,8 @@ private struct InsightsHeroCard<Destination: View>: View {
             }
 
             VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                ForEach(visibleCards) { card in
-                    InsightCard(card: card)
+                ForEach(Array(visibleCards.enumerated()), id: \.element.id) { index, card in
+                    InsightCard(card: card, prominence: index == 0 ? .primary : .secondary)
                 }
             }
 
@@ -554,13 +518,18 @@ private struct InsightsHeroCard<Destination: View>: View {
     }
 
     private var visibleCards: [HomeInsightCardData] {
-        let fallback = HomeInsightCardData.fallbackCards
-        return cards.isEmpty ? fallback : Array(cards.prefix(3))
+        HomeInsightCardData.fallbackCards
     }
 }
 
 private struct InsightCard: View {
+    enum Prominence {
+        case primary
+        case secondary
+    }
+
     let card: HomeInsightCardData
+    let prominence: Prominence
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -574,7 +543,7 @@ private struct InsightCard: View {
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text(card.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(titleFont)
                     .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -586,10 +555,14 @@ private struct InsightCard: View {
                 }
             }
         }
-        .padding(SymiSpacing.md)
+        .padding(prominence == .primary ? SymiSpacing.xl : SymiSpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(card.tint(for: colorScheme).opacity(SymiOpacity.clearAccent), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+
+    private var titleFont: Font {
+        prominence == .primary ? .headline.weight(.semibold) : .subheadline.weight(.semibold)
     }
 }
 
@@ -873,46 +846,59 @@ private struct HomeHeaderView: View {
     }
 }
 
-private struct PrimaryEntryButton: View {
+private struct HomePrimaryButton: View {
+    let title: String
+    let subtitle: String?
     let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: SymiSpacing.md) {
-                Image(systemName: "plus")
-                    .font(.title2.weight(.semibold))
+            PrimaryButtonLabel(title: title, subtitle: subtitle)
+        }
+        .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
+        .keyboardShortcut("n", modifiers: .command)
+        .hoverEffect(.highlight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityHint("Startet einen neuen Eintrag.")
+    }
+}
+
+private struct PrimaryButtonLabel: View {
+    let title: String
+    let subtitle: String?
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
+            Image(systemName: "plus")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(AppTheme.symiOnAccent)
+                .frame(width: SymiSize.homeQuickEntryIcon, height: SymiSize.homeQuickEntryIcon)
+                .background(AppTheme.coral(for: colorScheme), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text(title)
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(AppTheme.symiOnAccent)
-                    .frame(width: SymiSize.homeQuickEntryIcon, height: SymiSize.homeQuickEntryIcon)
-                    .background(AppTheme.coral(for: colorScheme), in: Circle())
-                    .accessibilityHidden(true)
+                    .lineLimit(1)
+                    .minimumScaleFactor(SymiTypography.buttonScaleFactor)
 
-                VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                    Text("Neuer Eintrag")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(AppTheme.symiOnAccent)
-                        .lineLimit(1)
-                        .minimumScaleFactor(SymiTypography.buttonScaleFactor)
-
-                    Text("Starte einen neuen Eintrag")
+                if let subtitle {
+                    Text(subtitle)
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.symiOnAccent.opacity(SymiOpacity.heroSecondaryWave))
                         .lineLimit(1)
                         .minimumScaleFactor(SymiTypography.compactScaleFactor)
                 }
-
-                Spacer(minLength: SymiSpacing.xs)
             }
-            .padding(.horizontal, SymiSpacing.lg)
-            .frame(maxWidth: .infinity, minHeight: SymiSize.homeQuickEntryButtonMinHeight, alignment: .leading)
+
+            Spacer(minLength: SymiSpacing.xs)
         }
-        .buttonStyle(HomePrimaryActionButtonStyle(colorScheme: colorScheme))
-        .keyboardShortcut("n", modifiers: .command)
-        .hoverEffect(.highlight)
-        .accessibilityIdentifier("home-quick-entry")
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Neuer Eintrag")
-        .accessibilityHint("Startet einen neuen Eintrag.")
+        .padding(.horizontal, SymiSpacing.lg)
+        .frame(maxWidth: .infinity, minHeight: SymiSize.homeQuickEntryButtonMinHeight, alignment: .leading)
     }
 }
 
@@ -1673,7 +1659,7 @@ private extension View {
     NavigationStack {
         ScrollView {
             VStack(spacing: SymiSpacing.lg) {
-                HeroCard(
+                HomeHeroSection(
                     state: .empty,
                     insightCards: [],
                     insightsDestination: {
@@ -1682,8 +1668,8 @@ private extension View {
                     onCreateEntry: {}
                 )
 
-                HeroCard(
-                    state: .early(entryCount: 2),
+                HomeHeroSection(
+                    state: .early(2),
                     insightCards: [],
                     insightsDestination: {
                         Text("Insights")
@@ -1691,8 +1677,8 @@ private extension View {
                     onCreateEntry: {}
                 )
 
-                HeroCard(
-                    state: .insights(entryCount: 3),
+                HomeHeroSection(
+                    state: .insights,
                     insightCards: HomeInsightCardData.fallbackCards,
                     insightsDestination: {
                         Text("Insights")
