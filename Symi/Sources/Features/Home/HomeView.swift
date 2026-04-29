@@ -430,6 +430,7 @@ private struct OnboardingStepRow: View {
         .frame(maxWidth: .infinity, minHeight: isPrimary ? SymiSize.minInteractiveHeight : 0, alignment: .leading)
         .contentShape(Rectangle())
         .opacity(rowOpacity)
+        .padding(.bottom, isPrimary ? HomeRhythm.primaryStepBottomSpacing : 0)
     }
 
     private var iconName: String {
@@ -508,9 +509,9 @@ private struct CompactEntryButtonLabel: View {
         HStack(spacing: HomeRhythm.md) {
             Image(systemName: "plus")
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(AppTheme.coral(for: colorScheme))
+                .foregroundStyle(SymiColors.coral.color)
                 .frame(width: 30, height: 30)
-                .background(AppTheme.coral(for: colorScheme).opacity(0.14), in: Circle())
+                .background(SymiColors.coral.color.opacity(0.14), in: Circle())
                 .accessibilityHidden(true)
 
             Text(title)
@@ -611,7 +612,7 @@ private struct InsightCard: View {
                 }
             }
         }
-        .padding(prominence == .primary ? HomeRhythm.lg : HomeRhythm.md)
+        .padding(prominence == .primary ? HomeRhythm.lg + HomeRhythm.primaryInsightPaddingBoost : HomeRhythm.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(card.tint(for: colorScheme).opacity(backgroundOpacity), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
         .shadow(color: Color.black.opacity(0.035), radius: prominence == .primary ? 8 : 5, x: 0, y: prominence == .primary ? 3 : 2)
@@ -1724,6 +1725,8 @@ private enum HomeRhythm {
     static let xl: CGFloat = 20
     static let xxl: CGFloat = 24
     static let primaryButtonHeight: CGFloat = 60
+    static let primaryStepBottomSpacing: CGFloat = 4
+    static let primaryInsightPaddingBoost: CGFloat = 4
 }
 
 private extension View {
