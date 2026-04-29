@@ -221,9 +221,7 @@ extension InsightEmptyState {
             self = InsightEmptyState(
                 reason: .notEnoughQualifiedEntries(required: minimumCount, available: qualifiedEpisodeCount),
                 title: InsightLocalized.text(de: "Noch nicht genug Einträge für Muster", en: "Not enough entries for patterns yet"),
-                message: InsightLocalized.isEnglish
-                    ? "\(qualifiedEpisodeCount) of \(minimumCount) required pain or migraine entries are available. Once there is more data, Symi looks for careful patterns."
-                    : "\(qualifiedEpisodeCount) von \(minimumCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern.",
+                message: "\(qualifiedEpisodeCount) von \(minimumCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern.",
                 requiredEntryCount: minimumCount,
                 availableEntryCount: qualifiedEpisodeCount
             )
@@ -835,38 +833,28 @@ enum InsightFormatter {
     private static func title(for candidate: InsightCandidate) -> String {
         switch candidate.payload {
         case .weekday(let weekday, _, _):
-            InsightLocalized.isEnglish ? "Pattern found: \(weekdayName(for: weekday))" : "Muster erkannt: \(weekdayName(for: weekday))"
+            "Muster erkannt: \(weekdayName(for: weekday))"
         case .trigger(let name, _, _):
-            InsightLocalized.isEnglish ? "\(name) appears more often with entries" : "\(name) häufiger zusammen mit Einträgen"
+            "\(name) häufiger zusammen mit Einträgen"
         case .averageIntensity(let value, _):
-            InsightLocalized.isEnglish ? "Pattern found: average \(formattedIntensity(value))/10" : "Muster erkannt: Durchschnitt \(formattedIntensity(value))/10"
+            "Muster erkannt: Durchschnitt \(formattedIntensity(value))/10"
         case .trend(let direction, _, _, _):
-            if InsightLocalized.isEnglish {
-                direction == .rising ? "Pattern found: higher intensity more often" : "Pattern found: lower intensity more often"
-            } else {
-                direction == .rising ? "Muster erkannt: häufiger höhere Intensität" : "Muster erkannt: häufiger niedrigere Intensität"
-            }
+            direction == .rising
+                ? "Muster erkannt: häufiger höhere Intensität"
+                : "Muster erkannt: häufiger niedrigere Intensität"
         }
     }
 
     private static func description(for candidate: InsightCandidate, totalCount: Int) -> String {
         switch candidate.payload {
         case .weekday(let weekday, let count, _):
-            InsightLocalized.isEnglish
-                ? "\(count) of \(totalCount) entries fall on \(weekdayName(for: weekday)). This stands out in your entries, but it is not a prediction."
-                : "\(count) von \(totalCount) Einträgen liegen auf \(weekdayName(for: weekday)). Das ist in deinen Einträgen auffällig, aber keine Vorhersage."
+            "\(count) von \(totalCount) Einträgen liegen auf \(weekdayName(for: weekday)). Das ist in deinen Einträgen auffällig, aber keine Vorhersage."
         case .trigger(let name, let count, _):
-            InsightLocalized.isEnglish
-                ? "\(name) was noted in \(count) of \(totalCount) entries. Symi only describes what appears more often together with documented entries."
-                : "\(name) wurde bei \(count) von \(totalCount) Einträgen notiert. Symi beschreibt nur, was häufiger zusammen mit dokumentierten Einträgen vorkommt."
+            "\(name) wurde bei \(count) von \(totalCount) Einträgen notiert. Symi beschreibt nur, was häufiger zusammen mit dokumentierten Einträgen vorkommt."
         case .averageIntensity(let value, _):
-            InsightLocalized.isEnglish
-                ? "Notable in your entries: the documented intensity averages \(formattedIntensity(value)) out of 10."
-                : "In deinen Einträgen auffällig: Die dokumentierte Intensität liegt im Durchschnitt bei \(formattedIntensity(value)) von 10."
+            "In deinen Einträgen auffällig: Die dokumentierte Intensität liegt im Durchschnitt bei \(formattedIntensity(value)) von 10."
         case .trend(_, let olderAverage, let newerAverage, _):
-            InsightLocalized.isEnglish
-                ? "Pattern found: newer entries average \(formattedIntensity(newerAverage))/10, older ones \(formattedIntensity(olderAverage))/10. This only describes the documented course."
-                : "Muster erkannt: Neuere Einträge liegen im Durchschnitt bei \(formattedIntensity(newerAverage))/10, ältere bei \(formattedIntensity(olderAverage))/10. Das beschreibt nur den dokumentierten Verlauf."
+            "Muster erkannt: Neuere Einträge liegen im Durchschnitt bei \(formattedIntensity(newerAverage))/10, ältere bei \(formattedIntensity(olderAverage))/10. Das beschreibt nur den dokumentierten Verlauf."
         }
     }
 
@@ -930,14 +918,13 @@ enum InsightFormatter {
             return "\(Int(rounded))"
         }
 
-        let tenths = Int((rounded * 10).rounded())
-        return "\(tenths / 10)\(InsightLocalized.isEnglish ? "." : ",")\(abs(tenths % 10))"
+        return rounded.formatted(.number.precision(.fractionLength(1)))
     }
 
     private static func entryCountText(_ count: Int) -> String {
-        if InsightLocalized.isEnglish {
-            return "\(count) entr\(count == 1 ? "y" : "ies")"
+        if count == 1 {
+            return "1 Eintrag"
         }
-        return "\(count) \(count == 1 ? "Eintrag" : "Einträge")"
+        return "\(count) Einträge"
     }
 }
