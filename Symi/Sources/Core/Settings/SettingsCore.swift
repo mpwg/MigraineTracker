@@ -187,7 +187,7 @@ final class SettingsController {
         }
 
         if syncService.status.queuedUpdates > 0 {
-            return "\(syncService.status.queuedUpdates) Änderung\(syncService.status.queuedUpdates == 1 ? "" : "en") warten auf Upload"
+            return "\(syncService.status.queuedUpdates) Änderung\(syncService.status.queuedUpdates == 1 ? " wartet" : "en warten") auf Upload"
         }
 
         if !syncService.conflicts.isEmpty {

@@ -17,18 +17,12 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
                 SettingsSectionCard(title: "Synchronisation") {
-                    NavigationLink {
-                        SyncStatusView(controller: controller)
-                    } label: {
-                        SettingsStatusHeader(
-                            systemImage: syncStatusIcon,
-                            title: controller.syncStatusTitle,
-                            detail: controller.syncStatusDetail,
-                            tint: statusColor
-                        )
-                    }
-
-                    SettingsDivider()
+                    SettingsStatusHeader(
+                        systemImage: syncStatusIcon,
+                        title: controller.syncStatusTitle,
+                        detail: controller.syncStatusDetail,
+                        tint: statusColor
+                    )
 
                     SettingsToggleRow(
                         title: "Synchronisation aktivieren",
@@ -47,8 +41,9 @@ struct SettingsView: View {
                     } label: {
                         SettingsRow(
                             title: "Jetzt synchronisieren",
-                            subtitle: "Alle Daten mit iCloud abgleichen",
+                            subtitle: "Alle Daten mit iCloud synchronisieren",
                             systemImage: "arrow.triangle.2.circlepath",
+                            rowStyle: .primaryAction,
                             isEnabled: controller.isSyncEnabled
                         )
                     }
@@ -64,11 +59,10 @@ struct SettingsView: View {
                             subtitle: "Speicher, Geräte und Daten",
                             systemImage: controller.conflicts.isEmpty ? "icloud" : "exclamationmark.triangle.fill",
                             tint: controller.conflicts.isEmpty ? AppTheme.symiPetrol : AppTheme.symiCoral,
+                            rowStyle: .navigation,
                             showsChevron: true
                         )
                     }
-
-                    SettingsDivider()
 
                     NavigationLink {
                         SyncLogView(controller: controller)
@@ -77,6 +71,7 @@ struct SettingsView: View {
                             title: "Sync-Protokoll",
                             subtitle: controller.syncLogSubtitle,
                             systemImage: "text.document",
+                            rowStyle: .navigation,
                             showsChevron: true
                         )
                     }
@@ -91,22 +86,10 @@ struct SettingsView: View {
                             subtitle: "Lese- und Schreibzugriff für Symi",
                             assetImageName: "AppleHealthIcon",
                             rightValue: controller.healthConnectionStatusTitle,
+                            rowStyle: .navigation,
+                            subtitleLineLimit: 1,
                             showsChevron: true
                         )
-                    }
-
-                    if !controller.isHealthConnected {
-                        SettingsDivider()
-
-                        NavigationLink {
-                            AppleHealthSettingsView(controller: controller)
-                        } label: {
-                            SettingsRow(
-                                title: "Verbindung herstellen",
-                                systemImage: "link",
-                                showsChevron: true
-                            )
-                        }
                     }
                 }
 
@@ -118,11 +101,10 @@ struct SettingsView: View {
                             title: "Backup erstellen",
                             subtitle: "Sichert alle Einträge und Vorlagen",
                             systemImage: "externaldrive.badge.plus",
+                            rowStyle: .navigation,
                             showsChevron: true
                         )
                     }
-
-                    SettingsDivider()
 
                     NavigationLink {
                         DataBackupSettingsView(dependencies: dependencies.dataExport)
@@ -131,11 +113,10 @@ struct SettingsView: View {
                             title: "Daten exportieren",
                             subtitle: "Deine Daten als Datei sichern",
                             systemImage: "square.and.arrow.up",
+                            rowStyle: .navigation,
                             showsChevron: true
                         )
                     }
-
-                    SettingsDivider()
 
                     Button {
                         showsResetInformation = true
@@ -145,6 +126,7 @@ struct SettingsView: View {
                             subtitle: "Alle Daten unwiderruflich löschen",
                             systemImage: "trash",
                             tint: AppTheme.symiCoral,
+                            rowStyle: .destructive,
                             isDestructive: true
                         )
                     }
@@ -168,6 +150,7 @@ struct SettingsView: View {
                         SettingsRow(
                             title: "Datenschutz & Hinweise",
                             systemImage: "hand.raised",
+                            rowStyle: .navigation,
                             showsChevron: true
                         )
                     }
@@ -187,6 +170,7 @@ struct SettingsView: View {
                             title: "Feedback senden",
                             subtitle: "Hast du Wünsche oder Probleme?",
                             systemImage: "bubble.left.and.text.bubble.right",
+                            rowStyle: .navigation,
                             showsChevron: true
                         )
                     }
@@ -194,9 +178,10 @@ struct SettingsView: View {
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.top, SymiSpacing.xxxl)
-            .padding(.bottom, 96)
+            .padding(.bottom, 128)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
+        .safeAreaPadding(.bottom, 32)
         .navigationTitle("Einstellungen")
         .brandScreen()
         .toolbar {
@@ -232,7 +217,7 @@ struct SettingsView: View {
         case .ready:
             AppTheme.symiSage
         case .syncing:
-            AppTheme.symiPetrol
+            SymiColors.noteAmber.color
         case .conflict, .needsAttention:
             AppTheme.symiCoral
         case .noICloudAccount, .offline:
@@ -302,13 +287,13 @@ private struct SettingsStatusHeader: View {
     var body: some View {
         HStack(alignment: .top, spacing: SymiSpacing.md) {
             Image(systemName: systemImage)
-                .font(.title3.weight(.semibold))
+                .font(.title2.weight(.semibold))
                 .foregroundStyle(tint)
-                .frame(width: 32, height: 32)
+                .frame(width: 40, height: 40)
                 .background(tint.opacity(SymiOpacity.secondaryFill), in: Circle())
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+            VStack(alignment: .leading, spacing: SymiSpacing.compact) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(AppTheme.symiTextPrimary)
@@ -319,19 +304,23 @@ private struct SettingsStatusHeader: View {
             }
 
             Spacer(minLength: SymiSpacing.sm)
-
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.tertiary)
-                .padding(.top, SymiSpacing.xs)
-                .accessibilityHidden(true)
         }
         .padding(.horizontal, SymiSpacing.lg)
-        .padding(.vertical, SymiSpacing.md)
-        .contentShape(Rectangle())
+        .padding(.vertical, SymiSpacing.lg)
+        .background(tint.opacity(SymiOpacity.clearAccent), in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+        .padding(.horizontal, SymiSpacing.xs)
+        .padding(.top, SymiSpacing.xs)
+        .padding(.bottom, SymiSpacing.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title). \(detail)")
     }
+}
+
+private enum SettingsRowStyle {
+    case primaryAction
+    case navigation
+    case standard
+    case destructive
 }
 
 private struct SettingsRow: View {
@@ -341,6 +330,8 @@ private struct SettingsRow: View {
     var assetImageName: String?
     var rightValue: String?
     var tint: Color = AppTheme.symiPetrol
+    var rowStyle: SettingsRowStyle = .standard
+    var subtitleLineLimit: Int?
     var showsChevron = false
     var isDestructive = false
     var isEnabled = true
@@ -351,16 +342,20 @@ private struct SettingsRow: View {
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text(title)
-                    .font(.body)
-                    .foregroundStyle(isDestructive ? AppTheme.symiCoral : AppTheme.symiTextPrimary)
+                    .font(titleFont)
+                    .foregroundStyle(titleColor)
+                    .lineLimit(1)
 
                 if let subtitle {
                     Text(subtitle)
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.symiTextSecondary)
+                        .lineLimit(subtitleLineLimit)
+                        .truncationMode(.tail)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            .layoutPriority(1)
 
             Spacer(minLength: SymiSpacing.sm)
 
@@ -369,6 +364,8 @@ private struct SettingsRow: View {
                     .font(.subheadline)
                     .foregroundStyle(AppTheme.symiTextSecondary)
                     .multilineTextAlignment(.trailing)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
 
             if showsChevron {
@@ -386,22 +383,55 @@ private struct SettingsRow: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var titleFont: Font {
+        switch rowStyle {
+        case .primaryAction:
+            .body.weight(.semibold)
+        case .destructive:
+            .body.weight(.medium)
+        case .navigation, .standard:
+            .body
+        }
+    }
+
+    private var titleColor: Color {
+        switch rowStyle {
+        case .primaryAction:
+            AppTheme.symiPetrol
+        case .destructive:
+            AppTheme.symiCoral
+        case .navigation, .standard:
+            isDestructive ? AppTheme.symiCoral : AppTheme.symiTextPrimary
+        }
+    }
+
     @ViewBuilder
     private var iconView: some View {
         if let assetImageName {
             Image(assetImageName)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 28, height: 28)
+                .frame(width: 30, height: 30)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .accessibilityHidden(true)
         } else if let systemImage {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(isDestructive ? AppTheme.symiCoral : tint)
+                .foregroundStyle(iconColor)
                 .frame(width: 30, height: 30)
-                .background((isDestructive ? AppTheme.symiCoral : tint).opacity(SymiOpacity.secondaryFill), in: Circle())
+                .background(iconColor.opacity(SymiOpacity.secondaryFill), in: Circle())
                 .accessibilityHidden(true)
+        }
+    }
+
+    private var iconColor: Color {
+        switch rowStyle {
+        case .primaryAction:
+            AppTheme.symiPetrol
+        case .destructive:
+            AppTheme.symiCoral
+        case .navigation, .standard:
+            isDestructive ? AppTheme.symiCoral : tint
         }
     }
 }
@@ -430,6 +460,7 @@ private struct SettingsToggleRow: View {
         .padding(.horizontal, SymiSpacing.lg)
         .padding(.vertical, SymiSpacing.md)
         .frame(minHeight: SymiSize.minInteractiveHeight)
+        .contentShape(Rectangle())
         .accessibilityLabel(title)
         .accessibilityValue(isOn ? "Aktiviert" : "Deaktiviert")
     }
