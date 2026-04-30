@@ -345,9 +345,10 @@ nonisolated enum SymiOpacity {
     static let glassTintLight: Double = 0.26
     static let selectedFill: Double = 0.35
     static let painIntensitySelectedStroke = selectedFill
-    static let painIntensityUnselectedIcon: Double = 0.40
     static let outline: Double = 0.45
+    static let painIntensityUnselectedStroke = outline
     static let disabledRow = outline
+    static let painIntensityUnselectedIcon = textMuted
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
 

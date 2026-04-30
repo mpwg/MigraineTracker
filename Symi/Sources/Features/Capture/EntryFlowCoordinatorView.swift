@@ -407,18 +407,8 @@ private struct PainIntensitySelectionTile: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: SymiSpacing.xs) {
-                level.image
-                    .foregroundStyle(iconColor)
-                    .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconHeight)
-                    .accessibilityHidden(true)
-
-                Text(level.displayLabel)
-                    .font(SymiTypography.flowTileLabel)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(AppTheme.symiTextPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
-                    .fixedSize(horizontal: false, vertical: true)
+                icon
+                label
             }
             .padding(.horizontal, SymiSpacing.xs)
             .padding(.vertical, SymiSpacing.xs)
@@ -429,16 +419,7 @@ private struct PainIntensitySelectionTile: View {
                     .stroke(borderColor, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
             }
             .overlay(alignment: .topTrailing) {
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(level.tintColor)
-                        .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
-                        .padding(.top, SymiSpacing.sm)
-                        .padding(.trailing, SymiSpacing.sm)
-                        .accessibilityHidden(true)
-                        .transition(.scale.combined(with: .opacity))
-                }
+                selectedCheckmark
             }
         }
         .buttonStyle(.plain)
@@ -453,12 +434,43 @@ private struct PainIntensitySelectionTile: View {
         isSelected ? level.selectedBackgroundColor : Color.clear
     }
 
+    private var icon: some View {
+        level.image
+            .foregroundStyle(iconColor)
+            .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconHeight)
+            .accessibilityHidden(true)
+    }
+
+    private var label: some View {
+        Text(level.displayLabel)
+            .font(SymiTypography.flowTileLabel)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(AppTheme.symiTextPrimary)
+            .lineLimit(2)
+            .minimumScaleFactor(SymiTypography.compactScaleFactor)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder
+    private var selectedCheckmark: some View {
+        if isSelected {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(level.tintColor)
+                .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
+                .padding(.top, SymiSpacing.sm)
+                .padding(.trailing, SymiSpacing.sm)
+                .accessibilityHidden(true)
+                .transition(.scale.combined(with: .opacity))
+        }
+    }
+
     private var borderColor: Color {
         if isSelected {
             return level.selectedBorderColor
         }
 
-        return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
+        return level.unselectedBorderColor
     }
 
     private var iconColor: Color {

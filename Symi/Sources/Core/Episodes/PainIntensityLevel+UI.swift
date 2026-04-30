@@ -18,7 +18,7 @@ extension PainIntensityLevel {
     }
 
     @MainActor var selectedBorderColor: Color {
-        tintColor.opacity(SymiOpacity.painIntensitySelectedStroke)
+        tintColor
     }
 
     @MainActor var selectedIconColor: Color {
@@ -26,7 +26,11 @@ extension PainIntensityLevel {
     }
 
     @MainActor var unselectedIconColor: Color {
-        Color.gray.opacity(SymiOpacity.painIntensityUnselectedIcon)
+        tintColor.opacity(SymiOpacity.painIntensityUnselectedIcon)
+    }
+
+    @MainActor var unselectedBorderColor: Color {
+        tintColor.opacity(SymiOpacity.painIntensityUnselectedStroke)
     }
 
     @MainActor var calendarDotColor: Color {
