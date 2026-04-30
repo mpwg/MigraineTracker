@@ -1,5 +1,6 @@
 import QuickLook
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ReportView: View {
     @State private var controller: DataExportController
@@ -487,6 +488,7 @@ private struct ReportPrimaryButtonStyle: ButtonStyle {
 
 struct BackupSettingsCardView: View {
     @State private var controller: DataExportController
+    @State private var isImportPickerPresented = false
 
     init(dependencies: DataExportFeatureDependencies) {
         _controller = State(initialValue: dependencies.makeDataExportController())
@@ -494,14 +496,44 @@ struct BackupSettingsCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.lg) {
-            VStack(alignment: .leading, spacing: SymiSpacing.compact) {
-                Text("Backup erstellen")
-                    .font(.headline)
+            backupExportSection
 
-                Text("Sichert alle Einträge und Vorlagen")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            Divider()
+
+            backupImportSection
+
+            if let importRollbackBackupURL = controller.importRollbackBackupURL {
+                ShareLink(item: importRollbackBackupURL) {
+                    Label("Rollback-Backup teilen", systemImage: "arrow.uturn.backward.circle")
+                }
             }
+
+            transferMessage
+        }
+        .padding(.vertical, SymiSpacing.xs)
+        .brandGroupedRow()
+        .fileImporter(
+            isPresented: $isImportPickerPresented,
+            allowedContentTypes: [.symiJSON5, .json],
+            allowsMultipleSelection: false
+        ) { result in
+            do {
+                guard let url = try result.get().first else {
+                    throw CocoaError(.fileNoSuchFile)
+                }
+                controller.importBackup(from: .success(url))
+            } catch {
+                controller.importBackup(from: .failure(error))
+            }
+        }
+    }
+
+    private var backupExportSection: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            BackupSectionHeaderView(
+                title: "Backup erstellen",
+                subtitle: "Sichert alle Einträge und Vorlagen"
+            )
 
             Button {
                 controller.createBackup()
@@ -519,15 +551,167 @@ struct BackupSettingsCardView: View {
                     Label("Backup teilen", systemImage: "square.and.arrow.up")
                 }
             }
+        }
+    }
 
-            if let dataTransferMessage = controller.dataTransferMessage {
-                Text(dataTransferMessage)
+    private var backupImportSection: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            BackupSectionHeaderView(
+                title: "Backup importieren",
+                subtitle: "Prüft eine JSON5-Datei und zeigt Änderungen vor dem Import"
+            )
+
+            Button {
+                isImportPickerPresented = true
+            } label: {
+                Label("Backup-Datei auswählen", systemImage: "doc.badge.plus")
+            }
+            .buttonStyle(SymiSecondaryButtonStyle())
+            .disabled(controller.isPreparingImportPreview || controller.isApplyingImport)
+            .accessibilityIdentifier("backup-import-select-file")
+
+            if controller.isPreparingImportPreview {
+                ProgressView("Import-Vorschau wird geprüft")
                     .font(.subheadline)
-                    .foregroundStyle(dataTransferMessage.contains("Fehler") ? AppTheme.symiCoral : .secondary)
+                    .accessibilityIdentifier("backup-import-preview-loading")
+            }
+
+            if let preview = controller.importPreview {
+                BackupImportPreviewView(
+                    preview: preview,
+                    isApplyingImport: controller.isApplyingImport,
+                    confirmImport: controller.confirmImport,
+                    cancelImport: controller.cancelImportPreview
+                )
+                .accessibilityIdentifier("backup-import-preview")
             }
         }
-        .padding(.vertical, SymiSpacing.xs)
-        .brandGroupedRow()
+    }
+
+    @ViewBuilder
+    private var transferMessage: some View {
+        if let dataTransferMessage = controller.dataTransferMessage {
+            Text(dataTransferMessage)
+                .font(.subheadline)
+                .foregroundStyle(dataTransferMessage.contains("Fehler") ? AppTheme.symiCoral : .secondary)
+        }
+    }
+}
+
+private struct BackupSectionHeaderView: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.compact) {
+            Text(title)
+                .font(.headline)
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct BackupImportPreviewView: View {
+    let preview: BackupImportPreview
+    let isApplyingImport: Bool
+    let confirmImport: () -> Void
+    let cancelImport: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                Label(preview.hasChanges ? "Änderungen gefunden" : "Keine Änderungen", systemImage: preview.hasChanges ? "checkmark.circle" : "equal.circle")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(preview.hasChanges ? SymiColors.primaryPetrol.color : .secondary)
+
+                Text("Backup vom \(preview.exportedAt.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let dateRange = preview.dateRange {
+                    Text("\(dateRange.start.formatted(date: .abbreviated, time: .omitted)) bis \(dateRange.end.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                BackupImportMetricRow(title: "Einträge", newCount: preview.newEpisodes, changedCount: preview.changedEpisodes, deletedCount: preview.deletedEpisodes)
+                BackupImportMetricRow(title: "Vorlagen", newCount: preview.newMedicationDefinitions, changedCount: preview.changedMedicationDefinitions)
+                BackupImportMetricRow(title: "Dauermedikation", newCount: preview.newContinuousMedications, changedCount: preview.changedContinuousMedications)
+            }
+
+            if preview.conflicts.isEmpty {
+                Label("Keine Konflikte erkannt", systemImage: "checkmark.shield")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                    Label("\(preview.conflicts.count) Konflikt\(preview.conflicts.count == 1 ? "" : "e")", systemImage: "exclamationmark.triangle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppTheme.symiCoral)
+
+                    ForEach(preview.conflicts, id: \.self) { conflict in
+                        Text(conflict)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            HStack(spacing: SymiSpacing.sm) {
+                Button("Abbrechen", role: .cancel, action: cancelImport)
+                    .buttonStyle(SymiSecondaryButtonStyle())
+                    .disabled(isApplyingImport)
+                    .accessibilityIdentifier("backup-import-cancel")
+
+                Button {
+                    confirmImport()
+                } label: {
+                    if isApplyingImport {
+                        ProgressView()
+                    } else {
+                        Label("Import bestätigen", systemImage: "checkmark.circle")
+                    }
+                }
+                .buttonStyle(SymiSecondaryButtonStyle())
+                .disabled(!preview.hasChanges || isApplyingImport)
+                .accessibilityIdentifier("backup-import-confirm")
+            }
+        }
+        .padding(SymiSpacing.md)
+        .background(
+            SymiColors.mist.color.opacity(SymiOpacity.entryDetailTopFadeEnd),
+            in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
+        )
+    }
+}
+
+private struct BackupImportMetricRow: View {
+    let title: String
+    let newCount: Int
+    let changedCount: Int
+    var deletedCount = 0
+
+    var body: some View {
+        Text("\(title): \(summary)")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+
+    private var summary: String {
+        let values = [
+            ("neu", newCount),
+            ("geändert", changedCount),
+            ("gelöscht", deletedCount)
+        ]
+        .filter { $0.1 > 0 }
+        .map { "\($0.1) \($0.0)" }
+
+        return values.isEmpty ? "keine Änderungen" : values.joined(separator: ", ")
     }
 }
 
