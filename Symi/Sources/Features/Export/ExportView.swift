@@ -643,104 +643,442 @@ private struct SettingsDivider: View {
 }
 
 private struct AppleHealthSettingsView: View {
+    @Environment(\.openURL) private var openURL
     @Bindable var controller: SettingsController
+    @State private var showsDisconnectConfirmation = false
 
     var body: some View {
-        List {
-            Section {
-                let status = controller.healthAuthorization
-                LabeledContent("Status", value: status.isAvailable ? "Verfügbar" : "Nicht verfügbar")
-                LabeledContent("Lesen", value: status.isReadEnabled ? "Aktiviert" : "Deaktiviert")
-                LabeledContent("Schreiben", value: status.isWriteEnabled ? "Aktiviert" : "Deaktiviert")
+        let status = controller.healthAuthorization
+
+        ScrollView {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
+                HealthHeaderView()
+
+                Button {
+                    Task {
+                        await controller.requestHealthAuthorization()
+                    }
+                } label: {
+                    Text(primaryActionTitle(for: status))
+                }
+                .buttonStyle(HealthPrimaryButtonStyle())
+                .disabled(!status.isAvailable)
 
                 if let message = status.lastErrorMessage {
-                    Text(message)
-                        .foregroundStyle(.secondary)
+                    HealthNoticeCard(message: message)
+                } else if !status.isAvailable {
+                    HealthNoticeCard(message: "Apple Health ist auf diesem Gerät nicht verfügbar.")
                 }
-            } header: {
-                Text("Verbindung")
-            } footer: {
-                Text("iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten.")
-            }
 
-            HealthDataTypeSection(
-                title: "Lesen aus Apple Health",
-                direction: .read,
-                definitions: controller.healthReadDefinitions,
-                enabledTypes: controller.healthAuthorization.enabledReadTypes,
-                onToggle: controller.setHealthDataTypeEnabled
-            )
-
-            Section {
-                Button {
-                    Task {
-                        await controller.requestHealthReadAuthorization()
-                    }
-                } label: {
-                    Label("Leserechte anfragen", systemImage: "eye")
-                }
-                .disabled(!controller.healthAuthorization.isAvailable)
-            }
-
-            HealthDataTypeSection(
-                title: "Schreiben nach Apple Health",
-                direction: .write,
-                definitions: controller.healthWriteDefinitions,
-                enabledTypes: controller.healthAuthorization.enabledWriteTypes,
-                onToggle: controller.setHealthDataTypeEnabled
-            )
-
-            Section {
-                Button {
-                    Task {
-                        await controller.requestHealthWriteAuthorization()
-                    }
-                } label: {
-                    Label("Schreibrechte anfragen", systemImage: "square.and.pencil")
-                }
-                .disabled(!controller.healthAuthorization.isAvailable)
-            } footer: {
-                Text("Geschrieben werden nur ausreichend präzise, nutzererfasste Symptome. Zyklusangaben aus der App wie „aktuell“ oder „erwartet“ bleiben Kontext und werden nicht als exakte Health-Flow-Samples gespeichert.")
-            }
-        }
-        .navigationTitle("Apple Health")
-        .brandGroupedScreen()
-    }
-}
-
-private struct HealthDataTypeSection: View {
-    let title: String
-    let direction: HealthDataDirection
-    let definitions: [HealthDataTypeDefinition]
-    let enabledTypes: Set<HealthDataTypeID>
-    let onToggle: (Bool, HealthDataTypeID, HealthDataDirection) -> Void
-
-    var body: some View {
-        Section(title) {
-            ForEach(definitions) { definition in
-                Toggle(isOn: Binding(
-                    get: { enabledTypes.contains(definition.id) },
-                    set: { onToggle($0, definition.id, direction) }
-                )) {
-                    VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                        Text(definition.displayName)
-                        Text("\(definition.category.rawValue) · \(definition.healthKitIdentifier)")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text(definition.rationale)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if let availabilityNote = definition.availabilityNote {
-                            Text(availabilityNote)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                if status.isReadEnabled, !enabledReadDefinitions(for: status).isEmpty {
+                    HealthSettingsSection(title: "Freigegebene Daten") {
+                        VStack(spacing: SymiSpacing.md) {
+                            ForEach(enabledReadDefinitions(for: status)) { definition in
+                                HealthCategoryRow(
+                                    icon: iconName(for: definition.id),
+                                    title: definition.displayName,
+                                    explanation: explanation(for: definition),
+                                    isOn: Binding(
+                                        get: { status.enabledReadTypes.contains(definition.id) },
+                                        set: { controller.setHealthDataTypeEnabled($0, type: definition.id, direction: .read) }
+                                    )
+                                )
+                            }
                         }
                     }
                 }
-                .tint(AppTheme.symiPetrol)
+
+                if shouldShowMissingPermissions(for: status) {
+                    HealthPermissionCard(
+                        title: "Weitere Daten verfügbar",
+                        text: "Diese Daten können helfen, Zusammenhänge besser zu verstehen.",
+                        buttonTitle: "Alle anderen Kategorien anfragen"
+                    ) {
+                        Task {
+                            await controller.requestHealthAuthorization()
+                        }
+                    }
+                    .disabled(!status.isAvailable)
+                }
+
+                if status.isWriteEnabled, !enabledWriteDefinitions(for: status).isEmpty {
+                    HealthSettingsSection(title: "An Apple Health senden") {
+                        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+                            Text("Deine Einträge können in Apple Health gespeichert werden - nur wenn du es erlaubst.")
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.symiTextSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            VStack(spacing: SymiSpacing.md) {
+                                ForEach(enabledWriteDefinitions(for: status)) { definition in
+                                    HealthCategoryRow(
+                                        icon: iconName(for: definition.id),
+                                        title: definition.displayName,
+                                        explanation: explanation(for: definition),
+                                        isOn: Binding(
+                                            get: { status.enabledWriteTypes.contains(definition.id) },
+                                            set: { controller.setHealthDataTypeEnabled($0, type: definition.id, direction: .write) }
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HealthPrivacySection()
+
+                if isConnected(status) {
+                    HealthDangerZone {
+                        showsDisconnectConfirmation = true
+                    }
+                }
+            }
+            .padding(.horizontal, AppTheme.groupedHorizontalInset)
+            .padding(.top, SymiSpacing.xxl)
+            .padding(.bottom, SymiSpacing.settingsContentBottomPadding)
+            .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
+        }
+        .navigationTitle("Apple Health")
+        .brandScreen()
+        .animation(.default, value: controller.healthSettingsRevision)
+        .confirmationDialog(
+            "Apple Health Integration beenden?",
+            isPresented: $showsDisconnectConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Integration beenden", role: .destructive) {
+                controller.disconnectAppleHealthIntegration()
+                openURL(HealthSettingsURL.url)
+            }
+
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Symi trennt die lokale Verbindung. HealthKit-Berechtigungen werden von iOS verwaltet und können in den Einstellungen geprüft oder widerrufen werden.")
+        }
+    }
+
+    private func primaryActionTitle(for status: HealthAuthorizationSnapshot) -> String {
+        isConnected(status) ? "Weitere Daten freigeben" : "Apple Health aktivieren"
+    }
+
+    private func shouldShowMissingPermissions(for status: HealthAuthorizationSnapshot) -> Bool {
+        guard isConnected(status) else { return false }
+        return !hasAllReadPermissions(status) || !hasAllWritePermissions(status)
+    }
+
+    private func hasAllReadPermissions(_ status: HealthAuthorizationSnapshot) -> Bool {
+        status.isReadEnabled && Set(controller.healthReadDefinitions.map(\.id)).isSubset(of: status.enabledReadTypes)
+    }
+
+    private func hasAllWritePermissions(_ status: HealthAuthorizationSnapshot) -> Bool {
+        status.isWriteEnabled && Set(controller.healthWriteDefinitions.map(\.id)).isSubset(of: status.enabledWriteTypes)
+    }
+
+    private func isConnected(_ status: HealthAuthorizationSnapshot) -> Bool {
+        status.isAvailable && (status.isReadEnabled || status.isWriteEnabled)
+    }
+
+    private func enabledReadDefinitions(for status: HealthAuthorizationSnapshot) -> [HealthDataTypeDefinition] {
+        controller.healthReadDefinitions.filter { status.enabledReadTypes.contains($0.id) }
+    }
+
+    private func enabledWriteDefinitions(for status: HealthAuthorizationSnapshot) -> [HealthDataTypeDefinition] {
+        controller.healthWriteDefinitions.filter { status.enabledWriteTypes.contains($0.id) }
+    }
+
+    private func explanation(for definition: HealthDataTypeDefinition) -> String {
+        switch definition.id {
+        case .sleep:
+            "Schlaf hilft, Muster zwischen Erholung und Beschwerden zu erkennen."
+        case .steps:
+            "Aktivität zeigt, wie Bewegung und Ruhe rund um deine Einträge zusammenhängen können."
+        case .heartRate:
+            "Herzfrequenz kann körperliche Belastung im Umfeld eines Eintrags sichtbar machen."
+        case .restingHeartRate:
+            "Ruhepuls ergänzt deinen Tageskontext ohne Bewertung."
+        case .heartRateVariability:
+            "Herzfrequenzvariabilität kann Hinweise auf Stress und Erholung als Kontext geben."
+        case .menstrualFlow:
+            "Zyklusdaten können helfen, wiederkehrende Muster besser einzuordnen."
+        case .headache:
+            "Kopfschmerz-Einträge können zwischen Symi und Apple Health abgeglichen werden."
+        case .nausea:
+            "Übelkeit hilft, Begleitsymptome neben Kopfschmerzen besser zu verstehen."
+        case .dizziness:
+            "Schwindel ergänzt den Verlauf mit einem häufig relevanten Begleitsymptom."
+        case .fatigue:
+            "Müdigkeit kann zeigen, wie Erschöpfung und Beschwerden zusammenfallen."
+        }
+    }
+
+    private func iconName(for type: HealthDataTypeID) -> String {
+        switch type {
+        case .sleep:
+            "bed.double"
+        case .steps:
+            "figure.walk"
+        case .heartRate, .restingHeartRate, .heartRateVariability:
+            "heart"
+        case .menstrualFlow:
+            "calendar"
+        case .headache:
+            "brain.head.profile"
+        case .nausea:
+            "face.dashed"
+        case .dizziness:
+            "waveform.path.ecg"
+        case .fatigue:
+            "sparkles"
+        }
+    }
+}
+
+private struct HealthHeaderView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            HStack(alignment: .center, spacing: SymiSpacing.md) {
+                Image("AppleHealthIcon")
+                    .resizable()
+                    .renderingMode(.original)
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                    .accessibilityHidden(true)
+
+                Text("Apple Health")
+                    .font(.largeTitle.weight(.bold))
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                Text("Deine Daten. Deine Kontrolle.")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                Text("Alle Daten bleiben auf deinem Gerät und werden niemals an Dritte gesendet.")
+                    .font(.body)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+                HealthTrustItem(icon: "checkmark.shield", title: "Nur mit deiner Erlaubnis")
+                HealthTrustItem(icon: "lock", title: "Verschlüsselt")
+                HealthTrustItem(icon: "power", title: "Jederzeit deaktivierbar")
+            }
+        }
+        .padding(SymiSpacing.xxl)
+        .brandCard()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct HealthTrustItem: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        Label {
+            Text(title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(AppTheme.symiTextPrimary)
+        } icon: {
+            Image(systemName: icon)
+                .foregroundStyle(AppTheme.symiPetrol)
+        }
+    }
+}
+
+private struct HealthSettingsSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(AppTheme.symiTextPrimary)
+                .accessibilityAddTraits(.isHeader)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.zero) {
+                content
+            }
+            .padding(SymiSpacing.lg)
+            .brandCard()
+        }
+    }
+}
+
+private struct HealthCategoryRow: View {
+    let icon: String
+    let title: String
+    let explanation: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            HStack(alignment: .top, spacing: SymiSpacing.md) {
+                IconContainerView(icon: Image(systemName: icon), color: AppTheme.symiPetrol)
+
+                VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                    Text(title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+                    Text(explanation)
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .tint(AppTheme.symiPetrol)
+        .accessibilityLabel(title)
+        .accessibilityHint(explanation)
+        .accessibilityValue(isOn ? "Aktiviert" : "Deaktiviert")
+    }
+}
+
+private struct HealthPermissionCard: View {
+    let title: String
+    let text: String
+    let buttonTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            HStack(alignment: .top, spacing: SymiSpacing.md) {
+                IconContainerView(icon: Image(systemName: "plus.circle"), color: AppTheme.symiPetrol)
+
+                VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+                    Text(text)
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Button(buttonTitle, action: action)
+                .buttonStyle(HealthSecondaryButtonStyle())
+        }
+        .padding(SymiSpacing.lg)
+        .brandCard()
+    }
+}
+
+private struct HealthPrivacySection: View {
+    var body: some View {
+        HealthSettingsSection(title: "Datenschutz") {
+            VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                PrivacyLine(icon: "iphone", text: "Alle Daten bleiben auf deinem Gerät")
+                PrivacyLine(icon: "person.crop.circle.badge.xmark", text: "Keine Weitergabe an Dritte")
+                PrivacyLine(icon: "hand.raised", text: "Du kannst den Zugriff jederzeit widerrufen")
             }
         }
     }
+}
+
+private struct PrivacyLine: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        Label {
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.symiTextPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: icon)
+                .foregroundStyle(AppTheme.symiPetrol)
+        }
+    }
+}
+
+private struct HealthDangerZone: View {
+    let action: () -> Void
+
+    var body: some View {
+        HealthSettingsSection(title: "Integration") {
+            VStack(alignment: .leading, spacing: SymiSpacing.md) {
+                Text("Alle Verbindungen werden getrennt")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button(role: .destructive, action: action) {
+                    Label("Apple Health Integration beenden", systemImage: "xmark.circle")
+                }
+                .buttonStyle(HealthDestructiveButtonStyle())
+            }
+        }
+    }
+}
+
+private struct HealthNoticeCard: View {
+    let message: String
+
+    var body: some View {
+        Label {
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.symiTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "info.circle")
+                .foregroundStyle(AppTheme.symiPetrol)
+        }
+        .padding(SymiSpacing.lg)
+        .background(AppTheme.symiCard, in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+    }
+}
+
+private struct HealthPrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(AppTheme.symiOnAccent)
+            .padding(.vertical, SymiSpacing.lg)
+            .frame(maxWidth: .infinity)
+            .background(AppTheme.symiPetrol.opacity(configuration.isPressed ? SymiOpacity.pressedContent : SymiOpacity.opaque))
+            .clipShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+            .shadow(color: AppTheme.symiPetrol.opacity(SymiOpacity.shadow), radius: SymiShadow.buttonRadius, y: SymiShadow.buttonYOffset)
+    }
+}
+
+private struct HealthSecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.weight(.semibold))
+            .foregroundStyle(AppTheme.symiPetrol)
+            .padding(.vertical, SymiSpacing.md)
+            .frame(maxWidth: .infinity)
+            .background(AppTheme.symiSage.opacity(configuration.isPressed ? SymiOpacity.pressedFill : SymiOpacity.secondaryFill))
+            .clipShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+    }
+}
+
+private struct HealthDestructiveButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.weight(.semibold))
+            .foregroundStyle(AppTheme.symiCoral)
+            .padding(.vertical, SymiSpacing.md)
+            .frame(maxWidth: .infinity)
+            .background(AppTheme.symiCoral.opacity(configuration.isPressed ? SymiOpacity.softFill : SymiOpacity.clearAccent))
+            .clipShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
+    }
+}
+
+private enum HealthSettingsURL {
+    static let url = URL(string: "app-settings:")!
 }
 
 private struct SyncStatusView: View {

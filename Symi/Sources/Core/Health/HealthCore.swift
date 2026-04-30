@@ -331,10 +331,18 @@ protocol HealthService: AnyObject {
 
     func authorizationSnapshot() -> HealthAuthorizationSnapshot
     func setEnabled(_ enabled: Bool, for type: HealthDataTypeID, direction: HealthDataDirection)
+    func requestAuthorization() async throws
     func requestReadAuthorization() async throws
     func requestWriteAuthorization() async throws
     func contextSnapshot(for draft: EpisodeDraft) async throws -> HealthContextSnapshotData?
     func writeEpisode(id: UUID, draft: EpisodeDraft) async throws
+}
+
+extension HealthService {
+    func requestAuthorization() async throws {
+        try await requestReadAuthorization()
+        try await requestWriteAuthorization()
+    }
 }
 
 extension HealthContextSnapshotData {

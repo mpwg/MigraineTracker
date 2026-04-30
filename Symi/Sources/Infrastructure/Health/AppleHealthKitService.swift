@@ -40,6 +40,18 @@ final class AppleHealthKitService: HealthService {
         preferences.setEnabled(enabled, type: type, direction: direction)
     }
 
+    func requestAuthorization() async throws {
+        guard Self.isAvailable else {
+            throw HealthIntegrationError.unavailable
+        }
+
+        #if canImport(HealthKit)
+        try await healthStore.requestAuthorization(toShare: writeSampleTypes(), read: readObjectTypes())
+        preferences.markAuthorizationRequested(for: .read)
+        preferences.markAuthorizationRequested(for: .write)
+        #endif
+    }
+
     func requestReadAuthorization() async throws {
         guard Self.isAvailable else {
             throw HealthIntegrationError.unavailable
