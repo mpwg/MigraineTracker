@@ -137,6 +137,8 @@ struct EntryFlowCoordinatorView: View {
 }
 
 private struct EntryHeadacheStepView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let coordinator: EntryFlowCoordinator
     let onBack: () -> Void
     let onCancel: () -> Void
@@ -156,88 +158,139 @@ private struct EntryHeadacheStepView: View {
     var body: some View {
         @Bindable var coordinator = coordinator
 
-        EntryFlowScreen(
-            step: .headache,
-            currentIndex: coordinator.currentStepIndex,
-            onBack: onBack,
-            onCancel: onCancel
-        ) {
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark sind die Schmerzen?", en: "How strong is the pain?")) {
-                InputFlowHeadacheOptionGrid {
-                    ForEach(PainIntensityLevel.selectableCases, id: \.self) { level in
-                        PainIntensitySelectionTile(
-                            level: level,
-                            isSelected: coordinator.draft.selectedIntensityLevel == level,
-                            accessibilityIdentifier: "entry-intensity-\(level.displayLabel)"
-                        ) {
-                            closeDatePicker()
-                            coordinator.draft.selectedIntensityLevel = level
-                        }
-                    }
-                }
-                .accessibilityIdentifier("entry-intensity-card")
-            }
-
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
-                InputFlowHeadacheOptionGrid {
-                    ForEach(visiblePainLocations) { location in
-                        PainLocationSelectionTile(
-                            option: location,
-                            isSelected: coordinator.draft.selectedPainLocations.contains(location.title),
-                            theme: .pain,
-                            accessibilityIdentifier: "entry-location-\(location.title)"
-                        ) {
-                            closeDatePicker()
-                            coordinator.draft.selectedPainLocations.toggleMembership(location.title)
-                        }
-                    }
-                }
-            }
-
-            EntryDayPartFieldGroup(
-                date: coordinator.draft.startedAt,
-                selectedDate: $selectedDate,
-                isDateOpen: $isDateOpen,
-                feedbackTrigger: $dateFeedbackTrigger,
-                onDateSelect: selectEntryDate,
-                onClose: closeDatePicker
+        ZStack {
+            EntryFlowScreen(
+                step: .headache,
+                currentIndex: coordinator.currentStepIndex,
+                onBack: onBack,
+                onCancel: onCancel
             ) {
-                InputFlowHeadacheOptionGrid {
-                    ForEach(EntryDayPartPreset.allCases) { preset in
-                        InputFlowSelectionTile(
-                            title: preset.title,
-                            systemImage: preset.symbolName,
-                            isSelected: selectedDayPartPreset == preset,
-                            theme: .pain,
-                            accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
-                        ) {
-                            closeDatePicker()
-                            selectedDayPartPreset = preset
-                            coordinator.selectDayPartPreset(preset, referenceDate: coordinator.draft.startedAt)
+                InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark sind die Schmerzen?", en: "How strong is the pain?")) {
+                    InputFlowHeadacheOptionGrid {
+                        ForEach(PainIntensityLevel.selectableCases, id: \.self) { level in
+                            PainIntensitySelectionTile(
+                                level: level,
+                                isSelected: coordinator.draft.selectedIntensityLevel == level,
+                                accessibilityIdentifier: "entry-intensity-\(level.displayLabel)"
+                            ) {
+                                closeDatePicker()
+                                coordinator.draft.selectedIntensityLevel = level
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("entry-intensity-card")
+                }
+
+                InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
+                    InputFlowHeadacheOptionGrid {
+                        ForEach(visiblePainLocations) { location in
+                            PainLocationSelectionTile(
+                                option: location,
+                                isSelected: coordinator.draft.selectedPainLocations.contains(location.title),
+                                theme: .pain,
+                                accessibilityIdentifier: "entry-location-\(location.title)"
+                            ) {
+                                closeDatePicker()
+                                coordinator.draft.selectedPainLocations.toggleMembership(location.title)
+                            }
                         }
                     }
                 }
+
+                EntryDayPartFieldGroup(
+                    date: coordinator.draft.startedAt,
+                    isDateOpen: $isDateOpen,
+                    feedbackTrigger: $dateFeedbackTrigger
+                ) {
+                    InputFlowHeadacheOptionGrid {
+                        ForEach(EntryDayPartPreset.allCases) { preset in
+                            InputFlowSelectionTile(
+                                title: preset.title,
+                                systemImage: preset.symbolName,
+                                isSelected: selectedDayPartPreset == preset,
+                                theme: .pain,
+                                accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
+                            ) {
+                                closeDatePicker()
+                                selectedDayPartPreset = preset
+                                coordinator.selectDayPartPreset(preset, referenceDate: coordinator.draft.startedAt)
+                            }
+                        }
+                    }
+                }
+            } footer: {
+                EntryFlowFooter(
+                    isSaving: coordinator.isSaving,
+                    primaryTitle: EntryFlowLocalized.text(de: "Weiter", en: "Continue"),
+                    primarySystemImage: "arrow.right",
+                    primaryIdentifier: "entry-flow-next",
+                    secondaryTitle: EntryFlowLocalized.text(de: "Nur Kopfschmerz speichern", en: "Save headache only"),
+                    secondaryIdentifier: "entry-flow-save-headache-only",
+                    isPrimaryDisabled: !coordinator.draft.hasSelectedIntensity,
+                    isSecondaryDisabled: !coordinator.draft.hasSelectedIntensity,
+                    onPrimary: coordinator.continueToNextStep,
+                    onSecondary: coordinator.saveHeadacheOnly
+                )
             }
-        } footer: {
-            EntryFlowFooter(
-                isSaving: coordinator.isSaving,
-                primaryTitle: EntryFlowLocalized.text(de: "Weiter", en: "Continue"),
-                primarySystemImage: "arrow.right",
-                primaryIdentifier: "entry-flow-next",
-                secondaryTitle: EntryFlowLocalized.text(de: "Nur Kopfschmerz speichern", en: "Save headache only"),
-                secondaryIdentifier: "entry-flow-save-headache-only",
-                isPrimaryDisabled: !coordinator.draft.hasSelectedIntensity,
-                isSecondaryDisabled: !coordinator.draft.hasSelectedIntensity,
-                onPrimary: coordinator.continueToNextStep,
-                onSecondary: coordinator.saveHeadacheOnly
-            )
+
+            if isDateOpen {
+                datePickerBottomSheet
+                    .transition(.move(edge: .bottom))
+                    .zIndex(20)
+            }
         }
+        .animation(.spring(), value: isDateOpen)
         .onAppear {
             coordinator.draft.type = .headache
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
             selectedDate = coordinator.draft.startedAt
             selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
+        }
+    }
+
+    private var datePickerBottomSheet: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: closeDatePicker)
+
+                VStack(spacing: SymiSpacing.zero) {
+                    Spacer()
+
+                    DatePicker(
+                        "",
+                        selection: $selectedDate,
+                        in: ...Date(),
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .labelsHidden()
+                    .padding(.horizontal, SymiSpacing.flowHorizontalPadding)
+                    .padding(.top, SymiSpacing.lg)
+                    .padding(.bottom, SymiSpacing.xxxl + proxy.safeAreaInsets.bottom)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        Color(.systemBackground),
+                        in: UnevenRoundedRectangle(
+                            topLeadingRadius: SymiRadius.datePickerOverlay,
+                            topTrailingRadius: SymiRadius.datePickerOverlay,
+                            style: .continuous
+                        )
+                    )
+                    .shadow(
+                        color: AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.shadow),
+                        radius: SymiShadow.datePickerOverlayRadius,
+                        x: SymiShadow.cardXOffset,
+                        y: -SymiShadow.datePickerOverlayYOffset
+                    )
+                    .onChange(of: selectedDate) { _, newValue in
+                        selectEntryDate(newValue)
+                    }
+                }
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
     }
 
@@ -254,7 +307,7 @@ private struct EntryHeadacheStepView: View {
         }
 
         dateFeedbackTrigger += 1
-        withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
+        withAnimation(.spring()) {
             isDateOpen = false
         }
     }
@@ -275,31 +328,20 @@ private struct EntryHeadacheStepView: View {
 }
 
 private struct EntryDayPartFieldGroup<Content: View>: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let date: Date
-    @Binding var selectedDate: Date
     @Binding var isDateOpen: Bool
     @Binding var feedbackTrigger: Int
-    let onDateSelect: (Date) -> Void
-    let onClose: () -> Void
     let content: Content
 
     init(
         date: Date,
-        selectedDate: Binding<Date>,
         isDateOpen: Binding<Bool>,
         feedbackTrigger: Binding<Int>,
-        onDateSelect: @escaping (Date) -> Void,
-        onClose: @escaping () -> Void,
         @ViewBuilder content: () -> Content
     ) {
         self.date = date
-        _selectedDate = selectedDate
         _isDateOpen = isDateOpen
         _feedbackTrigger = feedbackTrigger
-        self.onDateSelect = onDateSelect
-        self.onClose = onClose
         self.content = content()
     }
 
@@ -314,7 +356,7 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
 
                 Button {
                     feedbackTrigger += 1
-                    withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
+                    withAnimation(.spring()) {
                         isDateOpen.toggle()
                     }
                 } label: {
@@ -334,43 +376,6 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
                 .accessibilityLabel("Datum")
                 .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                 .accessibilityIdentifier("entry-date-picker")
-            }
-            .overlay(alignment: .topTrailing) {
-                if isDateOpen {
-                    ZStack(alignment: .topTrailing) {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture(perform: onClose)
-
-                        DatePicker(
-                            "",
-                            selection: $selectedDate,
-                            in: ...Date(),
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.graphical)
-                        .labelsHidden()
-                        .frame(width: SymiSize.datePickerOverlayWidth)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: SymiRadius.datePickerOverlay, style: .continuous))
-                        .clipShape(RoundedRectangle(cornerRadius: SymiRadius.datePickerOverlay, style: .continuous))
-                        .shadow(
-                            color: AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.shadow),
-                            radius: SymiShadow.datePickerOverlayRadius,
-                            x: SymiShadow.cardXOffset,
-                            y: SymiShadow.datePickerOverlayYOffset
-                        )
-                        .offset(y: SymiSpacing.datePickerOverlayYOffset)
-                        .onChange(of: selectedDate) { _, newValue in
-                            onDateSelect(newValue)
-                        }
-                    }
-                    .frame(
-                        width: SymiSize.datePickerOverlayDismissalSize,
-                        height: SymiSize.datePickerOverlayDismissalSize,
-                        alignment: .topTrailing
-                    )
-                    .zIndex(10)
-                }
             }
             .sensoryFeedback(.selection, trigger: feedbackTrigger)
             .zIndex(isDateOpen ? 10 : 0)
