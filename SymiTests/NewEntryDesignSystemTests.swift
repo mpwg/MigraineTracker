@@ -55,6 +55,14 @@ struct NewEntryDesignSystemTests {
     }
 
     @Test
+    func symiColorTokensDefinePainIntensityScale() {
+        #expect(SymiColors.painIntensityLow.hexString == "#A7B8B2")
+        #expect(SymiColors.painIntensityMedium.hexString == "#E7C29D")
+        #expect(SymiColors.painIntensityHigh.hexString == "#F19A7A")
+        #expect(SymiColors.painIntensityVeryHigh.hexString == "#E3746A")
+    }
+
+    @Test
     func symiDarkModeTokensUseReadableHomePalette() {
         #expect(SymiColors.petrolDark.hexString == "#8ECDB8")
         #expect(SymiColors.coralDark.hexString == "#FFA196")

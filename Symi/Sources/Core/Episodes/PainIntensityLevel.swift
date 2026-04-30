@@ -1,6 +1,29 @@
 import Foundation
 
-nonisolated enum PainIntensityLevel: CaseIterable, Equatable, Sendable {
+enum PainIntensityHealthSeverity: Sendable {
+    case mild
+    case moderate
+    case severe
+}
+
+enum PainIntensityFaceExpression: Sendable {
+    case calm
+    case neutral
+    case strained
+    case intense
+}
+
+struct PainIntensityMetadata: Equatable, Sendable {
+    let storedIntensity: Int
+    let displayLabel: String
+    let contextText: String?
+    let detailDescription: String
+    let colorToken: PainIntensityColorToken
+    let faceExpression: PainIntensityFaceExpression
+    let healthSeverity: PainIntensityHealthSeverity
+}
+
+nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, Sendable {
     case none
     case low
     case medium
@@ -22,60 +45,117 @@ nonisolated enum PainIntensityLevel: CaseIterable, Equatable, Sendable {
         }
     }
 
-    nonisolated var displayLabel: String {
+    nonisolated init(storageValue: String) {
+        switch storageValue {
+        case Self.low.rawValue, "leicht", "Leicht":
+            self = .low
+        case Self.medium.rawValue, "mittel", "Mittel":
+            self = .medium
+        case Self.high.rawValue, "stark", "Stark":
+            self = .high
+        case Self.veryHigh.rawValue, "very_high", "sehrStark", "Sehr stark", "Sehr Stark":
+            self = .veryHigh
+        default:
+            self = .none
+        }
+    }
+
+    nonisolated static var selectableCases: [PainIntensityLevel] {
+        [.low, .medium, .high, .veryHigh]
+    }
+
+    nonisolated var metadata: PainIntensityMetadata {
         switch self {
         case .none:
-            "Nicht bewertet"
+            PainIntensityMetadata(
+                storedIntensity: 0,
+                displayLabel: "Nicht bewertet",
+                contextText: nil,
+                detailDescription: "Die Intensität wurde für diesen Eintrag nicht bewertet.",
+                colorToken: .none,
+                faceExpression: .neutral,
+                healthSeverity: .mild
+            )
         case .low:
-            "Leicht"
+            PainIntensityMetadata(
+                storedIntensity: 2,
+                displayLabel: "Leicht",
+                contextText: "Leichter Verlauf",
+                detailDescription: "Die Schmerzen waren leicht und gut im Alltag einzuordnen.",
+                colorToken: .low,
+                faceExpression: .calm,
+                healthSeverity: .mild
+            )
         case .medium:
-            "Mittel"
+            PainIntensityMetadata(
+                storedIntensity: 5,
+                displayLabel: "Mittel",
+                contextText: "Mittlerer Verlauf",
+                detailDescription: "Die Schmerzen waren spürbar, aber noch gut auszuhalten.",
+                colorToken: .medium,
+                faceExpression: .neutral,
+                healthSeverity: .moderate
+            )
         case .high:
-            "Stark"
+            PainIntensityMetadata(
+                storedIntensity: 8,
+                displayLabel: "Stark",
+                contextText: "Starker Verlauf",
+                detailDescription: "Die Schmerzen waren deutlich und haben viel Aufmerksamkeit gebraucht.",
+                colorToken: .high,
+                faceExpression: .strained,
+                healthSeverity: .severe
+            )
         case .veryHigh:
-            "Sehr stark"
+            PainIntensityMetadata(
+                storedIntensity: 10,
+                displayLabel: "Sehr stark",
+                contextText: "Sehr starker Verlauf",
+                detailDescription: "Die Schmerzen waren sehr stark und haben den Alltag deutlich eingeschränkt.",
+                colorToken: .veryHigh,
+                faceExpression: .intense,
+                healthSeverity: .severe
+            )
         }
+    }
+
+    nonisolated var storedIntensity: Int {
+        metadata.storedIntensity
+    }
+
+    nonisolated var displayLabel: String {
+        metadata.displayLabel
+    }
+
+    nonisolated var isHighImpact: Bool {
+        self == .high || self == .veryHigh
+    }
+
+    nonisolated var faceExpression: PainIntensityFaceExpression {
+        metadata.faceExpression
     }
 
     nonisolated var contextText: String? {
-        switch self {
-        case .none:
-            nil
-        case .low:
-            "Leichter Verlauf"
-        case .medium:
-            "Mittlerer Verlauf"
-        case .high:
-            "Starker Verlauf"
-        case .veryHigh:
-            "Sehr starker Verlauf"
-        }
+        metadata.contextText
     }
 
     nonisolated var detailDescription: String {
-        switch self {
-        case .none:
-            "Die Intensität wurde für diesen Eintrag nicht bewertet."
-        case .low:
-            "Die Schmerzen waren leicht und gut im Alltag einzuordnen."
-        case .medium:
-            "Die Schmerzen waren spürbar, aber noch gut auszuhalten."
-        case .high:
-            "Die Schmerzen waren deutlich und haben viel Aufmerksamkeit gebraucht."
-        case .veryHigh:
-            "Die Schmerzen waren sehr stark und haben den Alltag deutlich eingeschränkt."
-        }
+        metadata.detailDescription
     }
 
     nonisolated var healthSeverityLabel: String {
-        switch self {
-        case .none, .low:
+        switch healthSeverity {
+        case .mild:
             "Leicht"
-        case .medium:
+        case .moderate:
             "Mittel"
-        case .high, .veryHigh:
+        case .severe:
             "Stark"
         }
+    }
+
+    nonisolated var healthSeverity: PainIntensityHealthSeverity {
+        metadata.healthSeverity
     }
 
     nonisolated func contains(intensity: Int) -> Bool {

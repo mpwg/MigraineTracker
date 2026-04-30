@@ -7,16 +7,6 @@
     "(empfohlen, wenn du mehrere Geräte nutzt)" : {
 
     },
-    "/10" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "/10"
-          }
-        }
-      }
-    },
     "%@ / 10" : {
       "localizations" : {
         "en" : {
@@ -201,22 +191,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld out of 10"
-          }
-        }
-      }
-    },
-    "%lld von 10, %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld von 10, %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld out of 10, %2$@"
           }
         }
       }
@@ -833,6 +807,9 @@
           }
         }
       }
+    },
+    "Datum" : {
+
     },
     "Dauermedikation" : {
       "localizations" : {
@@ -1830,16 +1807,6 @@
         }
       }
     },
-    "Kopfschmerzstärke" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Headache Intensity"
-          }
-        }
-      }
-    },
     "Kurz notieren, was auffällt" : {
       "localizations" : {
         "en" : {
@@ -2503,16 +2470,6 @@
     "Regelmäßige Medikamente bleiben als eigener Therapiekontext von Akutmedikation in Tagebucheinträgen getrennt." : {
 
     },
-    "ruhig" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "calm"
-          }
-        }
-      }
-    },
     "Ruhiger Verlauf der dokumentierten Stärke" : {
       "localizations" : {
         "en" : {
@@ -2659,16 +2616,6 @@
         }
       }
     },
-    "Skala" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scale"
-          }
-        }
-      }
-    },
     "Sobald Sync-Vorgänge oder Fehler auftreten, erscheinen sie hier." : {
       "localizations" : {
         "en" : {
@@ -2728,6 +2675,9 @@
           }
         }
       }
+    },
+    "Stärke" : {
+
     },
     "Startdatum" : {
       "localizations" : {
@@ -3115,6 +3065,9 @@
           }
         }
       }
+    },
+    "Wählt diese Stärke aus." : {
+
     },
     "Wählt dieses Medikament aus." : {
       "localizations" : {

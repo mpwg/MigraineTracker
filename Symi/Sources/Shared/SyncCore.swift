@@ -206,6 +206,7 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
     public nonisolated var endedAt: Date?
     public nonisolated var type: String
     public nonisolated var intensity: Int
+    public nonisolated var intensityLevel: String
     public nonisolated var painLocation: String
     public nonisolated var painCharacter: String
     public nonisolated var notes: String
@@ -225,6 +226,7 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         case endedAt
         case type
         case intensity
+        case intensityLevel
         case painLocation
         case painCharacter
         case notes
@@ -244,6 +246,7 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         endedAt: Date?,
         type: String,
         intensity: Int,
+        intensityLevel: String? = nil,
         painLocation: String,
         painCharacter: String,
         notes: String,
@@ -262,6 +265,7 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         self.endedAt = endedAt
         self.type = type
         self.intensity = intensity
+        self.intensityLevel = intensityLevel ?? PainIntensityLevel(intensity: intensity).rawValue
         self.painLocation = painLocation
         self.painCharacter = painCharacter
         self.notes = notes
@@ -283,6 +287,7 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         self.endedAt = try container.decodeIfPresent(Date.self, forKey: .endedAt)
         self.type = try container.decode(String.self, forKey: .type)
         self.intensity = try container.decode(Int.self, forKey: .intensity)
+        self.intensityLevel = try container.decodeIfPresent(String.self, forKey: .intensityLevel) ?? PainIntensityLevel(intensity: intensity).rawValue
         self.painLocation = try container.decode(String.self, forKey: .painLocation)
         self.painCharacter = try container.decode(String.self, forKey: .painCharacter)
         self.notes = try container.decode(String.self, forKey: .notes)
@@ -307,6 +312,7 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
         try container.encodeIfPresent(endedAt, forKey: .endedAt)
         try container.encode(type, forKey: .type)
         try container.encode(intensity, forKey: .intensity)
+        try container.encode(intensityLevel, forKey: .intensityLevel)
         try container.encode(painLocation, forKey: .painLocation)
         try container.encode(painCharacter, forKey: .painCharacter)
         try container.encode(notes, forKey: .notes)
@@ -325,6 +331,11 @@ public struct SyncEpisodePayload: Codable, Equatable, Sendable {
                 try container.encodeNil(forKey: .healthContext)
             }
         }
+    }
+
+    public nonisolated var resolvedIntensityLevel: String {
+        let decodedLevel = PainIntensityLevel(storageValue: intensityLevel)
+        return decodedLevel == .none ? PainIntensityLevel(intensity: intensity).rawValue : decodedLevel.rawValue
     }
 }
 
@@ -699,6 +710,7 @@ public enum SyncMergeEngine {
         let endedAt = mergedValue(field: "endedAt", base: base?.endedAt, local: local.endedAt, remote: remote.endedAt, conflicts: &conflicts).value
         let type = mergedValue(field: "type", base: base?.type, local: local.type, remote: remote.type, conflicts: &conflicts).value
         let intensity = mergedValue(field: "intensity", base: base?.intensity, local: local.intensity, remote: remote.intensity, conflicts: &conflicts).value
+        let intensityLevel = mergedValue(field: "intensityLevel", base: base?.intensityLevel, local: local.intensityLevel, remote: remote.intensityLevel, conflicts: &conflicts).value
         let painLocation = mergedValue(field: "painLocation", base: base?.painLocation, local: local.painLocation, remote: remote.painLocation, conflicts: &conflicts).value
         let painCharacter = mergedValue(field: "painCharacter", base: base?.painCharacter, local: local.painCharacter, remote: remote.painCharacter, conflicts: &conflicts).value
         let notes = mergedValue(field: "notes", base: base?.notes, local: local.notes, remote: remote.notes, conflicts: &conflicts).value
@@ -740,6 +752,7 @@ public enum SyncMergeEngine {
                 endedAt: endedAt,
                 type: type,
                 intensity: intensity,
+                intensityLevel: intensityLevel,
                 painLocation: painLocation,
                 painCharacter: painCharacter,
                 notes: notes,

@@ -245,6 +245,10 @@ final class EntryFlowCoordinator {
     }
 
     func continueToNextStep() {
+        guard currentStep != .headache || draft.hasSelectedIntensity else {
+            return
+        }
+
         applyStepSideEffects()
 
         guard let nextStep else {
@@ -312,6 +316,18 @@ final class EntryFlowCoordinator {
         weatherLoadState = .idle
     }
 
+    func selectEntryDate(_ date: Date, calendar: Calendar = .current) {
+        let currentTime = calendar.dateComponents([.hour, .minute, .second], from: draft.startedAt)
+        let selectedDay = calendar.startOfDay(for: date)
+        draft.startedAt = calendar.date(
+            bySettingHour: currentTime.hour ?? 12,
+            minute: currentTime.minute ?? 0,
+            second: currentTime.second ?? 0,
+            of: selectedDay
+        ) ?? selectedDay
+        weatherLoadState = .idle
+    }
+
     func refreshWeatherIfNeeded() async {
         guard weatherLoadState == .idle else {
             return
@@ -369,6 +385,10 @@ final class EntryFlowCoordinator {
 
     private func save(resetAfterSave: Bool) {
         guard !isSaving else {
+            return
+        }
+
+        guard draft.hasSelectedIntensity else {
             return
         }
 

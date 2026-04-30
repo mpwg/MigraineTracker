@@ -45,7 +45,7 @@ struct DomainValidatorTests {
         let issues = DomainValidator.episodeIssues(for: episode)
 
         #expect(issues.contains { $0.contains("endedAt") })
-        #expect(issues.contains { $0.contains("intensity") })
+        #expect(issues.contains { $0.contains("intensityLevel") })
         #expect(issues.contains { $0.contains("medications[0].name") })
         #expect(issues.contains { $0.contains("quantity") })
         #expect(issues.contains { $0.contains("continuousMedicationChecks[0].name") })
@@ -161,7 +161,9 @@ struct DomainValidatorTests {
     func startupMaintenanceRejectsInvalidPersistedDomainData() throws {
         let container = try makeInMemoryContainer()
         let context = ModelContext(container)
-        context.insert(Episode(startedAt: .now, type: .migraine, intensity: 12))
+        let episode = Episode(startedAt: .now, type: .migraine, intensity: 4)
+        episode.intensityLevelRaw = "invalid"
+        context.insert(episode)
         try context.save()
 
         #expect(throws: DomainValidationError.self) {
@@ -171,7 +173,7 @@ struct DomainValidatorTests {
 }
 
 private func makeInMemoryContainer() throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV6.self)
+    let schema = Schema(versionedSchema: SymiSchemaV7.self)
     let configuration = ModelConfiguration(
         "domain-validator-tests-\(UUID().uuidString)",
         schema: schema,

@@ -276,7 +276,7 @@ struct DataTransferHealthContextTests {
 }
 
 private func makeInMemoryContainer() throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV6.self)
+    let schema = Schema(versionedSchema: SymiSchemaV7.self)
     let configuration = ModelConfiguration(
         "test-\(UUID().uuidString)",
         schema: schema,

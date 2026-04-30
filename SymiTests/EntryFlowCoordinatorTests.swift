@@ -36,6 +36,7 @@ struct EntryFlowCoordinatorTests {
     @Test
     func optionalStepsCanBeSkipped() {
         let coordinator = makeCoordinator()
+        coordinator.draft.selectedIntensityLevel = .medium
         coordinator.continueToNextStep()
 
         coordinator.skipCurrentStep()
@@ -60,6 +61,7 @@ struct EntryFlowCoordinatorTests {
             )
         ])
         let coordinator = makeCoordinator(continuousMedicationRepository: repository)
+        coordinator.draft.selectedIntensityLevel = .medium
         await coordinator.continuousMedicationController.reload(for: .now)
         coordinator.draft.continuousMedicationChecks = coordinator.continuousMedicationController.makeDefaultChecks()
         coordinator.draft.continuousMedicationChecks[0].wasTaken = false
@@ -76,6 +78,7 @@ struct EntryFlowCoordinatorTests {
     @Test
     func reviewEditNavigatesBackToSelectedStep() {
         let coordinator = makeCoordinator()
+        coordinator.draft.selectedIntensityLevel = .medium
         coordinator.continueToNextStep()
         coordinator.continueToNextStep()
         coordinator.continueToNextStep()
@@ -105,15 +108,14 @@ struct EntryFlowCoordinatorTests {
     }
 
     @Test
-    func headacheStepNormalizesNewIntensityRange() async throws {
+    func headacheStepRequiresSelectedIntensityBeforeSaving() async throws {
         let repository = EntryFlowEpisodeRepositoryMock()
         let coordinator = makeCoordinator(repository: repository)
-        coordinator.draft.intensity = 0
 
         coordinator.saveHeadacheOnly()
-        try await waitForSaveResult(on: coordinator)
 
-        #expect(repository.lastSavedDraft?.intensity == 1)
+        #expect(repository.lastSavedDraft == nil)
+        #expect(coordinator.saveResult == nil)
     }
 
     @Test
@@ -170,7 +172,7 @@ struct EntryFlowCoordinatorTests {
 
         #expect(coordinator.isCancelled)
         #expect(coordinator.path.isEmpty)
-        #expect(coordinator.draft.intensity == 4)
+        #expect(coordinator.draft.selectedIntensityLevel == nil)
     }
 
     @Test

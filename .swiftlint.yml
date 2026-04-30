@@ -107,6 +107,13 @@ custom_rules:
     message: "Nutze SymiColors/AppTheme-Tokens statt direkter Farben."
     severity: warning
 
+  pain_intensity_color_hex_requires_token:
+    name: "Intensitätsfarben müssen ins Design-System"
+    included: "Symi/Sources/Core/Episodes/PainIntensityLevel.swift"
+    regex: '0x[0-9A-Fa-f]{6}|SymiColorValue\(hex:|colorHex'
+    message: "Intensitätsfarben müssen ins Design-System. PainIntensityLevel darf nur semantische Tokens referenzieren."
+    severity: error
+
   no_direct_white_black_background:
     name: "Keine weißen oder schwarzen Backgrounds"
     regex: '\.background\((?:Color\.)?(?:white|black)|\.background\(\.(?:white|black)'

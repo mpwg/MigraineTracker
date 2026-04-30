@@ -33,6 +33,7 @@ nonisolated enum SymiSpacing {
     static let flowHeaderTitleSpacing: CGFloat = 4
     static let flowFooterTopPadding: CGFloat = 2
     static let flowFooterBottomPadding: CGFloat = 6
+    static let flowExpandedControlBottomPadding: CGFloat = 80
     static let tileSpacing: CGFloat = 10
     static let pillSpacing: CGFloat = 8
     static let cardPadding: CGFloat = 16
@@ -42,6 +43,9 @@ nonisolated enum SymiSpacing {
     static let chevronTopPadding: CGFloat = 3
     static let selectedCheckOffsetX: CGFloat = 8
     static let selectedCheckOffsetY: CGFloat = -4
+    static let painIntensityFaceEyeOffsetY: CGFloat = -4
+    static let painIntensityFaceMouthOffsetY: CGFloat = 5
+    static let painIntensityFaceEyeSpacing: CGFloat = 7
 
     // Home effects
     static let heroWavePrimaryOffsetX: CGFloat = -10
@@ -170,6 +174,10 @@ nonisolated enum SymiSize {
     static let selectedMedicationRowMinHeight: CGFloat = 108
     static let medicationQuantityMinWidth: CGFloat = 24
     static let noteEditorMinHeight: CGFloat = 220
+    static let painIntensityFaceEye: CGFloat = 3.2
+    static let painIntensityFaceMouthWidth: CGFloat = 15
+    static let painIntensityFaceMouthHeight: CGFloat = 8
+    static let painIntensityFaceOpenMouthWidth: CGFloat = 6
 
     // Grid and dashboard layout
     static let dashboardWideColumnMinWidth: CGFloat = 360
@@ -235,8 +243,6 @@ nonisolated enum SymiSize {
     static let heroWaveSecondaryHeight: CGFloat = 44
     static let heroWaveAccentWidth: CGFloat = 132
     static let heroWaveAccentHeight: CGFloat = 34
-    static let painGaugeWidth: CGFloat = 218
-    static let painGaugeHeight: CGFloat = 148
 
     // Entry detail
     static let entryDetailTopFadeHeight: CGFloat = 16
@@ -280,16 +286,17 @@ nonisolated enum SymiStroke {
     // Core
     static let hairline: CGFloat = 1
     static let selectedHairline: CGFloat = 1.5
+    static let painIntensityVeryHighSelectedBorder: CGFloat = 2
 
     // Charts and artwork
     static let trendLine: CGFloat = 3
     static let heroWaveAccent: CGFloat = 4
     static let heroWaveSecondary: CGFloat = 5
     static let heroWavePrimary: CGFloat = 8
-    static let painGaugeArc: CGFloat = 18
 
     // Entry detail
     static let entryDetailFaceIcon: CGFloat = 2
+    static let painIntensityFace: CGFloat = 1.8
 }
 
 // MARK: - Animation
@@ -322,16 +329,23 @@ nonisolated enum SymiOpacity {
     static let pressedShadow = shadow
     static let subtleButtonHighlight: Double = 0.11
     static let faintSurface: Double = 0.12
+    static let painIntensitySelectedFill: Double = 0.15
+    static let painIntensityVeryHighSelectedFill: Double = 0.18
     static let softFill: Double = 0.16
     static let secondaryFill: Double = 0.18
+    static let painIntensityLowFaceFill = secondaryFill
     static let sliderThumbShadow = secondaryFill
     static let pressedFill: Double = 0.20
+    static let painIntensityMediumFaceFill = pressedFill
     static let backgroundAccent: Double = 0.22
     static let selectedStroke: Double = 0.24
     static let glassTintLight: Double = 0.26
     static let selectedFill: Double = 0.35
+    static let painIntensitySelectedStroke = selectedFill
     static let outline: Double = 0.45
+    static let painIntensityUnselectedStroke = outline
     static let disabledRow = outline
+    static let painIntensityUnselectedIcon: Double = 0.60
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
 

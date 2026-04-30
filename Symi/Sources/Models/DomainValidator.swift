@@ -19,8 +19,6 @@ enum DomainValidationError: LocalizedError, Equatable {
 }
 
 nonisolated enum DomainValidator {
-    static let intensityRange = 1 ... 10
-
     static func validate(_ episode: Episode) throws {
         try throwIfInvalid(episodeIssues(for: episode))
     }
@@ -47,8 +45,8 @@ nonisolated enum DomainValidator {
             into: &issues
         )
 
-        if !intensityRange.contains(episode.intensity) {
-            issues.append("\(path).intensity muss zwischen \(intensityRange.lowerBound) und \(intensityRange.upperBound) liegen")
+        if episode.intensityLevel == .none {
+            issues.append("\(path).intensityLevel muss gesetzt sein")
         }
 
         for (index, medication) in episode.medications.enumerated() {

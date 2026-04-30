@@ -268,7 +268,7 @@ private func makeContainer<SchemaType: VersionedSchema>(
 }
 
 private func makeCurrentContainer(storeURL: URL) throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV6.self)
+    let schema = Schema(versionedSchema: SymiSchemaV7.self)
     let configuration = ModelConfiguration("migration-test", schema: schema, url: storeURL, cloudKitDatabase: .none)
     return try ModelContainer(
         for: schema,

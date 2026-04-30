@@ -282,63 +282,59 @@ private struct CalmFaceIcon: Shape {
     }
 
     private var leftEyeStartY: CGFloat {
-        switch painLevel {
-        case .high, .veryHigh:
+        switch painLevel.faceExpression {
+        case .strained, .intense:
             0.38
-        case .none, .low, .medium:
+        case .calm, .neutral:
             0.40
         }
     }
 
     private var leftEyeEndY: CGFloat {
-        switch painLevel {
-        case .high, .veryHigh:
+        switch painLevel.faceExpression {
+        case .strained, .intense:
             0.42
-        case .none, .low, .medium:
+        case .calm, .neutral:
             0.42
         }
     }
 
     private var rightEyeStartY: CGFloat {
-        switch painLevel {
-        case .high, .veryHigh:
+        switch painLevel.faceExpression {
+        case .strained, .intense:
             0.38
-        case .none, .low, .medium:
+        case .calm, .neutral:
             0.40
         }
     }
 
     private var rightEyeEndY: CGFloat {
-        switch painLevel {
-        case .high, .veryHigh:
+        switch painLevel.faceExpression {
+        case .strained, .intense:
             0.42
-        case .none, .low, .medium:
+        case .calm, .neutral:
             0.42
         }
     }
 
     private var mouthY: CGFloat {
-        switch painLevel {
-        case .none:
+        switch painLevel.faceExpression {
+        case .neutral:
             0.63
-        case .low:
+        case .calm:
             0.64
-        case .medium:
-            0.63
-        case .high, .veryHigh:
+        case .strained, .intense:
             0.64
         }
     }
 
     private var mouthControlY: CGFloat {
-        switch painLevel {
-        case .none:
-            0.68
-        case .low:
+        switch painLevel.faceExpression {
+        case .calm:
             0.62
-        case .medium:
+        case .neutral:
             0.67
-        case .high, .veryHigh:
+        case .strained, .intense:
             0.59
         }
     }

@@ -233,33 +233,30 @@ private enum JournalIntensityFilter: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var displayTitle: String {
-        switch self {
-        case .all:
-            "Alle"
-        case .light:
-            "Leicht"
-        case .medium:
-            "Mittel"
-        case .strong:
-            "Stark"
-        case .veryStrong:
-            "Sehr stark"
-        }
+        painLevel?.displayLabel ?? "Alle"
     }
 
     func matches(_ intensity: Int) -> Bool {
         let level = PainIntensityLevel(intensity: intensity)
-        return switch self {
+        guard let painLevel else {
+            return true
+        }
+
+        return level == painLevel
+    }
+
+    private var painLevel: PainIntensityLevel? {
+        switch self {
         case .all:
-            true
+            nil
         case .light:
-            level == .low
+            .low
         case .medium:
-            level == .medium
+            .medium
         case .strong:
-            level == .high
+            .high
         case .veryStrong:
-            level == .veryHigh
+            .veryHigh
         }
     }
 }
@@ -634,7 +631,7 @@ private struct JournalEntryCard: View {
     }
 
     private var intensityColor: Color {
-        JournalEntryContext.intensityColor(for: episode.intensity)
+        PainIntensityLevel(intensity: episode.intensity).tintColor
     }
 
     private var subtitle: String {

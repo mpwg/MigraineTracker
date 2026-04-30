@@ -382,7 +382,7 @@ struct EpisodeDraft: Equatable, Sendable {
         return EpisodeDraft(
             id: nil,
             type: .unclear,
-            intensity: 4,
+            intensity: 0,
             startedAt: startedAt,
             endedAtEnabled: false,
             endedAt: startedAt,
@@ -440,6 +440,20 @@ struct EpisodeDraft: Equatable, Sendable {
 
     nonisolated var normalizedIntensity: Int {
         min(max(intensity, 1), 10)
+    }
+
+    nonisolated var selectedIntensityLevel: PainIntensityLevel? {
+        get {
+            let level = PainIntensityLevel(intensity: intensity)
+            return level == .none ? nil : level
+        }
+        set {
+            intensity = newValue?.storedIntensity ?? 0
+        }
+    }
+
+    nonisolated var hasSelectedIntensity: Bool {
+        selectedIntensityLevel != nil
     }
 
     nonisolated private static func decodePainLocations(_ value: String) -> Set<String> {

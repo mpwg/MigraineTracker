@@ -20,9 +20,6 @@ enum SymiTypography {
     static let homePainScaleMetric = Font.system(size: 58, weight: .bold, design: .rounded)
     static let insightHeroTitle = Font.system(size: 23, weight: .bold, design: .rounded)
     static let insightMetric = Font.system(size: 30, weight: .bold, design: .rounded)
-    static let painGaugeMetric = Font.system(size: 52, weight: .bold, design: .rounded)
-    static let painGaugeUnit = Font.footnote.weight(.medium)
-    static let painGaugeLabel = Font.title3.weight(.semibold)
     static let homeMetric = Font.system(size: 44, weight: .bold, design: .rounded)
     static let entryDetailIntensityTitle = Font.system(size: 44, weight: .bold, design: .rounded)
 

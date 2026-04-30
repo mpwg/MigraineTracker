@@ -9,7 +9,8 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
             SymiSchemaV3.self,
             SymiSchemaV4.self,
             SymiSchemaV5.self,
-            SymiSchemaV6.self
+            SymiSchemaV6.self,
+            SymiSchemaV7.self
         ]
     }
     static var stages: [MigrationStage] {
@@ -86,7 +87,41 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
             .lightweight(
                 fromVersion: SymiSchemaV5.self,
                 toVersion: SymiSchemaV6.self
+            ),
+            .custom(
+                fromVersion: SymiSchemaV6.self,
+                toVersion: SymiSchemaV7.self,
+                willMigrate: { context in
+                    let episodes = try context.fetch(FetchDescriptor<SymiSchemaV6.Episode>())
+                    let migratedLevels = Dictionary(
+                        uniqueKeysWithValues: episodes.map { episode in
+                            (episode.id.uuidString, PainIntensityLevel(intensity: episode.intensity).rawValue)
+                        }
+                    )
+                    let data = try JSONEncoder().encode(migratedLevels)
+                    try data.write(to: v6IntensityLevelMigrationURL, options: [.atomic])
+                },
+                didMigrate: { context in
+                    let migratedLevels: [String: String]
+                    if let data = try? Data(contentsOf: v6IntensityLevelMigrationURL),
+                       let decoded = try? JSONDecoder().decode([String: String].self, from: data) {
+                        migratedLevels = decoded
+                    } else {
+                        migratedLevels = [:]
+                    }
+
+                    let episodes = try context.fetch(FetchDescriptor<SymiSchemaV7.Episode>())
+                    for episode in episodes {
+                        episode.intensityLevelRaw = migratedLevels[episode.id.uuidString] ?? PainIntensityLevel.medium.rawValue
+                    }
+                    try? FileManager.default.removeItem(at: v6IntensityLevelMigrationURL)
+                    try context.save()
+                }
             )
         ]
+    }
+
+    private static var v6IntensityLevelMigrationURL: URL {
+        FileManager.default.temporaryDirectory.appending(path: "symi-v6-intensity-level-migration.json")
     }
 }
