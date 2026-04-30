@@ -6,6 +6,9 @@ struct SettingsView: View {
     let showsCloseButton: Bool
     @State private var controller: SettingsController
     @State private var showsResetInformation = false
+    @State private var showsDisableSyncConfirmation = false
+    @State private var showsDeleteCloudDataConfirmation = false
+    @State private var pendingSyncDisable = false
 
     init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
         self.dependencies = dependencies
@@ -30,9 +33,39 @@ struct SettingsView: View {
                         tint: AppTheme.symiPetrol,
                         isOn: Binding(
                             get: { controller.isSyncEnabled },
-                            set: { controller.setSyncEnabled($0) }
+                            set: { newValue in
+                                if newValue == false {
+                                    pendingSyncDisable = true
+                                    showsDisableSyncConfirmation = true
+                                } else {
+                                    controller.setSyncEnabled(true)
+                                }
+                            }
                         )
                     )
+                    .disabled(pendingSyncDisable || showsDisableSyncConfirmation || showsDeleteCloudDataConfirmation)
+                    .confirmationDialog(
+                        "Synchronisation deaktivieren?",
+                        isPresented: $showsDisableSyncConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Daten behalten") {
+                            controller.disableSyncKeepingCloudData()
+                            pendingSyncDisable = false
+                        }
+
+                        if controller.canOfferCloudDataDeletion {
+                            Button("Cloud-Daten löschen", role: .destructive) {
+                                showsDeleteCloudDataConfirmation = true
+                            }
+                        }
+
+                        Button("Abbrechen", role: .cancel) {
+                            pendingSyncDisable = false
+                        }
+                    } message: {
+                        Text(disableSyncConfirmationMessage)
+                    }
 
                     SettingsDivider()
 
@@ -211,6 +244,46 @@ struct SettingsView: View {
         } message: {
             Text("Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar.")
         }
+        .alert("Cloud-Daten wirklich löschen?", isPresented: $showsDeleteCloudDataConfirmation) {
+            Button("Jetzt löschen", role: .destructive) {
+                Task {
+                    await controller.disableSyncAndDeleteCloudData()
+                    pendingSyncDisable = false
+                }
+            }
+
+            Button("Abbrechen", role: .cancel) {
+                pendingSyncDisable = false
+            }
+        } message: {
+            Text("Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden.")
+        }
+        .onChange(of: showsDisableSyncConfirmation) { _, isPresented in
+            if !isPresented && !showsDeleteCloudDataConfirmation {
+                pendingSyncDisable = false
+            }
+        }
+        .onChange(of: showsDeleteCloudDataConfirmation) { _, isPresented in
+            if !isPresented {
+                pendingSyncDisable = false
+            }
+        }
+    }
+
+    private var disableSyncConfirmationMessage: String {
+        guard controller.canOfferCloudDataDeletion else {
+            if controller.isCloudUnavailableForSyncDisableFlow {
+                return "iCloud ist derzeit nicht verfügbar.\nDeine Daten bleiben auf diesem Gerät gespeichert."
+            }
+
+            return "Deine Daten bleiben auf diesem Gerät gespeichert."
+        }
+
+        if controller.isCloudUnavailableForSyncDisableFlow {
+            return "iCloud ist derzeit nicht verfügbar.\nDeine Daten bleiben auf diesem Gerät gespeichert.\nMöchtest du auch die Daten aus der Cloud entfernen?"
+        }
+
+        return "Deine Daten bleiben auf diesem Gerät gespeichert.\nMöchtest du auch die Daten aus der Cloud entfernen?"
     }
 
     private var statusColor: Color {
@@ -361,7 +434,7 @@ private struct AppleHealthCardView: View {
                 .renderingMode(.original)
                 .scaledToFit()
                 .frame(width: SymiSize.settingsAppleHealthIcon, height: SymiSize.settingsAppleHealthIcon)
-                .blendMode(colorScheme == .dark ? .normal : .multiply)
+ //               .blendMode(colorScheme == .dark ? .normal : .multiply)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {

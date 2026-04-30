@@ -123,6 +123,43 @@ final class SyncCoordinator {
         }
     }
 
+    func disableSyncAndDeleteCloudData() async {
+        automaticSyncTask?.cancel()
+        stopNetworkMonitor()
+
+        await stateStore.setSyncEnabled(false)
+        await logStateStoreEvents()
+        isEnabled = false
+        status = await buildStatusSnapshot(baseState: .disabled, isSyncing: false)
+        await log(level: .warning, operation: "coordinator.disableSyncAndDeleteCloudData", message: "Sync wurde deaktiviert; bestätigtes Löschen der Cloud-Daten wird ausgeführt.")
+
+        do {
+            await ensureStarted()
+            guard let provider else {
+                await log(level: .error, operation: "coordinator.disableSyncAndDeleteCloudData.missingProvider", message: "Cloud-Daten konnten nicht gelöscht werden, da kein Provider verfügbar ist.")
+                status = SyncStatusSnapshot(
+                    state: .disabled,
+                    service: "iCloud",
+                    lastError: "Cloud-Daten konnten nicht gelöscht werden, da iCloud derzeit nicht verfügbar ist.",
+                    lastErrorIsRetryable: true
+                )
+                return
+            }
+
+            try await provider.deleteCloudData()
+            await stateStore.resetCloudMetadata()
+            conflicts = []
+            self.provider = nil
+            status = await buildStatusSnapshot(baseState: .disabled, isSyncing: false)
+        } catch {
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
+            await log(level: .error, operation: "coordinator.disableSyncAndDeleteCloudData.error", message: "Cloud-Daten konnten nicht gelöscht werden.", metadata: [
+                "error": error.localizedDescription
+            ])
+            status = await buildStatusSnapshot(baseState: .disabled, isSyncing: false)
+        }
+    }
+
     func refreshStatus() {
         Task {
             let snapshot = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)

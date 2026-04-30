@@ -756,6 +756,42 @@ struct CoreArchitectureTests {
         #expect(summary.conflictCount == 1)
     }
 
+    @Test
+    @MainActor
+    func settingsControllerOffersCloudDeletionOnlyAfterKnownCloudSync() {
+        let syncService = SyncServiceMock()
+        let controller = makeSettingsController(syncService: syncService)
+
+        #expect(controller.canOfferCloudDataDeletion == false)
+
+        syncService.status = SyncStatusSnapshot(unsyncedRecords: 2)
+
+        #expect(controller.canOfferCloudDataDeletion == false)
+
+        syncService.status = SyncStatusSnapshot(lastUploadedAt: fixedDate())
+
+        #expect(controller.canOfferCloudDataDeletion == true)
+    }
+
+    @Test
+    @MainActor
+    func settingsControllerKeepsAndDeletesUseExplicitDisablePaths() async {
+        let syncService = SyncServiceMock()
+        syncService.isEnabled = true
+        let controller = makeSettingsController(syncService: syncService)
+
+        controller.disableSyncKeepingCloudData()
+
+        #expect(syncService.isEnabled == false)
+        #expect(syncService.didDeleteCloudData == false)
+
+        syncService.isEnabled = true
+        await controller.disableSyncAndDeleteCloudData()
+
+        #expect(syncService.isEnabled == false)
+        #expect(syncService.didDeleteCloudData == true)
+    }
+
 }
 
 private final class EpisodeRepositoryMock: EpisodeRepository, Sendable {
@@ -899,14 +935,57 @@ private final class SyncServiceMock: SyncService {
     var isEnabled = false
     var status = SyncStatusSnapshot()
     var conflictsStorage: [SyncConflict] = []
+    var didDeleteCloudData = false
     var conflicts: [SyncConflict] { conflictsStorage }
 
     func setSyncEnabled(_ enabled: Bool) { isEnabled = enabled }
     func refreshStatus() {}
     func syncNow() async {}
+    func disableSyncAndDeleteCloudData() async {
+        isEnabled = false
+        didDeleteCloudData = true
+    }
     func retryLastError() async {}
     func resolveConflictKeepingLocal(_ conflict: SyncConflict) async {}
     func resolveConflictUsingRemote(_ conflict: SyncConflict) async {}
+}
+
+@MainActor
+private func makeSettingsController(syncService: SyncServiceMock) -> SettingsController {
+    SettingsController(
+        episodeRepository: EpisodeRepositoryMock(),
+        medicationRepository: MedicationCatalogRepositoryMock(),
+        syncService: syncService,
+        appLogService: AppLogServiceMock(),
+        healthService: HealthServiceMock(),
+        usageDataConsentService: UsageDataConsentServiceMock()
+    )
+}
+
+private final class AppLogServiceMock: AppLogService {
+    func recentEntries(filter: AppLogFilter, limit: Int) async -> [AppLogEntry] { [] }
+    func exportLogFileURL(filter: AppLogFilter) async -> URL? { nil }
+    func clear() async {}
+}
+
+private final class HealthServiceMock: HealthService {
+    var readDefinitions: [HealthDataTypeDefinition] { [] }
+    var writeDefinitions: [HealthDataTypeDefinition] { [] }
+
+    func authorizationSnapshot() -> HealthAuthorizationSnapshot { .unavailable }
+    func setEnabled(_ enabled: Bool, for type: HealthDataTypeID, direction: HealthDataDirection) {}
+    func requestReadAuthorization() async throws {}
+    func requestWriteAuthorization() async throws {}
+    func contextSnapshot(for draft: EpisodeDraft) async throws -> HealthContextSnapshotData? { nil }
+    func writeEpisode(id: UUID, draft: EpisodeDraft) async throws {}
+}
+
+private final class UsageDataConsentServiceMock: UsageDataConsentService {
+    var usageDataConsent: UsageDataConsent = .undecided
+
+    func setUsageDataCollectionAllowed(_ allowed: Bool) {
+        usageDataConsent = allowed ? .allowed : .denied
+    }
 }
 
 private func makeEpisode(

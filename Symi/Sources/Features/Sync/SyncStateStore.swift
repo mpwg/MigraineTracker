@@ -242,6 +242,17 @@ actor SyncStateStore {
         persist()
     }
 
+    func resetCloudMetadata() {
+        state.engineStateData = nil
+        state.shadows = [:]
+        state.conflicts = [:]
+        state.lastUploadedAt = nil
+        state.lastDownloadedAt = nil
+        state.lastError = nil
+        state.lastErrorIsRetryable = false
+        persist()
+    }
+
     func drainPersistenceEvents() -> [PersistenceEvent] {
         let events = persistenceEvents
         persistenceEvents.removeAll()

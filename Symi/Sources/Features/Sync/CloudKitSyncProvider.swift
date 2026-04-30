@@ -32,6 +32,7 @@ protocol SyncProvider: AnyObject, Sendable {
     func queue(recordNames: [String]) async
     func fetch() async throws
     func send() async throws
+    func deleteCloudData() async throws
 }
 
 actor CloudKitSyncProviderState {
@@ -228,6 +229,37 @@ final class CloudKitSyncProvider: NSObject, SyncProvider {
             throw error
         }
         await log(level: .info, operation: "provider.send.finish", message: "CloudKit-Änderungen wurden gesendet.")
+    }
+
+    func deleteCloudData() async throws {
+        await providerState.stopSyncEngine()
+        await log(level: .warning, operation: "provider.deleteCloudData.start", message: "Bestätigtes Löschen der Cloud-Daten wird gestartet.", metadata: [
+            "zone": zoneID.zoneName
+        ])
+
+        do {
+            let results = try await container.privateCloudDatabase.modifyRecordZones(
+                saving: [],
+                deleting: [zoneID]
+            )
+            if case let .failure(error)? = results.deleteResults[zoneID] {
+                if let cloudKitError = error as? CKError, cloudKitError.code == .zoneNotFound {
+                    await log(level: .info, operation: "provider.deleteCloudData.missingZone", message: "Keine Cloud-Datenzone zum Löschen gefunden.", metadata: [
+                        "zone": zoneID.zoneName
+                    ])
+                    return
+                }
+
+                throw error
+            }
+            await log(level: .warning, operation: "provider.deleteCloudData.finish", message: "Cloud-Daten wurden aus iCloud entfernt.", metadata: [
+                "zone": zoneID.zoneName
+            ])
+        } catch let error as CKError where error.code == .zoneNotFound {
+            await log(level: .info, operation: "provider.deleteCloudData.missingZone", message: "Keine Cloud-Datenzone zum Löschen gefunden.", metadata: [
+                "zone": zoneID.zoneName
+            ])
+        }
     }
 
     private func handlePartialSendFailure(_ error: CKError) async -> Bool {

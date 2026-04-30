@@ -313,17 +313,6 @@
         }
       }
     },
-    "Abweichende Felder: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conflicting fields: %1$@"
-          }
-        }
-      }
-    },
     "Aktionen" : {
       "localizations" : {
         "en" : {
@@ -340,17 +329,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Active"
-          }
-        }
-      }
-    },
-    "Aktive Episoden" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Active Episodes"
           }
         }
       }
@@ -438,17 +416,6 @@
         }
       }
     },
-    "Allgemein" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "General"
-          }
-        }
-      }
-    },
     "Änderungen speichern" : {
       "localizations" : {
         "en" : {
@@ -512,17 +479,6 @@
     "App" : {
 
     },
-    "App verbessern" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Improve the App"
-          }
-        }
-      }
-    },
     "App-Angabe ohne Health-Flow-Sample." : {
       "localizations" : {
         "en" : {
@@ -575,17 +531,6 @@
     },
     "Apple Health. Lese- und Schreibzugriff. %@" : {
 
-    },
-    "Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apple Health data remains optional. Read values are labeled as Apple Health context; written symptoms do not include notes."
-          }
-        }
-      }
     },
     "Attribution" : {
       "localizations" : {
@@ -790,17 +735,6 @@
     "Bitte wähle, welche Version du behalten möchtest." : {
 
     },
-    "Cloud hat recht" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use Cloud Version"
-          }
-        }
-      }
-    },
     "Cloud-Daten" : {
       "localizations" : {
         "en" : {
@@ -811,16 +745,11 @@
         }
       }
     },
-    "Cloud-Daten verwalten" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manage Cloud Data"
-          }
-        }
-      }
+    "Cloud-Daten löschen" : {
+
+    },
+    "Cloud-Daten wirklich löschen?" : {
+
     },
     "Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar." : {
 
@@ -868,6 +797,9 @@
     "Daten & Sicherheit" : {
 
     },
+    "Daten behalten" : {
+
+    },
     "Daten wiederherstellen" : {
       "localizations" : {
         "en" : {
@@ -907,28 +839,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Long-term Medication"
-          }
-        }
-      }
-    },
-    "Dauermedikation hinzufügen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Long-term Medication"
-          }
-        }
-      }
-    },
-    "Dauermedikationen sind ein eigener Verlaufskontext und bleiben von Akutmedikation in Einträgen getrennt." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Long-term medications are their own history context and remain separate from acute medication in entries."
           }
         }
       }
@@ -976,6 +886,9 @@
         }
       }
     },
+    "Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden." : {
+
+    },
     "Deine Einträge" : {
       "localizations" : {
         "en" : {
@@ -1018,17 +931,6 @@
     },
     "Deine regelmäßige Medikation im Blick behalten" : {
 
-    },
-    "Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync works defensively: conflicts are not overwritten silently, but made visible here."
-          }
-        }
-      }
     },
     "Der Bericht wird beim Öffnen automatisch erstellt" : {
       "localizations" : {
@@ -1196,17 +1098,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dosage, optional"
-          }
-        }
-      }
-    },
-    "Download: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download: %1$@"
           }
         }
       }
@@ -1484,17 +1375,6 @@
         }
       }
     },
-    "Episode" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode"
-          }
-        }
-      }
-    },
     "Erwartet" : {
       "localizations" : {
         "en" : {
@@ -1601,17 +1481,6 @@
     "Frequenz oder Uhrzeit, optional" : {
 
     },
-    "Frequenz, optional" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frequency, optional"
-          }
-        }
-      }
-    },
     "Funktionelle Einschränkung" : {
       "localizations" : {
         "en" : {
@@ -1658,17 +1527,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only sufficiently precise, user-entered symptoms are written. Cycle entries from the app such as \"current\" or \"expected\" remain context and are not saved as exact Health flow samples."
-          }
-        }
-      }
-    },
-    "Gesundheit" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Health"
           }
         }
       }
@@ -1799,6 +1657,9 @@
         }
       }
     },
+    "Jetzt löschen" : {
+
+    },
     "Jetzt nicht" : {
       "localizations" : {
         "en" : {
@@ -1869,30 +1730,8 @@
         }
       }
     },
-    "Keine aktive Dauermedikation." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No active long-term medication."
-          }
-        }
-      }
-    },
     "Keine aktive regelmäßige Medikation." : {
 
-    },
-    "Keine beendete Dauermedikation." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No ended long-term medication."
-          }
-        }
-      }
     },
     "Keine beendete regelmäßige Medikation." : {
 
@@ -1946,17 +1785,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No cycle entry from the app."
-          }
-        }
-      }
-    },
-    "Konflikt lösen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resolve Conflict"
           }
         }
       }
@@ -2054,17 +1882,6 @@
         }
       }
     },
-    "Lesen und Schreiben werden getrennt verwaltet. Die App nutzt nur Daten, die für Schmerzepisoden als Kontext sinnvoll sind." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reading and writing are managed separately. The app uses only data that is useful as context for pain episodes."
-          }
-        }
-      }
-    },
     "Leserechte anfragen" : {
       "localizations" : {
         "en" : {
@@ -2105,17 +1922,6 @@
         }
       }
     },
-    "Lokal hat recht" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use Local Version"
-          }
-        }
-      }
-    },
     "Lokale Daten wurden nicht gelöscht" : {
       "localizations" : {
         "en" : {
@@ -2132,17 +1938,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete Local Store Files?"
-          }
-        }
-      }
-    },
-    "Lokaler Stand und Cloud-Stand unterscheiden sich." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Local and cloud versions differ."
           }
         }
       }
@@ -3074,34 +2869,12 @@
         }
       }
     },
-    "Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Symi only uses anonymous usage and diagnostic data. Journal content, health data, and personal data are not transmitted. You can change this setting at any time."
-          }
-        }
-      }
-    },
     "Symi-Bericht" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Symi-Report"
-          }
-        }
-      }
-    },
-    "symiapp.com" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "symiapp.com"
           }
         }
       }
@@ -3146,17 +2919,6 @@
         }
       }
     },
-    "Sync aktivieren" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable Sync"
-          }
-        }
-      }
-    },
     "Sync-Hinweis: %@" : {
       "localizations" : {
         "en" : {
@@ -3196,6 +2958,9 @@
           }
         }
       }
+    },
+    "Synchronisation deaktivieren?" : {
+
     },
     "Tagebuch" : {
       "localizations" : {
@@ -3296,17 +3061,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supports you when talking with your doctor"
-          }
-        }
-      }
-    },
-    "Upload: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upload: %1$@"
           }
         }
       }

@@ -70,6 +70,7 @@ protocol SyncService: AnyObject {
     func setSyncEnabled(_ enabled: Bool)
     func refreshStatus()
     func syncNow() async
+    func disableSyncAndDeleteCloudData() async
     func retryLastError() async
     func resolveConflictKeepingLocal(_ conflict: SyncConflict) async
     func resolveConflictUsingRemote(_ conflict: SyncConflict) async
@@ -136,6 +137,21 @@ final class SettingsController {
 
     var isSyncEnabled: Bool {
         syncService.isEnabled
+    }
+
+    var canOfferCloudDataDeletion: Bool {
+        syncService.status.lastDownloadedAt != nil ||
+            syncService.status.lastUploadedAt != nil ||
+            !syncService.conflicts.isEmpty
+    }
+
+    var isCloudUnavailableForSyncDisableFlow: Bool {
+        switch syncService.status.state {
+        case .noICloudAccount, .offline, .needsAttention:
+            return true
+        case .disabled, .ready, .syncing, .conflict:
+            return false
+        }
     }
 
     var conflicts: [SyncConflict] {
@@ -289,6 +305,16 @@ final class SettingsController {
 
     func setSyncEnabled(_ enabled: Bool) {
         syncService.setSyncEnabled(enabled)
+        load()
+    }
+
+    func disableSyncKeepingCloudData() {
+        syncService.setSyncEnabled(false)
+        load()
+    }
+
+    func disableSyncAndDeleteCloudData() async {
+        await syncService.disableSyncAndDeleteCloudData()
         load()
     }
 
