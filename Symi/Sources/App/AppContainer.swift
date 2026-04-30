@@ -93,7 +93,6 @@ final class AppContainer {
                 SettingsController(
                     episodeRepository: episodeRepository,
                     medicationRepository: medicationCatalogRepository,
-                    continuousMedicationRepository: continuousMedicationRepository,
                     syncService: syncService,
                     appLogService: appLogStore,
                     healthService: healthService,
@@ -101,6 +100,11 @@ final class AppContainer {
                 )
             },
             dataExport: dataExport
+        )
+        let therapy = TherapyFeatureDependencies(
+            makeTherapyViewModel: {
+                TherapyViewModel(repository: continuousMedicationRepository)
+            }
         )
         self.featureDependencies = AppFeatureDependencies(
             home: HomeFeatureDependencies(
@@ -120,6 +124,7 @@ final class AppContainer {
             capture: capture,
             history: history,
             insights: insights,
+            therapy: therapy,
             settings: settings,
             dataExport: dataExport
         )
@@ -140,6 +145,7 @@ struct AppFeatureDependencies {
     let capture: CaptureFeatureDependencies
     let history: HistoryFeatureDependencies
     let insights: InsightsFeatureDependencies
+    let therapy: TherapyFeatureDependencies
     let settings: SettingsFeatureDependencies
     let dataExport: DataExportFeatureDependencies
 }
@@ -170,6 +176,11 @@ struct HistoryFeatureDependencies {
 @MainActor
 struct InsightsFeatureDependencies {
     let loadResult: (InsightPeriod) async throws -> InsightResult
+}
+
+@MainActor
+struct TherapyFeatureDependencies {
+    let makeTherapyViewModel: () -> TherapyViewModel
 }
 
 @MainActor

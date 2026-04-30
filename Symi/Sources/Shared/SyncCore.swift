@@ -22,7 +22,7 @@ public enum SyncServiceState: String, Codable, CaseIterable, Sendable {
         case .conflict:
             "Konflikt"
         case .noICloudAccount:
-            "Kein iCloud-Account"
+            "iCloud ist derzeit nicht verfügbar"
         case .offline:
             "Offline"
         }
