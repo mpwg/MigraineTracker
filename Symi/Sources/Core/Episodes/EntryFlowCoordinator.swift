@@ -27,13 +27,13 @@ enum EntryStartedAtPreset: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .now:
-            EntryFlowLocalized.text(de: "Jetzt", en: "Now")
+            "Jetzt"
         case .oneHourAgo:
-            EntryFlowLocalized.text(de: "Vor 1 Std.", en: "1 hr ago")
+            "Vor 1 Std."
         case .todayMorning:
-            EntryFlowLocalized.text(de: "Heute Morgen", en: "This morning")
+            "Heute Morgen"
         case .custom:
-            EntryFlowLocalized.text(de: "Anderer Zeitpunkt", en: "Different time")
+            "Anderer Zeitpunkt"
         }
     }
 
@@ -115,16 +115,6 @@ enum EntryDayPartPreset: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum EntryFlowLocalized {
-    static var isEnglish: Bool {
-        Locale.current.language.languageCode?.identifier == "en"
-    }
-
-    static func text(de german: String, en english: String) -> String {
-        isEnglish ? english : german
-    }
-}
-
 @MainActor
 @Observable
 final class EntryContinuousMedicationController {
@@ -161,31 +151,31 @@ final class EntryFlowCoordinator {
     static let steps: [EntryFlowStep] = [.headache, .medication, .triggers, .note, .review]
 
     let symptomOptions = [
-        EntryFlowLocalized.text(de: "Übelkeit", en: "Nausea"),
-        EntryFlowLocalized.text(de: "Lichtempfindlichkeit", en: "Light sensitivity"),
-        EntryFlowLocalized.text(de: "Geräuschempfindlichkeit", en: "Sound sensitivity"),
+        "Übelkeit",
+        "Lichtempfindlichkeit",
+        "Geräuschempfindlichkeit",
         "Aura",
-        EntryFlowLocalized.text(de: "Kiefer-/Aufbissschmerz", en: "Jaw/bite pain"),
-        EntryFlowLocalized.text(de: "Pochen, Pulsieren", en: "Throbbing, pulsing")
+        "Kiefer-/Aufbissschmerz",
+        "Pochen, Pulsieren"
     ]
     let triggerOptions = [
-        EntryFlowLocalized.text(de: "Wetter", en: "Weather"),
+        "Wetter",
         "Stress",
-        EntryFlowLocalized.text(de: "Erhöhte Arbeitsbelastung", en: "High workload"),
-        EntryFlowLocalized.text(de: "Regel", en: "Period"),
-        EntryFlowLocalized.text(de: "Schlafdauer", en: "Sleep duration"),
-        EntryFlowLocalized.text(de: "Sport", en: "Exercise"),
-        EntryFlowLocalized.text(de: "Ernährung", en: "Nutrition"),
-        EntryFlowLocalized.text(de: "Bildschirmzeit", en: "Screen time"),
-        EntryFlowLocalized.text(de: "Bewegung", en: "Movement"),
-        EntryFlowLocalized.text(de: "Flüssigkeit", en: "Hydration")
+        "Erhöhte Arbeitsbelastung",
+        "Regel",
+        "Schlafdauer",
+        "Sport",
+        "Ernährung",
+        "Bildschirmzeit",
+        "Bewegung",
+        "Flüssigkeit"
     ]
     let painLocationOptions = [
-        EntryFlowLocalized.text(de: "Stirn", en: "Forehead"),
-        EntryFlowLocalized.text(de: "Schläfen", en: "Temples"),
-        EntryFlowLocalized.text(de: "Nacken", en: "Neck"),
-        EntryFlowLocalized.text(de: "Einseitig", en: "One side"),
-        EntryFlowLocalized.text(de: "Überall", en: "All over")
+        "Stirn",
+        "Schläfen",
+        "Nacken",
+        "Einseitig",
+        "Überall"
     ]
     let medicationController: EpisodeMedicationSelectionController
     let continuousMedicationController: EntryContinuousMedicationController

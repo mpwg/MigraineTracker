@@ -172,7 +172,7 @@ nonisolated enum PDFExportWriter {
     }
 
     private static func localized(_ key: String) -> String {
-        String(localized: String.LocalizationValue(key), bundle: .main)
+        key
     }
 
     private static func formatted(_ key: String, _ arguments: CVarArg...) -> String {
