@@ -410,6 +410,15 @@ final class SettingsController {
         healthSettingsRevision += 1
     }
 
+    func requestMissingHealthAuthorization() async {
+        try? await healthService.requestMissingAuthorization()
+        healthSettingsRevision += 1
+    }
+
+    func reloadHealthAuthorizationState() {
+        healthSettingsRevision += 1
+    }
+
     func requestHealthReadAuthorization() async {
         try? await healthService.requestReadAuthorization()
         healthSettingsRevision += 1

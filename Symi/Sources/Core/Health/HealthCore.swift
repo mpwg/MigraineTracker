@@ -299,6 +299,10 @@ struct HealthAuthorizationSnapshot: Equatable, Sendable {
     var isWriteEnabled: Bool
     var enabledReadTypes: Set<HealthDataTypeID>
     var enabledWriteTypes: Set<HealthDataTypeID>
+    var requestedReadTypes: Set<HealthDataTypeID>
+    var requestedWriteTypes: Set<HealthDataTypeID>
+    var missingReadTypes: Set<HealthDataTypeID>
+    var missingWriteTypes: Set<HealthDataTypeID>
     var lastErrorMessage: String?
 
     static let unavailable = HealthAuthorizationSnapshot(
@@ -307,6 +311,10 @@ struct HealthAuthorizationSnapshot: Equatable, Sendable {
         isWriteEnabled: false,
         enabledReadTypes: [],
         enabledWriteTypes: [],
+        requestedReadTypes: [],
+        requestedWriteTypes: [],
+        missingReadTypes: [],
+        missingWriteTypes: [],
         lastErrorMessage: "Apple Health ist auf diesem Gerät nicht verfügbar."
     )
 }
@@ -332,6 +340,7 @@ protocol HealthService: AnyObject {
     func authorizationSnapshot() -> HealthAuthorizationSnapshot
     func setEnabled(_ enabled: Bool, for type: HealthDataTypeID, direction: HealthDataDirection)
     func requestAuthorization() async throws
+    func requestMissingAuthorization() async throws
     func requestReadAuthorization() async throws
     func requestWriteAuthorization() async throws
     func contextSnapshot(for draft: EpisodeDraft) async throws -> HealthContextSnapshotData?
@@ -342,6 +351,10 @@ extension HealthService {
     func requestAuthorization() async throws {
         try await requestReadAuthorization()
         try await requestWriteAuthorization()
+    }
+
+    func requestMissingAuthorization() async throws {
+        try await requestAuthorization()
     }
 }
 

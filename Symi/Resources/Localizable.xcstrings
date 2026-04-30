@@ -516,6 +516,9 @@
         }
       }
     },
+    "Apple Health aktivieren" : {
+
+    },
     "Apple Health Integration beenden" : {
 
     },
@@ -762,6 +765,9 @@
 
     },
     "Cloud-Daten wirklich löschen?" : {
+
+    },
+    "Danke. Deine freigegebenen Daten helfen Symi, deine Insights besser einzuordnen." : {
 
     },
     "Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar." : {
@@ -2228,6 +2234,9 @@
           }
         }
       }
+    },
+    "Nicht gewährte Kategorien" : {
+
     },
     "Noch keine Einträge im Therapieverlauf." : {
 

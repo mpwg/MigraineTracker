@@ -654,15 +654,17 @@ private struct AppleHealthSettingsView: View {
             VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
                 HealthHeaderView()
 
-                Button {
-                    Task {
-                        await controller.requestHealthAuthorization()
+                if !isConnected(status) {
+                    Button {
+                        Task {
+                            await controller.requestHealthAuthorization()
+                        }
+                    } label: {
+                        Text("Apple Health aktivieren")
                     }
-                } label: {
-                    Text(primaryActionTitle(for: status))
+                    .buttonStyle(HealthPrimaryButtonStyle())
+                    .disabled(!status.isAvailable)
                 }
-                .buttonStyle(HealthPrimaryButtonStyle())
-                .disabled(!status.isAvailable)
 
                 if let message = status.lastErrorMessage {
                     HealthNoticeCard(message: message)
@@ -680,8 +682,9 @@ private struct AppleHealthSettingsView: View {
                                     explanation: explanation(for: definition),
                                     isOn: Binding(
                                         get: { status.enabledReadTypes.contains(definition.id) },
-                                        set: { controller.setHealthDataTypeEnabled($0, type: definition.id, direction: .read) }
-                                    )
+                                        set: { _ in }
+                                    ),
+                                    isInteractive: false
                                 )
                             }
                         }
@@ -695,10 +698,14 @@ private struct AppleHealthSettingsView: View {
                         buttonTitle: "Alle anderen Kategorien anfragen"
                     ) {
                         Task {
-                            await controller.requestHealthAuthorization()
+                            await controller.requestMissingHealthAuthorization()
                         }
                     }
                     .disabled(!status.isAvailable)
+                }
+
+                if shouldShowAuthorizationFeedback(for: status) {
+                    HealthAuthorizationFeedbackCard(notGrantedDefinitions: notGrantedDefinitions(for: status))
                 }
 
                 if status.isWriteEnabled, !enabledWriteDefinitions(for: status).isEmpty {
@@ -717,8 +724,9 @@ private struct AppleHealthSettingsView: View {
                                         explanation: explanation(for: definition),
                                         isOn: Binding(
                                             get: { status.enabledWriteTypes.contains(definition.id) },
-                                            set: { controller.setHealthDataTypeEnabled($0, type: definition.id, direction: .write) }
-                                        )
+                                            set: { _ in }
+                                        ),
+                                        isInteractive: false
                                     )
                                 }
                             }
@@ -741,6 +749,9 @@ private struct AppleHealthSettingsView: View {
         }
         .navigationTitle("Apple Health")
         .brandScreen()
+        .onAppear {
+            controller.reloadHealthAuthorizationState()
+        }
         .animation(.default, value: controller.healthSettingsRevision)
         .confirmationDialog(
             "Apple Health Integration beenden?",
@@ -758,21 +769,23 @@ private struct AppleHealthSettingsView: View {
         }
     }
 
-    private func primaryActionTitle(for status: HealthAuthorizationSnapshot) -> String {
-        isConnected(status) ? "Weitere Daten freigeben" : "Apple Health aktivieren"
-    }
-
     private func shouldShowMissingPermissions(for status: HealthAuthorizationSnapshot) -> Bool {
         guard isConnected(status) else { return false }
-        return !hasAllReadPermissions(status) || !hasAllWritePermissions(status)
+        return !status.missingReadTypes.isEmpty || !status.missingWriteTypes.isEmpty
     }
 
-    private func hasAllReadPermissions(_ status: HealthAuthorizationSnapshot) -> Bool {
-        status.isReadEnabled && Set(controller.healthReadDefinitions.map(\.id)).isSubset(of: status.enabledReadTypes)
+    private func shouldShowAuthorizationFeedback(for status: HealthAuthorizationSnapshot) -> Bool {
+        status.isAvailable && hasRequestedHealthAuthorization(status)
     }
 
-    private func hasAllWritePermissions(_ status: HealthAuthorizationSnapshot) -> Bool {
-        status.isWriteEnabled && Set(controller.healthWriteDefinitions.map(\.id)).isSubset(of: status.enabledWriteTypes)
+    private func hasRequestedHealthAuthorization(_ status: HealthAuthorizationSnapshot) -> Bool {
+        !status.requestedReadTypes.isEmpty || !status.requestedWriteTypes.isEmpty
+    }
+
+    private func notGrantedDefinitions(for status: HealthAuthorizationSnapshot) -> [HealthDataTypeDefinition] {
+        controller.healthWriteDefinitions.filter { definition in
+            status.requestedWriteTypes.contains(definition.id) && status.missingWriteTypes.contains(definition.id)
+        }
     }
 
     private func isConnected(_ status: HealthAuthorizationSnapshot) -> Bool {
@@ -919,6 +932,7 @@ private struct HealthCategoryRow: View {
     let title: String
     let explanation: String
     @Binding var isOn: Bool
+    var isInteractive = false
 
     var body: some View {
         Toggle(isOn: $isOn) {
@@ -937,6 +951,7 @@ private struct HealthCategoryRow: View {
             }
         }
         .tint(AppTheme.symiPetrol)
+        .allowsHitTesting(isInteractive)
         .accessibilityLabel(title)
         .accessibilityHint(explanation)
         .accessibilityValue(isOn ? "Aktiviert" : "Deaktiviert")
@@ -967,6 +982,45 @@ private struct HealthPermissionCard: View {
 
             Button(buttonTitle, action: action)
                 .buttonStyle(HealthSecondaryButtonStyle())
+        }
+        .padding(SymiSpacing.lg)
+        .brandCard()
+    }
+}
+
+private struct HealthAuthorizationFeedbackCard: View {
+    let notGrantedDefinitions: [HealthDataTypeDefinition]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            if notGrantedDefinitions.isEmpty {
+                Label {
+                    Text("Danke. Deine freigegebenen Daten helfen Symi, deine Insights besser einzuordnen.")
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "checkmark.circle")
+                        .foregroundStyle(AppTheme.symiPetrol)
+                }
+            } else {
+                Label {
+                    Text("Nicht gewährte Kategorien")
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+                } icon: {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(AppTheme.symiPetrol)
+                }
+
+                VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                    ForEach(notGrantedDefinitions) { definition in
+                        Text(definition.displayName)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiTextSecondary)
+                    }
+                }
+            }
         }
         .padding(SymiSpacing.lg)
         .brandCard()
