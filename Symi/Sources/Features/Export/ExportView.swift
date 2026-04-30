@@ -258,6 +258,16 @@ struct SettingsView: View {
         } message: {
             Text("Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden.")
         }
+        .onChange(of: showsDisableSyncConfirmation) { _, isPresented in
+            if !isPresented && !showsDeleteCloudDataConfirmation {
+                pendingSyncDisable = false
+            }
+        }
+        .onChange(of: showsDeleteCloudDataConfirmation) { _, isPresented in
+            if !isPresented {
+                pendingSyncDisable = false
+            }
+        }
     }
 
     private var disableSyncConfirmationMessage: String {
