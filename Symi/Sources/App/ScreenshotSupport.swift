@@ -96,7 +96,8 @@ enum ScreenshotBootstrap {
         let syncCoordinator = SyncCoordinator(
             modelContainer: container,
             appLogStore: appLogStore,
-            healthContextStore: healthContextStore
+            healthContextStore: healthContextStore,
+            autostart: false
         )
         let appContainer = AppContainer(
             modelContainer: container,

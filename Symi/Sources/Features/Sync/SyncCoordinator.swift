@@ -117,8 +117,6 @@ final class SyncCoordinator {
             } else {
                 automaticSyncTask?.cancel()
                 stopNetworkMonitor()
-                await provider?.stop()
-                provider = nil
                 status = await buildStatusSnapshot(baseState: .disabled, isSyncing: false)
             }
         }
@@ -325,6 +323,21 @@ final class SyncCoordinator {
         case .didUpdateState(let serialization):
             await stateStore.saveEngineState(serialization)
             await log(level: .debug, operation: "coordinator.provider.didUpdateState", message: "Engine-Status wurde persistiert.")
+        default:
+            guard isEnabled else {
+                await log(level: .debug, operation: "coordinator.provider.eventIgnored", message: "Provider-Ereignis wurde ignoriert, weil Cloud-Sync deaktiviert ist.")
+                status = await buildStatusSnapshot(baseState: .disabled, isSyncing: false)
+                return
+            }
+
+            await handleEnabledProviderEvent(event)
+        }
+    }
+
+    private func handleEnabledProviderEvent(_ event: SyncProviderEvent) async {
+        switch event {
+        case .didUpdateState:
+            return
         case .didFetchRecords(let records):
             await log(level: .info, operation: "coordinator.provider.didFetchRecords", message: "Remote-Records empfangen.", metadata: [
                 "count": "\(records.count)"
