@@ -143,6 +143,8 @@ private struct EntryHeadacheStepView: View {
 
     @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
     @State private var selectedDate = Date()
+    @State private var isDateOpen = false
+    @State private var dateFeedbackTrigger = 0
     private let visiblePainLocations: [EntryPainLocationOption] = [
         .init(title: EntryFlowLocalized.text(de: "Stirn", en: "Forehead"), imageName: "PainLocationForehead"),
         .init(title: EntryFlowLocalized.text(de: "Schläfen", en: "Temples"), imageName: "PainLocationTemples"),
@@ -169,26 +171,12 @@ private struct EntryHeadacheStepView: View {
                             theme: .pain,
                             accessibilityIdentifier: "entry-intensity-\(level.displayLabel)"
                         ) {
+                            closeDatePicker()
                             coordinator.draft.selectedIntensityLevel = level
                         }
                     }
                 }
                 .accessibilityIdentifier("entry-intensity-card")
-            }
-
-            DatePicker(
-                "Datum",
-                selection: $selectedDate,
-                in: ...Date(),
-                displayedComponents: .date
-            )
-            .datePickerStyle(.compact)
-            .font(.subheadline)
-            .foregroundStyle(AppTheme.symiTextSecondary)
-            .tint(AppTheme.symiPetrol)
-            .accessibilityIdentifier("entry-date-picker")
-            .onChange(of: selectedDate) { _, newValue in
-                selectEntryDate(newValue)
             }
 
             InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
@@ -200,13 +188,21 @@ private struct EntryHeadacheStepView: View {
                             theme: .pain,
                             accessibilityIdentifier: "entry-location-\(location.title)"
                         ) {
+                            closeDatePicker()
                             coordinator.draft.selectedPainLocations.toggleMembership(location.title)
                         }
                     }
                 }
             }
 
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Tagesbereich", en: "Time of day")) {
+            EntryDayPartFieldGroup(
+                date: coordinator.draft.startedAt,
+                selectedDate: $selectedDate,
+                isDateOpen: $isDateOpen,
+                feedbackTrigger: $dateFeedbackTrigger,
+                onDateSelect: selectEntryDate,
+                onClose: closeDatePicker
+            ) {
                 InputFlowHeadacheOptionGrid {
                     ForEach(EntryDayPartPreset.allCases) { preset in
                         InputFlowSelectionTile(
@@ -216,6 +212,7 @@ private struct EntryHeadacheStepView: View {
                             theme: .pain,
                             accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
                         ) {
+                            closeDatePicker()
                             selectedDayPartPreset = preset
                             coordinator.selectDayPartPreset(preset, referenceDate: coordinator.draft.startedAt)
                         }
@@ -249,6 +246,18 @@ private struct EntryHeadacheStepView: View {
         selectedDate = date
         coordinator.selectEntryDate(date)
         selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
+        closeDatePicker()
+    }
+
+    private func closeDatePicker() {
+        guard isDateOpen else {
+            return
+        }
+
+        dateFeedbackTrigger += 1
+        withAnimation(.easeInOut(duration: 0.2)) {
+            isDateOpen = false
+        }
     }
 
     private func seedDefaultPainLocationIfNeeded(coordinator: EntryFlowCoordinator) {
@@ -263,6 +272,109 @@ private struct EntryHeadacheStepView: View {
         }
 
         coordinator.draft.selectedPainLocations = [EntryFlowLocalized.text(de: "Schläfen", en: "Temples")]
+    }
+}
+
+private struct EntryDayPartFieldGroup<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let date: Date
+    @Binding var selectedDate: Date
+    @Binding var isDateOpen: Bool
+    @Binding var feedbackTrigger: Int
+    let onDateSelect: (Date) -> Void
+    let onClose: () -> Void
+    let content: Content
+
+    init(
+        date: Date,
+        selectedDate: Binding<Date>,
+        isDateOpen: Binding<Bool>,
+        feedbackTrigger: Binding<Int>,
+        onDateSelect: @escaping (Date) -> Void,
+        onClose: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.date = date
+        _selectedDate = selectedDate
+        _isDateOpen = isDateOpen
+        _feedbackTrigger = feedbackTrigger
+        self.onDateSelect = onDateSelect
+        self.onClose = onClose
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.lg) {
+            HStack(spacing: SymiSpacing.sm) {
+                Text(EntryFlowLocalized.text(de: "Tagesbereich", en: "Time of day"))
+                    .font(SymiTypography.flowSectionTitle)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+
+                Spacer(minLength: SymiSpacing.sm)
+
+                Button {
+                    feedbackTrigger += 1
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isDateOpen.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(SymiTypography.compactScaleFactor)
+
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.semibold))
+                            .rotationEffect(.degrees(isDateOpen ? 180 : 0))
+                    }
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Datum")
+                .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                .accessibilityIdentifier("entry-date-picker")
+            }
+            .overlay(alignment: .topTrailing) {
+                if isDateOpen {
+                    ZStack(alignment: .topTrailing) {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture(perform: onClose)
+
+                        DatePicker(
+                            "",
+                            selection: $selectedDate,
+                            in: ...Date(),
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.graphical)
+                        .labelsHidden()
+                        .frame(width: 320)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(
+                            color: AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.shadow),
+                            radius: 10,
+                            x: 0,
+                            y: 6
+                        )
+                        .offset(y: 40)
+                        .onChange(of: selectedDate) { _, newValue in
+                            onDateSelect(newValue)
+                        }
+                    }
+                    .frame(width: 1000, height: 1000, alignment: .topTrailing)
+                    .zIndex(10)
+                }
+            }
+            .sensoryFeedback(.selection, trigger: feedbackTrigger)
+            .zIndex(isDateOpen ? 10 : 0)
+
+            content
+        }
+        .zIndex(isDateOpen ? 10 : 0)
     }
 }
 
@@ -294,7 +406,7 @@ private struct PainIntensitySelectionTile: View {
         Button(action: action) {
             VStack(spacing: SymiSpacing.xs) {
                 PainIntensityFaceIcon(level: level)
-                    .foregroundStyle(isSelected ? theme.accent(for: colorScheme) : AppTheme.symiTextSecondary.opacity(SymiOpacity.strongText))
+                    .foregroundStyle(iconColor)
                     .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconHeight)
                     .accessibilityHidden(true)
 
@@ -318,7 +430,7 @@ private struct PainIntensitySelectionTile: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(theme.accent(for: colorScheme))
+                        .foregroundStyle(intensityColor)
                         .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
                         .padding(.top, SymiSpacing.sm)
                         .padding(.trailing, SymiSpacing.sm)
@@ -336,15 +448,32 @@ private struct PainIntensitySelectionTile: View {
     }
 
     private var tileBackground: Color {
-        isSelected ? theme.selectedFill(for: colorScheme) : SymiColors.elevatedCard(for: colorScheme)
+        isSelected ? intensityColor.opacity(0.15) : SymiColors.elevatedCard(for: colorScheme)
     }
 
     private var borderColor: Color {
         if isSelected {
-            return theme.border(for: colorScheme).opacity(SymiOpacity.selectedStroke)
+            return intensityColor.opacity(0.35)
         }
 
         return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
+    }
+
+    private var iconColor: Color {
+        isSelected ? intensityColor : AppTheme.textSecondary(for: colorScheme).opacity(0.55)
+    }
+
+    private var intensityColor: Color {
+        switch level {
+        case .none, .low:
+            return AppTheme.textSecondary(for: colorScheme).opacity(0.65)
+        case .medium:
+            return AppTheme.sage(for: colorScheme)
+        case .high:
+            return AppTheme.coral(for: colorScheme)
+        case .veryHigh:
+            return SymiColorValue(hex: 0xE96A5A).color
+        }
     }
 }
 
