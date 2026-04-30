@@ -51,6 +51,76 @@ struct DataExportControllerTests {
         #expect(pdfSummary.startDate == selectedRange.startDate)
         #expect(pdfSummary.endDate == selectedRange.endDate)
     }
+
+    @Test
+    func importBackupPreparesPreviewAndConfirmAppliesSelectedFile() async throws {
+        let repository = SpyExportRepository()
+        let controller = DataExportController(repository: repository)
+        let backupURL = URL(fileURLWithPath: "/tmp/symi-backup.json5")
+        let rollbackURL = URL(fileURLWithPath: "/tmp/symi-rollback.json5")
+        let preview = BackupImportPreview(
+            newEpisodes: 2,
+            changedEpisodes: 1,
+            deletedEpisodes: 0,
+            newMedicationDefinitions: 1,
+            changedMedicationDefinitions: 0,
+            newContinuousMedications: 0,
+            changedContinuousMedications: 1,
+            conflicts: ["Episode ist lokal neuer als das Backup."],
+            dateRange: makePreviewDateRange(),
+            exportedAt: makeDateRange(startDay: 1, endDay: 1).startDate
+        )
+        repository.configureImport(preview: preview, rollbackURL: rollbackURL)
+
+        controller.importBackup(from: .success(backupURL))
+
+        try await waitUntil {
+            repository.previewImportURLs == [backupURL] &&
+                controller.importPreview == preview
+        }
+
+        #expect(controller.dataTransferMessage == "Import-Vorschau erstellt. Bitte prüfen und bestätigen.")
+
+        controller.confirmImport()
+
+        try await waitUntil {
+            repository.importURLs == [backupURL] &&
+                controller.importRollbackBackupURL == rollbackURL
+        }
+
+        #expect(controller.importPreview == nil)
+        #expect(controller.dataTransferMessage == "JSON5-Daten wurden importiert. Vorheriger Stand wurde als Rollback-Backup gesichert.")
+    }
+
+    @Test
+    func importBackupShowsNoChangesPreviewWithoutApplyingImport() async throws {
+        let repository = SpyExportRepository()
+        let controller = DataExportController(repository: repository)
+        let backupURL = URL(fileURLWithPath: "/tmp/symi-backup.json5")
+        let preview = BackupImportPreview(
+            newEpisodes: 0,
+            changedEpisodes: 0,
+            deletedEpisodes: 0,
+            newMedicationDefinitions: 0,
+            changedMedicationDefinitions: 0,
+            newContinuousMedications: 0,
+            changedContinuousMedications: 0,
+            conflicts: [],
+            dateRange: nil,
+            exportedAt: makeDateRange(startDay: 1, endDay: 1).startDate
+        )
+        repository.configureImport(preview: preview, rollbackURL: URL(fileURLWithPath: "/tmp/symi-rollback.json5"))
+
+        controller.importBackup(from: .success(backupURL))
+
+        try await waitUntil {
+            repository.previewImportURLs == [backupURL] &&
+                controller.importPreview == preview
+        }
+
+        #expect(controller.dataTransferMessage == "Dry-Run abgeschlossen: Das Backup enthält keine neuen Änderungen.")
+        #expect(repository.importURLs.isEmpty)
+    }
 }
 
 private struct SpyDateRange: Equatable, Sendable {
@@ -64,6 +134,11 @@ private func makeDateRange(startDay: Int, endDay: Int) -> SpyDateRange {
     let startDate = calendar.date(from: DateComponents(year: 2026, month: 4, day: startDay, hour: 9))!
     let endDate = calendar.date(from: DateComponents(year: 2026, month: 4, day: endDay, hour: 18))!
     return SpyDateRange(startDate: startDate, endDate: endDate)
+}
+
+private func makePreviewDateRange() -> BackupImportPreview.DateRange {
+    let dateRange = makeDateRange(startDay: 4, endDay: 11)
+    return BackupImportPreview.DateRange(start: dateRange.startDate, end: dateRange.endDate)
 }
 
 private func makeRecord(startedAt: Date) -> EpisodeExportRecord {
@@ -98,6 +173,21 @@ private func waitUntil(
 private struct SpyExportRepositoryState: Sendable {
     var summaryRequests: [SpyDateRange] = []
     var pdfSummaries: [ExportPeriodSummary] = []
+    var previewImportURLs: [URL] = []
+    var importURLs: [URL] = []
+    var importPreview = BackupImportPreview(
+        newEpisodes: 0,
+        changedEpisodes: 0,
+        deletedEpisodes: 0,
+        newMedicationDefinitions: 0,
+        changedMedicationDefinitions: 0,
+        newContinuousMedications: 0,
+        changedContinuousMedications: 0,
+        conflicts: [],
+        dateRange: nil,
+        exportedAt: Date(timeIntervalSince1970: 0)
+    )
+    var rollbackURL = URL(fileURLWithPath: "/tmp/symi-rollback.json5")
 }
 
 private final class SpyExportRepository: ExportRepository {
@@ -109,6 +199,21 @@ private final class SpyExportRepository: ExportRepository {
 
     var pdfSummaries: [ExportPeriodSummary] {
         state.withLock { $0.pdfSummaries }
+    }
+
+    var previewImportURLs: [URL] {
+        state.withLock { $0.previewImportURLs }
+    }
+
+    var importURLs: [URL] {
+        state.withLock { $0.importURLs }
+    }
+
+    func configureImport(preview: BackupImportPreview, rollbackURL: URL) {
+        state.withLock {
+            $0.importPreview = preview
+            $0.rollbackURL = rollbackURL
+        }
     }
 
     nonisolated func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary {
@@ -135,10 +240,16 @@ private final class SpyExportRepository: ExportRepository {
     }
 
     nonisolated func previewBackupImport(from url: URL) throws -> BackupImportPreview {
-        throw DataTransferError.invalidFormat
+        state.withLock {
+            $0.previewImportURLs.append(url)
+            return $0.importPreview
+        }
     }
 
     nonisolated func importBackup(from url: URL) throws -> BackupImportResult {
-        throw DataTransferError.invalidFormat
+        state.withLock {
+            $0.importURLs.append(url)
+            return BackupImportResult(preview: $0.importPreview, rollbackBackupURL: $0.rollbackURL)
+        }
     }
 }
