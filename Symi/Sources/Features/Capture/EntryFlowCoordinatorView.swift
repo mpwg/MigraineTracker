@@ -142,8 +142,7 @@ private struct EntryHeadacheStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
-    @State private var showsDateOptions = false
-    @State private var showsCustomDatePicker = false
+    @State private var showsDatePicker = false
     @State private var customDate = Date()
     private let visiblePainLocations: [EntryPainLocationOption] = [
         .init(title: EntryFlowLocalized.text(de: "Stirn", en: "Forehead"), imageName: "PainLocationForehead"),
@@ -164,7 +163,7 @@ private struct EntryHeadacheStepView: View {
         ) {
             EntryDateSelectionButton(date: coordinator.draft.startedAt) {
                 customDate = coordinator.draft.startedAt
-                showsDateOptions = true
+                showsDatePicker = true
             }
 
             InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark ist es?", en: "How strong is it?")) {
@@ -234,48 +233,12 @@ private struct EntryHeadacheStepView: View {
             selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
         }
-        .confirmationDialog("Datum auswählen", isPresented: $showsDateOptions, titleVisibility: .visible) {
-            ForEach(recentDateOptions) { option in
-                Button(option.title) {
-                    coordinator.selectEntryDate(option.date)
-                    selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
-                }
-            }
-
-            Button("Anderes Datum wählen...") {
-                customDate = coordinator.draft.startedAt
-                showsCustomDatePicker = true
-            }
-
-            Button("Abbrechen", role: .cancel) {}
-        }
-        .sheet(isPresented: $showsCustomDatePicker) {
-            EntryCustomDatePickerSheet(selectedDate: $customDate) { date in
+        .sheet(isPresented: $showsDatePicker) {
+            EntryDatePickerSheet(selectedDate: $customDate) { date in
                 coordinator.selectEntryDate(date)
                 selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             }
             .presentationDetents([.medium])
-        }
-    }
-
-    private var recentDateOptions: [EntryDateOption] {
-        let calendar = Calendar.current
-        return (0 ... 5).compactMap { offset in
-            guard let date = calendar.date(byAdding: .day, value: -offset, to: .now) else {
-                return nil
-            }
-
-            let title: String
-            switch offset {
-            case 0:
-                title = EntryFlowLocalized.text(de: "Heute", en: "Today")
-            case 1:
-                title = EntryFlowLocalized.text(de: "Gestern", en: "Yesterday")
-            default:
-                title = date.formatted(.dateTime.weekday(.wide).day().month(.wide))
-            }
-
-            return EntryDateOption(date: date, title: title)
         }
     }
 
@@ -307,13 +270,6 @@ private extension EntryDayPartPreset {
             self = .nacht
         }
     }
-}
-
-private struct EntryDateOption: Identifiable {
-    let date: Date
-    let title: String
-
-    var id: Date { Calendar.current.startOfDay(for: date) }
 }
 
 private struct EntryDateSelectionButton: View {
@@ -356,9 +312,7 @@ private struct EntryDateSelectionButton: View {
     }
 }
 
-private struct EntryCustomDatePickerSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
+private struct EntryDatePickerSheet: View {
     @Binding var selectedDate: Date
     let onSelect: (Date) -> Void
 
@@ -372,21 +326,11 @@ private struct EntryCustomDatePickerSheet: View {
             )
             .datePickerStyle(.graphical)
             .padding(SymiSpacing.lg)
-            .navigationTitle("Anderes Datum")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Fertig") {
-                        onSelect(selectedDate)
-                        dismiss()
-                    }
-                }
+            .onChange(of: selectedDate) { _, newValue in
+                onSelect(newValue)
             }
+            .navigationTitle("Datum wählen")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
