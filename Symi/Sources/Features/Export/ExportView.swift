@@ -201,9 +201,9 @@ struct SettingsView: View {
 
     private var syncContractSummary: String {
         [
-            "Sync ist halbautomatisch: Aktivieren startet sofort einen Abgleich; App-Start lädt den gespeicherten Sync-Status und startet den Provider.",
-            "Danach löst du den Cloud-Abgleich bewusst mit `Jetzt synchronisieren` aus.",
-            "CloudKit-Subscriptions werden nicht angelegt; stale Stände, ungesyncte Records und Konflikte bleiben sichtbar."
+            "Cloud-Sync läuft automatisch, sobald er aktiviert ist.",
+            "Symi gleicht Änderungen ab, wenn die App geöffnet wird, wenn du Daten änderst oder wenn die Verbindung wieder da ist.",
+            "„Jetzt synchronisieren“ startet zusätzlich sofort einen Abgleich."
         ].joined(separator: " ")
     }
 
@@ -614,9 +614,11 @@ private struct SyncStatusView: View {
 
             Section("Sync-Vertrag") {
                 Text([
-                    "Symi arbeitet lokal-first.",
-                    "Bei aktivem iCloud-Sync startet ein neuer Abgleich sofort nach dem Aktivieren und danach nur, wenn du ihn mit `Jetzt synchronisieren` auslöst.",
-                    "Beim App-Start wird der gespeicherte Sync-Status geladen und der Provider vorbereitet; Push- oder Subscription-gesteuerte Hintergrundabgleiche gibt es derzeit nicht."
+                    "Symi speichert deine Daten zuerst sicher auf diesem Gerät.",
+                    "Wenn Cloud-Sync aktiv ist, gleicht Symi Änderungen automatisch mit iCloud ab: beim Aktivieren, beim Öffnen der App, nach Änderungen und sobald die Verbindung wieder da ist.",
+                    "„Jetzt synchronisieren“ startet zusätzlich sofort einen Abgleich.",
+                    "Wenn etwas nicht klappt, bleiben deine lokalen Daten erhalten. Symi zeigt dir, ob du es erneut versuchen kannst oder ob erst ein App- oder Cloud-Problem behoben werden muss.",
+                    "Bei Unterschieden zwischen Geräten entscheidet Symi nicht still für dich. Konflikte bleiben sichtbar, bis du auswählst, welcher Stand gelten soll."
                 ].joined(separator: " "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -652,7 +654,7 @@ private struct SyncStatusView: View {
         case .disabled:
             "Der Cloud-Sync ist ausgeschaltet. Lokale Daten bleiben unverändert verfügbar."
         case .ready:
-            "Der Sync-Dienst ist bereit. Änderungen werden beim nächsten Lauf in die private iCloud-Datenbank übertragen."
+            "Der Sync-Dienst ist bereit. Änderungen werden automatisch und per „Jetzt synchronisieren“ in die private iCloud-Datenbank übertragen."
         case .syncing:
             "Es läuft gerade ein Abgleich zwischen lokalem Speicher und iCloud."
         case .needsAttention:
@@ -700,7 +702,7 @@ private struct ManageCloudDataView: View {
             } header: {
                 Text("Übersicht")
             } footer: {
-                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Sync läuft halbautomatisch: Aktivierung startet einen Abgleich, danach nutzt du `Jetzt synchronisieren`.")
+                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Bei aktiviertem Cloud-Sync läuft der Abgleich automatisch; „Jetzt synchronisieren“ startet zusätzlich sofort einen Lauf.")
             }
 
             Section {
@@ -716,7 +718,7 @@ private struct ManageCloudDataView: View {
                         await controller.retryLastError()
                     }
                 }
-                .disabled(!controller.isSyncEnabled || controller.syncStatus.lastError == nil)
+                .disabled(!controller.isSyncEnabled || !controller.syncStatus.lastErrorIsRetryable)
 
                 NavigationLink {
                     DataBackupSettingsView(dependencies: dataExportDependencies)

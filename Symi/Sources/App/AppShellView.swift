@@ -32,6 +32,7 @@ struct AppShellView: View {
     private var features: AppFeatureDependencies { appContainer.featureDependencies }
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: Tab = .journal
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
@@ -48,6 +49,13 @@ struct AppShellView: View {
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             appContainer.startDeferredMaintenanceIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else {
+                return
+            }
+
+            appContainer.appDidBecomeActive()
         }
     }
 

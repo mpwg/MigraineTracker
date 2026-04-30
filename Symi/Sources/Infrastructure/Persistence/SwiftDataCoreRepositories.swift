@@ -127,6 +127,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, Sendable {
         try DomainValidator.validate(target)
         try context.save()
         try healthContextStore.save(healthContext, for: target.id)
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
         return target.id
     }
 
@@ -138,6 +139,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, Sendable {
 
         episode.markDeleted()
         try context.save()
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
     }
 
     nonisolated func restore(id: UUID) throws {
@@ -148,6 +150,7 @@ final class SwiftDataEpisodeRepository: EpisodeRepository, Sendable {
 
         episode.restore()
         try context.save()
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
     }
 
     nonisolated func fetchDeleted() throws -> [EpisodeRecord] {
@@ -229,6 +232,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
 
         try DomainValidator.validate(medication)
         try context.save()
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
         return ContinuousMedicationRecord(medication: medication)
     }
 
@@ -240,6 +244,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
 
         context.delete(medication)
         try context.save()
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
     }
 
     nonisolated private func readContext() -> ModelContext {
@@ -316,6 +321,7 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository, S
         }
 
         try context.save()
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
         return MedicationDefinitionRecord(definition: definition)
     }
 
@@ -327,6 +333,7 @@ final class SwiftDataMedicationCatalogRepository: MedicationCatalogRepository, S
 
         definition.markDeleted()
         try context.save()
+        NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
     }
 
     nonisolated func fetchDeletedDefinitions() throws -> [MedicationDefinitionRecord] {

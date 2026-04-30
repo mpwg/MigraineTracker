@@ -1,7 +1,16 @@
 import CloudKit
 import Foundation
+import Network
 import Observation
 import SwiftData
+
+typealias SyncProviderFactory = @MainActor @Sendable (
+    SyncStateStore,
+    CKRecordZone.ID,
+    AppLogStore,
+    @escaping @Sendable (CKRecord.ID) async -> CKRecord?,
+    @escaping @Sendable (SyncProviderEvent) async -> Void
+) -> any SyncProvider
 
 @MainActor
 @Observable
@@ -15,8 +24,15 @@ final class SyncCoordinator {
     private let appLogStore: AppLogStore
     private let repository: LocalSyncRepository
     private let deviceID: String
+    private let providerFactory: SyncProviderFactory
     private var provider: (any SyncProvider)?
     private let zoneID = SyncConfiguration.zoneID
+    private var syncRunTask: Task<Void, Never>?
+    private var automaticSyncTask: Task<Void, Never>?
+    private var localChangeObserverTask: Task<Void, Never>?
+    private var networkMonitor: NWPathMonitor?
+    private var currentSyncRunHadError = false
+    private let networkMonitorQueue = DispatchQueue(label: "Symi.Sync.NetworkMonitor")
 
     init(
         modelContainer: ModelContainer,
@@ -24,18 +40,29 @@ final class SyncCoordinator {
         healthContextStore: HealthContextStore = HealthContextStore(),
         stateStore: SyncStateStore = SyncStateStore(),
         deviceID: String? = nil,
-        autostart: Bool = true
+        autostart: Bool = true,
+        providerFactory: @escaping SyncProviderFactory = { stateStore, zoneID, appLogStore, recordProvider, eventHandler in
+            CloudKitSyncProvider(
+                stateStore: stateStore,
+                zoneID: zoneID,
+                appLogStore: appLogStore,
+                recordProvider: recordProvider,
+                eventHandler: eventHandler
+            )
+        }
     ) {
         self.modelContainer = modelContainer
         self.stateStore = stateStore
         self.appLogStore = appLogStore
         self.repository = LocalSyncRepository(modelContainer: modelContainer, healthContextStore: healthContextStore)
         self.deviceID = deviceID ?? Self.persistedDeviceID()
+        self.providerFactory = providerFactory
 
         guard autostart else {
             return
         }
 
+        startLocalChangeObserver()
         Task {
             await loadPersistedState()
         }
@@ -70,6 +97,8 @@ final class SyncCoordinator {
 
             if isEnabled {
                 await ensureStarted()
+                startNetworkMonitorIfNeeded()
+                triggerAutomaticSync(reason: "loadPersistedState")
             }
         }
     }
@@ -83,8 +112,11 @@ final class SyncCoordinator {
 
             if enabled {
                 await ensureStarted()
+                startNetworkMonitorIfNeeded()
                 await syncNow()
             } else {
+                automaticSyncTask?.cancel()
+                stopNetworkMonitor()
                 await provider?.stop()
                 provider = nil
                 status = await buildStatusSnapshot(baseState: .disabled, isSyncing: false)
@@ -99,6 +131,24 @@ final class SyncCoordinator {
     }
 
     func syncNow() async {
+        if let syncRunTask {
+            await syncRunTask.value
+            return
+        }
+
+        let task = Task { @MainActor in
+            await performSyncNow()
+        }
+        syncRunTask = task
+        await task.value
+        syncRunTask = nil
+    }
+
+    func appDidBecomeActive() {
+        triggerAutomaticSync(reason: "appDidBecomeActive", debounce: .seconds(0))
+    }
+
+    private func performSyncNow() async {
         await PerformanceInstrumentation.measure("SyncManualRun") {
             guard isEnabled else {
                 await log(level: .warning, operation: "coordinator.syncNow.skip", message: "Sync wurde angefordert, ist aber deaktiviert.")
@@ -118,6 +168,7 @@ final class SyncCoordinator {
             status = await buildStatusSnapshot(baseState: .syncing, isSyncing: true)
 
             do {
+                currentSyncRunHadError = false
                 try await PerformanceInstrumentation.measure("SyncProviderFetch") {
                     try await provider.fetch()
                 }
@@ -125,13 +176,16 @@ final class SyncCoordinator {
                 try await PerformanceInstrumentation.measure("SyncProviderSend") {
                     try await provider.send()
                 }
-                await stateStore.clearLastError()
+                if !currentSyncRunHadError {
+                    await stateStore.clearLastError()
+                }
                 await logStateStoreEvents()
                 await log(level: .info, operation: "coordinator.syncNow.finish", message: "Sync-Lauf erfolgreich abgeschlossen.", metadata: [
                     "conflicts": "\(await stateStore.conflicts().count)"
                 ])
             } catch {
-                await stateStore.setLastError(error.localizedDescription)
+                currentSyncRunHadError = true
+                await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
                 await logStateStoreEvents()
                 await log(level: .error, operation: "coordinator.syncNow.error", message: "Sync-Lauf fehlgeschlagen.", metadata: [
                     "error": error.localizedDescription
@@ -180,7 +234,7 @@ final class SyncCoordinator {
             ])
             status = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.resolveConflictUsingRemote.error", message: "Konflikt konnte nicht mit Cloud-Daten aufgelöst werden.", metadata: [
                 "documentID": conflict.documentID,
                 "error": error.localizedDescription
@@ -195,14 +249,14 @@ final class SyncCoordinator {
                 return
             }
 
-            let cloudProvider = CloudKitSyncProvider(
-                stateStore: stateStore,
-                zoneID: zoneID,
-                appLogStore: appLogStore,
-                recordProvider: { [weak self] recordID in
+            let cloudProvider = providerFactory(
+                stateStore,
+                zoneID,
+                appLogStore,
+                { [weak self] recordID in
                     await self?.recordForUpload(recordID: recordID)
                 },
-                eventHandler: { [weak self] event in
+                { [weak self] event in
                     await self?.handleProviderEvent(event)
                 }
             )
@@ -215,7 +269,7 @@ final class SyncCoordinator {
                 }
                 await log(level: .info, operation: "coordinator.ensureStarted", message: "Sync-Provider wurde initialisiert.")
             } catch {
-                await stateStore.setLastError(error.localizedDescription)
+                await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
                 await log(level: .error, operation: "coordinator.ensureStarted.error", message: "Sync-Provider konnte nicht gestartet werden.", metadata: [
                     "error": error.localizedDescription
                 ])
@@ -234,7 +288,7 @@ final class SyncCoordinator {
             }
             envelope = fetchedEnvelope
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.recordForUpload.error", message: "Lokales Dokument für Upload konnte nicht geladen werden.", metadata: [
                 "recordID": recordID.recordName,
                 "error": error.localizedDescription
@@ -305,6 +359,7 @@ final class SyncCoordinator {
             conflicts = await stateStore.conflicts()
             await stateStore.setLastUploadedAt(.now)
         case .didFailToSend(let failures):
+            currentSyncRunHadError = currentSyncRunHadError || failures.contains { !isRepairableServerRecordChange($0) }
             await log(level: .warning, operation: "coordinator.provider.didFailToSend", message: "Ein Teil des Uploads ist fehlgeschlagen.", metadata: [
                 "count": "\(failures.count)"
             ])
@@ -312,10 +367,14 @@ final class SyncCoordinator {
                 await handleFailedSave(failure)
             }
         case .didEncounterError(let message):
-            await stateStore.setLastError(message)
+            currentSyncRunHadError = true
+            await stateStore.setLastError(message, isRetryable: SyncErrorClassifier.isRetryable(message: message))
             await log(level: .error, operation: "coordinator.provider.didEncounterError", message: "Der Provider hat einen Fehler gemeldet.", metadata: [
                 "error": message
             ])
+        case .didRecoverAccountAvailability:
+            await log(level: .info, operation: "coordinator.provider.didRecoverAccountAvailability", message: "iCloud-Account ist verfügbar; automatischer Sync wird geplant.")
+            triggerAutomaticSync(reason: "iCloudAccountAvailable", debounce: .seconds(0))
         }
 
         status = await buildStatusSnapshot(baseState: currentBaseState(), isSyncing: false)
@@ -334,7 +393,7 @@ final class SyncCoordinator {
         do {
             localEnvelope = try repository.envelope(documentID: remoteEnvelope.documentID, deviceID: deviceID)
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.applyRemoteRecord.localEnvelopeError", message: "Lokaler Vergleichsstand konnte nicht geladen werden.", metadata: [
                 "documentID": remoteEnvelope.documentID,
                 "error": error.localizedDescription
@@ -345,7 +404,7 @@ final class SyncCoordinator {
         do {
             try repository.validate(remote: remoteEnvelope)
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
 
             if let localEnvelope {
                 await stateStore.saveConflict(
@@ -424,7 +483,7 @@ final class SyncCoordinator {
                 await log(level: .info, operation: "coordinator.applyRemoteRecord.insert", message: "Remote-Record wurde lokal neu angelegt.", metadata: metadata(for: remoteEnvelope, shadow: shadow))
             }
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.applyRemoteRecord.error", message: "Remote-Record konnte nicht angewendet werden.", metadata: [
                 "documentID": remoteEnvelope.documentID,
                 "error": error.localizedDescription
@@ -439,7 +498,7 @@ final class SyncCoordinator {
         do {
             localEnvelope = try repository.envelope(documentID: recordID.recordName, deviceID: deviceID)
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.handleRemoteDeletion.loadError", message: "Lokaler Stand für Remote-Löschung konnte nicht geladen werden.", metadata: [
                 "recordID": recordID.recordName,
                 "error": error.localizedDescription
@@ -471,7 +530,7 @@ final class SyncCoordinator {
                 "entityType": tombstone.entityType.rawValue
             ])
         } catch {
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.handleRemoteDeletion.error", message: "Remote-Löschung konnte lokal nicht angewendet werden.", metadata: [
                 "recordID": recordID.recordName,
                 "error": error.localizedDescription
@@ -486,8 +545,8 @@ final class SyncCoordinator {
                 "recordID": failure.recordID.recordName,
                 "errorCode": "\(failure.error.code.rawValue)"
             ])
-            guard let serverRecord = failure.error.serverRecord else {
-                await stateStore.setLastError(failure.error.localizedDescription)
+            guard let serverRecord = failure.serverRecord ?? failure.error.serverRecord else {
+                await stateStore.setLastError(failure.error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(failure.error))
                 await log(level: .error, operation: "coordinator.handleFailedSave.serverRecordMissing", message: "Server-Record fehlt trotz Konfliktmeldung.", metadata: [
                     "recordID": failure.recordID.recordName
                 ])
@@ -495,14 +554,88 @@ final class SyncCoordinator {
             }
 
             await applyRemoteRecord(serverRecord)
+            triggerAutomaticSync(reason: "serverRecordChangedRepair", debounce: .seconds(0))
         default:
-            await stateStore.setLastError(failure.error.localizedDescription)
+            let syncError = SyncErrorClassifier.classify(failure.error)
+            await stateStore.setLastError(syncError.userMessage, isRetryable: syncError.isRetryable)
             await log(level: .error, operation: "coordinator.handleFailedSave.error", message: "Record konnte nicht gespeichert werden.", metadata: [
                 "recordID": failure.recordID.recordName,
                 "errorCode": "\(failure.error.code.rawValue)",
-                "error": failure.error.localizedDescription
+                "error": failure.error.localizedDescription,
+                "isRetryable": "\(syncError.isRetryable)"
             ])
         }
+    }
+
+    private func isRepairableServerRecordChange(_ failure: SyncFailedRecordSave) -> Bool {
+        failure.error.code == .serverRecordChanged
+            && (failure.serverRecord != nil || failure.error.serverRecord != nil)
+    }
+
+    private func startLocalChangeObserver() {
+        guard localChangeObserverTask == nil else {
+            return
+        }
+
+        localChangeObserverTask = Task { [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .symiLocalSyncDataDidChange) {
+                await MainActor.run {
+                    self?.triggerAutomaticSync(reason: "localDataChanged")
+                }
+            }
+        }
+    }
+
+    private func triggerAutomaticSync(reason: String, debounce: Duration = .seconds(1)) {
+        guard isEnabled else {
+            return
+        }
+
+        automaticSyncTask?.cancel()
+        automaticSyncTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: debounce)
+            } catch {
+                return
+            }
+
+            await MainActor.run {
+                self?.startAutomaticSyncRun(reason: reason)
+            }
+        }
+    }
+
+    private func startAutomaticSyncRun(reason: String) {
+        Task { [weak self] in
+            await self?.log(level: .info, operation: "coordinator.automaticSync", message: "Automatischer Sync-Lauf wird gestartet.", metadata: [
+                "reason": reason
+            ])
+            await self?.syncNow()
+        }
+    }
+
+    private func startNetworkMonitorIfNeeded() {
+        guard networkMonitor == nil else {
+            return
+        }
+
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else {
+                return
+            }
+
+            Task { @MainActor [weak self] in
+                self?.triggerAutomaticSync(reason: "networkAvailable", debounce: .seconds(0))
+            }
+        }
+        monitor.start(queue: networkMonitorQueue)
+        networkMonitor = monitor
+    }
+
+    private func stopNetworkMonitor() {
+        networkMonitor?.cancel()
+        networkMonitor = nil
     }
 
     private func queueUnsyncedDocuments() async throws {
@@ -552,6 +685,7 @@ final class SyncCoordinator {
         let shadows = await stateStore.shadows()
         let conflictList = await stateStore.conflicts()
         var lastError = await stateStore.lastError()
+        let lastErrorIsRetryable = await stateStore.lastErrorIsRetryable()
         let pendingRecordCount = await provider?.queuedChangeCount ?? 0
         let accountState = await provider?.accountAvailability ?? (isEnabled ? .needsAttention : .disabled)
 
@@ -575,7 +709,7 @@ final class SyncCoordinator {
             localEnvelopes = try repository.allEnvelopes(deviceID: deviceID)
         } catch {
             lastError = error.localizedDescription
-            await stateStore.setLastError(error.localizedDescription)
+            await stateStore.setLastError(error.localizedDescription, isRetryable: SyncErrorClassifier.isRetryable(error))
             await log(level: .error, operation: "coordinator.buildStatusSnapshot.localEnvelopeError", message: "Lokale Sync-Dokumente konnten für den Status nicht geladen werden.", metadata: [
                 "error": error.localizedDescription
             ])
@@ -595,7 +729,8 @@ final class SyncCoordinator {
             unsyncedRecords: unsyncedCount,
             lastDownloadedAt: await stateStore.lastDownloadedAt(),
             lastUploadedAt: await stateStore.lastUploadedAt(),
-            lastError: lastError
+            lastError: lastError,
+            lastErrorIsRetryable: lastErrorIsRetryable
         )
     }
 
@@ -660,5 +795,104 @@ final class SyncCoordinator {
         }
 
         return ["payloadValidation"]
+    }
+}
+
+struct ClassifiedSyncError {
+    let userMessage: String
+    let isRetryable: Bool
+}
+
+enum SyncErrorClassifier {
+    static func classify(_ error: Error) -> ClassifiedSyncError {
+        if let ckError = error as? CKError {
+            return classify(ckError)
+        }
+
+        return ClassifiedSyncError(
+            userMessage: error.localizedDescription,
+            isRetryable: isRetryable(message: error.localizedDescription)
+        )
+    }
+
+    static func classify(_ error: CKError) -> ClassifiedSyncError {
+        let message = error.localizedDescription
+        if isCloudKitSchemaConfigurationError(error) || isCloudKitSchemaConfigurationError(message: message) {
+            return ClassifiedSyncError(
+                userMessage: "Sync kann aktuell nicht abgeschlossen werden, weil die Cloud-Konfiguration nicht zur App-Version passt. Deine lokalen Daten bleiben erhalten. Details: \(message)",
+                isRetryable: false
+            )
+        }
+
+        return ClassifiedSyncError(
+            userMessage: message,
+            isRetryable: isRetryable(error)
+        )
+    }
+
+    static func isRetryable(_ error: Error) -> Bool {
+        classify(error).isRetryable
+    }
+
+    static func isRetryable(message: String) -> Bool {
+        if isCloudKitSchemaConfigurationError(message: message) {
+            return false
+        }
+
+        let lowercased = message.lowercased()
+        return [
+            "network",
+            "internet",
+            "offline",
+            "timed out",
+            "timeout",
+            "temporarily",
+            "service unavailable",
+            "rate limit",
+            "try again",
+            "erneut",
+            "nicht erreichbar"
+        ].contains { lowercased.contains($0) }
+    }
+
+    private static func isRetryable(_ error: CKError) -> Bool {
+        if isCloudKitSchemaConfigurationError(error) || isCloudKitSchemaConfigurationError(message: error.localizedDescription) {
+            return false
+        }
+
+        switch error.code {
+        case .networkUnavailable,
+             .networkFailure,
+             .serviceUnavailable,
+             .requestRateLimited,
+             .zoneBusy,
+             .resultsTruncated,
+             .operationCancelled,
+             .notAuthenticated:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private static func isCloudKitSchemaConfigurationError(_ error: CKError) -> Bool {
+        switch error.code {
+        case .serverRejectedRequest,
+             .invalidArguments,
+             .zoneNotFound,
+             .unknownItem:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private static func isCloudKitSchemaConfigurationError(message: String) -> Bool {
+        let lowercased = message.lowercased()
+        return lowercased.contains("cannot create new type")
+            || lowercased.contains("production schema")
+            || lowercased.contains("record type")
+            || lowercased.contains("field")
+            || lowercased.contains("schema")
     }
 }

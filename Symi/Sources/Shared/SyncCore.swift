@@ -68,6 +68,7 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
     public nonisolated var lastDownloadedAt: Date?
     public nonisolated var lastUploadedAt: Date?
     public nonisolated var lastError: String?
+    public nonisolated var lastErrorIsRetryable: Bool
 
     public nonisolated init(
         state: SyncServiceState = .disabled,
@@ -76,7 +77,8 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
         unsyncedRecords: Int = 0,
         lastDownloadedAt: Date? = nil,
         lastUploadedAt: Date? = nil,
-        lastError: String? = nil
+        lastError: String? = nil,
+        lastErrorIsRetryable: Bool = false
     ) {
         self.state = state
         self.service = service
@@ -85,6 +87,7 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
         self.lastDownloadedAt = lastDownloadedAt
         self.lastUploadedAt = lastUploadedAt
         self.lastError = lastError
+        self.lastErrorIsRetryable = lastErrorIsRetryable
     }
 
     public nonisolated func staleDataWarning(
@@ -125,6 +128,10 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
         let days = max(1, hours / 24)
         return "\(days) Tag\(days == 1 ? "" : "e")"
     }
+}
+
+extension Notification.Name {
+    nonisolated static let symiLocalSyncDataDidChange = Notification.Name("SymiLocalSyncDataDidChange")
 }
 
 public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {

@@ -8,11 +8,19 @@ enum SyncProviderEvent: Sendable {
     case didSendRecords([CKRecord])
     case didFailToSend([SyncFailedRecordSave])
     case didEncounterError(String)
+    case didRecoverAccountAvailability
 }
 
 struct SyncFailedRecordSave: Sendable {
     let recordID: CKRecord.ID
     let error: CKError
+    let serverRecord: CKRecord?
+
+    init(recordID: CKRecord.ID, error: CKError, serverRecord: CKRecord? = nil) {
+        self.recordID = recordID
+        self.error = error
+        self.serverRecord = serverRecord
+    }
 }
 
 protocol SyncProvider: AnyObject, Sendable {
@@ -210,8 +218,72 @@ final class CloudKitSyncProvider: NSObject, SyncProvider {
         await log(level: .info, operation: "provider.send.start", message: "CloudKit-Änderungen werden gesendet.", metadata: [
             "pendingRecords": "\(pendingRecordCount)"
         ])
-        _ = try await providerState.sendChanges(zoneID: zoneID)
+        do {
+            _ = try await providerState.sendChanges(zoneID: zoneID)
+        } catch let error as CKError {
+            if await handlePartialSendFailure(error) {
+                await log(level: .warning, operation: "provider.send.partialFailure", message: "CloudKit hat einzelne Records abgelehnt; Details wurden an den Coordinator übergeben.")
+                return
+            }
+            throw error
+        }
         await log(level: .info, operation: "provider.send.finish", message: "CloudKit-Änderungen wurden gesendet.")
+    }
+
+    private func handlePartialSendFailure(_ error: CKError) async -> Bool {
+        let partialErrors: [(CKRecord.ID, CKError)]
+        if let errors = error.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
+            partialErrors = errors.compactMap { recordID, error in
+                guard let ckError = error as? CKError else {
+                    return nil
+                }
+
+                return (recordID, ckError)
+            }
+        } else if let errors = error.userInfo[CKPartialErrorsByItemIDKey] as? [AnyHashable: Error] {
+            partialErrors = errors.compactMap { key, error in
+                guard let recordID = key as? CKRecord.ID, let ckError = error as? CKError else {
+                    return nil
+                }
+
+                return (recordID, ckError)
+            }
+        } else {
+            return false
+        }
+
+        var failures: [SyncFailedRecordSave] = []
+        for (recordID, recordError) in partialErrors {
+            let serverRecord = await resolvedServerRecord(for: recordID, error: recordError)
+            failures.append(SyncFailedRecordSave(recordID: recordID, error: recordError, serverRecord: serverRecord))
+        }
+
+        guard !failures.isEmpty else {
+            return false
+        }
+
+        await eventHandler(.didFailToSend(failures))
+        return true
+    }
+
+    private func resolvedServerRecord(for recordID: CKRecord.ID, error: CKError) async -> CKRecord? {
+        if let serverRecord = error.serverRecord {
+            return serverRecord
+        }
+
+        guard error.code == .serverRecordChanged else {
+            return nil
+        }
+
+        do {
+            return try await container.privateCloudDatabase.record(for: recordID)
+        } catch {
+            await log(level: .warning, operation: "provider.serverRecordChanged.fetchFailed", message: "Vorhandener Server-Record konnte nach Konfliktmeldung nicht geladen werden.", metadata: [
+                "recordID": recordID.recordName,
+                "error": error.localizedDescription
+            ])
+            return nil
+        }
     }
 }
 
@@ -230,7 +302,7 @@ extension CloudKitSyncProvider: CKSyncEngineDelegate {
             await eventHandler(.didDeleteRecords(changes.deletions.map(\.recordID)))
         case .sentRecordZoneChanges(let changes):
             let failures = changes.failedRecordSaves.map {
-                SyncFailedRecordSave(recordID: $0.record.recordID, error: $0.error)
+                SyncFailedRecordSave(recordID: $0.record.recordID, error: $0.error, serverRecord: $0.error.serverRecord)
             }
             await providerState.removeSentRecordNames(changes.savedRecords.map { $0.recordID.recordName })
             await log(level: failures.isEmpty ? .info : .warning, operation: "provider.event.sentRecordZoneChanges", message: "Upload-Ergebnis erhalten.", metadata: [
@@ -276,6 +348,7 @@ extension CloudKitSyncProvider: CKSyncEngineDelegate {
                 await log(level: .info, operation: "provider.event.accountChange", message: "iCloud-Account ist wieder verfügbar.", metadata: [
                     "changeType": "\(change.changeType)"
                 ])
+                await eventHandler(.didRecoverAccountAvailability)
             @unknown default:
                 await log(level: .warning, operation: "provider.event.accountChange.unknown", message: "Unbekannte iCloud-Änderung erkannt.")
                 await eventHandler(.didEncounterError("Unbekannte iCloud-Änderung erkannt."))

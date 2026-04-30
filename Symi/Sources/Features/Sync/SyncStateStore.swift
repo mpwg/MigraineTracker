@@ -24,6 +24,7 @@ actor SyncStateStore {
         var lastUploadedAt: Date?
         var lastDownloadedAt: Date?
         var lastError: String?
+        var lastErrorIsRetryable = false
 
         private enum CodingKeys: String, CodingKey {
             case schemaVersion
@@ -34,6 +35,7 @@ actor SyncStateStore {
             case lastUploadedAt
             case lastDownloadedAt
             case lastError
+            case lastErrorIsRetryable
         }
 
         init() {}
@@ -58,6 +60,7 @@ actor SyncStateStore {
             self.lastUploadedAt = try container.decodeIfPresent(Date.self, forKey: .lastUploadedAt)
             self.lastDownloadedAt = try container.decodeIfPresent(Date.self, forKey: .lastDownloadedAt)
             self.lastError = try container.decodeIfPresent(String.self, forKey: .lastError)
+            self.lastErrorIsRetryable = try container.decodeIfPresent(Bool.self, forKey: .lastErrorIsRetryable) ?? false
         }
     }
 
@@ -223,13 +226,19 @@ actor SyncStateStore {
         state.lastError
     }
 
-    func setLastError(_ error: String?) {
+    func lastErrorIsRetryable() -> Bool {
+        state.lastError != nil && state.lastErrorIsRetryable
+    }
+
+    func setLastError(_ error: String?, isRetryable: Bool = true) {
         state.lastError = error
+        state.lastErrorIsRetryable = error == nil ? false : isRetryable
         persist()
     }
 
     func clearLastError() {
         state.lastError = nil
+        state.lastErrorIsRetryable = false
         persist()
     }
 
@@ -255,6 +264,7 @@ actor SyncStateStore {
 
     private func recordPersistenceFailure(operation: String, message: String, metadata: [String: String]) {
         state.lastError = message
+        state.lastErrorIsRetryable = false
         persistenceEvents.append(
             PersistenceEvent(
                 level: .error,

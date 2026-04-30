@@ -2450,15 +2450,8 @@
         }
       }
     },
-    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Sync läuft halbautomatisch: Aktivierung startet einen Abgleich, danach nutzt du `Jetzt synchronisieren`." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trash entries remain local and in the cloud until you intentionally restore them or permanently delete them later. Sync is semi-automatic: enabling it starts a sync, then you use `Sync Now`."
-          }
-        }
-      }
+    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Bei aktiviertem Cloud-Sync läuft der Abgleich automatisch; „Jetzt synchronisieren“ startet zusätzlich sofort einen Lauf." : {
+
     },
     "Paracetamol" : {
       "localizations" : {
