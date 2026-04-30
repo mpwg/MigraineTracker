@@ -404,7 +404,9 @@ final class SwiftDataExportRepository: ExportRepository, Sendable {
             FetchDescriptor<Episode>(sortBy: [SortDescriptor(\Episode.startedAt, order: .reverse)]),
             batchSize: Self.fetchBatchSize
         ) { batch in
-            episodes += batch.map { EpisodePayload(episode: $0, healthContext: healthContextStore.load(for: $0.id)) }
+            episodes += try batch.map {
+                EpisodePayload(episode: $0, healthContext: try healthContextStore.loadIfPresent(for: $0.id))
+            }
         }
 
         try readContext.fetchBatches(
