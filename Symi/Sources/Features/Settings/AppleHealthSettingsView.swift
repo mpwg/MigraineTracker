@@ -485,18 +485,6 @@ private struct HealthPrimaryButtonStyle: ButtonStyle {
     }
 }
 
-private struct HealthSecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.body.weight(.semibold))
-            .foregroundStyle(AppTheme.symiPetrol)
-            .padding(.vertical, SymiSpacing.md)
-            .frame(maxWidth: .infinity)
-            .background(AppTheme.symiSage.opacity(configuration.isPressed ? SymiOpacity.pressedFill : SymiOpacity.secondaryFill))
-            .clipShape(RoundedRectangle(cornerRadius: SymiRadius.button, style: .continuous))
-    }
-}
-
 private struct HealthInlineSettingsButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
