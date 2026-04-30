@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 
 enum EntryFlowStep: String, CaseIterable, Identifiable, Hashable, Sendable {
     case headache
@@ -12,8 +13,38 @@ enum EntryFlowStep: String, CaseIterable, Identifiable, Hashable, Sendable {
 }
 
 enum EntryFlowSaveResult: Equatable, Sendable {
-    case saved(UUID)
+    case saved(UUID, healthWarning: String?)
     case failed(String)
+}
+
+enum EpisodeHealthSaveWarning: Equatable, Sendable {
+    case contextUnavailable
+    case writeFailed
+    case contextUnavailableAndWriteFailed
+
+    var message: String {
+        switch self {
+        case .contextUnavailable:
+            "Dein Eintrag wurde lokal gespeichert. Apple-Health-Kontext konnte nicht gelesen werden."
+        case .writeFailed:
+            "Dein Eintrag wurde lokal gespeichert. Das Schreiben nach Apple Health ist fehlgeschlagen."
+        case .contextUnavailableAndWriteFailed:
+            "Dein Eintrag wurde lokal gespeichert. Apple-Health-Kontext konnte nicht gelesen und der Eintrag nicht nach Apple Health geschrieben werden."
+        }
+    }
+
+    static func make(contextFailed: Bool, writeFailed: Bool) -> EpisodeHealthSaveWarning? {
+        switch (contextFailed, writeFailed) {
+        case (true, true):
+            .contextUnavailableAndWriteFailed
+        case (true, false):
+            .contextUnavailable
+        case (false, true):
+            .writeFailed
+        case (false, false):
+            nil
+        }
+    }
 }
 
 enum EntryStartedAtPreset: String, CaseIterable, Identifiable, Sendable {
@@ -94,6 +125,7 @@ final class EntryContinuousMedicationController {
 @Observable
 final class EntryFlowCoordinator {
     static let steps: [EntryFlowStep] = [.headache, .medication, .triggers, .note, .review]
+    private static let healthLogger = Logger(subsystem: "Symi", category: "Health")
 
     let symptomOptions = EpisodeSymptomOption.allCases.map(\.displayLabel)
     let triggerOptions = EpisodeTriggerOption.allCases.map(\.displayLabel)
@@ -313,14 +345,18 @@ final class EntryFlowCoordinator {
 
             do {
                 let weatherSnapshot = try await weatherSnapshotForSave(startedAt: draftForSave.startedAt)
-                let healthContext = await healthContextForSave(draft: draftForSave)
+                let healthContextResult = await healthContextForSave(draft: draftForSave)
                 let savedID = try await saveEpisodeUseCase.execute(
                     draftForSave,
                     weatherSnapshot: weatherSnapshot,
-                    healthContext: healthContext
+                    healthContext: healthContextResult.snapshot
                 )
-                await writeHealthSampleIfNeeded(episodeID: savedID, draft: draftForSave)
-                saveResult = .saved(savedID)
+                let writeFailed = await writeHealthSampleIfNeeded(episodeID: savedID, draft: draftForSave)
+                let healthWarning = EpisodeHealthSaveWarning.make(
+                    contextFailed: healthContextResult.failed,
+                    writeFailed: writeFailed
+                )
+                saveResult = .saved(savedID, healthWarning: healthWarning?.message)
 
                 if resetAfterSave {
                     cancel()
@@ -343,18 +379,23 @@ final class EntryFlowCoordinator {
         return resolution.snapshot
     }
 
-    private func healthContextForSave(draft: EpisodeDraft) async -> HealthContextSnapshotData? {
+    private func healthContextForSave(draft: EpisodeDraft) async -> (snapshot: HealthContextSnapshotData?, failed: Bool) {
         do {
-            return try await healthService.contextSnapshot(for: draft)
+            return (try await healthService.contextSnapshot(for: draft), false)
         } catch {
-            return nil
+            Self.healthLogger.warning("Apple-Health-Kontext konnte nicht gelesen werden: \(error.localizedDescription, privacy: .public)")
+            return (nil, true)
         }
     }
 
-    private func writeHealthSampleIfNeeded(episodeID: UUID, draft: EpisodeDraft) async {
+    private func writeHealthSampleIfNeeded(episodeID: UUID, draft: EpisodeDraft) async -> Bool {
         do {
             try await healthService.writeEpisode(id: episodeID, draft: draft)
-        } catch {}
+            return false
+        } catch {
+            Self.healthLogger.warning("Apple-Health-Sample konnte nicht geschrieben werden: \(error.localizedDescription, privacy: .public)")
+            return true
+        }
     }
 
     private func saveFailureMessage(for error: Error) -> String {

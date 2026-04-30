@@ -67,7 +67,7 @@ struct EpisodeEditorView: View {
         .alert("Eintrag gespeichert", isPresented: $controller.saveMessageVisible) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Dein Eintrag wurde lokal gespeichert.")
+            Text(controller.healthSaveWarningMessage ?? "Dein Eintrag wurde lokal gespeichert.")
         }
         .sheet(item: $medicationController.customMedicationEditor) { editorState in
             NavigationStack {
