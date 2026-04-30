@@ -1,4 +1,5 @@
 import Foundation
+import os
 import Testing
 @testable import Symi
 
@@ -94,22 +95,25 @@ private func waitUntil(
     }
 }
 
-private final class SpyExportRepository: ExportRepository, @unchecked Sendable {
-    private let lock = NSLock()
-    private var lockedSummaryRequests: [SpyDateRange] = []
-    private var lockedPDFSummaries: [ExportPeriodSummary] = []
+private struct SpyExportRepositoryState: Sendable {
+    var summaryRequests: [SpyDateRange] = []
+    var pdfSummaries: [ExportPeriodSummary] = []
+}
+
+private final class SpyExportRepository: ExportRepository {
+    private let state = OSAllocatedUnfairLock(initialState: SpyExportRepositoryState())
 
     var summaryRequests: [SpyDateRange] {
-        lock.withLock { lockedSummaryRequests }
+        state.withLock { $0.summaryRequests }
     }
 
     var pdfSummaries: [ExportPeriodSummary] {
-        lock.withLock { lockedPDFSummaries }
+        state.withLock { $0.pdfSummaries }
     }
 
     nonisolated func buildSummary(startDate: Date, endDate: Date) throws -> ExportPeriodSummary {
-        lock.withLock {
-            lockedSummaryRequests.append(SpyDateRange(startDate: startDate, endDate: endDate))
+        state.withLock {
+            $0.summaryRequests.append(SpyDateRange(startDate: startDate, endDate: endDate))
         }
 
         return ExportPeriodSummary(
@@ -120,8 +124,8 @@ private final class SpyExportRepository: ExportRepository, @unchecked Sendable {
     }
 
     nonisolated func createPDF(summary: ExportPeriodSummary, mode: PDFReportMode) throws -> URL {
-        lock.withLock {
-            lockedPDFSummaries.append(summary)
+        state.withLock {
+            $0.pdfSummaries.append(summary)
         }
         return FileManager.default.temporaryDirectory.appendingPathComponent("report-\(UUID().uuidString).pdf")
     }

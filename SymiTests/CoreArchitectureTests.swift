@@ -135,26 +135,26 @@ struct CoreArchitectureTests {
     func episodeDayPartProvidesCentralClassificationAndDisplayText() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        let expectations: [(Int, EpisodeDayPart, String, String, Int)] = [
-            (4, .nacht, "In der Nacht", "moon.stars.fill", 23),
-            (5, .morgens, "Am Morgen", "sunrise.fill", 8),
-            (10, .morgens, "Am Morgen", "sunrise.fill", 8),
-            (11, .mittags, "Am Nachmittag", "sun.max.fill", 13),
-            (16, .mittags, "Am Nachmittag", "sun.max.fill", 13),
-            (17, .abends, "Am Abend", "sunset.fill", 19),
-            (21, .abends, "Am Abend", "sunset.fill", 19),
-            (22, .nacht, "In der Nacht", "moon.stars.fill", 23)
+        let expectations: [DayPartExpectation] = [
+            DayPartExpectation(hour: 4, dayPart: .nacht, label: "In der Nacht", symbolName: "moon.stars.fill", representativeHour: 23),
+            DayPartExpectation(hour: 5, dayPart: .morgens, label: "Am Morgen", symbolName: "sunrise.fill", representativeHour: 8),
+            DayPartExpectation(hour: 10, dayPart: .morgens, label: "Am Morgen", symbolName: "sunrise.fill", representativeHour: 8),
+            DayPartExpectation(hour: 11, dayPart: .mittags, label: "Am Nachmittag", symbolName: "sun.max.fill", representativeHour: 13),
+            DayPartExpectation(hour: 16, dayPart: .mittags, label: "Am Nachmittag", symbolName: "sun.max.fill", representativeHour: 13),
+            DayPartExpectation(hour: 17, dayPart: .abends, label: "Am Abend", symbolName: "sunset.fill", representativeHour: 19),
+            DayPartExpectation(hour: 21, dayPart: .abends, label: "Am Abend", symbolName: "sunset.fill", representativeHour: 19),
+            DayPartExpectation(hour: 22, dayPart: .nacht, label: "In der Nacht", symbolName: "moon.stars.fill", representativeHour: 23)
         ]
 
         for expectation in expectations {
-            let date = calendar.date(from: DateComponents(year: 2026, month: 4, day: 28, hour: expectation.0))!
+            let date = calendar.date(from: DateComponents(year: 2026, month: 4, day: 28, hour: expectation.hour))!
             let dayPart = EpisodeDayPart(date: date, calendar: calendar)
 
-            #expect(dayPart == expectation.1)
-            #expect(dayPart.contextualLabel == expectation.2)
-            #expect(dayPart.symbolName == expectation.3)
-            #expect(dayPart.representativeHour == expectation.4)
-            #expect(JournalEntryContext.timeOfDay(for: date, calendar: calendar) == expectation.2)
+            #expect(dayPart == expectation.dayPart)
+            #expect(dayPart.contextualLabel == expectation.label)
+            #expect(dayPart.symbolName == expectation.symbolName)
+            #expect(dayPart.representativeHour == expectation.representativeHour)
+            #expect(JournalEntryContext.timeOfDay(for: date, calendar: calendar) == expectation.label)
         }
     }
 
@@ -769,6 +769,14 @@ struct CoreArchitectureTests {
         #expect(syncService.didDeleteCloudData == true)
     }
 
+}
+
+private struct DayPartExpectation {
+    let hour: Int
+    let dayPart: EpisodeDayPart
+    let label: String
+    let symbolName: String
+    let representativeHour: Int
 }
 
 private final class EpisodeRepositoryMock: EpisodeRepository, Sendable {
