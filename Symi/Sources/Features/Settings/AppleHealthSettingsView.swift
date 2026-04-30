@@ -93,22 +93,7 @@ struct AppleHealthSettingsView: View {
             .padding(.bottom, SymiSpacing.settingsContentBottomPadding)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(spacing: 8) {
-                    Image(systemName: "heart.fill")
-                        .foregroundStyle(.red)
-                        .font(.headline)
-
-                    Text("Apple Health")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Apple Health")
-            }
-        }
+        .navigationTitle("Apple Health")
         .brandScreen()
         .onAppear {
             controller.reloadHealthAuthorizationState()
