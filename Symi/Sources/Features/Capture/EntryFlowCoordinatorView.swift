@@ -142,7 +142,6 @@ private struct EntryHeadacheStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
-    @State private var isDateExpanded = false
     @State private var selectedDate = Date()
     private let visiblePainLocations: [EntryPainLocationOption] = [
         .init(title: EntryFlowLocalized.text(de: "Stirn", en: "Forehead"), imageName: "PainLocationForehead"),
@@ -177,12 +176,20 @@ private struct EntryHeadacheStepView: View {
                 .accessibilityIdentifier("entry-intensity-card")
             }
 
-            EntryInlineDatePicker(
-                date: coordinator.draft.startedAt,
-                selectedDate: $selectedDate,
-                isExpanded: $isDateExpanded,
-                onSelect: selectEntryDate
+            DatePicker(
+                "Datum",
+                selection: $selectedDate,
+                in: ...Date(),
+                displayedComponents: .date
             )
+            .datePickerStyle(.compact)
+            .font(.subheadline)
+            .foregroundStyle(AppTheme.symiTextSecondary)
+            .tint(AppTheme.symiPetrol)
+            .accessibilityIdentifier("entry-date-picker")
+            .onChange(of: selectedDate) { _, newValue in
+                selectEntryDate(newValue)
+            }
 
             InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
                 InputFlowHeadacheOptionGrid {
@@ -270,137 +277,6 @@ private extension EntryDayPartPreset {
             self = .abends
         case .nacht:
             self = .nacht
-        }
-    }
-}
-
-private struct EntryInlineDatePicker: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let date: Date
-    @Binding var selectedDate: Date
-    @Binding var isExpanded: Bool
-    let onSelect: (Date) -> Void
-    @State private var ignoresNextDateChange = false
-    @State private var feedbackTrigger = 0
-
-    var body: some View {
-        VStack(spacing: SymiSpacing.xs) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: SymiSpacing.xs) {
-                    Image(systemName: "calendar")
-                        .font(.subheadline)
-                        .accessibilityHidden(true)
-
-                    Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                        .font(.subheadline)
-                        .lineLimit(1)
-                        .minimumScaleFactor(SymiTypography.compactScaleFactor)
-
-                    Spacer(minLength: SymiSpacing.sm)
-
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.15), value: isExpanded)
-                        .accessibilityHidden(true)
-                }
-                .foregroundStyle(AppTheme.symiTextSecondary)
-                .padding(.horizontal, SymiSpacing.sm)
-                .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Datum")
-            .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-            .accessibilityHint(isExpanded ? "Schließt die Datumsauswahl." : "Öffnet die Datumsauswahl.")
-            .accessibilityIdentifier("entry-date-picker")
-
-            if isExpanded {
-                expandedContent
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .sensoryFeedback(.selection, trigger: feedbackTrigger)
-    }
-
-    private var expandedContent: some View {
-        VStack(spacing: SymiSpacing.sm) {
-            HStack(spacing: SymiSpacing.sm) {
-                Button {
-                    selectQuickActionAndCollapse(.now)
-                } label: {
-                    quickActionLabel("Heute")
-                }
-
-                Button {
-                    let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now
-                    selectQuickActionAndCollapse(yesterday)
-                } label: {
-                    quickActionLabel("Gestern")
-                }
-            }
-            .buttonStyle(.plain)
-
-            Divider()
-                .padding(.top, SymiSpacing.xs)
-
-            DatePicker(
-                "Datum",
-                selection: $selectedDate,
-                in: ...Date(),
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .labelsHidden()
-            .tint(AppTheme.symiPetrol.opacity(SymiOpacity.disabledContent))
-            .opacity(0.78)
-            .frame(height: 300)
-            .clipShape(RoundedRectangle(cornerRadius: SymiRadius.flowPill, style: .continuous))
-            .onChange(of: selectedDate) { _, newValue in
-                if ignoresNextDateChange {
-                    ignoresNextDateChange = false
-                    return
-                }
-
-                applyDateAndCollapse(newValue)
-            }
-        }
-        .padding(.top, SymiSpacing.xs)
-        .padding(.horizontal, SymiSpacing.sm)
-        .frame(maxWidth: .infinity)
-    }
-
-    private func quickActionLabel(_ title: String) -> some View {
-        Text(title)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(AppTheme.symiPetrol)
-            .frame(maxWidth: .infinity, minHeight: 46)
-            .background(
-                AppTheme.symiSage.opacity(colorScheme == .dark ? SymiOpacity.selectedStroke : SymiOpacity.secondaryFill),
-                in: Capsule()
-            )
-            .contentShape(Capsule())
-    }
-
-    private func selectQuickActionAndCollapse(_ date: Date) {
-        if selectedDate != date {
-            ignoresNextDateChange = true
-            selectedDate = date
-        }
-
-        applyDateAndCollapse(date)
-    }
-
-    private func applyDateAndCollapse(_ date: Date) {
-        feedbackTrigger += 1
-        onSelect(date)
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isExpanded = false
         }
     }
 }

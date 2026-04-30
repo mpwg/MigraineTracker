@@ -1545,9 +1545,6 @@
         }
       }
     },
-    "Gestern" : {
-
-    },
     "Gesundheitsdaten" : {
       "localizations" : {
         "en" : {
@@ -2293,9 +2290,6 @@
         }
       }
     },
-    "Öffnet die Datumsauswahl." : {
-
-    },
     "Öffnet die Detailansicht des Eintrags." : {
       "localizations" : {
         "en" : {
@@ -2565,9 +2559,6 @@
           }
         }
       }
-    },
-    "Schließt die Datumsauswahl." : {
-
     },
     "Schmerzcharakter" : {
       "localizations" : {
