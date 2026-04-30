@@ -4,6 +4,7 @@ enum Tab: String, CaseIterable, Identifiable {
     case journal
     case insights
     case report
+    case therapy
     case settings
 
     var id: String { rawValue }
@@ -13,6 +14,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .journal: "Tagebuch"
         case .insights: "Insights"
         case .report: "Bericht"
+        case .therapy: "Therapie"
         case .settings: "Einstellungen"
         }
     }
@@ -22,6 +24,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .journal: "book.pages"
         case .insights: "sparkle.magnifyingglass"
         case .report: "doc.text"
+        case .therapy: "pills.fill"
         case .settings: "gearshape"
         }
     }
@@ -92,6 +95,16 @@ struct AppShellView: View {
             .tag(Tab.report)
 
             NavigationStack {
+                content(for: .therapy)
+            }
+            .tabItem {
+                Label(Tab.therapy.title, systemImage: Tab.therapy.systemImage)
+            }
+            .accessibilityLabel("\(Tab.therapy.title) Tab")
+            .accessibilityIdentifier("tab-\(Tab.therapy.rawValue)")
+            .tag(Tab.therapy)
+
+            NavigationStack {
                 content(for: .settings)
             }
             .tabItem {
@@ -142,6 +155,8 @@ struct AppShellView: View {
             InsightsView(dependencies: features.insights)
         case .report:
             ReportView(dependencies: features.dataExport)
+        case .therapy:
+            TherapyView(dependencies: features.therapy)
         case .settings:
             SettingsView(dependencies: features.settings, showsCloseButton: false)
         }
@@ -152,7 +167,7 @@ struct AppShellView: View {
         switch tab {
         case .journal, .insights:
             content(for: tab)
-        case .report, .settings:
+        case .report, .therapy, .settings:
             RegularDetailSurface {
                 content(for: tab)
             }

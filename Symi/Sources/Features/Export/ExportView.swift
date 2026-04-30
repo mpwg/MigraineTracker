@@ -36,8 +36,8 @@ struct SettingsView: View {
                         }
 
                         HStack(spacing: SymiSpacing.lg) {
-                            statValue(title: "Ausstehend", value: "\(controller.syncStatus.queuedUpdates)")
-                            statValue(title: "Ungesynct", value: "\(controller.syncStatus.unsyncedRecords)")
+                            statValue(title: "Wartet", value: "\(controller.syncStatus.queuedUpdates)")
+                            statValue(title: "Lokal", value: "\(controller.syncStatus.unsyncedRecords)")
                             statValue(title: "Konflikte", value: "\(controller.conflicts.count)")
                         }
 
@@ -52,7 +52,7 @@ struct SettingsView: View {
                     .brandGroupedRow()
                 }
 
-                Toggle("Sync aktivieren", isOn: Binding(
+                Toggle("iCloud-Synchronisation", isOn: Binding(
                     get: { controller.isSyncEnabled },
                     set: { controller.setSyncEnabled($0) }
                 ))
@@ -61,7 +61,7 @@ struct SettingsView: View {
                 NavigationLink {
                     ManageCloudDataView(dataExportDependencies: dependencies.dataExport, controller: controller)
                 } label: {
-                    Label("Cloud-Daten verwalten", systemImage: "icloud")
+                    Label("iCloud-Daten verwalten", systemImage: "icloud")
                 }
 
                 if !controller.conflicts.isEmpty {
@@ -110,31 +110,19 @@ struct SettingsView: View {
                     .brandGroupedRow()
                 }
             } header: {
-                Text("Gesundheit")
+                Text("Verbindungen")
             } footer: {
                 Text("Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen.")
             }
 
-            Section("Allgemein") {
-                NavigationLink {
-                    ContinuousMedicationSettingsView(controller: controller)
-                } label: {
-                    Label("Dauermedikation", systemImage: "pills")
-                }
-
-                Link(destination: ProductBranding.websiteURL) {
-                    Label("symiapp.com", systemImage: "link")
-                }
+            Section("Daten & Sicherheit") {
+                BackupSettingsCardView(dependencies: dependencies.dataExport)
 
                 NavigationLink {
                     ProductInformationView(mode: .standard)
                 } label: {
                     Label("Datenschutz und Hinweise", systemImage: "hand.raised")
                 }
-            }
-
-            Section("Daten") {
-                BackupSettingsCardView(dependencies: dependencies.dataExport)
             }
 
             Section {
@@ -144,9 +132,15 @@ struct SettingsView: View {
                 ))
                 .tint(AppTheme.symiPetrol)
             } header: {
-                Text("App verbessern")
+                Text("App")
             } footer: {
                 Text("Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern.")
+            }
+
+            Section("App-Information") {
+                Link(destination: ProductBranding.websiteURL) {
+                    Label("symiapp.com", systemImage: "link")
+                }
             }
 
             Section("Übersicht") {
@@ -197,8 +191,8 @@ struct SettingsView: View {
         }
 
         return controller.isSyncEnabled
-            ? "Synchronisation ist bereit. Lokale Änderungen bleiben bis zum nächsten Lauf sicher auf dem Gerät."
-            : "Synchronisation ist deaktiviert. Alle Daten bleiben lokal auf diesem Gerät erhalten."
+            ? "iCloud-Synchronisation ist bereit. Lokale Änderungen bleiben bis zum nächsten Abgleich sicher auf dem Gerät."
+            : "iCloud-Synchronisation ist deaktiviert. Alle Daten bleiben lokal auf diesem Gerät erhalten."
     }
 
     private var syncStalenessWarning: String? {
@@ -210,7 +204,7 @@ struct SettingsView: View {
 
     private var syncContractSummary: String {
         [
-            "Cloud-Sync läuft automatisch, sobald er aktiviert ist.",
+            "iCloud-Sync läuft automatisch, sobald er aktiviert ist.",
             "Symi gleicht Änderungen ab, wenn die App geöffnet wird, wenn du Daten änderst oder wenn die Verbindung wieder da ist.",
             "„Jetzt synchronisieren“ startet zusätzlich sofort einen Abgleich."
         ].joined(separator: " ")
@@ -284,201 +278,6 @@ struct SettingsView: View {
         #else
         .topBarLeading
         #endif
-    }
-}
-
-private struct ContinuousMedicationSettingsView: View {
-    @Bindable var controller: SettingsController
-
-    var body: some View {
-        List {
-            Section {
-                Button {
-                    controller.presentContinuousMedicationEditor(for: nil)
-                } label: {
-                    Label("Dauermedikation hinzufügen", systemImage: "plus")
-                }
-            } footer: {
-                Text("Dauermedikationen sind ein eigener Verlaufskontext und bleiben von Akutmedikation in Einträgen getrennt.")
-            }
-
-            Section("Aktuell") {
-                let active = controller.continuousMedications.filter(\.isActive)
-                if active.isEmpty {
-                    Text("Keine aktive Dauermedikation.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(active) { medication in
-                        ContinuousMedicationSettingsRow(
-                            medication: medication,
-                            onEdit: { controller.presentContinuousMedicationEditor(for: medication) },
-                            onEnd: { controller.endContinuousMedication(id: medication.id) }
-                        )
-                    }
-                }
-            }
-
-            Section("Beendet") {
-                let ended = controller.continuousMedications.filter { !$0.isActive }
-                if ended.isEmpty {
-                    Text("Keine beendete Dauermedikation.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(ended) { medication in
-                        ContinuousMedicationSettingsRow(
-                            medication: medication,
-                            onEdit: { controller.presentContinuousMedicationEditor(for: medication) },
-                            onEnd: nil
-                        )
-                    }
-                }
-            }
-
-            if let message = controller.continuousMedicationMessage {
-                Section {
-                    Text(message)
-                        .foregroundStyle(AppTheme.symiCoral)
-                }
-            }
-        }
-        .navigationTitle("Dauermedikation")
-        .brandGroupedScreen()
-        .sheet(item: $controller.continuousMedicationEditor) { draft in
-            NavigationStack {
-                ContinuousMedicationEditorSheet(
-                    draft: draft,
-                    onCancel: { controller.continuousMedicationEditor = nil },
-                    onSave: { draft in
-                        Task {
-                            await controller.saveContinuousMedication(draft)
-                        }
-                    }
-                )
-            }
-            .presentationDetents([.medium, .large])
-        }
-        .task {
-            controller.load()
-        }
-        .refreshable {
-            controller.load()
-        }
-    }
-}
-
-private struct ContinuousMedicationSettingsRow: View {
-    let medication: ContinuousMedicationRecord
-    let onEdit: () -> Void
-    let onEnd: (() -> Void)?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                    Text(medication.name)
-                        .font(.headline)
-                    if !medication.detailText.isEmpty {
-                        Text(medication.detailText)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Spacer()
-
-                Text(medication.isActive ? "Aktiv" : "Beendet")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(medication.isActive ? AppTheme.symiSage : .secondary)
-            }
-
-            Text(dateRangeText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            HStack {
-                Button("Bearbeiten", action: onEdit)
-                if let onEnd {
-                    Button("Beenden", role: .destructive, action: onEnd)
-                }
-            }
-            .buttonStyle(.borderless)
-        }
-        .padding(.vertical, SymiSpacing.xxs)
-        .brandGroupedRow()
-    }
-
-    private var dateRangeText: String {
-        let start = medication.startDate.formatted(date: .abbreviated, time: .omitted)
-        guard let endDate = medication.endDate else {
-            return "Seit \(start)"
-        }
-
-        return "\(start) bis \(endDate.formatted(date: .abbreviated, time: .omitted))"
-    }
-}
-
-private struct ContinuousMedicationEditorSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var draft: ContinuousMedicationDraft
-    @State private var hasEndDate: Bool
-
-    let onCancel: () -> Void
-    let onSave: (ContinuousMedicationDraft) -> Void
-
-    init(
-        draft: ContinuousMedicationDraft,
-        onCancel: @escaping () -> Void,
-        onSave: @escaping (ContinuousMedicationDraft) -> Void
-    ) {
-        _draft = State(initialValue: draft)
-        _hasEndDate = State(initialValue: draft.endDate != nil)
-        self.onCancel = onCancel
-        self.onSave = onSave
-    }
-
-    var body: some View {
-        Form {
-            Section("Medikament") {
-                TextField("Name", text: $draft.name)
-                    .textInputAutocapitalization(.words)
-                TextField("Dosierung, optional", text: $draft.dosage)
-                TextField("Frequenz, optional", text: $draft.frequency)
-            }
-
-            Section("Zeitraum") {
-                DatePicker("Startdatum", selection: $draft.startDate, displayedComponents: .date)
-                Toggle("Enddatum setzen", isOn: $hasEndDate.animation())
-                if hasEndDate {
-                    DatePicker(
-                        "Enddatum",
-                        selection: Binding(
-                            get: { draft.endDate ?? draft.startDate },
-                            set: { draft.endDate = $0 }
-                        ),
-                        displayedComponents: .date
-                    )
-                }
-            }
-        }
-        .navigationTitle(draft.id == nil ? "Dauermedikation" : "Bearbeiten")
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Abbrechen") {
-                    onCancel()
-                    dismiss()
-                }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Sichern") {
-                    var normalizedDraft = draft
-                    if !hasEndDate {
-                        normalizedDraft.endDate = nil
-                    }
-                    onSave(normalizedDraft)
-                    dismiss()
-                }
-            }
-        }
     }
 }
 
@@ -957,7 +756,7 @@ private enum ConflictDiffPresenter {
         case .medicationDefinition(let payload):
             return payload.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Medikament" : payload.name
         case .continuousMedication(let payload):
-            return payload.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Dauermedikation" : payload.name
+            return payload.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Regelmäßige Medikation" : payload.name
         }
     }
 
@@ -1002,7 +801,7 @@ private enum ConflictDiffPresenter {
         appendDifference(id: "functionalImpact", label: "Auswirkung im Alltag", myValue: text(local.functionalImpact), cloudValue: text(remote.functionalImpact), to: &differences)
         appendDifference(id: "menstruationStatus", label: "Zyklusstatus", myValue: menstruationStatus(local.menstruationStatus), cloudValue: menstruationStatus(remote.menstruationStatus), to: &differences)
         appendDifference(id: "medications", label: "Medikamente", myValue: medicationList(local.medications), cloudValue: medicationList(remote.medications), to: &differences)
-        appendDifference(id: "continuousMedicationChecks", label: "Dauermedikation", myValue: continuousMedicationChecks(local.continuousMedicationChecks), cloudValue: continuousMedicationChecks(remote.continuousMedicationChecks), to: &differences)
+        appendDifference(id: "continuousMedicationChecks", label: "Regelmäßige Medikation", myValue: continuousMedicationChecks(local.continuousMedicationChecks), cloudValue: continuousMedicationChecks(remote.continuousMedicationChecks), to: &differences)
         appendDifference(id: "weatherSnapshot", label: "Wetter", myValue: weather(local.weatherSnapshot), cloudValue: weather(remote.weatherSnapshot), to: &differences)
         appendDifference(id: "healthContext", label: "Apple-Health-Kontext", myValue: healthContext(local.healthContext), cloudValue: healthContext(remote.healthContext), to: &differences)
     }
