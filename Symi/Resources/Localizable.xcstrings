@@ -171,6 +171,16 @@
         }
       }
     },
+    "%@. %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. %2$@"
+          }
+        }
+      }
+    },
     "%lld" : {
       "localizations" : {
         "en" : {
@@ -335,6 +345,7 @@
       }
     },
     "Aktive Episoden" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -353,6 +364,9 @@
           }
         }
       }
+    },
+    "Aktiviert" : {
+
     },
     "Aktualisieren" : {
       "localizations" : {
@@ -519,9 +533,6 @@
         }
       }
     },
-    "App-Information" : {
-
-    },
     "App-Nutzung" : {
       "localizations" : {
         "en" : {
@@ -563,6 +574,7 @@
       }
     },
     "Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -807,6 +819,9 @@
         }
       }
     },
+    "Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar." : {
+
+    },
     "Das Projekt steht unter der GNU GPL v3." : {
       "localizations" : {
         "en" : {
@@ -860,6 +875,9 @@
         }
       }
     },
+    "Daten zurücksetzen" : {
+
+    },
     "Datenschutz und Hinweise" : {
       "localizations" : {
         "en" : {
@@ -911,6 +929,9 @@
           }
         }
       }
+    },
+    "Deaktiviert" : {
+
     },
     "Dein Eintrag hilft dir, Muster besser zu erkennen." : {
       "localizations" : {
@@ -1177,6 +1198,7 @@
       }
     },
     "Download: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1714,12 +1736,6 @@
         }
       }
     },
-    "iCloud-Daten verwalten" : {
-
-    },
-    "iCloud-Synchronisation" : {
-
-    },
     "In Sekunden eintragen" : {
       "localizations" : {
         "en" : {
@@ -2033,6 +2049,7 @@
       }
     },
     "Lesen und Schreiben werden getrennt verwaltet. Die App nutzt nur Daten, die für Schmerzepisoden als Kontext sinnvoll sind." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2549,7 +2566,7 @@
         }
       }
     },
-    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Bei aktiviertem Cloud-Sync läuft der Abgleich automatisch; „Jetzt synchronisieren“ startet zusätzlich sofort einen Lauf." : {
+    "Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Änderungen werden automatisch synchronisiert. „Jetzt synchronisieren“ startet zusätzlich sofort einen Lauf." : {
 
     },
     "Paracetamol" : {
@@ -3052,6 +3069,7 @@
       }
     },
     "Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3072,6 +3090,7 @@
       }
     },
     "symiapp.com" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3276,6 +3295,7 @@
       }
     },
     "Upload: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

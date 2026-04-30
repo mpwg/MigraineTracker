@@ -158,6 +158,102 @@ final class SettingsController {
         usageDataConsentService.usageDataConsent == .allowed
     }
 
+    var syncStatusTitle: String {
+        if !isSyncEnabled {
+            return "Synchronisation deaktiviert"
+        }
+
+        if !syncService.conflicts.isEmpty {
+            return "Konflikt vorhanden"
+        }
+
+        switch syncService.status.state {
+        case .disabled:
+            return "Synchronisation deaktiviert"
+        case .ready:
+            return "Synchronisiert"
+        case .syncing:
+            return "Wird synchronisiert …"
+        case .needsAttention, .noICloudAccount, .offline:
+            return "iCloud nicht verfügbar"
+        case .conflict:
+            return "Konflikt vorhanden"
+        }
+    }
+
+    var syncStatusDetail: String {
+        if !isSyncEnabled {
+            return "Änderungen bleiben lokal auf diesem Gerät."
+        }
+
+        if syncService.status.queuedUpdates > 0 {
+            return "\(syncService.status.queuedUpdates) Änderung\(syncService.status.queuedUpdates == 1 ? "" : "en") warten auf Upload"
+        }
+
+        if !syncService.conflicts.isEmpty {
+            return "\(syncService.conflicts.count) Konflikt\(syncService.conflicts.count == 1 ? "" : "e") warten auf deine Entscheidung"
+        }
+
+        guard let lastSyncDate else {
+            return "Noch keine Daten synchronisiert"
+        }
+
+        return "Letzte Aktualisierung: \(relativeDateFormatter.localizedString(for: lastSyncDate, relativeTo: .now))"
+    }
+
+    var syncLogSubtitle: String {
+        if let latest = logEntries.first {
+            return "Letzter Eintrag: \(latest.timestamp.formatted(date: .abbreviated, time: .shortened))"
+        }
+
+        return "Letzter Eintrag: Noch kein Protokoll vorhanden"
+    }
+
+    var userFacingSyncErrorMessage: String? {
+        guard let lastError = syncService.status.lastError?.trimmingCharacters(in: .whitespacesAndNewlines), !lastError.isEmpty else {
+            return nil
+        }
+
+        if lastError.localizedCaseInsensitiveContains("Could not determine iCloud account status") {
+            return "iCloud ist derzeit nicht verfügbar"
+        }
+
+        return "Die Synchronisation ist gerade nicht verfügbar. Bitte versuche es später erneut."
+    }
+
+    var isHealthConnected: Bool {
+        let status = healthAuthorization
+        return status.isAvailable && (status.isReadEnabled || status.isWriteEnabled)
+    }
+
+    var healthConnectionStatusTitle: String {
+        isHealthConnected ? "Verbunden" : "Nicht verbunden"
+    }
+
+    var appVersionDisplay: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+        let cleanVersion = version?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanBuild = build?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        switch (cleanVersion?.isEmpty == false ? cleanVersion : nil, cleanBuild?.isEmpty == false ? cleanBuild : nil) {
+        case let (version?, build?):
+            return "\(version) (\(build))"
+        case let (version?, nil):
+            return version
+        case let (nil, build?):
+            return build
+        case (nil, nil):
+            return "Unbekannt"
+        }
+    }
+
+    private var lastSyncDate: Date? {
+        [syncService.status.lastUploadedAt, syncService.status.lastDownloadedAt]
+            .compactMap { $0 }
+            .max()
+    }
+
     func load() {
         loadTask?.cancel()
         syncService.refreshStatus()
@@ -289,5 +385,12 @@ final class SettingsController {
 
     func setUsageDataCollectionAllowed(_ allowed: Bool) {
         usageDataConsentService.setUsageDataCollectionAllowed(allowed)
+    }
+
+    private var relativeDateFormatter: RelativeDateTimeFormatter {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        formatter.locale = Locale(identifier: "de_DE")
+        return formatter
     }
 }

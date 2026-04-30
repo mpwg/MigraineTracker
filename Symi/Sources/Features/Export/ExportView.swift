@@ -5,6 +5,7 @@ struct SettingsView: View {
     let dependencies: SettingsFeatureDependencies
     let showsCloseButton: Bool
     @State private var controller: SettingsController
+    @State private var showsResetInformation = false
 
     init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
         self.dependencies = dependencies
@@ -13,144 +14,191 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                NavigationLink {
-                    SyncStatusView(controller: controller)
-                } label: {
-                    VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-                        HStack {
-                            Text("Status")
-                            Spacer()
-                            statusBadge
-                        }
-
-                        Text(statusSubtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        if let syncStalenessWarning {
-                            Label(syncStalenessWarning, systemImage: "exclamationmark.triangle.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(AppTheme.symiCoral)
-                        }
-
-                        HStack(spacing: SymiSpacing.lg) {
-                            statValue(title: "Wartet", value: "\(controller.syncStatus.queuedUpdates)")
-                            statValue(title: "Lokal", value: "\(controller.syncStatus.unsyncedRecords)")
-                            statValue(title: "Konflikte", value: "\(controller.conflicts.count)")
-                        }
-
-                        VStack(alignment: .leading, spacing: SymiSpacing.micro) {
-                            Text("Upload: \(formatted(controller.syncStatus.lastUploadedAt))")
-                            Text("Download: \(formatted(controller.syncStatus.lastDownloadedAt))")
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
+                SettingsSectionCard(title: "Synchronisation") {
+                    NavigationLink {
+                        SyncStatusView(controller: controller)
+                    } label: {
+                        SettingsStatusHeader(
+                            systemImage: syncStatusIcon,
+                            title: controller.syncStatusTitle,
+                            detail: controller.syncStatusDetail,
+                            tint: statusColor
+                        )
                     }
-                    .padding(.vertical, SymiSpacing.compact)
-                    .brandGroupedRow()
-                }
 
-                Toggle("iCloud-Synchronisation", isOn: Binding(
-                    get: { controller.isSyncEnabled },
-                    set: { controller.setSyncEnabled($0) }
-                ))
-                .tint(AppTheme.symiPetrol)
+                    SettingsDivider()
 
-                NavigationLink {
-                    ManageCloudDataView(dataExportDependencies: dependencies.dataExport, controller: controller)
-                } label: {
-                    Label("iCloud-Daten verwalten", systemImage: "icloud")
-                }
+                    SettingsToggleRow(
+                        title: "Synchronisation aktivieren",
+                        isOn: Binding(
+                            get: { controller.isSyncEnabled },
+                            set: { controller.setSyncEnabled($0) }
+                        )
+                    )
 
-                if !controller.conflicts.isEmpty {
+                    SettingsDivider()
+
+                    Button {
+                        Task {
+                            await controller.syncNow()
+                        }
+                    } label: {
+                        SettingsRow(
+                            title: "Jetzt synchronisieren",
+                            subtitle: "Alle Daten mit iCloud abgleichen",
+                            systemImage: "arrow.triangle.2.circlepath",
+                            isEnabled: controller.isSyncEnabled
+                        )
+                    }
+                    .disabled(!controller.isSyncEnabled)
+
+                    SettingsDivider()
+
                     NavigationLink {
                         ManageCloudDataView(dataExportDependencies: dependencies.dataExport, controller: controller)
                     } label: {
-                        Label("\(controller.conflicts.count) Sync-Konflikt\(controller.conflicts.count == 1 ? "" : "e") entscheiden", systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(AppTheme.symiCoral)
+                        SettingsRow(
+                            title: controller.conflicts.isEmpty ? "Cloud-Daten verwalten" : "\(controller.conflicts.count) Sync-Konflikt\(controller.conflicts.count == 1 ? "" : "e") entscheiden",
+                            subtitle: "Speicher, Geräte und Daten",
+                            systemImage: controller.conflicts.isEmpty ? "icloud" : "exclamationmark.triangle.fill",
+                            tint: controller.conflicts.isEmpty ? AppTheme.symiPetrol : AppTheme.symiCoral,
+                            showsChevron: true
+                        )
+                    }
+
+                    SettingsDivider()
+
+                    NavigationLink {
+                        SyncLogView(controller: controller)
+                    } label: {
+                        SettingsRow(
+                            title: "Sync-Protokoll",
+                            subtitle: controller.syncLogSubtitle,
+                            systemImage: "text.document",
+                            showsChevron: true
+                        )
                     }
                 }
 
-                NavigationLink {
-                    SyncLogView(controller: controller)
-                } label: {
-                    VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                        Label("Sync-Protokoll", systemImage: "text.document")
-                        Text(logSubtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                SettingsSectionCard(title: "Verbindungen") {
+                    NavigationLink {
+                        AppleHealthSettingsView(controller: controller)
+                    } label: {
+                        SettingsRow(
+                            title: "Apple Health",
+                            subtitle: "Lese- und Schreibzugriff für Symi",
+                            assetImageName: "AppleHealthIcon",
+                            rightValue: controller.healthConnectionStatusTitle,
+                            showsChevron: true
+                        )
                     }
-                    .brandGroupedRow()
-                }
-            } header: {
-                Text("Synchronisation")
-            } footer: {
-                Text(syncContractSummary)
-            }
 
-            Section {
-                NavigationLink {
-                    AppleHealthSettingsView(controller: controller)
-                } label: {
-                    VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-                        HStack {
-                            Label("Apple Health", systemImage: "heart.text.square")
-                            Spacer()
-                            Text(healthStatusTitle)
-                                .foregroundStyle(.secondary)
+                    if !controller.isHealthConnected {
+                        SettingsDivider()
+
+                        NavigationLink {
+                            AppleHealthSettingsView(controller: controller)
+                        } label: {
+                            SettingsRow(
+                                title: "Verbindung herstellen",
+                                systemImage: "link",
+                                showsChevron: true
+                            )
                         }
-
-                        Text("Lesen und Schreiben werden getrennt verwaltet. Die App nutzt nur Daten, die für Schmerzepisoden als Kontext sinnvoll sind.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, SymiSpacing.compact)
-                    .brandGroupedRow()
                 }
-            } header: {
-                Text("Verbindungen")
-            } footer: {
-                Text("Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen.")
-            }
 
-            Section("Daten & Sicherheit") {
-                BackupSettingsCardView(dependencies: dependencies.dataExport)
+                SettingsSectionCard(title: "Daten & Sicherheit") {
+                    NavigationLink {
+                        DataBackupSettingsView(dependencies: dependencies.dataExport)
+                    } label: {
+                        SettingsRow(
+                            title: "Backup erstellen",
+                            subtitle: "Sichert alle Einträge und Vorlagen",
+                            systemImage: "externaldrive.badge.plus",
+                            showsChevron: true
+                        )
+                    }
 
-                NavigationLink {
-                    ProductInformationView(mode: .standard)
-                } label: {
-                    Label("Datenschutz und Hinweise", systemImage: "hand.raised")
+                    SettingsDivider()
+
+                    NavigationLink {
+                        DataBackupSettingsView(dependencies: dependencies.dataExport)
+                    } label: {
+                        SettingsRow(
+                            title: "Daten exportieren",
+                            subtitle: "Deine Daten als Datei sichern",
+                            systemImage: "square.and.arrow.up",
+                            showsChevron: true
+                        )
+                    }
+
+                    SettingsDivider()
+
+                    Button {
+                        showsResetInformation = true
+                    } label: {
+                        SettingsRow(
+                            title: "Daten zurücksetzen",
+                            subtitle: "Alle Daten unwiderruflich löschen",
+                            systemImage: "trash",
+                            tint: AppTheme.symiCoral,
+                            isDestructive: true
+                        )
+                    }
+                }
+
+                SettingsSectionCard(title: "Datenschutz") {
+                    SettingsToggleRow(
+                        title: "Anonyme Nutzungsdaten teilen",
+                        subtitle: "Hilft uns, Symi zu verbessern. Deine persönlichen Einträge bleiben immer privat.",
+                        isOn: Binding(
+                            get: { controller.isUsageDataCollectionAllowed },
+                            set: { controller.setUsageDataCollectionAllowed($0) }
+                        )
+                    )
+
+                    SettingsDivider()
+
+                    NavigationLink {
+                        ProductInformationView(mode: .standard)
+                    } label: {
+                        SettingsRow(
+                            title: "Datenschutz & Hinweise",
+                            systemImage: "hand.raised",
+                            showsChevron: true
+                        )
+                    }
+                }
+
+                SettingsSectionCard(title: "App") {
+                    SettingsRow(
+                        title: "Version",
+                        systemImage: "info.circle",
+                        rightValue: controller.appVersionDisplay
+                    )
+
+                    SettingsDivider()
+
+                    Link(destination: ProductBranding.supportURL) {
+                        SettingsRow(
+                            title: "Feedback senden",
+                            subtitle: "Hast du Wünsche oder Probleme?",
+                            systemImage: "bubble.left.and.text.bubble.right",
+                            showsChevron: true
+                        )
+                    }
                 }
             }
-
-            Section {
-                Toggle("Anonyme Nutzungsdaten teilen", isOn: Binding(
-                    get: { controller.isUsageDataCollectionAllowed },
-                    set: { controller.setUsageDataCollectionAllowed($0) }
-                ))
-                .tint(AppTheme.symiPetrol)
-            } header: {
-                Text("App")
-            } footer: {
-                Text("Symi verwendet nur anonyme Nutzungs- und Diagnosedaten. Tagebuchinhalte, Gesundheitsdaten und personenbezogene Daten werden nicht übertragen. Du kannst diese Einstellung jederzeit ändern.")
-            }
-
-            Section("App-Information") {
-                Link(destination: ProductBranding.websiteURL) {
-                    Label("symiapp.com", systemImage: "link")
-                }
-            }
-
-            Section("Übersicht") {
-                LabeledContent("Aktive Episoden", value: "\(controller.summary.activeEpisodeCount)")
-                LabeledContent("Papierkorb", value: "\(controller.summary.trashCount)")
-                LabeledContent("Konflikte", value: "\(controller.summary.conflictCount)")
-            }
+            .padding(.horizontal, SymiSpacing.xxl)
+            .padding(.top, SymiSpacing.xxxl)
+            .padding(.bottom, 96)
+            .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
         .navigationTitle("Einstellungen")
-        .brandGroupedScreen()
+        .brandScreen()
         .toolbar {
             if showsCloseButton {
                 ToolbarItem(placement: closeButtonPlacement) {
@@ -168,10 +216,19 @@ struct SettingsView: View {
             controller.load()
             controller.refreshLog(limit: 1)
         }
+        .alert("Daten zurücksetzen", isPresented: $showsResetInformation) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar.")
+        }
     }
 
     private var statusColor: Color {
-        switch controller.syncStatus.state {
+        if !controller.conflicts.isEmpty {
+            return AppTheme.symiCoral
+        }
+
+        return switch controller.syncStatus.state {
         case .ready:
             AppTheme.symiSage
         case .syncing:
@@ -185,91 +242,21 @@ struct SettingsView: View {
         }
     }
 
-    private var statusSubtitle: String {
-        if let lastError = controller.syncStatus.lastError, !lastError.isEmpty {
-            return lastError
+    private var syncStatusIcon: String {
+        if !controller.conflicts.isEmpty {
+            return "exclamationmark.triangle.fill"
         }
 
-        return controller.isSyncEnabled
-            ? "iCloud-Synchronisation ist bereit. Lokale Änderungen bleiben bis zum nächsten Abgleich sicher auf dem Gerät."
-            : "iCloud-Synchronisation ist deaktiviert. Alle Daten bleiben lokal auf diesem Gerät erhalten."
-    }
-
-    private var syncStalenessWarning: String? {
-        controller.syncStatus.staleDataWarning(
-            isSyncEnabled: controller.isSyncEnabled,
-            openConflictCount: controller.conflicts.count
-        )
-    }
-
-    private var syncContractSummary: String {
-        [
-            "iCloud-Sync läuft automatisch, sobald er aktiviert ist.",
-            "Symi gleicht Änderungen ab, wenn die App geöffnet wird, wenn du Daten änderst oder wenn die Verbindung wieder da ist.",
-            "„Jetzt synchronisieren“ startet zusätzlich sofort einen Abgleich."
-        ].joined(separator: " ")
-    }
-
-    private var statusBadge: some View {
-        HStack(spacing: SymiSpacing.xs) {
-            Circle()
-                .fill(statusColor)
-                .frame(width: SymiSize.statusDot, height: SymiSize.statusDot)
-            Text(controller.syncStatus.state.displayTitle)
-                .foregroundStyle(.secondary)
+        switch controller.syncStatus.state {
+        case .syncing:
+            return "arrow.triangle.2.circlepath"
+        case .needsAttention, .noICloudAccount, .offline:
+            return "icloud.slash"
+        case .conflict:
+            return "exclamationmark.triangle.fill"
+        case .disabled, .ready:
+            return "icloud"
         }
-    }
-
-    private func statValue(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.micro) {
-            Text(value)
-                .font(.headline)
-                .foregroundStyle(.primary)
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private func formatted(_ date: Date) -> String {
-        date.formatted(date: .abbreviated, time: .shortened)
-    }
-
-    private func formatted(_ date: Date?) -> String {
-        guard let date else {
-            return "Noch nie"
-        }
-
-        return formatted(date)
-    }
-
-    private var logSubtitle: String {
-        if let latest = controller.logEntries.first {
-            return "Letzter Eintrag: \(formatted(latest.timestamp))"
-        }
-
-        return "Ansehen, teilen und bei Bedarf löschen."
-    }
-
-    private var healthStatusTitle: String {
-        let status = controller.healthAuthorization
-        guard status.isAvailable else {
-            return "Nicht verfügbar"
-        }
-
-        if status.isReadEnabled, status.isWriteEnabled {
-            return "Lesen und Schreiben"
-        }
-
-        if status.isReadEnabled {
-            return "Lesen"
-        }
-
-        if status.isWriteEnabled {
-            return "Schreiben"
-        }
-
-        return "Nicht verbunden"
     }
 
     private var closeButtonPlacement: ToolbarItemPlacement {
@@ -278,6 +265,180 @@ struct SettingsView: View {
         #else
         .topBarLeading
         #endif
+    }
+}
+
+private struct SettingsSectionCard<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.md) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(AppTheme.symiTextPrimary)
+                .accessibilityAddTraits(.isHeader)
+
+            VStack(spacing: SymiSpacing.zero) {
+                content
+            }
+            .padding(.vertical, SymiSpacing.xs)
+            .brandCard()
+        }
+    }
+}
+
+private struct SettingsStatusHeader: View {
+    let systemImage: String
+    let title: String
+    let detail: String
+    let tint: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: SymiSpacing.md) {
+            Image(systemName: systemImage)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(tint)
+                .frame(width: 32, height: 32)
+                .background(tint.opacity(SymiOpacity.secondaryFill), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                Text(detail)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: SymiSpacing.sm)
+
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .padding(.top, SymiSpacing.xs)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, SymiSpacing.lg)
+        .padding(.vertical, SymiSpacing.md)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(detail)")
+    }
+}
+
+private struct SettingsRow: View {
+    let title: String
+    var subtitle: String?
+    var systemImage: String?
+    var assetImageName: String?
+    var rightValue: String?
+    var tint: Color = AppTheme.symiPetrol
+    var showsChevron = false
+    var isDestructive = false
+    var isEnabled = true
+
+    var body: some View {
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
+            iconView
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(isDestructive ? AppTheme.symiCoral : AppTheme.symiTextPrimary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Spacer(minLength: SymiSpacing.sm)
+
+            if let rightValue {
+                Text(rightValue)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .multilineTextAlignment(.trailing)
+            }
+
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+        }
+        .padding(.horizontal, SymiSpacing.lg)
+        .padding(.vertical, SymiSpacing.md)
+        .frame(minHeight: SymiSize.minInteractiveHeight)
+        .contentShape(Rectangle())
+        .opacity(isEnabled ? 1 : 0.45)
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var iconView: some View {
+        if let assetImageName {
+            Image(assetImageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 28, height: 28)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .accessibilityHidden(true)
+        } else if let systemImage {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(isDestructive ? AppTheme.symiCoral : tint)
+                .frame(width: 30, height: 30)
+                .background((isDestructive ? AppTheme.symiCoral : tint).opacity(SymiOpacity.secondaryFill), in: Circle())
+                .accessibilityHidden(true)
+        }
+    }
+}
+
+private struct SettingsToggleRow: View {
+    let title: String
+    var subtitle: String?
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .tint(AppTheme.symiPetrol)
+        .padding(.horizontal, SymiSpacing.lg)
+        .padding(.vertical, SymiSpacing.md)
+        .frame(minHeight: SymiSize.minInteractiveHeight)
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn ? "Aktiviert" : "Deaktiviert")
+    }
+}
+
+private struct SettingsDivider: View {
+    var body: some View {
+        Divider()
+            .padding(.leading, 62)
     }
 }
 
@@ -404,7 +565,7 @@ private struct SyncStatusView: View {
                         .brandGroupedRow()
                 }
 
-                if let lastError = controller.syncStatus.lastError {
+                if let lastError = controller.userFacingSyncErrorMessage {
                     VStack(alignment: .leading, spacing: SymiSpacing.compact) {
                         Text("Letzter Fehler")
                         Text(lastError)
@@ -423,7 +584,7 @@ private struct SyncStatusView: View {
             Section("Sync-Vertrag") {
                 Text([
                     "Symi speichert deine Daten zuerst sicher auf diesem Gerät.",
-                    "Wenn Cloud-Sync aktiv ist, gleicht Symi Änderungen automatisch mit iCloud ab: beim Aktivieren, beim Öffnen der App, nach Änderungen und sobald die Verbindung wieder da ist.",
+                    "Änderungen werden automatisch synchronisiert, sobald iCloud-Sync aktiv ist.",
                     "„Jetzt synchronisieren“ startet zusätzlich sofort einen Abgleich.",
                     "Wenn etwas nicht klappt, bleiben deine lokalen Daten erhalten. Symi zeigt dir, ob du es erneut versuchen kannst oder ob erst ein App- oder Cloud-Problem behoben werden muss.",
                     "Bei Unterschieden zwischen Geräten entscheidet Symi nicht still für dich. Konflikte bleiben sichtbar, bis du auswählst, welcher Stand gelten soll."
@@ -451,7 +612,7 @@ private struct SyncStatusView: View {
 
     private func formatted(_ date: Date?) -> String {
         guard let date else {
-            return "Noch nie"
+            return "Noch keine Daten synchronisiert"
         }
 
         return date.formatted(date: .numeric, time: .shortened)
@@ -462,7 +623,7 @@ private struct SyncStatusView: View {
         case .disabled:
             "Der Cloud-Sync ist ausgeschaltet. Lokale Daten bleiben unverändert verfügbar."
         case .ready:
-            "Der Sync-Dienst ist bereit. Änderungen werden automatisch und per „Jetzt synchronisieren“ in die private iCloud-Datenbank übertragen."
+            "Der Sync-Dienst ist bereit. Änderungen werden automatisch synchronisiert. „Jetzt synchronisieren“ startet zusätzlich sofort einen Abgleich."
         case .syncing:
             "Es läuft gerade ein Abgleich zwischen lokalem Speicher und iCloud."
         case .needsAttention:
@@ -509,7 +670,7 @@ private struct ManageCloudDataView: View {
             } header: {
                 Text("Übersicht")
             } footer: {
-                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Bei aktiviertem Cloud-Sync läuft der Abgleich automatisch; „Jetzt synchronisieren“ startet zusätzlich sofort einen Lauf.")
+                Text("Papierkorb-Einträge bleiben lokal und in der Cloud erhalten, bis du sie bewusst wiederherstellst oder später einmal endgültig entfernst. Änderungen werden automatisch synchronisiert. „Jetzt synchronisieren“ startet zusätzlich sofort einen Lauf.")
             }
 
             Section {
@@ -672,7 +833,7 @@ private struct ManageCloudDataView: View {
 
     private func formatted(_ date: Date?) -> String {
         guard let date else {
-            return "Noch nie"
+            return "Noch keine Daten synchronisiert"
         }
 
         return date.formatted(date: .numeric, time: .shortened)
