@@ -22,7 +22,7 @@ enum Tab: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .journal: "book.pages"
-        case .insights: "sparkle.magnifyingglass"
+        case .insights: "sparkle.text.clipboard"
         case .report: "doc.text"
         case .therapy: "pills.fill"
         case .settings: "gearshape"

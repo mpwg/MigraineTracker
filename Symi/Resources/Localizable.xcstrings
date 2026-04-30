@@ -423,6 +423,9 @@
         }
       }
     },
+    "Alles ist eingerichtet" : {
+
+    },
     "Änderungen speichern" : {
       "localizations" : {
         "en" : {
@@ -765,9 +768,6 @@
 
     },
     "Cloud-Daten wirklich löschen?" : {
-
-    },
-    "Danke. Deine freigegebenen Daten helfen Symi, deine Insights besser einzuordnen." : {
 
     },
     "Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar." : {
@@ -1177,7 +1177,7 @@
         }
       }
     },
-    "Du kannst zusätzliche Daten direkt in der Health App freigeben, um noch bessere Zusammenhänge zu erkennen." : {
+    "Du kannst weitere Daten in der Health App aktivieren, um noch bessere Einblicke zu erhalten." : {
 
     },
     "Eigenes Medikament" : {
@@ -1505,6 +1505,9 @@
           }
         }
       }
+    },
+    "Freigegeben" : {
+
     },
     "Frequenz oder Uhrzeit, optional" : {
 
@@ -2244,9 +2247,6 @@
         }
       }
     },
-    "Nicht gewährte Kategorien" : {
-
-    },
     "Noch keine Einträge im Therapieverlauf." : {
 
     },
@@ -2389,6 +2389,9 @@
           }
         }
       }
+    },
+    "Optional" : {
+
     },
     "Optionale Details" : {
       "localizations" : {
