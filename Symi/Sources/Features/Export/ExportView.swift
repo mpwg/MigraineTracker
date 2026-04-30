@@ -6,6 +6,8 @@ struct SettingsView: View {
     let showsCloseButton: Bool
     @State private var controller: SettingsController
     @State private var showsResetInformation = false
+    @State private var showsDisableSyncConfirmation = false
+    @State private var showsDeleteCloudDataConfirmation = false
 
     init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
         self.dependencies = dependencies
@@ -30,7 +32,13 @@ struct SettingsView: View {
                         tint: AppTheme.symiPetrol,
                         isOn: Binding(
                             get: { controller.isSyncEnabled },
-                            set: { controller.setSyncEnabled($0) }
+                            set: { isEnabled in
+                                if isEnabled {
+                                    controller.setSyncEnabled(true)
+                                } else {
+                                    showsDisableSyncConfirmation = true
+                                }
+                            }
                         )
                     )
 
@@ -211,6 +219,56 @@ struct SettingsView: View {
         } message: {
             Text("Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar.")
         }
+        .confirmationDialog(
+            "Synchronisation deaktivieren?",
+            isPresented: $showsDisableSyncConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Daten behalten") {
+                controller.disableSyncKeepingCloudData()
+            }
+
+            if controller.canOfferCloudDataDeletion {
+                Button("Cloud-Daten löschen", role: .destructive) {
+                    showsDeleteCloudDataConfirmation = true
+                }
+            }
+
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text(disableSyncConfirmationMessage)
+        }
+        .confirmationDialog(
+            "Cloud-Daten wirklich löschen?",
+            isPresented: $showsDeleteCloudDataConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Jetzt löschen", role: .destructive) {
+                Task {
+                    await controller.disableSyncAndDeleteCloudData()
+                }
+            }
+
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden.")
+        }
+    }
+
+    private var disableSyncConfirmationMessage: String {
+        guard controller.canOfferCloudDataDeletion else {
+            if controller.isCloudUnavailableForSyncDisableFlow {
+                return "iCloud ist derzeit nicht verfügbar.\nDeine Daten bleiben auf diesem Gerät gespeichert."
+            }
+
+            return "Deine Daten bleiben auf diesem Gerät gespeichert."
+        }
+
+        if controller.isCloudUnavailableForSyncDisableFlow {
+            return "iCloud ist derzeit nicht verfügbar.\nDeine Daten bleiben auf diesem Gerät gespeichert.\nMöchtest du auch die Daten aus der Cloud entfernen?"
+        }
+
+        return "Deine Daten bleiben auf diesem Gerät gespeichert.\nMöchtest du auch die Daten aus der Cloud entfernen?"
     }
 
     private var statusColor: Color {

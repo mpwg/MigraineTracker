@@ -982,6 +982,13 @@ private final class FakeSyncProvider: SyncProvider {
             await eventHandler(.didFailToSend(failures))
         }
     }
+
+    func deleteCloudData() async throws {
+        lock.withLock {
+            queuedRecordNames.removeAll()
+            _sentRecordNames.removeAll()
+        }
+    }
 }
 
 private func productionSchemaCKError() -> CKError {

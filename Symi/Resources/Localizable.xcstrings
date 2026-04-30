@@ -811,6 +811,9 @@
         }
       }
     },
+    "Cloud-Daten löschen" : {
+
+    },
     "Cloud-Daten verwalten" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -821,6 +824,9 @@
           }
         }
       }
+    },
+    "Cloud-Daten wirklich löschen?" : {
+
     },
     "Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar." : {
 
@@ -866,6 +872,9 @@
       }
     },
     "Daten & Sicherheit" : {
+
+    },
+    "Daten behalten" : {
 
     },
     "Daten wiederherstellen" : {
@@ -975,6 +984,9 @@
           }
         }
       }
+    },
+    "Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden." : {
+
     },
     "Deine Einträge" : {
       "localizations" : {
@@ -1798,6 +1810,9 @@
           }
         }
       }
+    },
+    "Jetzt löschen" : {
+
     },
     "Jetzt nicht" : {
       "localizations" : {
@@ -3196,6 +3211,9 @@
           }
         }
       }
+    },
+    "Synchronisation deaktivieren?" : {
+
     },
     "Tagebuch" : {
       "localizations" : {

@@ -24,6 +24,10 @@ final class SyncServiceAdapter: SyncService {
         await coordinator.syncNow()
     }
 
+    func disableSyncAndDeleteCloudData() async {
+        await coordinator.disableSyncAndDeleteCloudData()
+    }
+
     func retryLastError() async {
         await coordinator.retryLastError()
     }
