@@ -23,15 +23,23 @@ final class AppleHealthKitService: HealthService {
             return .unavailable
         }
 
-        let readTypes = preferences.enabledTypes(for: .read, definitions: readDefinitions)
-        let writeTypes = preferences.enabledTypes(for: .write, definitions: writeDefinitions)
+        let selectedReadTypes = preferences.enabledTypes(for: .read, definitions: readDefinitions)
+        let requestedReadTypes = preferences.requestedTypes(for: .read, definitions: readDefinitions)
+        let enabledReadTypes = selectedReadTypes.intersection(requestedReadTypes)
+        let selectedWriteTypes = preferences.enabledTypes(for: .write, definitions: writeDefinitions)
+        let requestedWriteTypes = preferences.requestedTypes(for: .write, definitions: writeDefinitions)
+        let enabledWriteTypes = authorizedWriteTypes(in: selectedWriteTypes)
 
         return HealthAuthorizationSnapshot(
             isAvailable: true,
-            isReadEnabled: preferences.hasRequestedAuthorization(for: .read) && !readTypes.isEmpty,
-            isWriteEnabled: preferences.hasRequestedAuthorization(for: .write) && !writeTypes.isEmpty,
-            enabledReadTypes: readTypes,
-            enabledWriteTypes: writeTypes,
+            isReadEnabled: !enabledReadTypes.isEmpty,
+            isWriteEnabled: !enabledWriteTypes.isEmpty,
+            enabledReadTypes: enabledReadTypes,
+            enabledWriteTypes: enabledWriteTypes,
+            requestedReadTypes: requestedReadTypes,
+            requestedWriteTypes: requestedWriteTypes,
+            missingReadTypes: selectedReadTypes.subtracting(requestedReadTypes),
+            missingWriteTypes: selectedWriteTypes.subtracting(enabledWriteTypes),
             lastErrorMessage: nil
         )
     }
@@ -40,14 +48,32 @@ final class AppleHealthKitService: HealthService {
         preferences.setEnabled(enabled, type: type, direction: direction)
     }
 
+    func requestAuthorization() async throws {
+        guard Self.isAvailable else {
+            throw HealthIntegrationError.unavailable
+        }
+
+        #if canImport(HealthKit)
+        let readTypeIDs = preferences.enabledTypes(for: .read, definitions: readDefinitions)
+        let writeTypeIDs = preferences.enabledTypes(for: .write, definitions: writeDefinitions)
+        try await healthStore.requestAuthorization(
+            toShare: sampleTypes(for: writeTypeIDs),
+            read: objectTypes(for: readTypeIDs)
+        )
+        preferences.markAuthorizationRequested(for: readTypeIDs, direction: .read)
+        preferences.markAuthorizationRequested(for: writeTypeIDs, direction: .write)
+        #endif
+    }
+
     func requestReadAuthorization() async throws {
         guard Self.isAvailable else {
             throw HealthIntegrationError.unavailable
         }
 
         #if canImport(HealthKit)
-        try await healthStore.requestAuthorization(toShare: [], read: readObjectTypes())
-        preferences.markAuthorizationRequested(for: .read)
+        let readTypeIDs = preferences.enabledTypes(for: .read, definitions: readDefinitions)
+        try await healthStore.requestAuthorization(toShare: [], read: objectTypes(for: readTypeIDs))
+        preferences.markAuthorizationRequested(for: readTypeIDs, direction: .read)
         #endif
     }
 
@@ -57,8 +83,9 @@ final class AppleHealthKitService: HealthService {
         }
 
         #if canImport(HealthKit)
-        try await healthStore.requestAuthorization(toShare: writeSampleTypes(), read: [])
-        preferences.markAuthorizationRequested(for: .write)
+        let writeTypeIDs = preferences.enabledTypes(for: .write, definitions: writeDefinitions)
+        try await healthStore.requestAuthorization(toShare: sampleTypes(for: writeTypeIDs), read: [])
+        preferences.markAuthorizationRequested(for: writeTypeIDs, direction: .write)
         #endif
     }
 
@@ -146,16 +173,26 @@ final class AppleHealthKitService: HealthService {
     }
 
     #if canImport(HealthKit)
-    private func readObjectTypes() -> Set<HKObjectType> {
-        authorizationSnapshot().enabledReadTypes.compactMap(Self.objectType(for:)).reduce(into: Set<HKObjectType>()) { result, type in
+    private func objectTypes(for typeIDs: Set<HealthDataTypeID>) -> Set<HKObjectType> {
+        typeIDs.compactMap(Self.objectType(for:)).reduce(into: Set<HKObjectType>()) { result, type in
             result.insert(type)
         }
     }
 
-    private func writeSampleTypes() -> Set<HKSampleType> {
-        authorizationSnapshot().enabledWriteTypes.compactMap(Self.sampleType(for:)).reduce(into: Set<HKSampleType>()) { result, type in
+    private func sampleTypes(for typeIDs: Set<HealthDataTypeID>) -> Set<HKSampleType> {
+        typeIDs.compactMap(Self.sampleType(for:)).reduce(into: Set<HKSampleType>()) { result, type in
             result.insert(type)
         }
+    }
+
+    private func authorizedWriteTypes(in typeIDs: Set<HealthDataTypeID>) -> Set<HealthDataTypeID> {
+        Set(typeIDs.filter { typeID in
+            guard let sampleType = Self.sampleType(for: typeID) else {
+                return false
+            }
+
+            return healthStore.authorizationStatus(for: sampleType) == .sharingAuthorized
+        })
     }
 
     private static func objectType(for type: HealthDataTypeID) -> HKObjectType? {
@@ -419,6 +456,7 @@ final class HealthTypePreferences {
     private let defaults: UserDefaults
     private let keyPrefix = "health.type.enabled"
     private let authorizationKeyPrefix = "health.authorization.requested"
+    private let typeAuthorizationKeyPrefix = "health.type.authorization.requested"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -434,12 +472,27 @@ final class HealthTypePreferences {
         defaults.set(enabled, forKey: key(for: type, direction: direction))
     }
 
+    func requestedTypes(for direction: HealthDataDirection, definitions: [HealthDataTypeDefinition]) -> Set<HealthDataTypeID> {
+        Set(definitions.compactMap { definition in
+            hasRequestedAuthorization(for: definition.id, direction: direction) ? definition.id : nil
+        })
+    }
+
     func hasRequestedAuthorization(for direction: HealthDataDirection) -> Bool {
         defaults.bool(forKey: authorizationKey(for: direction))
     }
 
     func markAuthorizationRequested(for direction: HealthDataDirection) {
         defaults.set(true, forKey: authorizationKey(for: direction))
+    }
+
+    func markAuthorizationRequested(for types: Set<HealthDataTypeID>, direction: HealthDataDirection) {
+        guard !types.isEmpty else { return }
+
+        types.forEach { type in
+            defaults.set(true, forKey: authorizationKey(for: type, direction: direction))
+        }
+        markAuthorizationRequested(for: direction)
     }
 
     private func isEnabled(_ type: HealthDataTypeID, direction: HealthDataDirection, defaultValue: Bool) -> Bool {
@@ -457,5 +510,13 @@ final class HealthTypePreferences {
 
     private func authorizationKey(for direction: HealthDataDirection) -> String {
         "\(authorizationKeyPrefix).\(direction.rawValue)"
+    }
+
+    private func hasRequestedAuthorization(for type: HealthDataTypeID, direction: HealthDataDirection) -> Bool {
+        defaults.bool(forKey: authorizationKey(for: type, direction: direction))
+    }
+
+    private func authorizationKey(for type: HealthDataTypeID, direction: HealthDataDirection) -> String {
+        "\(typeAuthorizationKeyPrefix).\(direction.rawValue).\(type.rawValue)"
     }
 }

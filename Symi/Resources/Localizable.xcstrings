@@ -17,22 +17,6 @@
         }
       }
     },
-    "%@ · %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@"
-          }
-        }
-      }
-    },
     "%@ / 10" : {
       "localizations" : {
         "en" : {
@@ -386,6 +370,9 @@
         }
       }
     },
+    "Alle Daten bleiben auf deinem Gerät und werden niemals an Dritte gesendet." : {
+
+    },
     "Alle Einträge" : {
       "localizations" : {
         "en" : {
@@ -395,6 +382,9 @@
           }
         }
       }
+    },
+    "Alle Verbindungen werden getrennt" : {
+
     },
     "Alle wichtigen Einträge klar und verständlich zusammengefasst" : {
       "localizations" : {
@@ -508,6 +498,12 @@
           }
         }
       }
+    },
+    "Apple Health aktivieren" : {
+
+    },
+    "Apple Health Integration beenden" : {
+
     },
     "Apple Health optional" : {
       "localizations" : {
@@ -889,6 +885,9 @@
     "Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden." : {
 
     },
+    "Deine Daten. Deine Kontrolle." : {
+
+    },
     "Deine Einträge" : {
       "localizations" : {
         "en" : {
@@ -1132,6 +1131,9 @@
         }
       }
     },
+    "Du kannst den Zugriff jederzeit wieder aktivieren." : {
+
+    },
     "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
       "localizations" : {
         "en" : {
@@ -1142,6 +1144,9 @@
         }
       }
     },
+    "Du kannst Einträge zusätzlich in Apple Health speichern." : {
+
+    },
     "Du kannst entscheiden ob und in welchem Ausmaß du deine Gesundheitsdaten an diese App freigibst. Sie werden niemals an Dritte weitergegeben." : {
       "localizations" : {
         "en" : {
@@ -1151,6 +1156,9 @@
           }
         }
       }
+    },
+    "Du kannst weitere Daten in der Health App aktivieren, um noch bessere Einblicke zu erhalten." : {
+
     },
     "Eigenes Medikament" : {
       "localizations" : {
@@ -1478,6 +1486,9 @@
         }
       }
     },
+    "Freigegeben" : {
+
+    },
     "Frequenz oder Uhrzeit, optional" : {
 
     },
@@ -1517,16 +1528,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "For weather data, the app asks for your approximate location. Coordinates are only needed for the weather request and are never stored."
-          }
-        }
-      }
-    },
-    "Geschrieben werden nur ausreichend präzise, nutzererfasste Symptome. Zyklusangaben aus der App wie „aktuell“ oder „erwartet“ bleiben Kontext und werden nicht als exakte Health-Flow-Samples gespeichert." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only sufficiently precise, user-entered symptoms are written. Cycle entries from the app such as \"current\" or \"expected\" remain context and are not saved as exact Health flow samples."
           }
         }
       }
@@ -1597,6 +1598,9 @@
         }
       }
     },
+    "In Einstellungen öffnen" : {
+
+    },
     "In Sekunden eintragen" : {
       "localizations" : {
         "en" : {
@@ -1627,6 +1631,12 @@
         }
       }
     },
+    "Integration beenden" : {
+
+    },
+    "Integration beenden?" : {
+
+    },
     "Intensität" : {
       "localizations" : {
         "en" : {
@@ -1643,16 +1653,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intensity over time"
-          }
-        }
-      }
-    },
-    "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iOS manages Health permissions per data type. Denied read permissions appear in the app as missing data."
           }
         }
       }
@@ -1869,25 +1869,12 @@
         }
       }
     },
-    "Lese- und Schreibzugriff" : {
-
-    },
     "Lesen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read"
-          }
-        }
-      }
-    },
-    "Leserechte anfragen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Read Access"
           }
         }
       }
@@ -2047,6 +2034,9 @@
           }
         }
       }
+    },
+    "Mehr Daten verfügbar" : {
+
     },
     "Mehr gute Tage" : {
       "localizations" : {
@@ -2277,6 +2267,9 @@
         }
       }
     },
+    "Nur wenn aktiviert" : {
+
+    },
     "Nutzungsdaten anonym teilen?" : {
       "localizations" : {
         "en" : {
@@ -2346,6 +2339,9 @@
           }
         }
       }
+    },
+    "Optional" : {
+
     },
     "Optionale Details" : {
       "localizations" : {
@@ -2579,16 +2575,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Write"
-          }
-        }
-      }
-    },
-    "Schreibrechte anfragen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Write Access"
           }
         }
       }
@@ -3005,6 +2991,9 @@
         }
       }
     },
+    "Tippe dort auf „Health“ → „Datenzugriff & Geräte“ → „Symi“" : {
+
+    },
     "Trigger" : {
       "localizations" : {
         "en" : {
@@ -3061,16 +3050,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supports you when talking with your doctor"
-          }
-        }
-      }
-    },
-    "Verbindung" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection"
           }
         }
       }

@@ -399,6 +399,21 @@ final class SettingsController {
         healthSettingsRevision += 1
     }
 
+    func requestHealthAuthorization() async {
+        healthReadDefinitions.forEach { definition in
+            healthService.setEnabled(true, for: definition.id, direction: .read)
+        }
+        healthWriteDefinitions.forEach { definition in
+            healthService.setEnabled(true, for: definition.id, direction: .write)
+        }
+        try? await healthService.requestAuthorization()
+        healthSettingsRevision += 1
+    }
+
+    func reloadHealthAuthorizationState() {
+        healthSettingsRevision += 1
+    }
+
     func requestHealthReadAuthorization() async {
         try? await healthService.requestReadAuthorization()
         healthSettingsRevision += 1
@@ -406,6 +421,16 @@ final class SettingsController {
 
     func requestHealthWriteAuthorization() async {
         try? await healthService.requestWriteAuthorization()
+        healthSettingsRevision += 1
+    }
+
+    func disconnectAppleHealthIntegration() {
+        healthReadDefinitions.forEach { definition in
+            healthService.setEnabled(false, for: definition.id, direction: .read)
+        }
+        healthWriteDefinitions.forEach { definition in
+            healthService.setEnabled(false, for: definition.id, direction: .write)
+        }
         healthSettingsRevision += 1
     }
 
