@@ -340,7 +340,7 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
                     .datePickerStyle(.graphical)
                     .labelsHidden()
                     .tint(AppTheme.symiPetrol)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.opacity)
                     .onChange(of: selectedDate) { _, newValue in
                         onDateSelect(newValue)
                     }
