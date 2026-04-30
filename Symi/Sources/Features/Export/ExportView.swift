@@ -696,7 +696,7 @@ private struct ManageCloudDataView: View {
                 statusRow("Sync", controller.isSyncEnabled ? "Aktiviert" : "Deaktiviert")
                 statusRow("Letzter Upload", formatted(controller.syncStatus.lastUploadedAt))
                 statusRow("Letzter Download", formatted(controller.syncStatus.lastDownloadedAt))
-                statusRow("Ungesyncte Records", "\(controller.syncStatus.unsyncedRecords)")
+                statusRow("Nicht synchronisiert", "\(controller.syncStatus.unsyncedRecords)")
                 statusRow("Offene Konflikte", "\(controller.conflicts.count)")
                 statusRow("Papierkorb", "\(controller.summary.trashCount)")
 
@@ -739,7 +739,7 @@ private struct ManageCloudDataView: View {
                 if !controller.isSyncEnabled {
                     Text("Aktiviere den Sync, um iCloud-Synchronisation und Konfliktbehandlung zu verwenden.")
                 } else {
-                    Text("Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht.")
+                    Text("Wenn zwei Geräte denselben Eintrag unterschiedlich geändert haben, entscheidest du hier, welche Version bleiben soll.")
                 }
             }
 
@@ -755,32 +755,43 @@ private struct ManageCloudDataView: View {
                         .brandGroupedRow()
 
                     ForEach(controller.conflicts) { conflict in
+                        let differences = ConflictDiffPresenter.differences(for: conflict)
+
                         VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-                            Text(conflictTitle(for: conflict))
+                            Text(ConflictDiffPresenter.title(for: conflict))
                                 .font(.headline)
-                            Text("Lokaler Stand und Cloud-Stand unterscheiden sich.")
+                            Text("Es gibt unterschiedliche Änderungen für diesen Eintrag.")
                                 .font(.subheadline)
-                            Text(versionSummary("Lokal", envelope: conflict.local))
+
+                            Text("Bitte wähle, welche Version du behalten möchtest.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(versionSummary("Cloud", envelope: conflict.remote))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))")
-                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
+                            VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                                ForEach(differences) { difference in
+                                    ConflictDifferenceRow(difference: difference)
+                                }
+                            }
+                            .padding(.top, SymiSpacing.xxs)
+
                             HStack(spacing: SymiSpacing.sm) {
-                                Button("Lokale Version behalten") {
+                                Button("Meine Version behalten") {
                                     resolveConflict(conflict, preferLocal: true)
                                 }
                                 .buttonStyle(.bordered)
 
-                                Button("Cloud-Version übernehmen") {
-                                    resolveConflict(conflict, preferLocal: false)
+                                VStack(alignment: .leading, spacing: SymiSpacing.micro) {
+                                    Button("Version aus der Cloud verwenden") {
+                                        resolveConflict(conflict, preferLocal: false)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+
+                                    Text("(empfohlen, wenn du mehrere Geräte nutzt)")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
                                 }
-                                .buttonStyle(.borderedProminent)
                             }
+                            .padding(.top, SymiSpacing.xxs)
                             .disabled(isResolvingConflict)
                         }
                         .padding(.vertical, SymiSpacing.xxs)
@@ -841,16 +852,13 @@ private struct ManageCloudDataView: View {
         .refreshable {
             controller.load()
         }
-    }
-
-    private func conflictTitle(for conflict: SyncConflict) -> String {
-        switch conflict.entityType {
-        case .episode:
-            "Episode"
-        case .medicationDefinition:
-            "Medikamentenvorlage"
-        case .continuousMedication:
-            "Dauermedikation"
+        .task {
+            await resolveIdenticalConflictsIfNeeded()
+        }
+        .onChange(of: controller.conflicts.map(\.id)) { _, _ in
+            Task {
+                await resolveIdenticalConflictsIfNeeded()
+            }
         }
     }
 
@@ -869,11 +877,6 @@ private struct ManageCloudDataView: View {
         }
 
         return date.formatted(date: .numeric, time: .shortened)
-    }
-
-    private func versionSummary(_ title: String, envelope: SyncDocumentEnvelope) -> String {
-        let deletedSuffix = envelope.deletedAt == nil ? "" : " · gelöscht"
-        return "\(title): geändert \(formatted(envelope.modifiedAt))\(deletedSuffix)"
     }
 
     private var syncStalenessWarning: String? {
@@ -898,6 +901,262 @@ private struct ManageCloudDataView: View {
                 isResolvingConflict = false
             }
         }
+    }
+
+    private func resolveIdenticalConflictsIfNeeded() async {
+        let identicalConflicts = controller.conflicts.filter {
+            ConflictDiffPresenter.differences(for: $0).isEmpty
+        }
+
+        guard !identicalConflicts.isEmpty else {
+            return
+        }
+
+        for conflict in identicalConflicts {
+            await controller.resolveConflictUsingRemote(conflict)
+        }
+        controller.load()
+    }
+}
+
+private struct ConflictDifferenceRow: View {
+    let difference: ConflictDisplayDifference
+    private let cloudValueColor = Color(red: 15 / 255, green: 61 / 255, blue: 62 / 255)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SymiSpacing.micro) {
+            Text(difference.label)
+                .font(.subheadline.weight(.semibold))
+
+            HStack(alignment: .firstTextBaseline, spacing: SymiSpacing.xs) {
+                Text(difference.myValue)
+                    .foregroundStyle(.secondary)
+                Image(systemName: "arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(difference.cloudValue)
+                    .foregroundStyle(cloudValueColor)
+            }
+            .font(.subheadline)
+            .textSelection(.enabled)
+        }
+    }
+}
+
+private struct ConflictDisplayDifference: Identifiable, Equatable {
+    let id: String
+    let label: String
+    let myValue: String
+    let cloudValue: String
+}
+
+private enum ConflictDiffPresenter {
+    static func title(for conflict: SyncConflict) -> String {
+        switch conflict.local.payload {
+        case .episode(let payload):
+            return "Eintrag vom \(dateOnly(payload.startedAt))"
+        case .medicationDefinition(let payload):
+            return payload.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Medikament" : payload.name
+        case .continuousMedication(let payload):
+            return payload.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Dauermedikation" : payload.name
+        }
+    }
+
+    static func differences(for conflict: SyncConflict) -> [ConflictDisplayDifference] {
+        var differences: [ConflictDisplayDifference] = []
+        appendDifference(
+            id: "deletedAt",
+            label: "Status",
+            myValue: conflict.local.deletedAt == nil ? "Vorhanden" : "Entfernt",
+            cloudValue: conflict.remote.deletedAt == nil ? "Vorhanden" : "Entfernt",
+            to: &differences
+        )
+
+        switch (conflict.local.payload, conflict.remote.payload) {
+        case (.episode(let local), .episode(let remote)):
+            appendEpisodeDifferences(local: local, remote: remote, to: &differences)
+        case (.medicationDefinition(let local), .medicationDefinition(let remote)):
+            appendMedicationDefinitionDifferences(local: local, remote: remote, to: &differences)
+        case (.continuousMedication(let local), .continuousMedication(let remote)):
+            appendContinuousMedicationDifferences(local: local, remote: remote, to: &differences)
+        default:
+            appendDifference(id: "kind", label: "Art des Eintrags", myValue: "Eintrag", cloudValue: "Andere Art von Eintrag", to: &differences)
+        }
+
+        return differences
+    }
+
+    private static func appendEpisodeDifferences(
+        local: SyncEpisodePayload,
+        remote: SyncEpisodePayload,
+        to differences: inout [ConflictDisplayDifference]
+    ) {
+        appendDifference(id: "startedAt", label: "Beginn", myValue: dateAndTime(local.startedAt), cloudValue: dateAndTime(remote.startedAt), to: &differences)
+        appendDifference(id: "endedAt", label: "Ende", myValue: optionalDateAndTime(local.endedAt), cloudValue: optionalDateAndTime(remote.endedAt), to: &differences)
+        appendDifference(id: "type", label: "Art des Eintrags", myValue: episodeType(local.type), cloudValue: episodeType(remote.type), to: &differences)
+        appendDifference(id: "intensity", label: "Schmerzstärke", myValue: intensity(local.intensity), cloudValue: intensity(remote.intensity), to: &differences)
+        appendDifference(id: "painLocation", label: "Schmerzort", myValue: text(local.painLocation), cloudValue: text(remote.painLocation), to: &differences)
+        appendDifference(id: "painCharacter", label: "Schmerzart", myValue: text(local.painCharacter), cloudValue: text(remote.painCharacter), to: &differences)
+        appendDifference(id: "notes", label: "Notiz", myValue: text(local.notes), cloudValue: text(remote.notes), to: &differences)
+        appendDifference(id: "symptoms", label: "Symptome", myValue: list(local.symptoms), cloudValue: list(remote.symptoms), to: &differences)
+        appendDifference(id: "triggers", label: "Auslöser", myValue: list(local.triggers), cloudValue: list(remote.triggers), to: &differences)
+        appendDifference(id: "functionalImpact", label: "Auswirkung im Alltag", myValue: text(local.functionalImpact), cloudValue: text(remote.functionalImpact), to: &differences)
+        appendDifference(id: "menstruationStatus", label: "Zyklusstatus", myValue: menstruationStatus(local.menstruationStatus), cloudValue: menstruationStatus(remote.menstruationStatus), to: &differences)
+        appendDifference(id: "medications", label: "Medikamente", myValue: medicationList(local.medications), cloudValue: medicationList(remote.medications), to: &differences)
+        appendDifference(id: "continuousMedicationChecks", label: "Dauermedikation", myValue: continuousMedicationChecks(local.continuousMedicationChecks), cloudValue: continuousMedicationChecks(remote.continuousMedicationChecks), to: &differences)
+        appendDifference(id: "weatherSnapshot", label: "Wetter", myValue: weather(local.weatherSnapshot), cloudValue: weather(remote.weatherSnapshot), to: &differences)
+        appendDifference(id: "healthContext", label: "Apple-Health-Kontext", myValue: healthContext(local.healthContext), cloudValue: healthContext(remote.healthContext), to: &differences)
+    }
+
+    private static func appendMedicationDefinitionDifferences(
+        local: SyncMedicationDefinitionPayload,
+        remote: SyncMedicationDefinitionPayload,
+        to differences: inout [ConflictDisplayDifference]
+    ) {
+        appendDifference(id: "name", label: "Name", myValue: text(local.name), cloudValue: text(remote.name), to: &differences)
+        appendDifference(id: "category", label: "Kategorie", myValue: medicationCategory(local.category), cloudValue: medicationCategory(remote.category), to: &differences)
+        appendDifference(id: "suggestedDosage", label: "Dosierung", myValue: text(local.suggestedDosage), cloudValue: text(remote.suggestedDosage), to: &differences)
+        appendDifference(id: "groupTitle", label: "Gruppe", myValue: text(local.groupTitle), cloudValue: text(remote.groupTitle), to: &differences)
+    }
+
+    private static func appendContinuousMedicationDifferences(
+        local: SyncContinuousMedicationPayload,
+        remote: SyncContinuousMedicationPayload,
+        to differences: inout [ConflictDisplayDifference]
+    ) {
+        appendDifference(id: "name", label: "Name", myValue: text(local.name), cloudValue: text(remote.name), to: &differences)
+        appendDifference(id: "dosage", label: "Dosierung", myValue: text(local.dosage), cloudValue: text(remote.dosage), to: &differences)
+        appendDifference(id: "frequency", label: "Häufigkeit", myValue: text(local.frequency), cloudValue: text(remote.frequency), to: &differences)
+        appendDifference(id: "startDate", label: "Start", myValue: dateOnly(local.startDate), cloudValue: dateOnly(remote.startDate), to: &differences)
+        appendDifference(id: "endDate", label: "Ende", myValue: optionalDateOnly(local.endDate), cloudValue: optionalDateOnly(remote.endDate), to: &differences)
+    }
+
+    private static func appendDifference(
+        id: String,
+        label: String,
+        myValue: String,
+        cloudValue: String,
+        to differences: inout [ConflictDisplayDifference]
+    ) {
+        guard myValue != cloudValue else {
+            return
+        }
+
+        differences.append(
+            ConflictDisplayDifference(
+                id: id,
+                label: label,
+                myValue: myValue,
+                cloudValue: cloudValue
+            )
+        )
+    }
+
+    private static func text(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Nicht eingetragen" : trimmed
+    }
+
+    private static func list(_ values: [String]) -> String {
+        let cleaned = values
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .sorted()
+
+        return cleaned.isEmpty ? "Nicht vorhanden" : cleaned.joined(separator: ", ")
+    }
+
+    private static func episodeType(_ value: String) -> String {
+        EpisodeType(storageValue: value).displayName
+    }
+
+    private static func menstruationStatus(_ value: String) -> String {
+        MenstruationStatus(storageValue: value).displayName
+    }
+
+    private static func medicationCategory(_ value: String) -> String {
+        MedicationCategory(storageValue: value).displayName
+    }
+
+    private static func medicationEffectiveness(_ value: String) -> String {
+        MedicationEffectiveness(storageValue: value).displayName
+    }
+
+    private static func intensity(_ value: Int) -> String {
+        value <= 0 ? "Nicht bewertet" : "\(value) (\(PainIntensityLevel(intensity: value).displayLabel))"
+    }
+
+    private static func medicationList(_ medications: [SyncMedicationEntryPayload]) -> String {
+        let summaries = medications
+            .map { medication in
+                [
+                    text(medication.name),
+                    text(medication.dosage),
+                    medication.quantity > 1 ? "\(medication.quantity)x" : nil,
+                    medicationEffectiveness(medication.effectiveness) == "Teilweise" ? nil : "Wirkung: \(medicationEffectiveness(medication.effectiveness))"
+                ]
+                .compactMap { $0 }
+                .filter { $0 != "Nicht eingetragen" }
+                .joined(separator: " · ")
+            }
+            .filter { !$0.isEmpty }
+            .sorted()
+
+        return summaries.isEmpty ? "Nicht vorhanden" : summaries.joined(separator: ", ")
+    }
+
+    private static func continuousMedicationChecks(_ checks: [SyncContinuousMedicationCheckPayload]) -> String {
+        let summaries = checks
+            .map { check in
+                let status = check.wasTaken ? "genommen" : "nicht genommen"
+                return [text(check.name), text(check.dosage), status]
+                    .filter { $0 != "Nicht eingetragen" }
+                    .joined(separator: " · ")
+            }
+            .filter { !$0.isEmpty }
+            .sorted()
+
+        return summaries.isEmpty ? "Nicht vorhanden" : summaries.joined(separator: ", ")
+    }
+
+    private static func weather(_ weather: SyncWeatherSnapshotPayload?) -> String {
+        guard let weather else {
+            return "Nicht vorhanden"
+        }
+
+        var parts = [text(weather.condition)]
+        if let temperature = weather.temperature {
+            parts.append("\(temperature.formatted(.number.precision(.fractionLength(0 ... 1)))) °C")
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    private static func healthContext(_ context: HealthContextSnapshotData?) -> String {
+        context == nil ? "Nicht vorhanden" : "Vorhanden"
+    }
+
+    private static func optionalDateAndTime(_ date: Date?) -> String {
+        guard let date else {
+            return "Nicht eingetragen"
+        }
+
+        return dateAndTime(date)
+    }
+
+    private static func optionalDateOnly(_ date: Date?) -> String {
+        guard let date else {
+            return "Nicht eingetragen"
+        }
+
+        return dateOnly(date)
+    }
+
+    private static func dateAndTime(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .shortened)
+    }
+
+    private static func dateOnly(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .omitted)
     }
 }
 
