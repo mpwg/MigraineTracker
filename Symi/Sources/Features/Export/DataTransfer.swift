@@ -256,8 +256,9 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
             }
         }
 
-        try context.save()
-        try mergeEpisodeSidecars(into: healthContextStore)
+        try healthContextStore.save(episodeSidecarChanges()) {
+            try context.save()
+        }
     }
 
     private nonisolated func validateDomainInvariants() throws {
@@ -276,10 +277,8 @@ struct DataTransferSnapshot: @preconcurrency Encodable, Decodable, Sendable {
         }
     }
 
-    private nonisolated func mergeEpisodeSidecars(into healthContextStore: HealthContextStore) throws {
-        for payload in episodes {
-            try payload.applySidecars(to: healthContextStore)
-        }
+    private nonisolated func episodeSidecarChanges() -> [HealthContextSidecarChange] {
+        episodes.compactMap(\.sidecarChange)
     }
 
     private nonisolated static func fileDateString(from date: Date) -> String {
@@ -559,12 +558,12 @@ struct EpisodePayload: Codable, Sendable {
             episode.continuousMedicationChecks.map(\.id) != continuousMedicationChecks.map(\.id)
     }
 
-    nonisolated func applySidecars(to healthContextStore: HealthContextStore) throws {
+    nonisolated var sidecarChange: HealthContextSidecarChange? {
         guard shouldImportHealthContext else {
-            return
+            return nil
         }
 
-        try healthContextStore.save(healthContext, for: id)
+        return HealthContextSidecarChange(episodeID: id, snapshot: healthContext)
     }
 
     nonisolated func domainValidationIssues(path: String) -> [String] {

@@ -217,18 +217,23 @@ struct DataTransferHealthContextTests {
         let blockedBaseURL = try makeTemporaryDirectory()
         try Data("blockiert".utf8).write(to: blockedBaseURL.appending(path: "Symi"))
         let blockedHealthStore = HealthContextStore(baseURL: blockedBaseURL)
+        let targetContainer = try makeInMemoryContainer()
+        try seedEpisode(id: episodeID, notes: "Lokaler Stand", in: targetContainer)
 
         var didThrow = false
         do {
             _ = try SwiftDataExportRepository(
-                modelContainer: try makeInMemoryContainer(),
+                modelContainer: targetContainer,
                 healthContextStore: blockedHealthStore
             ).importBackup(from: backupURL)
         } catch {
             didThrow = true
         }
 
+        let storedEpisode = try #require(try ModelContext(targetContainer).fetch(FetchDescriptor<Episode>()).first)
         #expect(didThrow)
+        #expect(storedEpisode.notes == "Lokaler Stand")
+        #expect(blockedHealthStore.load(for: episodeID) == nil)
     }
 
     @Test
