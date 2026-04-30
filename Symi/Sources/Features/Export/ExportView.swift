@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var showsResetInformation = false
     @State private var showsDisableSyncConfirmation = false
     @State private var showsDeleteCloudDataConfirmation = false
+    @State private var pendingSyncDisable = false
 
     init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
         self.dependencies = dependencies
@@ -32,15 +33,17 @@ struct SettingsView: View {
                         tint: AppTheme.symiPetrol,
                         isOn: Binding(
                             get: { controller.isSyncEnabled },
-                            set: { isEnabled in
-                                if isEnabled {
-                                    controller.setSyncEnabled(true)
-                                } else {
+                            set: { newValue in
+                                if newValue == false {
+                                    pendingSyncDisable = true
                                     showsDisableSyncConfirmation = true
+                                } else {
+                                    controller.setSyncEnabled(true)
                                 }
                             }
                         )
                     )
+                    .disabled(pendingSyncDisable || showsDisableSyncConfirmation || showsDeleteCloudDataConfirmation)
                     .confirmationDialog(
                         "Synchronisation deaktivieren?",
                         isPresented: $showsDisableSyncConfirmation,
@@ -48,6 +51,7 @@ struct SettingsView: View {
                     ) {
                         Button("Daten behalten") {
                             controller.disableSyncKeepingCloudData()
+                            pendingSyncDisable = false
                         }
 
                         if controller.canOfferCloudDataDeletion {
@@ -56,7 +60,9 @@ struct SettingsView: View {
                             }
                         }
 
-                        Button("Abbrechen", role: .cancel) {}
+                        Button("Abbrechen", role: .cancel) {
+                            pendingSyncDisable = false
+                        }
                     } message: {
                         Text(disableSyncConfirmationMessage)
                     }
@@ -242,10 +248,13 @@ struct SettingsView: View {
             Button("Jetzt löschen", role: .destructive) {
                 Task {
                     await controller.disableSyncAndDeleteCloudData()
+                    pendingSyncDisable = false
                 }
             }
 
-            Button("Abbrechen", role: .cancel) {}
+            Button("Abbrechen", role: .cancel) {
+                pendingSyncDisable = false
+            }
         } message: {
             Text("Deine Daten werden dauerhaft aus iCloud entfernt.\nDieser Schritt kann nicht rückgängig gemacht werden.")
         }
