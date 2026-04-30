@@ -144,7 +144,7 @@ struct ManageCloudDataView: View {
                     }
                 }
                 .disabled(!controller.isSyncEnabled || !controller.syncStatus.lastErrorIsRetryable)
-                
+
             } header: {
                 Text("Aktionen")
             } footer: {

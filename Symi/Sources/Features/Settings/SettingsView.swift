@@ -29,7 +29,7 @@ struct SettingsView: View {
                         Text("Apple Health")
                     } icon: {
                         Image(systemName: "heart.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppTheme.symiCoral)
                     }
                 }
             }
