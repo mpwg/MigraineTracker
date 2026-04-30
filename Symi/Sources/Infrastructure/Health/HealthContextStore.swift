@@ -1,5 +1,10 @@
 import Foundation
 
+struct HealthContextSidecarChange: Sendable {
+    let episodeID: UUID
+    let snapshot: HealthContextSnapshotData?
+}
+
 final class HealthContextStore: Sendable {
     private let directoryURL: URL
 
@@ -28,6 +33,33 @@ final class HealthContextStore: Sendable {
         try ProtectedFileStorage.applyProtection(to: url)
     }
 
+    nonisolated func save(_ changes: [HealthContextSidecarChange], committing commit: () throws -> Void) throws {
+        guard !changes.isEmpty else {
+            try commit()
+            return
+        }
+
+        let backupDirectoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Symi-HealthContext-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: backupDirectoryURL, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: backupDirectoryURL)
+        }
+
+        let backups = try sidecarBackups(for: changes.map(\.episodeID), in: backupDirectoryURL)
+
+        do {
+            for change in changes {
+                try save(change.snapshot, for: change.episodeID)
+            }
+
+            try commit()
+        } catch {
+            try? restoreSidecars(from: backups)
+            throw error
+        }
+    }
+
     nonisolated func load(for episodeID: UUID) -> HealthContextRecord? {
         let url = fileURL(for: episodeID)
         let decoder = JSONDecoder()
@@ -42,4 +74,37 @@ final class HealthContextStore: Sendable {
     nonisolated private func fileURL(for episodeID: UUID) -> URL {
         directoryURL.appendingPathComponent("\(episodeID.uuidString).json")
     }
+
+    nonisolated private func sidecarBackups(for episodeIDs: [UUID], in backupDirectoryURL: URL) throws -> [SidecarBackup] {
+        try Array(Set(episodeIDs)).map { episodeID in
+            let originalURL = fileURL(for: episodeID)
+            let backupURL = backupDirectoryURL.appendingPathComponent("\(episodeID.uuidString).json")
+
+            guard FileManager.default.fileExists(atPath: originalURL.path) else {
+                return SidecarBackup(originalURL: originalURL, backupURL: nil)
+            }
+
+            try FileManager.default.copyItem(at: originalURL, to: backupURL)
+            return SidecarBackup(originalURL: originalURL, backupURL: backupURL)
+        }
+    }
+
+    nonisolated private func restoreSidecars(from backups: [SidecarBackup]) throws {
+        for backup in backups {
+            if FileManager.default.fileExists(atPath: backup.originalURL.path) {
+                try FileManager.default.removeItem(at: backup.originalURL)
+            }
+
+            if let backupURL = backup.backupURL {
+                try ProtectedFileStorage.createProtectedDirectory(at: directoryURL)
+                try FileManager.default.copyItem(at: backupURL, to: backup.originalURL)
+                try ProtectedFileStorage.applyProtection(to: backup.originalURL)
+            }
+        }
+    }
+}
+
+private struct SidecarBackup {
+    let originalURL: URL
+    let backupURL: URL?
 }
