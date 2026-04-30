@@ -76,6 +76,9 @@ nonisolated enum SymiSpacing {
     static let dataSharingContentBottomPadding: CGFloat = 132
     static let dataSharingBulletIndent: CGFloat = 30
     static let reportBottomPadding: CGFloat = 100
+    static let settingsContentBottomPadding: CGFloat = 128
+    static let settingsSafeAreaBottomPadding: CGFloat = 32
+    static let settingsDividerLeadingPadding: CGFloat = 62
 }
 
 // MARK: - Radius
@@ -85,6 +88,7 @@ nonisolated enum SymiRadius {
     static let card: CGFloat = 20
     static let button: CGFloat = 18
     static let chip: CGFloat = 12
+    static let settingsIconContainer: CGFloat = 9
 
     // Feature surfaces
     static let homeActionButton: CGFloat = 22
@@ -182,6 +186,9 @@ nonisolated enum SymiSize {
 
     // Status and calendar
     static let statusDot: CGFloat = 10
+    static let settingsIconContainer: CGFloat = 32
+    static let settingsAppleHealthIcon: CGFloat = 38
+    static let settingsAppleHealthCardMinHeight: CGFloat = 78
     static let calendarDot: CGFloat = 9
     static let calendarPlaceholderHeight: CGFloat = 16
     static let calendarDayMinHeight: CGFloat = 52
@@ -324,6 +331,7 @@ nonisolated enum SymiOpacity {
     static let glassTintLight: Double = 0.26
     static let selectedFill: Double = 0.35
     static let outline: Double = 0.45
+    static let disabledRow = outline
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
 
