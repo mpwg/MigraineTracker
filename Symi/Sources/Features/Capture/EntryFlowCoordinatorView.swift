@@ -305,27 +305,30 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
 
                     Spacer(minLength: SymiSpacing.sm)
 
-                    Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.symiTextSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(SymiTypography.compactScaleFactor)
+                    Button {
+                        feedbackTrigger += 1
+                        withAnimation(.spring()) {
+                            isDatePickerExpanded.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: SymiSpacing.sm) {
+                            Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.symiTextSecondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(SymiTypography.compactScaleFactor)
 
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppTheme.symiTextSecondary)
-                        .rotationEffect(.degrees(isDatePickerExpanded ? 180 : 0))
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    feedbackTrigger += 1
-                    withAnimation(.spring()) {
-                        isDatePickerExpanded.toggle()
+                            Image(systemName: "chevron.down")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppTheme.symiTextSecondary)
+                                .rotationEffect(.degrees(isDatePickerExpanded ? 180 : 0))
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Datum")
+                    .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                    .accessibilityIdentifier("entry-date-picker")
                 }
-                .accessibilityLabel("Datum")
-                .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                .accessibilityIdentifier("entry-date-picker")
 
                 if isDatePickerExpanded {
                     DatePicker(
@@ -842,8 +845,12 @@ private struct EntryReviewStepView: View {
 
     private var headacheSummary: [String] {
         let draft = coordinator.draft
+        let intensitySummary = draft.selectedIntensityLevel.map {
+            "\(draft.normalizedIntensity)/10 · \($0.displayLabel)"
+        } ?? "Stärke nicht angegeben"
+
         return [
-            draft.selectedIntensityLevel?.displayLabel ?? "Stärke nicht angegeben",
+            intensitySummary,
             draft.resolvedPainLocation.isEmpty ? "Ort nicht angegeben" : "Ort: \(draft.resolvedPainLocation)",
             "Zeitpunkt: \(startedAtSummary(for: draft.startedAt))"
         ]
