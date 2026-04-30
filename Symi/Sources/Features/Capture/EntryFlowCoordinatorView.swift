@@ -448,7 +448,7 @@ private struct PainIntensitySelectionTile: View {
     }
 
     private var tileBackground: Color {
-        isSelected ? intensityColor.opacity(0.15) : SymiColors.elevatedCard(for: colorScheme)
+        isSelected ? intensityColor.opacity(0.15) : Color.clear
     }
 
     private var borderColor: Color {
@@ -460,19 +460,19 @@ private struct PainIntensitySelectionTile: View {
     }
 
     private var iconColor: Color {
-        isSelected ? intensityColor : AppTheme.textSecondary(for: colorScheme).opacity(0.55)
+        isSelected ? intensityColor : Color.gray.opacity(0.4)
     }
 
     private var intensityColor: Color {
         switch level {
         case .none, .low:
-            return AppTheme.textSecondary(for: colorScheme).opacity(0.65)
+            return SymiColorValue(hex: 0xA4B1A0).color
         case .medium:
-            return AppTheme.sage(for: colorScheme)
+            return SymiColorValue(hex: 0xF6B78D).color
         case .high:
-            return AppTheme.coral(for: colorScheme)
+            return SymiColorValue(hex: 0xF29C7D).color
         case .veryHigh:
-            return SymiColorValue(hex: 0xE96A5A).color
+            return SymiColorValue(hex: 0xE6867C).color
         }
     }
 }
