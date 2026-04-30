@@ -145,11 +145,6 @@ struct ManageCloudDataView: View {
                 }
                 .disabled(!controller.isSyncEnabled || !controller.syncStatus.lastErrorIsRetryable)
 
-                NavigationLink {
-                    DataBackupSettingsView(dependencies: dataExportDependencies)
-                } label: {
-                    Text("Lokales JSON5-Backup erstellen")
-                }
             } header: {
                 Text("Aktionen")
             } footer: {

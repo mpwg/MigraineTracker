@@ -195,16 +195,6 @@
         }
       }
     },
-    "%lld Sync-Konflikt%@ entscheiden" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld Sync-Konflikt%2$@ entscheiden"
-          }
-        }
-      }
-    },
     "%lld von 10" : {
       "localizations" : {
         "en" : {
@@ -678,6 +668,9 @@
         }
       }
     },
+    "Berechtigungen erneut anfragen" : {
+
+    },
     "Bericht" : {
       "localizations" : {
         "en" : {
@@ -744,6 +737,9 @@
     "Cloud-Daten löschen" : {
 
     },
+    "Cloud-Daten verwalten" : {
+
+    },
     "Cloud-Daten wirklich löschen?" : {
 
     },
@@ -796,6 +792,9 @@
     "Daten behalten" : {
 
     },
+    "Daten exportieren" : {
+
+    },
     "Daten wiederherstellen" : {
       "localizations" : {
         "en" : {
@@ -807,6 +806,12 @@
       }
     },
     "Daten zurücksetzen" : {
+
+    },
+    "Datenschutz" : {
+
+    },
+    "Datenschutz & Hinweise" : {
 
     },
     "Datenschutz und Hinweise" : {
@@ -1416,6 +1421,9 @@
         }
       }
     },
+    "Feedback senden" : {
+
+    },
     "Feedback und Hilfe findest du über symiapp.com." : {
       "localizations" : {
         "en" : {
@@ -1567,6 +1575,9 @@
           }
         }
       }
+    },
+    "Hilft uns, Symi zu verbessern. Deine persönlichen Einträge bleiben immer privat." : {
+
     },
     "Hinweis: %@" : {
       "localizations" : {
@@ -1879,6 +1890,9 @@
         }
       }
     },
+    "Letzte Synchronisation" : {
+
+    },
     "Letzter Fehler" : {
       "localizations" : {
         "en" : {
@@ -1925,16 +1939,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete Local Store Files?"
-          }
-        }
-      }
-    },
-    "Lokales JSON5-Backup erstellen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create Local JSON5 Backup"
           }
         }
       }
@@ -2915,16 +2919,6 @@
         }
       }
     },
-    "Sync-Protokoll" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync Log"
-          }
-        }
-      }
-    },
     "Sync-Vertrag" : {
       "localizations" : {
         "en" : {
@@ -2944,6 +2938,9 @@
           }
         }
       }
+    },
+    "Synchronisation aktivieren" : {
+
     },
     "Synchronisation deaktivieren?" : {
 
@@ -3024,6 +3021,9 @@
         }
       }
     },
+    "Über Symi" : {
+
+    },
     "Übersicht" : {
       "localizations" : {
         "en" : {
@@ -3058,6 +3058,9 @@
 
     },
     "Verlauf" : {
+
+    },
+    "Version" : {
 
     },
     "Version aus der Cloud verwenden" : {

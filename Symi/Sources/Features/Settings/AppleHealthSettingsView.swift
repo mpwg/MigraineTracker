@@ -26,6 +26,17 @@ struct AppleHealthSettingsView: View {
                     .disabled(!status.isAvailable)
                 }
 
+                if status.isAvailable {
+                    Button {
+                        Task {
+                            await controller.requestHealthAuthorization()
+                        }
+                    } label: {
+                        Label("Berechtigungen erneut anfragen", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(HealthInlineSettingsButtonStyle())
+                }
+
                 if let message = status.lastErrorMessage {
                     HealthNoticeCard(message: message)
                 } else if !status.isAvailable {
