@@ -33,6 +33,7 @@ nonisolated enum SymiSpacing {
     static let flowHeaderTitleSpacing: CGFloat = 4
     static let flowFooterTopPadding: CGFloat = 2
     static let flowFooterBottomPadding: CGFloat = 6
+    static let flowExpandedControlBottomPadding: CGFloat = 80
     static let tileSpacing: CGFloat = 10
     static let pillSpacing: CGFloat = 8
     static let cardPadding: CGFloat = 16
@@ -42,7 +43,6 @@ nonisolated enum SymiSpacing {
     static let chevronTopPadding: CGFloat = 3
     static let selectedCheckOffsetX: CGFloat = 8
     static let selectedCheckOffsetY: CGFloat = -4
-    static let datePickerOverlayYOffset: CGFloat = 40
     static let painIntensityFaceEyeOffsetY: CGFloat = -4
     static let painIntensityFaceMouthOffsetY: CGFloat = 5
     static let painIntensityFaceEyeSpacing: CGFloat = 7
@@ -106,7 +106,6 @@ nonisolated enum SymiRadius {
     static let flowTile: CGFloat = 14
     static let flowPill: CGFloat = 12
     static let flowBanner: CGFloat = 16
-    static let datePickerOverlay: CGFloat = 16
 }
 
 // MARK: - Shadow
@@ -134,8 +133,6 @@ enum SymiShadow {
     static let buttonYOffset: CGFloat = 6
     static let calendarButtonRadius: CGFloat = 7
     static let calendarButtonYOffset: CGFloat = 3
-    static let datePickerOverlayRadius: CGFloat = 10
-    static let datePickerOverlayYOffset: CGFloat = 6
     static let sliderThumbRadius: CGFloat = 2
     static let sliderThumbYOffset: CGFloat = 1
 }
@@ -177,8 +174,6 @@ nonisolated enum SymiSize {
     static let selectedMedicationRowMinHeight: CGFloat = 108
     static let medicationQuantityMinWidth: CGFloat = 24
     static let noteEditorMinHeight: CGFloat = 220
-    static let datePickerOverlayWidth: CGFloat = 320
-    static let datePickerOverlayDismissalSize: CGFloat = 1000
     static let painIntensityFaceEye: CGFloat = 3.2
     static let painIntensityFaceMouthWidth: CGFloat = 15
     static let painIntensityFaceMouthHeight: CGFloat = 8
