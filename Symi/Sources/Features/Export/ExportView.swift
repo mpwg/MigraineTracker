@@ -84,14 +84,9 @@ struct SettingsView: View {
                     NavigationLink {
                         AppleHealthSettingsView(controller: controller)
                     } label: {
-                        SettingsRow(
-                            title: "Apple Health",
-                            subtitle: "Lese- und Schreibzugriff für Symi",
-                            assetImageName: "AppleHealthIcon",
-                            rightValue: controller.healthConnectionStatusTitle,
-                            rowStyle: .navigation,
-                            subtitleLineLimit: 1,
-                            showsChevron: true
+                        AppleHealthCardView(
+                            statusTitle: controller.healthConnectionStatusTitle,
+                            isConnected: controller.isHealthConnected
                         )
                     }
                 }
@@ -352,6 +347,61 @@ private enum SettingsRowStyle {
     case navigation
     case standard
     case destructive
+}
+
+private struct AppleHealthCardView: View {
+    let statusTitle: String
+    let isConnected: Bool
+
+    var body: some View {
+        HStack(alignment: .center, spacing: SymiSpacing.lg) {
+            Image("AppleHealthIcon")
+                .resizable()
+                .renderingMode(.original)
+                .scaledToFit()
+                .frame(width: 36, height: 36)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                Text("Apple Health")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .lineLimit(1)
+
+                Text("Lese- und Schreibzugriff")
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .layoutPriority(1)
+
+            Spacer(minLength: SymiSpacing.md)
+
+            Text(statusTitle)
+                .font(.subheadline)
+                .foregroundStyle(isConnected ? AppTheme.symiPetrol : AppTheme.symiTextSecondary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, SymiSpacing.xxl)
+        .padding(.vertical, SymiSpacing.lg)
+        .frame(minHeight: 72)
+        .background(
+            AppTheme.symiCoral.opacity(isConnected ? 0.08 : 0.10),
+            in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
+        )
+        .padding(.horizontal, SymiSpacing.xs)
+        .padding(.vertical, SymiSpacing.xs)
+        .contentShape(RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Apple Health. Lese- und Schreibzugriff. \(statusTitle)")
+    }
 }
 
 private struct SettingsRow: View {

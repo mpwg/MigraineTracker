@@ -573,6 +573,9 @@
         }
       }
     },
+    "Apple Health. Lese- und Schreibzugriff. %@" : {
+
+    },
     "Apple-Health-Daten bleiben optional. Gelesene Werte werden als Apple-Health-Kontext gekennzeichnet; geschriebene Symptome enthalten keine Notizen." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2037,6 +2040,9 @@
           }
         }
       }
+    },
+    "Lese- und Schreibzugriff" : {
+
     },
     "Lesen" : {
       "localizations" : {
