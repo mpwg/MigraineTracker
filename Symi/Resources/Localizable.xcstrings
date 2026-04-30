@@ -839,9 +839,6 @@
     "Datum" : {
 
     },
-    "Datum wählen" : {
-
-    },
     "Dauermedikation" : {
       "localizations" : {
         "en" : {
@@ -1547,6 +1544,9 @@
           }
         }
       }
+    },
+    "Gestern" : {
+
     },
     "Gesundheitsdaten" : {
       "localizations" : {
@@ -2565,6 +2565,9 @@
           }
         }
       }
+    },
+    "Schließt die Datumsauswahl." : {
+
     },
     "Schmerzcharakter" : {
       "localizations" : {

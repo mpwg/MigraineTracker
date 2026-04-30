@@ -142,8 +142,8 @@ private struct EntryHeadacheStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
-    @State private var showsDatePicker = false
-    @State private var customDate = Date()
+    @State private var isDateExpanded = false
+    @State private var selectedDate = Date()
     private let visiblePainLocations: [EntryPainLocationOption] = [
         .init(title: EntryFlowLocalized.text(de: "Stirn", en: "Forehead"), imageName: "PainLocationForehead"),
         .init(title: EntryFlowLocalized.text(de: "Schläfen", en: "Temples"), imageName: "PainLocationTemples"),
@@ -161,10 +161,12 @@ private struct EntryHeadacheStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            EntryDateSelectionButton(date: coordinator.draft.startedAt) {
-                customDate = coordinator.draft.startedAt
-                showsDatePicker = true
-            }
+            EntryInlineDatePicker(
+                date: coordinator.draft.startedAt,
+                selectedDate: $selectedDate,
+                isExpanded: $isDateExpanded,
+                onSelect: selectEntryDate
+            )
 
             InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark ist es?", en: "How strong is it?")) {
                 InputFlowHeadacheOptionGrid {
@@ -230,16 +232,16 @@ private struct EntryHeadacheStepView: View {
         .onAppear {
             coordinator.draft.type = .headache
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
+            selectedDate = coordinator.draft.startedAt
             selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
         }
-        .sheet(isPresented: $showsDatePicker) {
-            EntryDatePickerSheet(selectedDate: $customDate) { date in
-                coordinator.selectEntryDate(date)
-                selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
-            }
-            .presentationDetents([.medium])
-        }
+    }
+
+    private func selectEntryDate(_ date: Date) {
+        selectedDate = date
+        coordinator.selectEntryDate(date)
+        selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
     }
 
     private func seedDefaultPainLocationIfNeeded(coordinator: EntryFlowCoordinator) {
@@ -272,52 +274,80 @@ private extension EntryDayPartPreset {
     }
 }
 
-private struct EntryDateSelectionButton: View {
+private struct EntryInlineDatePicker: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let date: Date
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: SymiSpacing.xs) {
-                Image(systemName: "calendar")
-                    .font(.subheadline.weight(.semibold))
-                    .accessibilityHidden(true)
-
-                Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
-
-                Image(systemName: "chevron.down")
-                    .font(.caption.weight(.bold))
-                    .padding(.top, SymiSpacing.chevronTopPadding)
-                    .accessibilityHidden(true)
-            }
-            .foregroundStyle(AppTheme.symiPetrol)
-            .padding(.horizontal, SymiSpacing.lg)
-            .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight)
-            .background(
-                SymiColors.elevatedCard(for: colorScheme).opacity(SymiOpacity.strongSurface),
-                in: Capsule()
-            )
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Datum")
-        .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-        .accessibilityHint("Öffnet die Datumsauswahl.")
-        .accessibilityIdentifier("entry-date-picker")
-    }
-}
-
-private struct EntryDatePickerSheet: View {
     @Binding var selectedDate: Date
+    @Binding var isExpanded: Bool
     let onSelect: (Date) -> Void
+    @State private var ignoresNextDateChange = false
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: SymiSpacing.sm) {
+            Button {
+                withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: SymiSpacing.xs) {
+                    Image(systemName: "calendar")
+                        .font(.subheadline)
+                        .accessibilityHidden(true)
+
+                    Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(SymiTypography.compactScaleFactor)
+
+                    Spacer(minLength: SymiSpacing.sm)
+
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .accessibilityHidden(true)
+                }
+                .foregroundStyle(AppTheme.symiTextSecondary)
+                .padding(.horizontal, SymiSpacing.sm)
+                .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Datum")
+            .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+            .accessibilityHint(isExpanded ? "Schließt die Datumsauswahl." : "Öffnet die Datumsauswahl.")
+            .accessibilityIdentifier("entry-date-picker")
+
+            if isExpanded {
+                expandedContent
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private var expandedContent: some View {
+        VStack(spacing: SymiSpacing.md) {
+            HStack(spacing: SymiSpacing.sm) {
+                Button {
+                    selectQuickActionAndCollapse(.now)
+                } label: {
+                    Text("Heute")
+                        .frame(maxWidth: .infinity)
+                }
+
+                Button {
+                    let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now
+                    selectQuickActionAndCollapse(yesterday)
+                } label: {
+                    Text("Gestern")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
+
+            Divider()
+
             DatePicker(
                 "Datum",
                 selection: $selectedDate,
@@ -325,12 +355,44 @@ private struct EntryDatePickerSheet: View {
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
-            .padding(SymiSpacing.lg)
+            .labelsHidden()
+            .frame(maxHeight: 250)
+            .clipped()
             .onChange(of: selectedDate) { _, newValue in
-                onSelect(newValue)
+                if ignoresNextDateChange {
+                    ignoresNextDateChange = false
+                    return
+                }
+
+                applyDateAndCollapse(newValue)
             }
-            .navigationTitle("Datum wählen")
-            .navigationBarTitleDisplayMode(.inline)
+        }
+        .padding(SymiSpacing.md)
+        .frame(maxWidth: .infinity)
+        .frame(maxHeight: 320)
+        .background(
+            SymiColors.elevatedCard(for: colorScheme).opacity(SymiOpacity.strongSurface),
+            in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
+                .stroke(SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface), lineWidth: SymiStroke.hairline)
+        }
+    }
+
+    private func selectQuickActionAndCollapse(_ date: Date) {
+        if selectedDate != date {
+            ignoresNextDateChange = true
+            selectedDate = date
+        }
+
+        applyDateAndCollapse(date)
+    }
+
+    private func applyDateAndCollapse(_ date: Date) {
+        onSelect(date)
+        withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
+            isExpanded = false
         }
     }
 }
