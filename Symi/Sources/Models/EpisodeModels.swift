@@ -346,7 +346,7 @@ extension Episode {
 
 extension ContinuousMedication {
     var isActive: Bool {
-        endDate == nil || (endDate ?? .distantPast) >= Calendar.current.startOfDay(for: .now)
+        deletedAt == nil && (endDate == nil || (endDate ?? .distantPast) >= Calendar.current.startOfDay(for: .now))
     }
 
     var detailText: String {
@@ -355,6 +355,17 @@ extension ContinuousMedication {
 
     func markUpdated(at date: Date = .now) {
         updatedAt = date
+        deletedAt = nil
+    }
+
+    func markDeleted(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = date
+    }
+
+    func restore(at date: Date = .now) {
+        updatedAt = date
+        deletedAt = nil
     }
 
     func end(on date: Date = .now) {

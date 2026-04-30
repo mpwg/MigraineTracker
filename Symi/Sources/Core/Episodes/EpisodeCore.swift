@@ -75,8 +75,13 @@ struct ContinuousMedicationRecord: Identifiable, Equatable, Sendable {
     nonisolated let endDate: Date?
     nonisolated let createdAt: Date
     nonisolated let updatedAt: Date
+    nonisolated let deletedAt: Date?
 
     nonisolated var isActive: Bool {
+        guard deletedAt == nil else {
+            return false
+        }
+
         guard let endDate else {
             return true
         }

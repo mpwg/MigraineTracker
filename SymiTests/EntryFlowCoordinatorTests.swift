@@ -57,7 +57,8 @@ struct EntryFlowCoordinatorTests {
                 startDate: .now,
                 endDate: nil,
                 createdAt: .now,
-                updatedAt: .now
+                updatedAt: .now,
+                deletedAt: nil
             )
         ])
         let coordinator = makeCoordinator(continuousMedicationRepository: repository)
@@ -338,7 +339,8 @@ private final class EntryFlowContinuousMedicationRepositoryMock: ContinuousMedic
             startDate: draft.startDate,
             endDate: draft.endDate,
             createdAt: .now,
-            updatedAt: .now
+            updatedAt: .now,
+            deletedAt: nil
         )
     }
     func delete(id: UUID) throws {}
