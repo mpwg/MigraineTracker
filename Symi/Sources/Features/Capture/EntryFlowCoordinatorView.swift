@@ -142,6 +142,9 @@ private struct EntryHeadacheStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
+    @State private var showsDateOptions = false
+    @State private var showsCustomDatePicker = false
+    @State private var customDate = Date()
     private let visiblePainLocations: [EntryPainLocationOption] = [
         .init(title: EntryFlowLocalized.text(de: "Stirn", en: "Forehead"), imageName: "PainLocationForehead"),
         .init(title: EntryFlowLocalized.text(de: "Schläfen", en: "Temples"), imageName: "PainLocationTemples"),
@@ -159,7 +162,26 @@ private struct EntryHeadacheStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            PainGaugeView(value: $coordinator.draft.intensity)
+            EntryDateSelectionButton(date: coordinator.draft.startedAt) {
+                customDate = coordinator.draft.startedAt
+                showsDateOptions = true
+            }
+
+            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark ist es?", en: "How strong is it?")) {
+                InputFlowHeadacheOptionGrid {
+                    ForEach(PainIntensityLevel.selectableCases, id: \.self) { level in
+                        PainIntensitySelectionTile(
+                            level: level,
+                            isSelected: coordinator.draft.selectedIntensityLevel == level,
+                            theme: .pain,
+                            accessibilityIdentifier: "entry-intensity-\(level.displayLabel)"
+                        ) {
+                            coordinator.draft.selectedIntensityLevel = level
+                        }
+                    }
+                }
+                .accessibilityIdentifier("entry-intensity-card")
+            }
 
             InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
                 InputFlowHeadacheOptionGrid {
@@ -187,7 +209,7 @@ private struct EntryHeadacheStepView: View {
                             accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
                         ) {
                             selectedDayPartPreset = preset
-                            coordinator.selectDayPartPreset(preset)
+                            coordinator.selectDayPartPreset(preset, referenceDate: coordinator.draft.startedAt)
                         }
                     }
                 }
@@ -200,6 +222,8 @@ private struct EntryHeadacheStepView: View {
                 primaryIdentifier: "entry-flow-next",
                 secondaryTitle: EntryFlowLocalized.text(de: "Nur Kopfschmerz speichern", en: "Save headache only"),
                 secondaryIdentifier: "entry-flow-save-headache-only",
+                isPrimaryDisabled: !coordinator.draft.hasSelectedIntensity,
+                isSecondaryDisabled: !coordinator.draft.hasSelectedIntensity,
                 onPrimary: coordinator.continueToNextStep,
                 onSecondary: coordinator.saveHeadacheOnly
             )
@@ -209,6 +233,49 @@ private struct EntryHeadacheStepView: View {
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
             selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
+        }
+        .confirmationDialog("Datum auswählen", isPresented: $showsDateOptions, titleVisibility: .visible) {
+            ForEach(recentDateOptions) { option in
+                Button(option.title) {
+                    coordinator.selectEntryDate(option.date)
+                    selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
+                }
+            }
+
+            Button("Anderes Datum wählen...") {
+                customDate = coordinator.draft.startedAt
+                showsCustomDatePicker = true
+            }
+
+            Button("Abbrechen", role: .cancel) {}
+        }
+        .sheet(isPresented: $showsCustomDatePicker) {
+            EntryCustomDatePickerSheet(selectedDate: $customDate) { date in
+                coordinator.selectEntryDate(date)
+                selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
+            }
+            .presentationDetents([.medium])
+        }
+    }
+
+    private var recentDateOptions: [EntryDateOption] {
+        let calendar = Calendar.current
+        return (0 ... 5).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: .now) else {
+                return nil
+            }
+
+            let title: String
+            switch offset {
+            case 0:
+                title = EntryFlowLocalized.text(de: "Heute", en: "Today")
+            case 1:
+                title = EntryFlowLocalized.text(de: "Gestern", en: "Yesterday")
+            default:
+                title = date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+            }
+
+            return EntryDateOption(date: date, title: title)
         }
     }
 
@@ -239,6 +306,209 @@ private extension EntryDayPartPreset {
         case .nacht:
             self = .nacht
         }
+    }
+}
+
+private struct EntryDateOption: Identifiable {
+    let date: Date
+    let title: String
+
+    var id: Date { Calendar.current.startOfDay(for: date) }
+}
+
+private struct EntryDateSelectionButton: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let date: Date
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: SymiSpacing.xs) {
+                Image(systemName: "calendar")
+                    .font(.subheadline.weight(.semibold))
+                    .accessibilityHidden(true)
+
+                Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
+
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.bold))
+                    .padding(.top, SymiSpacing.chevronTopPadding)
+                    .accessibilityHidden(true)
+            }
+            .foregroundStyle(AppTheme.symiPetrol)
+            .padding(.horizontal, SymiSpacing.lg)
+            .frame(maxWidth: .infinity, minHeight: SymiSize.minInteractiveHeight)
+            .background(
+                SymiColors.elevatedCard(for: colorScheme).opacity(SymiOpacity.strongSurface),
+                in: Capsule()
+            )
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Datum")
+        .accessibilityValue(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+        .accessibilityHint("Öffnet die Datumsauswahl.")
+        .accessibilityIdentifier("entry-date-picker")
+    }
+}
+
+private struct EntryCustomDatePickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @Binding var selectedDate: Date
+    let onSelect: (Date) -> Void
+
+    var body: some View {
+        NavigationStack {
+            DatePicker(
+                "Datum",
+                selection: $selectedDate,
+                in: ...Date(),
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .padding(SymiSpacing.lg)
+            .navigationTitle("Anderes Datum")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Abbrechen") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Fertig") {
+                        onSelect(selectedDate)
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct PainIntensitySelectionTile: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let level: PainIntensityLevel
+    let isSelected: Bool
+    let theme: InputFlowStepTheme
+    let accessibilityIdentifier: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: SymiSpacing.xs) {
+                PainIntensityFaceIcon(level: level)
+                    .foregroundStyle(isSelected ? theme.accent(for: colorScheme) : AppTheme.symiTextSecondary.opacity(SymiOpacity.strongText))
+                    .frame(width: SymiSize.inputSelectionIconWidth, height: SymiSize.inputSelectionIconHeight)
+                    .accessibilityHidden(true)
+
+                Text(level.displayLabel)
+                    .font(SymiTypography.flowTileLabel)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(AppTheme.symiTextPrimary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(SymiTypography.compactScaleFactor)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, SymiSpacing.xs)
+            .padding(.vertical, SymiSpacing.xs)
+            .frame(maxWidth: .infinity, minHeight: SymiSize.headacheLocationTileMinHeight)
+            .background(tileBackground, in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
+                    .stroke(borderColor, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+            }
+            .overlay(alignment: .topTrailing) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(theme.accent(for: colorScheme))
+                        .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
+                        .padding(.top, SymiSpacing.sm)
+                        .padding(.trailing, SymiSpacing.sm)
+                        .accessibilityHidden(true)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(level.displayLabel)
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
+        .accessibilityHint("Wählt diese Stärke aus.")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private var tileBackground: Color {
+        isSelected ? theme.selectedFill(for: colorScheme) : SymiColors.elevatedCard(for: colorScheme)
+    }
+
+    private var borderColor: Color {
+        if isSelected {
+            return theme.border(for: colorScheme).opacity(SymiOpacity.selectedStroke)
+        }
+
+        return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
+    }
+}
+
+private struct PainIntensityFaceIcon: View {
+    let level: PainIntensityLevel
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(lineWidth: 1.8)
+
+            HStack(spacing: 7) {
+                Circle()
+                    .frame(width: 3.2, height: 3.2)
+                Circle()
+                    .frame(width: 3.2, height: 3.2)
+            }
+            .offset(y: -4)
+
+            PainIntensityMouthShape(level: level)
+                .stroke(style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+                .frame(width: 15, height: 8)
+                .offset(y: 5)
+        }
+    }
+}
+
+private struct PainIntensityMouthShape: Shape {
+    let level: PainIntensityLevel
+
+    func path(in rect: CGRect) -> Path {
+        switch level {
+        case .low:
+            return curvedPath(in: rect, curve: 5)
+        case .medium, .none:
+            var path = Path()
+            path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            return path
+        case .high:
+            return curvedPath(in: rect, curve: -4)
+        case .veryHigh:
+            return Path(ellipseIn: CGRect(x: rect.midX - 3, y: rect.minY, width: 6, height: rect.height))
+        }
+    }
+
+    private func curvedPath(in rect: CGRect, curve: CGFloat) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addQuadCurve(
+            to: CGPoint(x: rect.maxX, y: rect.midY),
+            control: CGPoint(x: rect.midX, y: rect.midY + curve)
+        )
+        return path
     }
 }
 
@@ -668,7 +938,7 @@ private struct EntryReviewStepView: View {
     private var headacheSummary: [String] {
         let draft = coordinator.draft
         return [
-            "\(draft.normalizedIntensity)/10 · \(intensityLabel(for: draft.normalizedIntensity))",
+            draft.selectedIntensityLevel?.displayLabel ?? "Stärke nicht angegeben",
             draft.resolvedPainLocation.isEmpty ? "Ort nicht angegeben" : "Ort: \(draft.resolvedPainLocation)",
             "Zeitpunkt: \(startedAtSummary(for: draft.startedAt))"
         ]
@@ -742,9 +1012,6 @@ private struct EntryReviewStepView: View {
         return startedAt.formatted(date: .abbreviated, time: .shortened)
     }
 
-    private func intensityLabel(for intensity: Int) -> String {
-        PainIntensityLevel(intensity: intensity).displayLabel
-    }
 }
 
 private struct EntryFlowScreen<Content: View, Footer: View>: View {
@@ -952,6 +1219,8 @@ private struct EntryFlowFooter: View {
     let primaryIdentifier: String
     let secondaryTitle: String?
     let secondaryIdentifier: String?
+    let isPrimaryDisabled: Bool
+    let isSecondaryDisabled: Bool
     let onPrimary: () -> Void
     let onSecondary: (() -> Void)?
 
@@ -962,6 +1231,8 @@ private struct EntryFlowFooter: View {
         primaryIdentifier: String,
         secondaryTitle: String? = nil,
         secondaryIdentifier: String? = nil,
+        isPrimaryDisabled: Bool = false,
+        isSecondaryDisabled: Bool = false,
         onPrimary: @escaping () -> Void,
         onSecondary: (() -> Void)? = nil
     ) {
@@ -971,6 +1242,8 @@ private struct EntryFlowFooter: View {
         self.primaryIdentifier = primaryIdentifier
         self.secondaryTitle = secondaryTitle
         self.secondaryIdentifier = secondaryIdentifier
+        self.isPrimaryDisabled = isPrimaryDisabled
+        self.isSecondaryDisabled = isSecondaryDisabled
         self.onPrimary = onPrimary
         self.onSecondary = onSecondary
     }
@@ -981,7 +1254,7 @@ private struct EntryFlowFooter: View {
                 title: primaryTitle,
                 systemImage: primarySystemImage,
                 isLoading: isSaving,
-                isDisabled: isSaving,
+                isDisabled: isSaving || isPrimaryDisabled,
                 accessibilityIdentifier: primaryIdentifier,
                 action: onPrimary
             )
@@ -989,7 +1262,7 @@ private struct EntryFlowFooter: View {
             if let secondaryTitle, let onSecondary {
                 InputFlowSecondaryAction(
                     title: secondaryTitle,
-                    isDisabled: isSaving,
+                    isDisabled: isSaving || isSecondaryDisabled,
                     accessibilityIdentifier: secondaryIdentifier ?? "entry-flow-secondary",
                     action: onSecondary
                 )

@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum PainIntensityLevel: CaseIterable, Equatable, Sendable {
+nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, Sendable {
     case none
     case low
     case medium
@@ -19,6 +19,40 @@ nonisolated enum PainIntensityLevel: CaseIterable, Equatable, Sendable {
             self = .veryHigh
         default:
             self = .none
+        }
+    }
+
+    nonisolated init(storageValue: String) {
+        switch storageValue {
+        case Self.low.rawValue, "leicht", "Leicht":
+            self = .low
+        case Self.medium.rawValue, "mittel", "Mittel":
+            self = .medium
+        case Self.high.rawValue, "stark", "Stark":
+            self = .high
+        case Self.veryHigh.rawValue, "very_high", "sehrStark", "Sehr stark", "Sehr Stark":
+            self = .veryHigh
+        default:
+            self = .none
+        }
+    }
+
+    nonisolated static var selectableCases: [PainIntensityLevel] {
+        [.low, .medium, .high, .veryHigh]
+    }
+
+    nonisolated var storedIntensity: Int {
+        switch self {
+        case .none:
+            0
+        case .low:
+            2
+        case .medium:
+            5
+        case .high:
+            8
+        case .veryHigh:
+            10
         }
     }
 

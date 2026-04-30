@@ -235,8 +235,6 @@ nonisolated enum SymiSize {
     static let heroWaveSecondaryHeight: CGFloat = 44
     static let heroWaveAccentWidth: CGFloat = 132
     static let heroWaveAccentHeight: CGFloat = 34
-    static let painGaugeWidth: CGFloat = 218
-    static let painGaugeHeight: CGFloat = 148
 
     // Entry detail
     static let entryDetailTopFadeHeight: CGFloat = 16
@@ -286,7 +284,6 @@ nonisolated enum SymiStroke {
     static let heroWaveAccent: CGFloat = 4
     static let heroWaveSecondary: CGFloat = 5
     static let heroWavePrimary: CGFloat = 8
-    static let painGaugeArc: CGFloat = 18
 
     // Entry detail
     static let entryDetailFaceIcon: CGFloat = 2

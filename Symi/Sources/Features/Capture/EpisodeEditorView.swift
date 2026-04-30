@@ -185,23 +185,18 @@ private struct EpisodeScaleSection: View {
             }
             .pickerStyle(.segmented)
 
-            VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                HStack {
-                    Text("Intensität")
-                    Spacer()
-                    Text("\(draft.normalizedIntensity)/10")
-                        .font(.headline)
-                        .monospacedDigit()
+            Picker("Intensität", selection: Binding(
+                get: { draft.selectedIntensityLevel ?? .medium },
+                set: { draft.selectedIntensityLevel = $0 }
+            )) {
+                ForEach(PainIntensityLevel.selectableCases, id: \.self) { level in
+                    Text(level.displayLabel).tag(level)
                 }
-
-                IntensityPicker(value: Binding(
-                    get: { Double(draft.normalizedIntensity) },
-                    set: { draft.intensity = Int($0) }
-                ))
             }
+            .pickerStyle(.segmented)
             .formAlignedRow()
         } header: {
-            Text("Skala")
+            Text("Stärke")
         } footer: {
             Text("Wenige Angaben reichen. Alles Weitere bleibt optional.")
         }
@@ -518,26 +513,6 @@ private enum AppSettingsURL {
     static let url = URL(string: "app-settings:")!
 }
 
-struct IntensityPicker: View {
-    @Binding var value: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
-            Slider(value: $value, in: 1 ... 10, step: 1)
-                .tint(AppTheme.symiCoral)
-                .accessibilityLabel("Intensität")
-                .accessibilityValue("\(Int(value)) von 10")
-
-            HStack {
-                Text("ruhig")
-                Spacer()
-                Text("stark")
-            }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(AppTheme.symiTextSecondary)
-        }
-    }
-}
 
 private struct MedicationDefinitionRow: View {
     let definition: MedicationDefinitionRecord

@@ -838,7 +838,7 @@ private extension Array {
 
 @MainActor
 private func makeSyncTestStack(provider: FakeSyncProvider? = nil) throws -> SyncTestStack {
-    let schema = Schema(versionedSchema: SymiSchemaV6.self)
+    let schema = Schema(versionedSchema: SymiSchemaV7.self)
     let configuration = ModelConfiguration(
         "sync-tests-\(UUID().uuidString)",
         schema: schema,

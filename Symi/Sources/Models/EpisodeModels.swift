@@ -276,7 +276,7 @@ extension Episode {
             updatedAt: updatedAt,
             deletedAt: deletedAt,
             typeRaw: type.rawValue,
-            intensity: intensity,
+            intensityLevelRaw: PainIntensityLevel(intensity: intensity).rawValue,
             painLocation: painLocation,
             painCharacter: painCharacter,
             notes: notes,
@@ -307,6 +307,16 @@ extension Episode {
     var triggers: [String] {
         get { StringListStorage.decode(triggersStorage) }
         set { triggersStorage = StringListStorage.encode(newValue) }
+    }
+
+    var intensityLevel: PainIntensityLevel {
+        get { PainIntensityLevel(storageValue: intensityLevelRaw) }
+        set { intensityLevelRaw = newValue.rawValue }
+    }
+
+    var intensity: Int {
+        get { intensityLevel.storedIntensity }
+        set { intensityLevel = PainIntensityLevel(intensity: newValue) }
     }
 
     var hasWeatherSnapshot: Bool {

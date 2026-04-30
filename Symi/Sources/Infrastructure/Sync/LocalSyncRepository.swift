@@ -122,7 +122,7 @@ struct LocalSyncRepository {
         target.updatedAt = envelope.modifiedAt
         target.deletedAt = envelope.deletedAt
         target.type = EpisodeType(storageValue: payload.type)
-        target.intensity = payload.intensity
+        target.intensityLevel = PainIntensityLevel(storageValue: payload.resolvedIntensityLevel)
         target.painLocation = payload.painLocation
         target.painCharacter = payload.painCharacter
         target.notes = payload.notes
@@ -622,6 +622,7 @@ extension Episode {
                     endedAt: endedAt,
                     type: type.rawValue,
                     intensity: intensity,
+                    intensityLevel: intensityLevel.rawValue,
                     painLocation: painLocation,
                     painCharacter: painCharacter,
                     notes: notes,
