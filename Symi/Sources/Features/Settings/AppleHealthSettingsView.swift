@@ -1,6 +1,18 @@
 import SwiftUI
 import UIKit
 
+struct AppleHealthView: View {
+    @State private var controller: SettingsController
+
+    init(dependencies: SettingsFeatureDependencies) {
+        _controller = State(initialValue: dependencies.makeSettingsController())
+    }
+
+    var body: some View {
+        AppleHealthSettingsView(controller: controller)
+    }
+}
+
 struct AppleHealthSettingsView: View {
     @Bindable var controller: SettingsController
     @State private var showsDisconnectConfirmation = false
@@ -24,6 +36,17 @@ struct AppleHealthSettingsView: View {
                     }
                     .buttonStyle(HealthPrimaryButtonStyle())
                     .disabled(!status.isAvailable)
+                }
+
+                if status.isAvailable {
+                    Button {
+                        Task {
+                            await controller.requestHealthAuthorization()
+                        }
+                    } label: {
+                        Label("Berechtigungen erneut anfragen", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(HealthInlineSettingsButtonStyle())
                 }
 
                 if let message = status.lastErrorMessage {
