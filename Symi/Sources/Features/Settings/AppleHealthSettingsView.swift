@@ -1,18 +1,6 @@
 import SwiftUI
 import UIKit
 
-struct AppleHealthView: View {
-    @State private var controller: SettingsController
-
-    init(dependencies: SettingsFeatureDependencies) {
-        _controller = State(initialValue: dependencies.makeSettingsController())
-    }
-
-    var body: some View {
-        AppleHealthSettingsView(controller: controller)
-    }
-}
-
 struct AppleHealthSettingsView: View {
     @Bindable var controller: SettingsController
     @State private var showsDisconnectConfirmation = false

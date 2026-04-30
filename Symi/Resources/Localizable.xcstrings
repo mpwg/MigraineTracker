@@ -1943,16 +1943,6 @@
         }
       }
     },
-    "Lokales JSON5-Backup erstellen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create Local JSON5 Backup"
-          }
-        }
-      }
-    },
     "Löschen" : {
       "localizations" : {
         "en" : {
@@ -2925,16 +2915,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync note: %1$@"
-          }
-        }
-      }
-    },
-    "Sync-Protokoll" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync Log"
           }
         }
       }

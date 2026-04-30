@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SyncLogView: View {
+struct DiagnosisView: View {
     @Bindable var controller: SettingsController
 
     var body: some View {
@@ -79,7 +79,7 @@ struct SyncLogView: View {
                 }
             }
         }
-        .navigationTitle("Sync-Protokoll")
+        .navigationTitle("Diagnose")
         .brandGroupedScreen()
         .task {
             controller.refreshLog()

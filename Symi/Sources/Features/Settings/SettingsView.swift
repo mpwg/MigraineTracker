@@ -3,10 +3,12 @@ import SwiftUI
 struct SettingsView: View {
     let dependencies: SettingsFeatureDependencies
     let showsCloseButton: Bool
+    @State private var controller: SettingsController
 
     init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
         self.dependencies = dependencies
         self.showsCloseButton = showsCloseButton
+        _controller = State(initialValue: dependencies.makeSettingsController())
     }
 
     var body: some View {
@@ -23,7 +25,12 @@ struct SettingsView: View {
                 NavigationLink {
                     AppleHealthView(dependencies: dependencies)
                 } label: {
-                    Label("Apple Health", systemImage: "heart")
+                    Label {
+                        Text("Apple Health")
+                    } icon: {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(.red)
+                    }
                 }
             }
 
@@ -56,41 +63,20 @@ struct SettingsView: View {
                     Label("Feedback senden", systemImage: "bubble.left.and.text.bubble.right")
                 }
             }
-        }
-        .navigationTitle("Einstellungen")
-        .brandGroupedScreen()
-    }
-}
 
-private struct AboutSymiView: View {
-    @State private var controller: SettingsController
-
-    init(dependencies: SettingsFeatureDependencies) {
-        _controller = State(initialValue: dependencies.makeSettingsController())
-    }
-
-    var body: some View {
-        List {
-            Section {
-                LabeledContent("Version", value: controller.appVersionDisplay)
-            }
-        }
-        .navigationTitle("Über Symi")
-        .brandGroupedScreen()
-    }
-}
-
-private struct FeedbackView: View {
-    var body: some View {
-        List {
-            Section {
-                Link(destination: ProductBranding.supportURL) {
-                    Label("Feedback senden", systemImage: "bubble.left.and.text.bubble.right")
+            Section("Diagnose") {
+                NavigationLink {
+                    DiagnosisView(controller: controller)
+                } label: {
+                    Label("Diagnose", systemImage: "text.document")
                 }
             }
         }
-        .navigationTitle("Feedback senden")
+        .navigationTitle("Einstellungen")
         .brandGroupedScreen()
+        .task {
+            controller.refreshLog(limit: 1)
+        }
     }
 }
 
