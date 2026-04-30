@@ -180,6 +180,10 @@ struct CoreArchitectureTests {
         #expect(PainIntensityLevel.medium.metadata.colorHex == 0xF6B78D)
         #expect(PainIntensityLevel.high.metadata.colorHex == 0xF29C7D)
         #expect(PainIntensityLevel.veryHigh.metadata.colorHex == 0xE6867C)
+        #expect(PainIntensityLevel.low.metadata.faceExpression == .calm)
+        #expect(PainIntensityLevel.medium.metadata.faceExpression == .neutral)
+        #expect(PainIntensityLevel.high.metadata.faceExpression == .strained)
+        #expect(PainIntensityLevel.veryHigh.metadata.faceExpression == .intense)
     }
 
     @Test
