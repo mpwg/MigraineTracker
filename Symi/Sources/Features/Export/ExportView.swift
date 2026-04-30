@@ -26,6 +26,8 @@ struct SettingsView: View {
 
                     SettingsToggleRow(
                         title: "Synchronisation aktivieren",
+                        systemImage: "icloud",
+                        tint: AppTheme.symiPetrol,
                         isOn: Binding(
                             get: { controller.isSyncEnabled },
                             set: { controller.setSyncEnabled($0) }
@@ -71,6 +73,7 @@ struct SettingsView: View {
                             title: "Sync-Protokoll",
                             subtitle: controller.syncLogSubtitle,
                             systemImage: "text.document",
+                            tint: AppTheme.symiPetrol,
                             rowStyle: .navigation,
                             showsChevron: true
                         )
@@ -101,6 +104,7 @@ struct SettingsView: View {
                             title: "Backup erstellen",
                             subtitle: "Sichert alle Einträge und Vorlagen",
                             systemImage: "externaldrive.badge.plus",
+                            tint: SettingsIconPalette.dataSecurity,
                             rowStyle: .navigation,
                             showsChevron: true
                         )
@@ -113,6 +117,7 @@ struct SettingsView: View {
                             title: "Daten exportieren",
                             subtitle: "Deine Daten als Datei sichern",
                             systemImage: "square.and.arrow.up",
+                            tint: SettingsIconPalette.dataSecurity,
                             rowStyle: .navigation,
                             showsChevron: true
                         )
@@ -136,6 +141,8 @@ struct SettingsView: View {
                     SettingsToggleRow(
                         title: "Anonyme Nutzungsdaten teilen",
                         subtitle: "Hilft uns, Symi zu verbessern. Deine persönlichen Einträge bleiben immer privat.",
+                        systemImage: "chart.bar",
+                        tint: AppTheme.symiSage,
                         isOn: Binding(
                             get: { controller.isUsageDataCollectionAllowed },
                             set: { controller.setUsageDataCollectionAllowed($0) }
@@ -150,6 +157,7 @@ struct SettingsView: View {
                         SettingsRow(
                             title: "Datenschutz & Hinweise",
                             systemImage: "hand.raised",
+                            tint: AppTheme.symiSage,
                             rowStyle: .navigation,
                             showsChevron: true
                         )
@@ -160,7 +168,8 @@ struct SettingsView: View {
                     SettingsRow(
                         title: "Version",
                         systemImage: "info.circle",
-                        rightValue: controller.appVersionDisplay
+                        rightValue: controller.appVersionDisplay,
+                        tint: AppTheme.symiPetrol
                     )
 
                     SettingsDivider()
@@ -170,6 +179,7 @@ struct SettingsView: View {
                             title: "Feedback senden",
                             subtitle: "Hast du Wünsche oder Probleme?",
                             systemImage: "bubble.left.and.text.bubble.right",
+                            tint: AppTheme.symiPetrol,
                             rowStyle: .navigation,
                             showsChevron: true
                         )
@@ -285,13 +295,8 @@ private struct SettingsStatusHeader: View {
     let tint: Color
 
     var body: some View {
-        HStack(alignment: .top, spacing: SymiSpacing.md) {
-            Image(systemName: systemImage)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(tint)
-                .frame(width: 40, height: 40)
-                .background(tint.opacity(SymiOpacity.secondaryFill), in: Circle())
-                .accessibilityHidden(true)
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
+            IconContainerView(icon: Image(systemName: systemImage), color: tint)
 
             VStack(alignment: .leading, spacing: SymiSpacing.compact) {
                 Text(title)
@@ -313,6 +318,32 @@ private struct SettingsStatusHeader: View {
         .padding(.bottom, SymiSpacing.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title). \(detail)")
+    }
+}
+
+private enum SettingsIconPalette {
+    static let dataSecurity = SymiColors.triggerBlue.color
+}
+
+private struct IconContainerView: View {
+    let icon: Image
+    let color: Color
+    var backgroundOpacity = 0.12
+    var preservesOriginalRendering = false
+
+    var body: some View {
+        icon
+            .resizable()
+            .renderingMode(preservesOriginalRendering ? .original : .template)
+            .scaledToFit()
+            .foregroundStyle(color)
+            .padding(SymiSpacing.compact)
+            .frame(width: 32, height: 32)
+            .background(
+                color.opacity(backgroundOpacity),
+                in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+            )
+            .accessibilityHidden(true)
     }
 }
 
@@ -408,19 +439,13 @@ private struct SettingsRow: View {
     @ViewBuilder
     private var iconView: some View {
         if let assetImageName {
-            Image(assetImageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 30, height: 30)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .accessibilityHidden(true)
+            IconContainerView(
+                icon: Image(assetImageName),
+                color: AppTheme.symiCoral,
+                preservesOriginalRendering: true
+            )
         } else if let systemImage {
-            Image(systemName: systemImage)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(iconColor)
-                .frame(width: 30, height: 30)
-                .background(iconColor.opacity(SymiOpacity.secondaryFill), in: Circle())
-                .accessibilityHidden(true)
+            IconContainerView(icon: Image(systemName: systemImage), color: iconColor)
         }
     }
 
@@ -439,21 +464,30 @@ private struct SettingsRow: View {
 private struct SettingsToggleRow: View {
     let title: String
     var subtitle: String?
+    var systemImage: String?
+    var tint: Color = AppTheme.symiPetrol
     @Binding var isOn: Bool
 
     var body: some View {
         Toggle(isOn: $isOn) {
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
-                Text(title)
-                    .font(.body)
-                    .foregroundStyle(AppTheme.symiTextPrimary)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.symiTextSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .center, spacing: SymiSpacing.md) {
+                if let systemImage {
+                    IconContainerView(icon: Image(systemName: systemImage), color: tint)
                 }
+
+                VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
+                    Text(title)
+                        .font(.body)
+                        .foregroundStyle(AppTheme.symiTextPrimary)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.symiTextSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .layoutPriority(1)
             }
         }
         .tint(AppTheme.symiPetrol)
