@@ -35,7 +35,11 @@ struct EntryFlowCoordinatorView: View {
         .alert("Eintrag gespeichert", isPresented: savedBinding) {
             Button("OK", role: .cancel, action: finishAfterSave)
         } message: {
-            Text("Dein Eintrag wurde lokal gespeichert.")
+            if case .saved(_, let healthWarning) = coordinator.saveResult, let healthWarning {
+                Text(healthWarning)
+            } else {
+                Text("Dein Eintrag wurde lokal gespeichert.")
+            }
         }
         .alert("Eintrag konnte nicht gespeichert werden", isPresented: failedBinding) {
             Button("OK", role: .cancel) {
