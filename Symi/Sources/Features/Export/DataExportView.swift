@@ -126,7 +126,10 @@ struct ReportView: View {
             }
         }
         .sheet(isPresented: $isDateSelectionPresented) {
-            ReportDateSelectionSheet(selectedDateRange: $selectedDateRange)
+            ReportDateSelectionSheet(
+                selectedDateRange: selectedDateRange,
+                selectDateRange: selectDateRange
+            )
                 .presentationDetents([.height(320)])
                 .presentationDragIndicator(.visible)
         }
@@ -142,6 +145,12 @@ struct ReportView: View {
 
     private func openDateSelection() {
         isDateSelectionPresented = true
+    }
+
+    private func selectDateRange(_ range: ReportDateRange) {
+        selectedDateRange = range
+        let dateRange = range.dateRange()
+        controller.setDateRange(startDate: dateRange.startDate, endDate: dateRange.endDate)
     }
 
     private func presentReportPreview(_ url: URL) {
@@ -203,7 +212,6 @@ private enum ReportDateRange: String, CaseIterable, Identifiable {
     case last7Days
     case lastMonth
     case last3Months
-    case custom
 
     var id: String { rawValue }
 
@@ -215,9 +223,21 @@ private enum ReportDateRange: String, CaseIterable, Identifiable {
             "Letzter Monat"
         case .last3Months:
             "Letzte 3 Monate"
-        case .custom:
-            "Benutzerdefiniert"
         }
+    }
+
+    func dateRange(calendar: Calendar = .current, now: Date = .now) -> (startDate: Date, endDate: Date) {
+        let startDate: Date
+        switch self {
+        case .last7Days:
+            startDate = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        case .lastMonth:
+            startDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        case .last3Months:
+            startDate = calendar.date(byAdding: .month, value: -3, to: now) ?? now
+        }
+
+        return (startDate, now)
     }
 }
 
@@ -345,7 +365,8 @@ private struct FloatingReportButton: View {
 }
 
 private struct ReportDateSelectionSheet: View {
-    @Binding var selectedDateRange: ReportDateRange
+    let selectedDateRange: ReportDateRange
+    let selectDateRange: (ReportDateRange) -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -357,7 +378,7 @@ private struct ReportDateSelectionSheet: View {
             VStack(spacing: SymiSpacing.xs) {
                 ForEach(ReportDateRange.allCases) { range in
                     Button {
-                        selectedDateRange = range
+                        selectDateRange(range)
                         dismiss()
                     } label: {
                         HStack(spacing: SymiSpacing.md) {

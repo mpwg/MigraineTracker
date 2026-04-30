@@ -157,6 +157,12 @@ final class DataExportController {
         }
     }
 
+    func setDateRange(startDate: Date, endDate: Date, debounce: Duration? = .milliseconds(350)) {
+        self.startDate = startDate
+        self.endDate = endDate
+        scheduleSummaryReload(debounce: debounce)
+    }
+
     func reloadSummary() async {
         await reloadSummary(startDate: startDate, endDate: endDate)
     }
@@ -371,8 +377,7 @@ final class DataExportController {
     }
 
     private static func defaultDateRange(calendar: Calendar = .current, now: Date = .now) -> (startDate: Date, endDate: Date) {
-        let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-        let startDate = calendar.date(byAdding: .month, value: -2, to: startOfCurrentMonth) ?? now
+        let startDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
         return (startDate, now)
     }
 
