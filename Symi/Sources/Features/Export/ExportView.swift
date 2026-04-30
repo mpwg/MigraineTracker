@@ -921,7 +921,6 @@ private struct ManageCloudDataView: View {
 
 private struct ConflictDifferenceRow: View {
     let difference: ConflictDisplayDifference
-    private let cloudValueColor = Color(red: 15 / 255, green: 61 / 255, blue: 62 / 255)
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.micro) {
@@ -935,7 +934,7 @@ private struct ConflictDifferenceRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text(difference.cloudValue)
-                    .foregroundStyle(cloudValueColor)
+                    .foregroundStyle(SymiColors.primaryPetrol.color)
             }
             .font(.subheadline)
             .textSelection(.enabled)

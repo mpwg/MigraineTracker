@@ -882,7 +882,8 @@ private func makeSyncTestStack(provider: FakeSyncProvider? = nil) throws -> Sync
     )
 }
 
-private final class FakeSyncProvider: SyncProvider, @unchecked Sendable {
+@MainActor
+private final class FakeSyncProvider: SyncProvider {
     private let lock = NSLock()
     private let failedSaveError: CKError?
     var serverRecordForFailure: CKRecord?

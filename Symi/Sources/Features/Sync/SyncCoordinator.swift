@@ -664,83 +664,6 @@ final class SyncCoordinator {
         networkMonitor = nil
     }
 
-    private func resolveActionableStatusIfNeeded(_ snapshot: SyncStatusSnapshot, reason: String) async {
-        guard isEnabled, snapshot.state != .syncing else {
-            return
-        }
-
-        let openConflicts = await stateStore.conflicts().count
-        let uploadableLocalChanges = max(0, snapshot.unsyncedRecords - openConflicts)
-        var shouldSync = false
-
-        if uploadableLocalChanges > 0 {
-            await logAutomaticStatusResolution(
-                key: "uploadableLocalChanges",
-                operation: "coordinator.statusAutoResolution.uploadableLocalChanges",
-                message: "Lokale Änderungen wurden automatisch für den nächsten iCloud-Abgleich vorgemerkt.",
-                metadata: [
-                    "reason": reason,
-                    "count": "\(uploadableLocalChanges)"
-                ]
-            )
-            shouldSync = true
-        }
-
-        if snapshot.lastDownloadedAt == nil {
-            await logAutomaticStatusResolution(
-                key: "missingInitialDownload",
-                operation: "coordinator.statusAutoResolution.missingInitialDownload",
-                message: "Fehlender iCloud-Download wird automatisch nachgeholt.",
-                metadata: [
-                    "reason": reason
-                ]
-            )
-            shouldSync = true
-        } else if let lastDownloadedAt = snapshot.lastDownloadedAt,
-                  Date().timeIntervalSince(lastDownloadedAt) >= SyncStatusSnapshot.staleDataWarningInterval {
-            await logAutomaticStatusResolution(
-                key: "staleDownload",
-                operation: "coordinator.statusAutoResolution.staleDownload",
-                message: "Veralteter iCloud-Download wurde erkannt; ein automatischer Abgleich wird gestartet.",
-                metadata: [
-                    "reason": reason,
-                    "lastDownloadedAt": lastDownloadedAt.ISO8601Format()
-                ]
-            )
-            shouldSync = true
-        }
-
-        if snapshot.lastErrorIsRetryable {
-            await logAutomaticStatusResolution(
-                key: "retryableLastError",
-                operation: "coordinator.statusAutoResolution.retryableLastError",
-                message: "Ein vorübergehender Sync-Fehler wird automatisch erneut versucht.",
-                metadata: [
-                    "reason": reason
-                ]
-            )
-            shouldSync = true
-        }
-
-        if shouldSync {
-            triggerAutomaticSync(reason: "statusAutoResolution", debounce: .seconds(0))
-        }
-    }
-
-    private func logAutomaticStatusResolution(
-        key: String,
-        operation: String,
-        message: String,
-        metadata: [String: String]
-    ) async {
-        guard !loggedAutomaticStatusResolutionKeys.contains(key) else {
-            return
-        }
-
-        loggedAutomaticStatusResolutionKeys.insert(key)
-        await log(level: .info, operation: operation, message: message, metadata: metadata)
-    }
-
     private func queueUnsyncedDocuments() async throws {
         try await PerformanceInstrumentation.measure("SyncQueueUnsyncedDocuments") {
             guard let provider else {
@@ -864,6 +787,95 @@ final class SyncCoordinator {
         }
     }
 
+}
+
+extension SyncCoordinator {
+    private func resolveActionableStatusIfNeeded(_ snapshot: SyncStatusSnapshot, reason: String) async {
+        guard isEnabled, snapshot.state != .syncing else {
+            return
+        }
+
+        let openConflicts = await stateStore.conflicts().count
+        let uploadableLocalChanges = max(0, snapshot.unsyncedRecords - openConflicts)
+        var shouldSync = false
+
+        if uploadableLocalChanges > 0 {
+            await logAutomaticStatusResolution(
+                key: "uploadableLocalChanges",
+                operation: "coordinator.statusAutoResolution.uploadableLocalChanges",
+                message: "Lokale Änderungen wurden automatisch für den nächsten iCloud-Abgleich vorgemerkt.",
+                metadata: [
+                    "reason": reason,
+                    "count": "\(uploadableLocalChanges)"
+                ]
+            )
+            shouldSync = true
+        }
+
+        if snapshot.lastDownloadedAt == nil {
+            await logAutomaticStatusResolution(
+                key: "missingInitialDownload",
+                operation: "coordinator.statusAutoResolution.missingInitialDownload",
+                message: "Fehlender iCloud-Download wird automatisch nachgeholt.",
+                metadata: [
+                    "reason": reason
+                ]
+            )
+            shouldSync = true
+        } else if let lastDownloadedAt = snapshot.lastDownloadedAt,
+                  Date().timeIntervalSince(lastDownloadedAt) >= SyncStatusSnapshot.staleDataWarningInterval {
+            await logAutomaticStatusResolution(
+                key: "staleDownload",
+                operation: "coordinator.statusAutoResolution.staleDownload",
+                message: "Veralteter iCloud-Download wurde erkannt; ein automatischer Abgleich wird gestartet.",
+                metadata: [
+                    "reason": reason,
+                    "lastDownloadedAt": lastDownloadedAt.ISO8601Format()
+                ]
+            )
+            shouldSync = true
+        }
+
+        if snapshot.lastErrorIsRetryable {
+            await logAutomaticStatusResolution(
+                key: "retryableLastError",
+                operation: "coordinator.statusAutoResolution.retryableLastError",
+                message: "Ein vorübergehender Sync-Fehler wird automatisch erneut versucht.",
+                metadata: [
+                    "reason": reason
+                ]
+            )
+            shouldSync = true
+        }
+
+        if shouldSync {
+            triggerAutomaticSync(reason: "statusAutoResolution", debounce: .seconds(0))
+        }
+    }
+
+    private func logAutomaticStatusResolution(
+        key: String,
+        operation: String,
+        message: String,
+        metadata: [String: String]
+    ) async {
+        guard !loggedAutomaticStatusResolutionKeys.contains(key) else {
+            return
+        }
+
+        loggedAutomaticStatusResolutionKeys.insert(key)
+        await log(level: .info, operation: operation, message: message, metadata: metadata)
+    }
+
+    private static func hasSameUserVisibleContent(
+        _ local: SyncDocumentEnvelope,
+        _ remote: SyncDocumentEnvelope
+    ) -> Bool {
+        local.entityType == remote.entityType
+            && local.deletedAt == remote.deletedAt
+            && local.payload == remote.payload
+    }
+
     private func metadata(for envelope: SyncDocumentEnvelope, shadow: SyncShadow?) -> [String: String] {
         var values: [String: String] = [
             "documentID": envelope.documentID,
@@ -898,15 +910,6 @@ final class SyncCoordinator {
         }
 
         return ["payloadValidation"]
-    }
-
-    private static func hasSameUserVisibleContent(
-        _ local: SyncDocumentEnvelope,
-        _ remote: SyncDocumentEnvelope
-    ) -> Bool {
-        local.entityType == remote.entityType
-            && local.deletedAt == remote.deletedAt
-            && local.payload == remote.payload
     }
 }
 
