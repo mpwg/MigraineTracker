@@ -350,16 +350,17 @@ private enum SettingsRowStyle {
 }
 
 private struct AppleHealthCardView: View {
+    @Environment(\.colorScheme) private var colorScheme
     let statusTitle: String
     let isConnected: Bool
 
     var body: some View {
-        HStack(alignment: .center, spacing: SymiSpacing.lg) {
+        HStack(alignment: .center, spacing: SymiSpacing.md) {
             Image("AppleHealthIcon")
                 .resizable()
                 .renderingMode(.original)
                 .scaledToFit()
-                .frame(width: 36, height: 36)
+                .frame(width: 38, height: 38)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
@@ -378,29 +379,38 @@ private struct AppleHealthCardView: View {
 
             Spacer(minLength: SymiSpacing.md)
 
-            Text(statusTitle)
-                .font(.subheadline)
-                .foregroundStyle(isConnected ? AppTheme.symiPetrol : AppTheme.symiTextSecondary)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: SymiSpacing.xs) {
+                Text(statusTitle)
+                    .font(.subheadline)
+                    .foregroundStyle(isConnected ? AppTheme.symiPetrol : AppTheme.symiTextSecondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
 
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.tertiary)
-                .accessibilityHidden(true)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
         }
-        .padding(.horizontal, SymiSpacing.xxl)
-        .padding(.vertical, SymiSpacing.lg)
-        .frame(minHeight: 72)
+        .padding(.horizontal, SymiSpacing.lg)
+        .padding(.vertical, SymiSpacing.xl)
+        .frame(minHeight: 78)
         .background(
-            AppTheme.symiCoral.opacity(isConnected ? 0.08 : 0.10),
+            appleHealthBackground,
             in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
         )
-        .padding(.horizontal, SymiSpacing.xs)
-        .padding(.vertical, SymiSpacing.xs)
+        .padding(.vertical, SymiSpacing.sm)
         .contentShape(RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Apple Health. Lese- und Schreibzugriff. \(statusTitle)")
+    }
+
+    private var appleHealthBackground: Color {
+        if colorScheme == .dark {
+            return Color.white.opacity(0.06)
+        }
+
+        return Color(.systemGray6).opacity(0.88)
     }
 }
 
