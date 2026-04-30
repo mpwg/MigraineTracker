@@ -178,7 +178,7 @@ final class EntryFlowUITests: XCTestCase {
         XCTAssertVisibleText("Wähle alle passenden aus.", in: app)
         XCTAssertTrue(app.buttons["entry-trigger-Stress"].exists)
         XCTAssertTrue(app.buttons["entry-trigger-Wetter"].exists)
-        XCTAssertTrue(app.buttons["entry-trigger-Schlaf"].exists)
+        XCTAssertTrue(app.buttons["entry-trigger-Schlafdauer"].exists)
         XCTAssertTrue(app.buttons["entry-trigger-Ernährung"].exists)
         XCTAssertVisibleText("Du kannst mehrere auswählen.", in: app)
         XCTAssertVisibleText("von 5", in: app)

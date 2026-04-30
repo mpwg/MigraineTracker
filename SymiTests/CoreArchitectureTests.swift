@@ -135,15 +135,15 @@ struct CoreArchitectureTests {
     func episodeDayPartProvidesCentralClassificationAndDisplayText() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        let expectations: [(Int, EpisodeDayPart, String)] = [
-            (4, .nacht, "In der Nacht"),
-            (5, .morgens, "Am Morgen"),
-            (10, .morgens, "Am Morgen"),
-            (11, .mittags, "Am Nachmittag"),
-            (16, .mittags, "Am Nachmittag"),
-            (17, .abends, "Am Abend"),
-            (21, .abends, "Am Abend"),
-            (22, .nacht, "In der Nacht")
+        let expectations: [(Int, EpisodeDayPart, String, String, Int)] = [
+            (4, .nacht, "In der Nacht", "moon.stars.fill", 23),
+            (5, .morgens, "Am Morgen", "sunrise.fill", 8),
+            (10, .morgens, "Am Morgen", "sunrise.fill", 8),
+            (11, .mittags, "Am Nachmittag", "sun.max.fill", 13),
+            (16, .mittags, "Am Nachmittag", "sun.max.fill", 13),
+            (17, .abends, "Am Abend", "sunset.fill", 19),
+            (21, .abends, "Am Abend", "sunset.fill", 19),
+            (22, .nacht, "In der Nacht", "moon.stars.fill", 23)
         ]
 
         for expectation in expectations {
@@ -152,6 +152,8 @@ struct CoreArchitectureTests {
 
             #expect(dayPart == expectation.1)
             #expect(dayPart.contextualLabel == expectation.2)
+            #expect(dayPart.symbolName == expectation.3)
+            #expect(dayPart.representativeHour == expectation.4)
             #expect(JournalEntryContext.timeOfDay(for: date, calendar: calendar) == expectation.2)
         }
     }
