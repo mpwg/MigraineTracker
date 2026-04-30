@@ -183,10 +183,10 @@ struct SettingsView: View {
             }
             .padding(.horizontal, SymiSpacing.xxl)
             .padding(.top, SymiSpacing.xxxl)
-            .padding(.bottom, 128)
+            .padding(.bottom, SymiSpacing.settingsContentBottomPadding)
             .wideContent(maxWidth: AppTheme.readableContentMaxWidth)
         }
-        .safeAreaPadding(.bottom, 32)
+        .safeAreaPadding(.bottom, SymiSpacing.settingsSafeAreaBottomPadding)
         .navigationTitle("Einstellungen")
         .brandScreen()
         .toolbar {
@@ -323,7 +323,7 @@ private enum SettingsIconPalette {
 private struct IconContainerView: View {
     let icon: Image
     let color: Color
-    var backgroundOpacity = 0.12
+    var backgroundOpacity = SymiOpacity.faintSurface
     var preservesOriginalRendering = false
 
     var body: some View {
@@ -333,10 +333,10 @@ private struct IconContainerView: View {
             .scaledToFit()
             .foregroundStyle(color)
             .padding(SymiSpacing.compact)
-            .frame(width: 32, height: 32)
+            .frame(width: SymiSize.settingsIconContainer, height: SymiSize.settingsIconContainer)
             .background(
                 color.opacity(backgroundOpacity),
-                in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+                in: RoundedRectangle(cornerRadius: SymiRadius.settingsIconContainer, style: .continuous)
             )
             .accessibilityHidden(true)
     }
@@ -360,20 +360,20 @@ private struct AppleHealthCardView: View {
                 .resizable()
                 .renderingMode(.original)
                 .scaledToFit()
-                .frame(width: 38, height: 38)
+                .frame(width: SymiSize.settingsAppleHealthIcon, height: SymiSize.settingsAppleHealthIcon)
+                .blendMode(colorScheme == .dark ? .normal : .multiply)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text("Apple Health")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(AppTheme.symiTextPrimary)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
 
                 Text("Lese- und Schreibzugriff")
                     .font(.subheadline)
                     .foregroundStyle(AppTheme.symiTextSecondary)
                     .lineLimit(1)
-                    .truncationMode(.tail)
             }
             .layoutPriority(1)
 
@@ -394,12 +394,12 @@ private struct AppleHealthCardView: View {
         }
         .padding(.horizontal, SymiSpacing.lg)
         .padding(.vertical, SymiSpacing.xl)
-        .frame(minHeight: 78)
+        .frame(minHeight: SymiSize.settingsAppleHealthCardMinHeight)
         .background(
             appleHealthBackground,
             in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
         )
-        .padding(.vertical, SymiSpacing.sm)
+        .padding(.vertical, SymiSpacing.md)
         .contentShape(RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Apple Health. Lese- und Schreibzugriff. \(statusTitle)")
@@ -407,10 +407,10 @@ private struct AppleHealthCardView: View {
 
     private var appleHealthBackground: Color {
         if colorScheme == .dark {
-            return Color.white.opacity(0.06)
+            return Color.white.opacity(SymiOpacity.clearAccent)
         }
 
-        return Color(.systemGray6).opacity(0.88)
+        return Color(.systemGray6)
     }
 }
 
@@ -470,7 +470,7 @@ private struct SettingsRow: View {
         .padding(.vertical, SymiSpacing.md)
         .frame(minHeight: SymiSize.minInteractiveHeight)
         .contentShape(Rectangle())
-        .opacity(isEnabled ? 1 : 0.45)
+        .opacity(isEnabled ? SymiOpacity.opaque : SymiOpacity.disabledRow)
         .accessibilityElement(children: .combine)
     }
 
@@ -563,7 +563,7 @@ private struct SettingsToggleRow: View {
 private struct SettingsDivider: View {
     var body: some View {
         Divider()
-            .padding(.leading, 62)
+            .padding(.leading, SymiSpacing.settingsDividerLeadingPadding)
     }
 }
 
