@@ -6,6 +6,17 @@ struct HealthContextSidecarChange: Sendable {
 }
 
 final class HealthContextStore: Sendable {
+    enum LoadError: LocalizedError {
+        case unreadableSidecar(episodeID: UUID, underlyingError: Error)
+
+        var errorDescription: String? {
+            switch self {
+            case let .unreadableSidecar(episodeID, _):
+                return "Der Apple-Health-Kontext für Eintrag \(episodeID.uuidString) konnte nicht gelesen werden."
+            }
+        }
+    }
+
     private let directoryURL: URL
 
     init(baseURL: URL? = nil) {
@@ -61,14 +72,25 @@ final class HealthContextStore: Sendable {
     }
 
     nonisolated func load(for episodeID: UUID) -> HealthContextRecord? {
+        try? loadIfPresent(for: episodeID)
+    }
+
+    nonisolated func loadIfPresent(for episodeID: UUID) throws -> HealthContextRecord? {
         let url = fileURL(for: episodeID)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        guard let data = try? Data(contentsOf: url), let snapshot = try? decoder.decode(HealthContextSnapshotData.self, from: data) else {
+        guard FileManager.default.fileExists(atPath: url.path) else {
             return nil
         }
 
-        return HealthContextRecord(snapshot: snapshot)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        do {
+            let data = try Data(contentsOf: url)
+            let snapshot = try decoder.decode(HealthContextSnapshotData.self, from: data)
+            return HealthContextRecord(snapshot: snapshot)
+        } catch {
+            throw LoadError.unreadableSidecar(episodeID: episodeID, underlyingError: error)
+        }
     }
 
     nonisolated private func fileURL(for episodeID: UUID) -> URL {

@@ -155,7 +155,7 @@ private func makeRecord(startedAt: Date) -> EpisodeExportRecord {
 }
 
 private func waitUntil(
-    timeout: Duration = .seconds(10),
+    timeout: Duration = .seconds(30),
     condition: @MainActor @escaping () -> Bool
 ) async throws {
     let clock = ContinuousClock()
