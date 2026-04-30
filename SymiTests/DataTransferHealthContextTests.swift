@@ -109,6 +109,46 @@ struct DataTransferHealthContextTests {
     }
 
     @Test
+    func backupExportThrowsWhenExistingHealthContextSidecarIsCorrupt() throws {
+        let episodeID = UUID()
+        let sourceContainer = try makeInMemoryContainer()
+        let baseURL = try makeTemporaryDirectory()
+        let sourceHealthStore = HealthContextStore(baseURL: baseURL)
+        try seedEpisode(id: episodeID, in: sourceContainer)
+        try writeCorruptHealthContextSidecar(baseURL: baseURL, episodeID: episodeID)
+
+        do {
+            _ = try SwiftDataExportRepository(
+                modelContainer: sourceContainer,
+                healthContextStore: sourceHealthStore
+            ).createBackup()
+            Issue.record("Backup-Export sollte bei korruptem HealthContext-Sidecar fehlschlagen.")
+        } catch HealthContextStore.LoadError.unreadableSidecar(let failedEpisodeID, _) {
+            #expect(failedEpisodeID == episodeID)
+        }
+    }
+
+    @Test
+    func syncEnvelopeThrowsWhenExistingHealthContextSidecarIsCorrupt() throws {
+        let episodeID = UUID()
+        let container = try makeInMemoryContainer()
+        let baseURL = try makeTemporaryDirectory()
+        let healthStore = HealthContextStore(baseURL: baseURL)
+        try seedEpisode(id: episodeID, in: container)
+        try writeCorruptHealthContextSidecar(baseURL: baseURL, episodeID: episodeID)
+
+        do {
+            _ = try LocalSyncRepository(
+                modelContainer: container,
+                healthContextStore: healthStore
+            ).envelope(documentID: "episode:\(episodeID.uuidString)", deviceID: "test-device")
+            Issue.record("Sync-Envelope sollte bei korruptem HealthContext-Sidecar fehlschlagen.")
+        } catch HealthContextStore.LoadError.unreadableSidecar(let failedEpisodeID, _) {
+            #expect(failedEpisodeID == episodeID)
+        }
+    }
+
+    @Test
     func explicitNullHealthContextRemovesExistingContext() throws {
         let episodeID = UUID()
         let sourceContainer = try makeInMemoryContainer()
@@ -420,6 +460,15 @@ private func backupURLByAddingExplicitNullHealthContext(to backupURL: URL) throw
     let url = try makeTemporaryDirectory().appending(path: "explicit-null-health-context.json5")
     try explicitNullData.write(to: url, options: .atomic)
     return url
+}
+
+private func writeCorruptHealthContextSidecar(baseURL: URL, episodeID: UUID) throws {
+    let sidecarDirectoryURL = baseURL
+        .appendingPathComponent("Symi", isDirectory: true)
+        .appendingPathComponent("HealthContext", isDirectory: true)
+    try FileManager.default.createDirectory(at: sidecarDirectoryURL, withIntermediateDirectories: true)
+    try Data("kein gültiger HealthContext".utf8)
+        .write(to: sidecarDirectoryURL.appendingPathComponent("\(episodeID.uuidString).json"), options: .atomic)
 }
 
 private func makeLegacyGermanBackupURL(episodeID: UUID) throws -> URL {

@@ -22,7 +22,7 @@ struct LocalSyncRepository {
             batchSize: Self.fetchBatchSize
         ) { episodes in
             try episodes.forEach(DomainValidator.validate)
-            envelopes += episodes.map { $0.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore) }
+            envelopes += try episodes.map { try $0.syncEnvelope(deviceID: deviceID, healthContextStore: healthContextStore) }
         }
 
         try context.fetchBatches(
@@ -608,8 +608,8 @@ enum RemoteSyncPayloadValidator {
 }
 
 extension Episode {
-    func syncEnvelope(deviceID: String, healthContextStore: HealthContextStore) -> SyncDocumentEnvelope {
-        let healthContext = healthContextStore.load(for: id).map(HealthContextSnapshotData.init)
+    func syncEnvelope(deviceID: String, healthContextStore: HealthContextStore) throws -> SyncDocumentEnvelope {
+        let healthContext = try healthContextStore.loadIfPresent(for: id).map(HealthContextSnapshotData.init)
 
         return SyncDocumentEnvelope(
             documentID: "episode:\(id.uuidString)",
