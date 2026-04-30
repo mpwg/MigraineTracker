@@ -146,11 +146,11 @@ private struct EntryHeadacheStepView: View {
     @State private var isDatePickerExpanded = false
     @State private var dateFeedbackTrigger = 0
     private let visiblePainLocations: [EntryPainLocationOption] = [
-        .init(title: EntryFlowLocalized.text(de: "Stirn", en: "Forehead"), imageName: "PainLocationForehead"),
-        .init(title: EntryFlowLocalized.text(de: "Schläfen", en: "Temples"), imageName: "PainLocationTemples"),
+        .init(title: "Stirn", imageName: "PainLocationForehead"),
+        .init(title: "Schläfen", imageName: "PainLocationTemples"),
         // .init(title: "Nacken", imageName: "PainLocationNeck"),
-        .init(title: EntryFlowLocalized.text(de: "Einseitig", en: "One side"), imageName: "PainLocationLeftTemple"),
-        .init(title: EntryFlowLocalized.text(de: "Überall", en: "All over"), imageName: "PainLocationCrown")
+        .init(title: "Einseitig", imageName: "PainLocationLeftTemple"),
+        .init(title: "Überall", imageName: "PainLocationCrown")
     ]
 
     var body: some View {
@@ -162,7 +162,7 @@ private struct EntryHeadacheStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark sind die Schmerzen?", en: "How strong is the pain?")) {
+            InputFlowFieldGroup(title: "Wie stark sind die Schmerzen?") {
                 InputFlowHeadacheOptionGrid {
                     ForEach(PainIntensityLevel.selectableCases, id: \.self) { level in
                         PainIntensitySelectionTile(
@@ -178,7 +178,7 @@ private struct EntryHeadacheStepView: View {
                 .accessibilityIdentifier("entry-intensity-card")
             }
 
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
+            InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
                 InputFlowHeadacheOptionGrid {
                     ForEach(visiblePainLocations) { location in
                         PainLocationSelectionTile(
@@ -220,10 +220,10 @@ private struct EntryHeadacheStepView: View {
         } footer: {
             EntryFlowFooter(
                 isSaving: coordinator.isSaving,
-                primaryTitle: EntryFlowLocalized.text(de: "Weiter", en: "Continue"),
+                primaryTitle: "Weiter",
                 primarySystemImage: "arrow.right",
                 primaryIdentifier: "entry-flow-next",
-                secondaryTitle: EntryFlowLocalized.text(de: "Nur Kopfschmerz speichern", en: "Save headache only"),
+                secondaryTitle: "Nur Kopfschmerz speichern",
                 secondaryIdentifier: "entry-flow-save-headache-only",
                 isPrimaryDisabled: !coordinator.draft.hasSelectedIntensity,
                 isSecondaryDisabled: !coordinator.draft.hasSelectedIntensity,
@@ -270,7 +270,7 @@ private struct EntryHeadacheStepView: View {
             return
         }
 
-        coordinator.draft.selectedPainLocations = [EntryFlowLocalized.text(de: "Schläfen", en: "Temples")]
+        coordinator.draft.selectedPainLocations = ["Schläfen"]
     }
 }
 
@@ -302,7 +302,7 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
         VStack(alignment: .leading, spacing: SymiSpacing.lg) {
             VStack(alignment: .leading, spacing: SymiSpacing.xs) {
                 HStack(spacing: SymiSpacing.sm) {
-                    Text(EntryFlowLocalized.text(de: "Tagesbereich", en: "Time of day"))
+                    Text("Tagesbereich")
                         .font(SymiTypography.flowSectionTitle)
                         .foregroundStyle(AppTheme.symiTextSecondary)
 
@@ -509,8 +509,8 @@ private struct PainLocationSelectionTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(option.title)
-        .accessibilityValue(isSelected ? EntryFlowLocalized.text(de: "Ausgewählt", en: "Selected") : EntryFlowLocalized.text(de: "Nicht ausgewählt", en: "Not selected"))
-        .accessibilityHint(isSelected ? EntryFlowLocalized.text(de: "Entfernt die Auswahl.", en: "Removes the selection.") : EntryFlowLocalized.text(de: "Wählt diese Option aus.", en: "Selects this option."))
+        .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
+        .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier(accessibilityIdentifier)
     }
@@ -534,20 +534,20 @@ private struct EntryMedicationStepView: View {
     let onCancel: () -> Void
 
     @State private var selectedDosage = "400 mg"
-    @State private var selectedTakenAt = EntryFlowLocalized.text(de: "Jetzt", en: "Now")
+    @State private var selectedTakenAt = "Jetzt"
 
     private let medicationOptions: [EntryMedicationOption] = [
         EntryMedicationOption(title: "Ibuprofen", symbolName: "pills", category: .nsar, defaultDosage: "400 mg"),
         EntryMedicationOption(title: "Triptan", symbolName: "capsule", category: .triptan, defaultDosage: ""),
         EntryMedicationOption(title: "Paracetamol", symbolName: "syringe", category: .paracetamol, defaultDosage: "500 mg"),
-        EntryMedicationOption(title: EntryFlowLocalized.text(de: "Andere", en: "Other"), symbolName: "ellipsis", category: .other, defaultDosage: "")
+        EntryMedicationOption(title: "Andere", symbolName: "ellipsis", category: .other, defaultDosage: "")
     ]
-    private let dosageOptions = ["200 mg", "400 mg", "600 mg", EntryFlowLocalized.text(de: "Andere", en: "Other")]
+    private let dosageOptions = ["200 mg", "400 mg", "600 mg", "Andere"]
     private let takenAtOptions = [
-        EntryFlowLocalized.text(de: "Jetzt", en: "Now"),
-        EntryFlowLocalized.text(de: "Vor 1 Std.", en: "1 hr ago"),
-        EntryFlowLocalized.text(de: "Vor 2 Std.", en: "2 hrs ago"),
-        EntryFlowLocalized.text(de: "Anderer Zeitpunkt", en: "Different time")
+        "Jetzt",
+        "Vor 1 Std.",
+        "Vor 2 Std.",
+        "Anderer Zeitpunkt"
     ]
 
     var body: some View {
@@ -560,7 +560,7 @@ private struct EntryMedicationStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Welche Medikation?", en: "Which medication?")) {
+            InputFlowFieldGroup(title: "Welche Medikation?") {
                 VStack(spacing: SymiSpacing.tileSpacing) {
                     InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
                         ForEach(medicationOptions) { option in
@@ -578,8 +578,8 @@ private struct EntryMedicationStepView: View {
 
                     InputFlowSelectionTile(
                         title: coordinator.draft.continuousMedicationChecks.isEmpty
-                            ? EntryFlowLocalized.text(de: "Keine Medikation", en: "No medication")
-                            : EntryFlowLocalized.text(de: "Keine weitere Medikation", en: "No more medication"),
+                            ? "Keine Medikation"
+                            : "Keine weitere Medikation",
                         systemImage: "slash.circle",
                         isSelected: medicationController.selectedMedications.isEmpty,
                         theme: .medication,
@@ -590,7 +590,7 @@ private struct EntryMedicationStepView: View {
                 }
             }
 
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Dosierung", en: "Dosage")) {
+            InputFlowFieldGroup(title: "Dosierung") {
                 InputFlowPillGrid {
                     ForEach(dosageOptions, id: \.self) { dosage in
                         InputFlowPillOption(
@@ -605,7 +605,7 @@ private struct EntryMedicationStepView: View {
                 }
             }
 
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wann hast du es eingenommen?", en: "When did you take it?")) {
+            InputFlowFieldGroup(title: "Wann hast du es eingenommen?") {
                 InputFlowPillGrid {
                     ForEach(takenAtOptions, id: \.self) { option in
                         InputFlowPillOption(
@@ -626,10 +626,10 @@ private struct EntryMedicationStepView: View {
         } footer: {
             EntryFlowFooter(
                 isSaving: coordinator.isSaving,
-                primaryTitle: EntryFlowLocalized.text(de: "Weiter", en: "Continue"),
+                primaryTitle: "Weiter",
                 primarySystemImage: "arrow.right",
                 primaryIdentifier: "entry-flow-next",
-                secondaryTitle: EntryFlowLocalized.text(de: "Überspringen", en: "Skip"),
+                secondaryTitle: "Überspringen",
                 secondaryIdentifier: "entry-flow-skip",
                 onPrimary: coordinator.continueToNextStep,
                 onSecondary: coordinator.skipCurrentStep
@@ -681,12 +681,12 @@ private struct EntryMedicationStepView: View {
     }
 
     private func selectMedication(_ option: EntryMedicationOption, controller: EpisodeMedicationSelectionController) {
-        if option.title == EntryFlowLocalized.text(de: "Andere", en: "Other") {
+        if option.title == "Andere" {
             controller.presentEditor(for: nil)
             return
         }
 
-        let dosage = selectedDosage == EntryFlowLocalized.text(de: "Andere", en: "Other") ? option.defaultDosage : selectedDosage
+        let dosage = selectedDosage == "Andere" ? option.defaultDosage : selectedDosage
         controller.toggleMedicationSelection(
             named: option.title,
             fallbackCategory: option.category,
@@ -702,13 +702,13 @@ private struct EntryTriggersStepView: View {
 
     private let triggerOptions: [EntryTriggerOption] = [
         EntryTriggerOption(title: "Stress", symbolName: "brain.head.profile"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Wetter", en: "Weather"), symbolName: "cloud.sun"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Schlaf", en: "Sleep"), symbolName: "moon"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Ernährung", en: "Nutrition"), symbolName: "fork.knife.circle"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Bildschirmzeit", en: "Screen time"), symbolName: "ipad.landscape.and.iphone"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Zyklus", en: "Cycle"), symbolName: "drop"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Bewegung", en: "Movement"), symbolName: "figure.run"),
-        EntryTriggerOption(title: EntryFlowLocalized.text(de: "Flüssigkeit", en: "Hydration"), symbolName: "waterbottle")
+        EntryTriggerOption(title: "Wetter", symbolName: "cloud.sun"),
+        EntryTriggerOption(title: "Schlaf", symbolName: "moon"),
+        EntryTriggerOption(title: "Ernährung", symbolName: "fork.knife.circle"),
+        EntryTriggerOption(title: "Bildschirmzeit", symbolName: "ipad.landscape.and.iphone"),
+        EntryTriggerOption(title: "Zyklus", symbolName: "drop"),
+        EntryTriggerOption(title: "Bewegung", symbolName: "figure.run"),
+        EntryTriggerOption(title: "Flüssigkeit", symbolName: "waterbottle")
     ]
 
     var body: some View {
@@ -720,7 +720,7 @@ private struct EntryTriggersStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wähle alle passenden aus.", en: "Select all that apply.")) {
+            InputFlowFieldGroup(title: "Wähle alle passenden aus.") {
                 InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
                     ForEach(triggerOptions) { option in
                         InputFlowSelectionTile(
@@ -736,14 +736,14 @@ private struct EntryTriggersStepView: View {
                 }
             }
 
-            EntryInfoBanner(text: EntryFlowLocalized.text(de: "Du kannst mehrere auswählen.", en: "You can select multiple options."))
+            EntryInfoBanner(text: "Du kannst mehrere auswählen.")
         } footer: {
             EntryFlowFooter(
                 isSaving: coordinator.isSaving,
-                primaryTitle: EntryFlowLocalized.text(de: "Weiter", en: "Continue"),
+                primaryTitle: "Weiter",
                 primarySystemImage: "arrow.right",
                 primaryIdentifier: "entry-flow-next",
-                secondaryTitle: EntryFlowLocalized.text(de: "Überspringen", en: "Skip"),
+                secondaryTitle: "Überspringen",
                 secondaryIdentifier: "entry-flow-skip",
                 onPrimary: coordinator.continueToNextStep,
                 onSecondary: coordinator.skipCurrentStep

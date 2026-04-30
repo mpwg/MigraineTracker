@@ -62,8 +62,8 @@ struct HomeView: View {
 
                 if homeState == .insights {
                     HomePrimaryButton(
-                        title: HomeLocalized.text(de: "Neuer Eintrag", en: "New entry"),
-                        subtitle: HomeLocalized.text(de: "Starte einen neuen Eintrag", en: "Start a new entry")
+                        title: "Neuer Eintrag",
+                        subtitle: "Starte einen neuen Eintrag"
                     ) {
                         isPresentingEpisodeEditor = true
                     }
@@ -109,8 +109,8 @@ struct HomeView: View {
 
                 if homeState == .insights {
                     HomePrimaryButton(
-                        title: HomeLocalized.text(de: "Neuer Eintrag", en: "New entry"),
-                        subtitle: HomeLocalized.text(de: "Starte einen neuen Eintrag", en: "Start a new entry")
+                        title: "Neuer Eintrag",
+                        subtitle: "Starte einen neuen Eintrag"
                     ) {
                         isPresentingEpisodeEditor = true
                     }
@@ -181,16 +181,6 @@ struct HomeView: View {
         return HomeInsightCardData.makeCards(from: patternPreviewData.cards)
     }
 
-}
-
-private enum HomeLocalized {
-    static var isEnglish: Bool {
-        Locale.current.language.languageCode?.identifier == "en"
-    }
-
-    static func text(de german: String, en english: String) -> String {
-        isEnglish ? english : german
-    }
 }
 
 enum HomeState: Equatable {
@@ -342,11 +332,11 @@ private struct OnboardingCard: View {
     private var primaryActionTitle: String {
         switch state {
         case .empty:
-            HomeLocalized.text(de: "Jetzt eintragen", en: "Log now")
+            "Jetzt eintragen"
         case .early:
-            HomeLocalized.text(de: "Weiter eintragen", en: "Keep logging")
+            "Weiter eintragen"
         case .insights:
-            HomeLocalized.text(de: "Neuer Eintrag", en: "New entry")
+            "Neuer Eintrag"
         }
     }
 }
@@ -415,12 +405,12 @@ private struct OnboardingContextBlock: View {
 
             VStack(alignment: .leading, spacing: HomeRhythm.sm) {
                 contextItem(
-                    title: HomeLocalized.text(de: "Achte auf mögliche Auslöser", en: "Watch for possible triggers"),
-                    subtitle: HomeLocalized.text(de: "z. B. Stress, Schlaf oder Wetter", en: "e.g. stress, sleep, or weather")
+                    title: "Achte auf mögliche Auslöser",
+                    subtitle: "z. B. Stress, Schlaf oder Wetter"
                 )
                 contextItem(
-                    title: HomeLocalized.text(de: "Notiere, was noch Einfluss hat", en: "Note what else has an effect"),
-                    subtitle: HomeLocalized.text(de: "z. B. Medikamente oder Zyklus", en: "e.g. medication or cycle")
+                    title: "Notiere, was noch Einfluss hat",
+                    subtitle: "z. B. Medikamente oder Zyklus"
                 )
             }
         }
@@ -618,27 +608,21 @@ private struct HomeInsightCardData: Identifiable, Equatable {
     static let fallbackCards = [
         HomeInsightCardData(
             id: "evening",
-            title: HomeLocalized.text(
-                de: "Bei dir treten Schmerzen abends häufiger auf",
-                en: "Your pain appears more often in the evening"
-            ),
-            subtitle: HomeLocalized.text(de: "Vor allem zwischen 18–22 Uhr", en: "Mostly between 6-10 PM"),
+            title: "Bei dir treten Schmerzen abends häufiger auf",
+            subtitle: "Vor allem zwischen 18–22 Uhr",
             systemImage: "moon.stars.fill",
             tint: .petrol
         ),
         HomeInsightCardData(
             id: "sleep",
-            title: HomeLocalized.text(
-                de: "Weniger Schlaf erhöht deine Schmerzintensität",
-                en: "Less sleep raises your pain intensity"
-            ),
-            subtitle: HomeLocalized.text(de: "Unter 6h -> +1.3 Punkte", en: "Under 6h -> +1.3 points"),
+            title: "Weniger Schlaf erhöht deine Schmerzintensität",
+            subtitle: "Unter 6h -> +1.3 Punkte",
             systemImage: "bed.double.fill",
             tint: .sage
         ),
         HomeInsightCardData(
             id: "medication",
-            title: HomeLocalized.text(de: "Medikation hilft in 72% der Fälle", en: "Medication helps in 72% of cases"),
+            title: "Medikation hilft in 72% der Fälle",
             subtitle: nil,
             systemImage: "pills.fill",
             tint: .coral
@@ -839,17 +823,17 @@ private struct HomeCalendarDayCell: View {
 
     private var accessibilityLabel: String {
         let dateText = date.formatted(date: .complete, time: .omitted)
-        let stateText = isToday ? HomeLocalized.text(de: "heute", en: "today") : HomeLocalized.text(de: "Kalendertag", en: "calendar day")
+        let stateText = isToday ? "heute" : "Kalendertag"
 
         guard entries.isEmpty == false else {
-            return "\(dateText), \(stateText), \(HomeLocalized.text(de: "keine Einträge", en: "no entries"))"
+            return "\(dateText), \(stateText), \("keine Einträge")"
         }
 
         let entryText = entries.count == 1
             ? "1 Eintrag"
             : "\(entries.count) Einträge"
         let highestIntensity = entries.map(\.intensity).max() ?? 0
-        return "\(dateText), \(stateText), \(entryText), \(HomeLocalized.text(de: "höchste Intensität", en: "highest intensity")) \(highestIntensity) \(HomeLocalized.text(de: "von", en: "out of")) 10"
+        return "\(dateText), \(stateText), \(entryText), \("höchste Intensität") \(highestIntensity) \("von") 10"
     }
 }
 
@@ -1094,17 +1078,11 @@ private struct HomePatternEmptyState: View {
         }
 
         if recordedCount >= HomePatternPreviewData.minimumEpisodeCount {
-            return HomeLocalized.text(
-                de: "Es gibt schon genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist.",
-                en: "There are enough entries, but nothing in them stands out clearly enough yet."
-            )
+            return "Es gibt schon genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist."
         }
 
         if recordedCount == 0 {
-            return HomeLocalized.text(
-                de: "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise.",
-                en: "Once you have logged a few pain or migraine entries, Symi shows careful hints here."
-            )
+            return "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise."
         }
 
         return "\(recordedCount) von \(HomePatternPreviewData.minimumEpisodeCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern."
@@ -1195,21 +1173,21 @@ private struct HomeInsightsContent: View {
 
                         if !topTriggers.isEmpty {
                             FrequencyInsightCard(
-                                title: HomeLocalized.text(de: "Häufige Auslöser", en: "Frequent triggers"),
+                                title: "Häufige Auslöser",
                                 systemImage: "tag",
                                 summaries: topTriggers,
                                 tint: AppTheme.coral(for: colorScheme),
-                                detail: HomeLocalized.text(de: "in deinen Einträgen auffällig", en: "stands out in your entries")
+                                detail: "in deinen Einträgen auffällig"
                             )
                         }
 
                         if !topMedications.isEmpty {
                             FrequencyInsightCard(
-                                title: HomeLocalized.text(de: "Medikation", en: "Medication"),
+                                title: "Medikation",
                                 systemImage: "pills",
                                 summaries: topMedications,
                                 tint: AppTheme.petrol(for: colorScheme),
-                                detail: HomeLocalized.text(de: "in diesem Zeitraum dokumentiert", en: "documented in this period")
+                                detail: "in diesem Zeitraum dokumentiert"
                             )
                         }
                     }

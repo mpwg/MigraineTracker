@@ -32,40 +32,40 @@ enum InputFlowStepCatalog {
     static let steps: [InputFlowStepMetadata] = [
         InputFlowStepMetadata(
             id: .headache,
-            title: EntryFlowLocalized.text(de: "Kopfschmerz", en: "Headache"),
-            subtitle: EntryFlowLocalized.text(de: "Wie stark ist es gerade?", en: "How strong is it right now?"),
+            title: "Kopfschmerz",
+            subtitle: "Wie stark ist es gerade?",
             symbolName: "waveform.path.ecg",
             theme: .pain,
             status: nil
         ),
         InputFlowStepMetadata(
             id: .medication,
-            title: EntryFlowLocalized.text(de: "Medikation", en: "Medication"),
-            subtitle: EntryFlowLocalized.text(de: "Hast du etwas genommen?", en: "Did you take anything?"),
+            title: "Medikation",
+            subtitle: "Hast du etwas genommen?",
             symbolName: "pills.fill",
             theme: .medication,
             status: nil
         ),
         InputFlowStepMetadata(
             id: .triggers,
-            title: EntryFlowLocalized.text(de: "Auslöser", en: "Triggers"),
-            subtitle: EntryFlowLocalized.text(de: "Was könnte eine Rolle gespielt haben?", en: "What might have played a role?"),
+            title: "Auslöser",
+            subtitle: "Was könnte eine Rolle gespielt haben?",
             symbolName: "brain.head.profile",
             theme: .trigger,
             status: nil
         ),
         InputFlowStepMetadata(
             id: .note,
-            title: EntryFlowLocalized.text(de: "Notiz", en: "Note"),
-            subtitle: EntryFlowLocalized.text(de: "Was möchtest du festhalten?", en: "What do you want to note?"),
+            title: "Notiz",
+            subtitle: "Was möchtest du festhalten?",
             symbolName: "note.text",
             theme: .note,
             status: nil
         ),
         InputFlowStepMetadata(
             id: .review,
-            title: EntryFlowLocalized.text(de: "Eintrag prüfen", en: "Review entry"),
-            subtitle: EntryFlowLocalized.text(de: "Alles bereit zum Speichern.", en: "Everything is ready to save."),
+            title: "Eintrag prüfen",
+            subtitle: "Alles bereit zum Speichern.",
             symbolName: "checkmark.seal.fill",
             theme: .review,
             status: nil

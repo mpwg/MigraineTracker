@@ -19,11 +19,11 @@ enum InsightCategory: String, CaseIterable, Equatable, Sendable {
     var displayTitle: String {
         switch self {
         case .weekdayPattern:
-            InsightLocalized.text(de: "Wochentag", en: "Weekday")
+            "Wochentag"
         case .triggerCorrelation:
             "Trigger"
         case .averageIntensity:
-            InsightLocalized.text(de: "Durchschnitt", en: "Average")
+            "Durchschnitt"
         case .trend:
             "Trend"
         }
@@ -86,11 +86,11 @@ enum InsightPeriod: String, CaseIterable, Identifiable, Equatable, Sendable {
     var displayTitle: String {
         switch self {
         case .sevenDays:
-            InsightLocalized.text(de: "7 Tage", en: "7 days")
+            "7 Tage"
         case .thirtyDays:
-            InsightLocalized.text(de: "30 Tage", en: "30 days")
+            "30 Tage"
         case .threeMonths:
-            InsightLocalized.text(de: "3 Monate", en: "3 months")
+            "3 Monate"
         }
     }
 
@@ -111,16 +111,6 @@ enum InsightPeriod: String, CaseIterable, Identifiable, Equatable, Sendable {
         }
 
         return calendar.date(byAdding: component, value: value, to: referenceDate) ?? referenceDate
-    }
-}
-
-enum InsightLocalized {
-    static var isEnglish: Bool {
-        Locale.current.language.languageCode?.identifier == "en"
-    }
-
-    static func text(de german: String, en english: String) -> String {
-        isEnglish ? english : german
     }
 }
 
@@ -209,18 +199,15 @@ extension InsightEmptyState {
         if qualifiedEpisodeCount == 0 {
             self = InsightEmptyState(
                 reason: .noQualifiedEntries,
-                title: InsightLocalized.text(de: "Noch nicht genug Einträge für Muster", en: "Not enough entries for patterns yet"),
-                message: InsightLocalized.text(
-                    de: "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise.",
-                    en: "Once you have logged a few pain or migraine entries, Symi shows careful hints here."
-                ),
+                title: "Noch nicht genug Einträge für Muster",
+                message: "Wenn du einige Schmerz- oder Migräneeinträge erfasst hast, zeigt Symi hier vorsichtige Hinweise.",
                 requiredEntryCount: minimumCount,
                 availableEntryCount: qualifiedEpisodeCount
             )
         } else {
             self = InsightEmptyState(
                 reason: .notEnoughQualifiedEntries(required: minimumCount, available: qualifiedEpisodeCount),
-                title: InsightLocalized.text(de: "Noch nicht genug Einträge für Muster", en: "Not enough entries for patterns yet"),
+                title: "Noch nicht genug Einträge für Muster",
                 message: "\(qualifiedEpisodeCount) von \(minimumCount) nötigen Schmerz- oder Migräneeinträgen sind vorhanden. Sobald mehr Daten da sind, sucht Symi nach vorsichtigen Mustern.",
                 requiredEntryCount: minimumCount,
                 availableEntryCount: qualifiedEpisodeCount
@@ -231,11 +218,8 @@ extension InsightEmptyState {
     static func noVisibleInsights(qualifiedEpisodeCount: Int, minimumCount: Int) -> InsightEmptyState {
         InsightEmptyState(
             reason: .noVisibleInsights,
-            title: InsightLocalized.text(de: "Noch kein vorsichtiges Muster sichtbar", en: "No careful pattern visible yet"),
-            message: InsightLocalized.text(
-                de: "Es gibt genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist.",
-                en: "There are enough entries, but nothing in them stands out clearly enough yet."
-            ),
+            title: "Noch kein vorsichtiges Muster sichtbar",
+            message: "Es gibt genug Einträge, aber noch nichts, das in deinen Einträgen auffällig genug ist.",
             requiredEntryCount: minimumCount,
             availableEntryCount: qualifiedEpisodeCount
         )
@@ -893,21 +877,21 @@ enum InsightFormatter {
     private static func weekdayName(for weekday: Int) -> String {
         switch weekday {
         case 1:
-            InsightLocalized.text(de: "Sonntag", en: "Sunday")
+            "Sonntag"
         case 2:
-            InsightLocalized.text(de: "Montag", en: "Monday")
+            "Montag"
         case 3:
-            InsightLocalized.text(de: "Dienstag", en: "Tuesday")
+            "Dienstag"
         case 4:
-            InsightLocalized.text(de: "Mittwoch", en: "Wednesday")
+            "Mittwoch"
         case 5:
-            InsightLocalized.text(de: "Donnerstag", en: "Thursday")
+            "Donnerstag"
         case 6:
-            InsightLocalized.text(de: "Freitag", en: "Friday")
+            "Freitag"
         case 7:
-            InsightLocalized.text(de: "Samstag", en: "Saturday")
+            "Samstag"
         default:
-            InsightLocalized.text(de: "ein Wochentag", en: "a weekday")
+            "ein Wochentag"
         }
     }
 

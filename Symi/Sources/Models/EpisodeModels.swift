@@ -11,11 +11,11 @@ enum EpisodeType: String, CaseIterable, Codable, Identifiable {
     nonisolated var displayName: String {
         switch self {
         case .migraine:
-            String(localized: "Migräne")
+            "Migräne"
         case .headache:
-            String(localized: "Kopfschmerz")
+            "Kopfschmerz"
         case .unclear:
-            String(localized: "Unklar")
+            "Unklar"
         }
     }
 
@@ -49,26 +49,26 @@ enum MenstruationStatus: String, CaseIterable, Codable, Identifiable {
     nonisolated var displayName: String {
         switch self {
         case .unknown:
-            String(localized: "Nicht angegeben")
+            "Nicht angegeben"
         case .none:
-            String(localized: "Nein")
+            "Nein"
         case .active:
-            String(localized: "Aktuell")
+            "Aktuell"
         case .expected:
-            String(localized: "Erwartet")
+            "Erwartet"
         }
     }
 
     nonisolated var accuracyDescription: String {
         switch self {
         case .unknown:
-            String(localized: "Keine Zyklusangabe aus der App.")
+            "Keine Zyklusangabe aus der App."
         case .none:
-            String(localized: "App-Angabe ohne Health-Flow-Sample.")
+            "App-Angabe ohne Health-Flow-Sample."
         case .active:
-            String(localized: "Aktuelle App-Angabe ohne Stärke oder Health-Flow-Sample.")
+            "Aktuelle App-Angabe ohne Stärke oder Health-Flow-Sample."
         case .expected:
-            String(localized: "Erwartete App-Angabe, keine echte Blutungsprobe.")
+            "Erwartete App-Angabe, keine echte Blutungsprobe."
         }
     }
 
@@ -109,15 +109,15 @@ enum MedicationCategory: String, CaseIterable, Codable, Identifiable {
     nonisolated var displayName: String {
         switch self {
         case .triptan:
-            String(localized: "Triptan")
+            "Triptan"
         case .nsar:
-            String(localized: "NSAR")
+            "NSAR"
         case .paracetamol:
-            String(localized: "Paracetamol")
+            "Paracetamol"
         case .antiemetic:
-            String(localized: "Antiemetikum")
+            "Antiemetikum"
         case .other:
-            String(localized: "Sonstiges")
+            "Sonstiges"
         }
     }
 
@@ -154,11 +154,11 @@ enum MedicationEffectiveness: String, CaseIterable, Codable, Identifiable {
     nonisolated var displayName: String {
         switch self {
         case .none:
-            String(localized: "Keine")
+            "Keine"
         case .partial:
-            String(localized: "Teilweise")
+            "Teilweise"
         case .good:
-            String(localized: "Gut")
+            "Gut"
         }
     }
 
