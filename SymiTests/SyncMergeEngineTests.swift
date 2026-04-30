@@ -6,7 +6,7 @@ import Testing
 
 struct SyncMergeEngineTests {
     @Test
-    func syncStatusWarnsWhenLastDownloadIsStale() {
+    func syncStatusDoesNotWarnWhenLastDownloadIsStale() {
         let now = Date(timeIntervalSince1970: 200_000)
         let status = SyncStatusSnapshot(
             state: .ready,
@@ -17,11 +17,11 @@ struct SyncMergeEngineTests {
 
         let warning = status.staleDataWarning(now: now, isSyncEnabled: true, openConflictCount: 0)
 
-        #expect(warning?.contains("letzte iCloud-Download") == true)
+        #expect(warning == nil)
     }
 
     @Test
-    func syncStatusPrioritizesConflictsAndUnsyncedRecords() {
+    func syncStatusOnlyWarnsForConflictsThatNeedDecision() {
         let status = SyncStatusSnapshot(
             state: .conflict,
             unsyncedRecords: 3,
@@ -40,7 +40,7 @@ struct SyncMergeEngineTests {
         )
 
         #expect(conflictWarning?.contains("2 Sync-Konflikte") == true)
-        #expect(unsyncedWarning?.contains("3 lokale Änderungen") == true)
+        #expect(unsyncedWarning == nil)
     }
 
     @Test

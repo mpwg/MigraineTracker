@@ -4,6 +4,9 @@
     "" : {
       "shouldTranslate" : false
     },
+    "(empfohlen, wenn du mehrere Geräte nutzt)" : {
+
+    },
     "/10" : {
       "localizations" : {
         "en" : {
@@ -301,6 +304,7 @@
       }
     },
     "Abweichende Felder: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -760,6 +764,9 @@
         }
       }
     },
+    "Bitte wähle, welche Version du behalten möchtest." : {
+
+    },
     "Cloud hat recht" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -790,9 +797,6 @@
           }
         }
       }
-    },
-    "Cloud-Version übernehmen" : {
-
     },
     "Das Projekt steht unter der GNU GPL v3." : {
       "localizations" : {
@@ -975,6 +979,7 @@
       }
     },
     "Der Abgleich arbeitet defensiv: Konflikte werden nicht still überschrieben, sondern hier sichtbar gemacht." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1435,6 +1440,7 @@
       }
     },
     "Episode" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1463,6 +1469,9 @@
           }
         }
       }
+    },
+    "Es gibt unterschiedliche Änderungen für diesen Eintrag." : {
+
     },
     "Export nur mit deiner Aktion" : {
       "localizations" : {
@@ -2056,10 +2065,8 @@
         }
       }
     },
-    "Lokale Version behalten" : {
-
-    },
     "Lokaler Stand und Cloud-Stand unterscheiden sich." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2188,6 +2195,9 @@
           }
         }
       }
+    },
+    "Meine Version behalten" : {
+
     },
     "Menstruationsstatus" : {
       "localizations" : {
@@ -3218,6 +3228,9 @@
         }
       }
     },
+    "Version aus der Cloud verwenden" : {
+
+    },
     "Verstanden" : {
       "localizations" : {
         "en" : {
@@ -3357,6 +3370,9 @@
           }
         }
       }
+    },
+    "Wenn zwei Geräte denselben Eintrag unterschiedlich geändert haben, entscheidest du hier, welche Version bleiben soll." : {
+
     },
     "Wetter" : {
       "localizations" : {
