@@ -732,18 +732,6 @@ final class SyncCoordinator {
         }
     }
 
-    private func currentBaseState() -> SyncServiceState {
-        if !isEnabled {
-            return .disabled
-        }
-
-        if !conflicts.isEmpty {
-            return .conflict
-        }
-
-        return .ready
-    }
-
     private func buildStatusSnapshot(baseState: SyncServiceState, isSyncing: Bool) async -> SyncStatusSnapshot {
         let shadows = await stateStore.shadows()
         let conflictList = await stateStore.conflicts()
@@ -797,6 +785,21 @@ final class SyncCoordinator {
         )
     }
 
+}
+
+extension SyncCoordinator {
+    private func currentBaseState() -> SyncServiceState {
+        if !isEnabled {
+            return .disabled
+        }
+
+        if !conflicts.isEmpty {
+            return .conflict
+        }
+
+        return .ready
+    }
+
     private func log(
         level: AppLogLevel,
         operation: String,
@@ -824,9 +827,6 @@ final class SyncCoordinator {
         }
     }
 
-}
-
-extension SyncCoordinator {
     private func resolveActionableStatusIfNeeded(_ snapshot: SyncStatusSnapshot, reason: String) async {
         guard isEnabled, snapshot.state != .syncing else {
             return

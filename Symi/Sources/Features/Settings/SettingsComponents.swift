@@ -99,9 +99,9 @@ struct AppleHealthCardView: View {
     var body: some View {
         HStack(alignment: .center, spacing: SymiSpacing.md) {
             Image(systemName: "heart.fill")
-                .foregroundStyle(.red)
+                .foregroundStyle(AppTheme.symiCoral)
                 .font(.headline)
-            
+
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text("Apple Health")
                     .font(.body.weight(.semibold))
