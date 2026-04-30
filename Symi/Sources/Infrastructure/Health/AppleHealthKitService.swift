@@ -65,28 +65,6 @@ final class AppleHealthKitService: HealthService {
         #endif
     }
 
-    func requestMissingAuthorization() async throws {
-        guard Self.isAvailable else {
-            throw HealthIntegrationError.unavailable
-        }
-
-        #if canImport(HealthKit)
-        let snapshot = authorizationSnapshot()
-        let missingReadTypes = snapshot.missingReadTypes
-        let missingWriteTypes = snapshot.missingWriteTypes
-        guard !missingReadTypes.isEmpty || !missingWriteTypes.isEmpty else {
-            return
-        }
-
-        try await healthStore.requestAuthorization(
-            toShare: sampleTypes(for: missingWriteTypes),
-            read: objectTypes(for: missingReadTypes)
-        )
-        preferences.markAuthorizationRequested(for: missingReadTypes, direction: .read)
-        preferences.markAuthorizationRequested(for: missingWriteTypes, direction: .write)
-        #endif
-    }
-
     func requestReadAuthorization() async throws {
         guard Self.isAvailable else {
             throw HealthIntegrationError.unavailable

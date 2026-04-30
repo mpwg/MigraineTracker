@@ -1177,6 +1177,9 @@
         }
       }
     },
+    "Du kannst zusätzliche Daten direkt in der Health App freigeben, um noch bessere Zusammenhänge zu erkennen." : {
+
+    },
     "Eigenes Medikament" : {
       "localizations" : {
         "en" : {
@@ -1622,6 +1625,9 @@
           }
         }
       }
+    },
+    "In Einstellungen öffnen" : {
+
     },
     "In Sekunden eintragen" : {
       "localizations" : {
@@ -2078,6 +2084,9 @@
           }
         }
       }
+    },
+    "Mehr Daten verfügbar" : {
+
     },
     "Mehr gute Tage" : {
       "localizations" : {
@@ -3042,6 +3051,9 @@
           }
         }
       }
+    },
+    "Tippe dort auf „Health“ → „Datenzugriff & Geräte“ → „Symi“" : {
+
     },
     "Trigger" : {
       "localizations" : {

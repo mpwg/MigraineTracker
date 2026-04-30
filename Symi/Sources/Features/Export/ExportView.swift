@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -643,7 +644,6 @@ private struct SettingsDivider: View {
 }
 
 private struct AppleHealthSettingsView: View {
-    @Environment(\.openURL) private var openURL
     @Bindable var controller: SettingsController
     @State private var showsDisconnectConfirmation = false
 
@@ -692,16 +692,9 @@ private struct AppleHealthSettingsView: View {
                 }
 
                 if shouldShowMissingPermissions(for: status) {
-                    HealthPermissionCard(
-                        title: "Weitere Daten verfügbar",
-                        text: "Diese Daten können helfen, Zusammenhänge besser zu verstehen.",
-                        buttonTitle: "Alle anderen Kategorien anfragen"
-                    ) {
-                        Task {
-                            await controller.requestMissingHealthAuthorization()
-                        }
+                    MoreHealthDataCard {
+                        openAppSettings()
                     }
-                    .disabled(!status.isAvailable)
                 }
 
                 if shouldShowAuthorizationFeedback(for: status) {
@@ -760,7 +753,7 @@ private struct AppleHealthSettingsView: View {
         ) {
             Button("Integration beenden", role: .destructive) {
                 controller.disconnectAppleHealthIntegration()
-                openURL(HealthSettingsURL.url)
+                openAppSettings()
             }
 
             Button("Abbrechen", role: .cancel) {}
@@ -786,6 +779,10 @@ private struct AppleHealthSettingsView: View {
         controller.healthWriteDefinitions.filter { definition in
             status.requestedWriteTypes.contains(definition.id) && status.missingWriteTypes.contains(definition.id)
         }
+    }
+
+    private func openAppSettings() {
+        UIApplication.shared.open(HealthSettingsURL.url)
     }
 
     private func isConnected(_ status: HealthAuthorizationSnapshot) -> Bool {
@@ -958,10 +955,7 @@ private struct HealthCategoryRow: View {
     }
 }
 
-private struct HealthPermissionCard: View {
-    let title: String
-    let text: String
-    let buttonTitle: String
+private struct MoreHealthDataCard: View {
     let action: () -> Void
 
     var body: some View {
@@ -970,18 +964,23 @@ private struct HealthPermissionCard: View {
                 IconContainerView(icon: Image(systemName: "plus.circle"), color: AppTheme.symiPetrol)
 
                 VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-                    Text(title)
+                    Text("Mehr Daten verfügbar")
                         .font(.headline)
                         .foregroundStyle(AppTheme.symiTextPrimary)
-                    Text(text)
+                    Text("Du kannst zusätzliche Daten direkt in der Health App freigeben, um noch bessere Zusammenhänge zu erkennen.")
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.symiTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
-            Button(buttonTitle, action: action)
+            Button("In Einstellungen öffnen", action: action)
                 .buttonStyle(HealthSecondaryButtonStyle())
+
+            Text("Tippe dort auf „Health“ → „Datenzugriff & Geräte“ → „Symi“")
+                .font(.footnote)
+                .foregroundStyle(AppTheme.symiTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(SymiSpacing.lg)
         .brandCard()
@@ -1132,7 +1131,7 @@ private struct HealthDestructiveButtonStyle: ButtonStyle {
 }
 
 private enum HealthSettingsURL {
-    static let url = URL(string: "app-settings:")!
+    static let url = URL(string: UIApplication.openSettingsURLString)!
 }
 
 private struct SyncStatusView: View {
