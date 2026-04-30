@@ -53,6 +53,16 @@
         }
       }
     },
+    "%@ bis %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ bis %2$@"
+          }
+        }
+      }
+    },
     "%@ entfernen" : {
       "localizations" : {
         "en" : {
@@ -171,6 +181,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld entries in the selected period"
+          }
+        }
+      }
+    },
+    "%lld Konflikt%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld Konflikt%2$@"
           }
         }
       }
@@ -370,6 +390,9 @@
         }
       }
     },
+    "Änderungen gefunden" : {
+
+    },
     "Änderungen speichern" : {
       "localizations" : {
         "en" : {
@@ -541,6 +564,12 @@
           }
         }
       }
+    },
+    "Backup vom %@" : {
+
+    },
+    "Backup-Datei auswählen" : {
+
     },
     "Basierend auf deinen Einträgen" : {
       "localizations" : {
@@ -1586,6 +1615,12 @@
         }
       }
     },
+    "Import bestätigen" : {
+
+    },
+    "Import-Vorschau wird geprüft" : {
+
+    },
     "In Einstellungen öffnen" : {
 
     },
@@ -1721,6 +1756,9 @@
     "Keine aktive regelmäßige Medikation." : {
 
     },
+    "Keine Änderungen" : {
+
+    },
     "Keine beendete regelmäßige Medikation." : {
 
     },
@@ -1753,6 +1791,9 @@
           }
         }
       }
+    },
+    "Keine Konflikte erkannt" : {
+
     },
     "Keine offenen Konflikte." : {
       "localizations" : {
@@ -2468,6 +2509,9 @@
       }
     },
     "Regelmäßige Medikamente bleiben als eigener Therapiekontext von Akutmedikation in Tagebucheinträgen getrennt." : {
+
+    },
+    "Rollback-Backup teilen" : {
 
     },
     "Ruhiger Verlauf der dokumentierten Stärke" : {
