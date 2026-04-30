@@ -64,6 +64,15 @@ struct SettingsView: View {
                     Label("Cloud-Daten verwalten", systemImage: "icloud")
                 }
 
+                if !controller.conflicts.isEmpty {
+                    NavigationLink {
+                        ManageCloudDataView(dataExportDependencies: dependencies.dataExport, controller: controller)
+                    } label: {
+                        Label("\(controller.conflicts.count) Sync-Konflikt\(controller.conflicts.count == 1 ? "" : "e") entscheiden", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(AppTheme.symiCoral)
+                    }
+                }
+
                 NavigationLink {
                     SyncLogView(controller: controller)
                 } label: {
@@ -679,7 +688,6 @@ private struct SyncStatusView: View {
 private struct ManageCloudDataView: View {
     let dataExportDependencies: DataExportFeatureDependencies
     @Bindable var controller: SettingsController
-    @State private var selectedConflict: SyncConflict?
     @State private var isResolvingConflict = false
 
     var body: some View {
@@ -740,19 +748,40 @@ private struct ManageCloudDataView: View {
                     Text("Keine offenen Konflikte.")
                         .foregroundStyle(.secondary)
                 } else {
+                    Label("\(controller.conflicts.count) Konflikt\(controller.conflicts.count == 1 ? "" : "e") warten auf deine Entscheidung.", systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.symiCoral)
+                        .padding(.vertical, SymiSpacing.xxs)
+                        .brandGroupedRow()
+
                     ForEach(controller.conflicts) { conflict in
                         VStack(alignment: .leading, spacing: SymiSpacing.xs) {
                             Text(conflictTitle(for: conflict))
                                 .font(.headline)
                             Text("Lokaler Stand und Cloud-Stand unterscheiden sich.")
                                 .font(.subheadline)
+                            Text(versionSummary("Lokal", envelope: conflict.local))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(versionSummary("Cloud", envelope: conflict.remote))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                             Text("Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
-                            Button("Konflikt lösen") {
-                                selectedConflict = conflict
+                            HStack(spacing: SymiSpacing.sm) {
+                                Button("Lokale Version behalten") {
+                                    resolveConflict(conflict, preferLocal: true)
+                                }
+                                .buttonStyle(.bordered)
+
+                                Button("Cloud-Version übernehmen") {
+                                    resolveConflict(conflict, preferLocal: false)
+                                }
+                                .buttonStyle(.borderedProminent)
                             }
+                            .disabled(isResolvingConflict)
                         }
                         .padding(.vertical, SymiSpacing.xxs)
                         .brandGroupedRow()
@@ -809,28 +838,6 @@ private struct ManageCloudDataView: View {
                     .background(.thinMaterial, in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
             }
         }
-        .confirmationDialog(
-            selectedConflict.map(dialogTitle(for:)) ?? "Sync-Konflikt",
-            isPresented: selectedConflictPresented,
-            titleVisibility: .visible,
-            presenting: selectedConflict
-        ) { conflict in
-            Button("Lokal hat recht") {
-                resolveConflict(conflict, preferLocal: true)
-            }
-            Button("Cloud hat recht") {
-                resolveConflict(conflict, preferLocal: false)
-            }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { conflict in
-            Text(dialogMessage(for: conflict))
-        }
-        .onAppear {
-            presentNextConflictIfNeeded()
-        }
-        .onChange(of: controller.conflicts.map(\.id)) { _, _ in
-            presentNextConflictIfNeeded()
-        }
         .refreshable {
             controller.load()
         }
@@ -864,6 +871,11 @@ private struct ManageCloudDataView: View {
         return date.formatted(date: .numeric, time: .shortened)
     }
 
+    private func versionSummary(_ title: String, envelope: SyncDocumentEnvelope) -> String {
+        let deletedSuffix = envelope.deletedAt == nil ? "" : " · gelöscht"
+        return "\(title): geändert \(formatted(envelope.modifiedAt))\(deletedSuffix)"
+    }
+
     private var syncStalenessWarning: String? {
         controller.syncStatus.staleDataWarning(
             isSyncEnabled: controller.isSyncEnabled,
@@ -871,35 +883,7 @@ private struct ManageCloudDataView: View {
         )
     }
 
-    private var selectedConflictPresented: Binding<Bool> {
-        Binding(
-            get: { selectedConflict != nil },
-            set: { isPresented in
-                if !isPresented {
-                    selectedConflict = nil
-                }
-            }
-        )
-    }
-
-    private func dialogTitle(for conflict: SyncConflict) -> String {
-        "\(conflictTitle(for: conflict)) in Konflikt"
-    }
-
-    private func dialogMessage(for conflict: SyncConflict) -> String {
-        "Der lokale Stand und die Cloud-Daten unterscheiden sich. Wähle, welche Version gelten soll. Abweichende Felder: \(conflict.conflictingFields.joined(separator: ", "))."
-    }
-
-    private func presentNextConflictIfNeeded() {
-        guard selectedConflict == nil, !controller.conflicts.isEmpty else {
-            return
-        }
-
-        selectedConflict = controller.conflicts.first
-    }
-
     private func resolveConflict(_ conflict: SyncConflict, preferLocal: Bool) {
-        selectedConflict = nil
         isResolvingConflict = true
 
         Task {
@@ -912,7 +896,6 @@ private struct ManageCloudDataView: View {
 
             await MainActor.run {
                 isResolvingConflict = false
-                presentNextConflictIfNeeded()
             }
         }
     }
