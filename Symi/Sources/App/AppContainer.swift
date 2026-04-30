@@ -6,6 +6,7 @@ final class AppContainer {
     let featureDependencies: AppFeatureDependencies
 
     private let startupMaintenanceService: StartupMaintenanceService
+    private let syncCoordinator: SyncCoordinator
 
     init(
         modelContainer: ModelContainer,
@@ -17,6 +18,7 @@ final class AppContainer {
         healthContextStore: HealthContextStore = HealthContextStore(),
         usageDataConsentService: UsageDataConsentService = AppTelemetryService.shared
     ) {
+        self.syncCoordinator = syncCoordinator
         let episodeWeatherContextService = EpisodeWeatherContextService(
             weatherService: weatherService,
             locationService: locationService
@@ -125,6 +127,10 @@ final class AppContainer {
 
     func startDeferredMaintenanceIfNeeded() {
         startupMaintenanceService.startIfNeeded()
+    }
+
+    func appDidBecomeActive() {
+        syncCoordinator.appDidBecomeActive()
     }
 }
 

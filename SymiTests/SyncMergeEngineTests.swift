@@ -6,7 +6,7 @@ import Testing
 
 struct SyncMergeEngineTests {
     @Test
-    func syncStatusWarnsWhenLastDownloadIsStale() {
+    func syncStatusDoesNotWarnWhenLastDownloadIsStale() {
         let now = Date(timeIntervalSince1970: 200_000)
         let status = SyncStatusSnapshot(
             state: .ready,
@@ -17,11 +17,11 @@ struct SyncMergeEngineTests {
 
         let warning = status.staleDataWarning(now: now, isSyncEnabled: true, openConflictCount: 0)
 
-        #expect(warning?.contains("letzte iCloud-Download") == true)
+        #expect(warning == nil)
     }
 
     @Test
-    func syncStatusPrioritizesConflictsAndUnsyncedRecords() {
+    func syncStatusOnlyWarnsForConflictsThatNeedDecision() {
         let status = SyncStatusSnapshot(
             state: .conflict,
             unsyncedRecords: 3,
@@ -40,7 +40,7 @@ struct SyncMergeEngineTests {
         )
 
         #expect(conflictWarning?.contains("2 Sync-Konflikte") == true)
-        #expect(unsyncedWarning?.contains("3 lokale Änderungen") == true)
+        #expect(unsyncedWarning == nil)
     }
 
     @Test
@@ -644,6 +644,74 @@ struct SyncMergeEngineTests {
 
         #expect(pending == [changed.documentID])
     }
+
+    @Test
+    @MainActor
+    func manualSyncUploadsLocalChangeAndClearsUnsyncedRecords() async throws {
+        let fakeProvider = FakeSyncProvider()
+        let stack = try makeSyncTestStack(provider: fakeProvider)
+        await stack.stateStore.setSyncEnabled(true)
+        let documentID = try insertBaseEpisode(in: stack.container)
+
+        await stack.coordinator.loadPersistedState()
+        await stack.coordinator.syncNow()
+
+        let shadow = await stack.stateStore.shadow(for: documentID)
+
+        #expect(shadow?.envelope.documentID == documentID)
+        #expect(stack.coordinator.status.unsyncedRecords == 0)
+        #expect(await fakeProvider.sentRecordNames.contains(documentID))
+    }
+
+    @Test
+    @MainActor
+    func failedManualSyncKeepsNonRetryableSchemaErrorVisible() async throws {
+        let fakeProvider = FakeSyncProvider(
+            failedSaveError: productionSchemaCKError()
+        )
+        let stack = try makeSyncTestStack(provider: fakeProvider)
+        await stack.stateStore.setSyncEnabled(true)
+        _ = try insertBaseEpisode(in: stack.container)
+
+        await stack.coordinator.loadPersistedState()
+        await stack.coordinator.syncNow()
+
+        #expect(stack.coordinator.status.lastError?.contains("Cloud-Konfiguration") == true)
+        #expect(stack.coordinator.status.lastErrorIsRetryable == false)
+        #expect(stack.coordinator.status.unsyncedRecords == 1)
+    }
+
+    @Test
+    @MainActor
+    func existingServerRecordRepairsShadowAndClearsUnsyncedRecord() async throws {
+        let fakeProvider = FakeSyncProvider(
+            failedSaveError: insertAlreadyExistsCKError()
+        )
+        let stack = try makeSyncTestStack(provider: fakeProvider)
+        await stack.stateStore.setSyncEnabled(true)
+        let documentID = try insertBaseEpisode(in: stack.container)
+        let envelope = try requireEnvelope(from: stack.repository, documentID: documentID)
+        fakeProvider.serverRecordForFailure = try record(from: envelope)
+
+        await stack.coordinator.loadPersistedState()
+        await stack.coordinator.syncNow()
+
+        let shadow = await stack.stateStore.shadow(for: documentID)
+
+        #expect(shadow?.envelope == envelope)
+        #expect(shadow?.recordSystemFields != nil)
+        #expect(stack.coordinator.status.lastError == nil)
+        #expect(stack.coordinator.status.unsyncedRecords == 0)
+    }
+
+    @Test
+    @MainActor
+    func cloudKitProductionSchemaErrorIsNotRetryable() {
+        let classified = SyncErrorClassifier.classify(productionSchemaCKError())
+
+        #expect(classified.isRetryable == false)
+        #expect(classified.userMessage.contains("Cloud-Konfiguration") == true)
+    }
 }
 
 private func episodeEnvelope(
@@ -769,7 +837,7 @@ private extension Array {
 }
 
 @MainActor
-private func makeSyncTestStack() throws -> SyncTestStack {
+private func makeSyncTestStack(provider: FakeSyncProvider? = nil) throws -> SyncTestStack {
     let schema = Schema(versionedSchema: SymiSchemaV6.self)
     let configuration = ModelConfiguration(
         "sync-tests-\(UUID().uuidString)",
@@ -787,7 +855,21 @@ private func makeSyncTestStack() throws -> SyncTestStack {
         healthContextStore: healthContextStore,
         stateStore: stateStore,
         deviceID: syncTestDeviceID,
-        autostart: false
+        autostart: false,
+        providerFactory: { _, _, _, recordProvider, eventHandler in
+            if let provider {
+                provider.install(recordProvider: recordProvider, eventHandler: eventHandler)
+                return provider
+            }
+
+            return CloudKitSyncProvider(
+                stateStore: stateStore,
+                zoneID: syncTestZoneID,
+                appLogStore: appLogStore,
+                recordProvider: recordProvider,
+                eventHandler: eventHandler
+            )
+        }
     )
     let repository = LocalSyncRepository(modelContainer: container, healthContextStore: healthContextStore)
 
@@ -798,6 +880,132 @@ private func makeSyncTestStack() throws -> SyncTestStack {
         repository: repository,
         healthContextStore: healthContextStore
     )
+}
+
+@MainActor
+private final class FakeSyncProvider: SyncProvider {
+    private let lock = NSLock()
+    private let failedSaveError: CKError?
+    var serverRecordForFailure: CKRecord?
+    private var queuedRecordNames: [String] = []
+    private var _sentRecordNames: [String] = []
+    private var recordProvider: (@Sendable (CKRecord.ID) async -> CKRecord?)?
+    private var eventHandler: (@Sendable (SyncProviderEvent) async -> Void)?
+
+    init(failedSaveError: CKError? = nil) {
+        self.failedSaveError = failedSaveError
+    }
+
+    var sentRecordNames: [String] {
+        get async {
+            lock.withLock {
+                _sentRecordNames
+            }
+        }
+    }
+
+    var queuedChangeCount: Int {
+        get async {
+            lock.withLock {
+                queuedRecordNames.count
+            }
+        }
+    }
+
+    var accountAvailability: SyncServiceState {
+        get async {
+            .ready
+        }
+    }
+
+    func install(
+        recordProvider: @escaping @Sendable (CKRecord.ID) async -> CKRecord?,
+        eventHandler: @escaping @Sendable (SyncProviderEvent) async -> Void
+    ) {
+        lock.withLock {
+            self.recordProvider = recordProvider
+            self.eventHandler = eventHandler
+        }
+    }
+
+    func start() async throws {}
+
+    func stop() async {
+        lock.withLock {
+            queuedRecordNames.removeAll()
+        }
+    }
+
+    func queue(recordNames: [String]) async {
+        lock.withLock {
+            queuedRecordNames.append(contentsOf: recordNames)
+        }
+    }
+
+    func fetch() async throws {}
+
+    func send() async throws {
+        let snapshot = lock.withLock {
+            (queuedRecordNames, recordProvider, eventHandler)
+        }
+
+        guard let recordProvider = snapshot.1, let eventHandler = snapshot.2 else {
+            return
+        }
+
+        var records: [CKRecord] = []
+        var failures: [SyncFailedRecordSave] = []
+        for recordName in snapshot.0 {
+            let recordID = CKRecord.ID(recordName: recordName, zoneID: syncTestZoneID)
+            if let record = await recordProvider(recordID) {
+                if let failedSaveError {
+                    let serverRecord = lock.withLock {
+                        serverRecordForFailure
+                    }
+                    failures.append(SyncFailedRecordSave(recordID: record.recordID, error: failedSaveError, serverRecord: serverRecord))
+                } else {
+                    records.append(record)
+                }
+            }
+        }
+
+        lock.withLock {
+            _sentRecordNames.append(contentsOf: records.map { $0.recordID.recordName })
+            if failures.isEmpty {
+                queuedRecordNames.removeAll()
+            }
+        }
+        if !records.isEmpty {
+            await eventHandler(.didSendRecords(records))
+        }
+        if !failures.isEmpty {
+            await eventHandler(.didFailToSend(failures))
+        }
+    }
+}
+
+private func productionSchemaCKError() -> CKError {
+    let error = NSError(
+        domain: CKError.errorDomain,
+        code: CKError.serverRejectedRequest.rawValue,
+        userInfo: [
+            NSLocalizedDescriptionKey: "Cannot create new type SyncDocument in production schema"
+        ]
+    )
+
+    return CKError(_nsError: error)
+}
+
+private func insertAlreadyExistsCKError() -> CKError {
+    let error = NSError(
+        domain: CKError.errorDomain,
+        code: CKError.serverRecordChanged.rawValue,
+        userInfo: [
+            NSLocalizedDescriptionKey: "record to insert already exists"
+        ]
+    )
+
+    return CKError(_nsError: error)
 }
 
 @MainActor

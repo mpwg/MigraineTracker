@@ -68,6 +68,7 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
     public nonisolated var lastDownloadedAt: Date?
     public nonisolated var lastUploadedAt: Date?
     public nonisolated var lastError: String?
+    public nonisolated var lastErrorIsRetryable: Bool
 
     public nonisolated init(
         state: SyncServiceState = .disabled,
@@ -76,7 +77,8 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
         unsyncedRecords: Int = 0,
         lastDownloadedAt: Date? = nil,
         lastUploadedAt: Date? = nil,
-        lastError: String? = nil
+        lastError: String? = nil,
+        lastErrorIsRetryable: Bool = false
     ) {
         self.state = state
         self.service = service
@@ -85,6 +87,7 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
         self.lastDownloadedAt = lastDownloadedAt
         self.lastUploadedAt = lastUploadedAt
         self.lastError = lastError
+        self.lastErrorIsRetryable = lastErrorIsRetryable
     }
 
     public nonisolated func staleDataWarning(
@@ -100,31 +103,13 @@ public struct SyncStatusSnapshot: Codable, Equatable, Sendable {
             return "\(openConflictCount) Sync-Konflikt\(openConflictCount == 1 ? "" : "e") warten auf eine Entscheidung. Bearbeite erst weiter, wenn klar ist, welcher Stand gelten soll."
         }
 
-        if unsyncedRecords > 0 {
-            return "\(unsyncedRecords) lokale Änderung\(unsyncedRecords == 1 ? "" : "en") sind noch nicht in iCloud bestätigt. Synchronisiere vor dem Bearbeiten auf anderen Geräten."
-        }
-
-        guard let lastDownloadedAt else {
-            return "Dieses Gerät hat noch keinen iCloud-Download abgeschlossen. Synchronisiere vor dem Bearbeiten, wenn du Symi auf mehreren Geräten nutzt."
-        }
-
-        let age = now.timeIntervalSince(lastDownloadedAt)
-        guard age >= Self.staleDataWarningInterval else {
-            return nil
-        }
-
-        return "Der letzte iCloud-Download liegt \(Self.relativeDurationDescription(for: age)) zurück. Synchronisiere vor dem Bearbeiten, damit du nicht auf einem alten Stand arbeitest."
+        return nil
     }
 
-    private nonisolated static func relativeDurationDescription(for interval: TimeInterval) -> String {
-        let hours = max(1, Int(interval / 3_600))
-        guard hours >= 48 else {
-            return "\(hours) Stunde\(hours == 1 ? "" : "n")"
-        }
+}
 
-        let days = max(1, hours / 24)
-        return "\(days) Tag\(days == 1 ? "" : "e")"
-    }
+extension Notification.Name {
+    nonisolated static let symiLocalSyncDataDidChange = Notification.Name("SymiLocalSyncDataDidChange")
 }
 
 public struct SyncDocumentEnvelope: Codable, Equatable, Sendable {
