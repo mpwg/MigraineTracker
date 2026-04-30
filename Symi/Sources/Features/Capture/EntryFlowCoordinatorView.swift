@@ -254,7 +254,7 @@ private struct EntryHeadacheStepView: View {
         }
 
         dateFeedbackTrigger += 1
-        withAnimation(.easeInOut(duration: 0.2)) {
+        withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
             isDateOpen = false
         }
     }
@@ -314,11 +314,11 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
 
                 Button {
                     feedbackTrigger += 1
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
                         isDateOpen.toggle()
                     }
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: SymiSpacing.xxs) {
                         Text(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                             .font(.subheadline)
                             .lineLimit(1)
@@ -350,21 +350,25 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
                         )
                         .datePickerStyle(.graphical)
                         .labelsHidden()
-                        .frame(width: 320)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .frame(width: SymiSize.datePickerOverlayWidth)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: SymiRadius.datePickerOverlay, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: SymiRadius.datePickerOverlay, style: .continuous))
                         .shadow(
                             color: AppTheme.petrol(for: colorScheme).opacity(SymiOpacity.shadow),
-                            radius: 10,
-                            x: 0,
-                            y: 6
+                            radius: SymiShadow.datePickerOverlayRadius,
+                            x: SymiShadow.cardXOffset,
+                            y: SymiShadow.datePickerOverlayYOffset
                         )
-                        .offset(y: 40)
+                        .offset(y: SymiSpacing.datePickerOverlayYOffset)
                         .onChange(of: selectedDate) { _, newValue in
                             onDateSelect(newValue)
                         }
                     }
-                    .frame(width: 1000, height: 1000, alignment: .topTrailing)
+                    .frame(
+                        width: SymiSize.datePickerOverlayDismissalSize,
+                        height: SymiSize.datePickerOverlayDismissalSize,
+                        alignment: .topTrailing
+                    )
                     .zIndex(10)
                 }
             }

@@ -7,17 +7,6 @@
     "(empfohlen, wenn du mehrere Geräte nutzt)" : {
 
     },
-    "/10" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "/10"
-          }
-        }
-      }
-    },
     "%@ / 10" : {
       "localizations" : {
         "en" : {
@@ -202,23 +191,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld out of 10"
-          }
-        }
-      }
-    },
-    "%lld von 10, %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld von 10, %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld out of 10, %2$@"
           }
         }
       }
@@ -1835,17 +1807,6 @@
         }
       }
     },
-    "Kopfschmerzstärke" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Headache Intensity"
-          }
-        }
-      }
-    },
     "Kurz notieren, was auffällt" : {
       "localizations" : {
         "en" : {
@@ -2509,17 +2470,6 @@
     "Regelmäßige Medikamente bleiben als eigener Therapiekontext von Akutmedikation in Tagebucheinträgen getrennt." : {
 
     },
-    "ruhig" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "calm"
-          }
-        }
-      }
-    },
     "Ruhiger Verlauf der dokumentierten Stärke" : {
       "localizations" : {
         "en" : {
@@ -2662,17 +2612,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing backup"
-          }
-        }
-      }
-    },
-    "Skala" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scale"
           }
         }
       }

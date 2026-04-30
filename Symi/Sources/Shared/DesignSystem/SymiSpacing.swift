@@ -42,6 +42,10 @@ nonisolated enum SymiSpacing {
     static let chevronTopPadding: CGFloat = 3
     static let selectedCheckOffsetX: CGFloat = 8
     static let selectedCheckOffsetY: CGFloat = -4
+    static let datePickerOverlayYOffset: CGFloat = 40
+    static let painIntensityFaceEyeOffsetY: CGFloat = -4
+    static let painIntensityFaceMouthOffsetY: CGFloat = 5
+    static let painIntensityFaceEyeSpacing: CGFloat = 7
 
     // Home effects
     static let heroWavePrimaryOffsetX: CGFloat = -10
@@ -102,6 +106,7 @@ nonisolated enum SymiRadius {
     static let flowTile: CGFloat = 14
     static let flowPill: CGFloat = 12
     static let flowBanner: CGFloat = 16
+    static let datePickerOverlay: CGFloat = 16
 }
 
 // MARK: - Shadow
@@ -129,6 +134,8 @@ enum SymiShadow {
     static let buttonYOffset: CGFloat = 6
     static let calendarButtonRadius: CGFloat = 7
     static let calendarButtonYOffset: CGFloat = 3
+    static let datePickerOverlayRadius: CGFloat = 10
+    static let datePickerOverlayYOffset: CGFloat = 6
     static let sliderThumbRadius: CGFloat = 2
     static let sliderThumbYOffset: CGFloat = 1
 }
@@ -170,6 +177,12 @@ nonisolated enum SymiSize {
     static let selectedMedicationRowMinHeight: CGFloat = 108
     static let medicationQuantityMinWidth: CGFloat = 24
     static let noteEditorMinHeight: CGFloat = 220
+    static let datePickerOverlayWidth: CGFloat = 320
+    static let datePickerOverlayDismissalSize: CGFloat = 1000
+    static let painIntensityFaceEye: CGFloat = 3.2
+    static let painIntensityFaceMouthWidth: CGFloat = 15
+    static let painIntensityFaceMouthHeight: CGFloat = 8
+    static let painIntensityFaceOpenMouthWidth: CGFloat = 6
 
     // Grid and dashboard layout
     static let dashboardWideColumnMinWidth: CGFloat = 360
@@ -287,6 +300,7 @@ nonisolated enum SymiStroke {
 
     // Entry detail
     static let entryDetailFaceIcon: CGFloat = 2
+    static let painIntensityFace: CGFloat = 1.8
 }
 
 // MARK: - Animation
@@ -319,14 +333,19 @@ nonisolated enum SymiOpacity {
     static let pressedShadow = shadow
     static let subtleButtonHighlight: Double = 0.11
     static let faintSurface: Double = 0.12
+    static let painIntensitySelectedFill: Double = 0.15
     static let softFill: Double = 0.16
     static let secondaryFill: Double = 0.18
+    static let painIntensityLowFaceFill = secondaryFill
     static let sliderThumbShadow = secondaryFill
     static let pressedFill: Double = 0.20
+    static let painIntensityMediumFaceFill = pressedFill
     static let backgroundAccent: Double = 0.22
     static let selectedStroke: Double = 0.24
     static let glassTintLight: Double = 0.26
     static let selectedFill: Double = 0.35
+    static let painIntensitySelectedStroke = selectedFill
+    static let painIntensityUnselectedIcon: Double = 0.40
     static let outline: Double = 0.45
     static let disabledRow = outline
     static let strongSurface: Double = 0.96

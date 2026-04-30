@@ -513,7 +513,6 @@ private enum AppSettingsURL {
     static let url = URL(string: "app-settings:")!
 }
 
-
 private struct MedicationDefinitionRow: View {
     let definition: MedicationDefinitionRecord
     let isSelected: Bool

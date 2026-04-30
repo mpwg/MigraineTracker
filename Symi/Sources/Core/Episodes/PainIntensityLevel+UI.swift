@@ -14,11 +14,11 @@ extension PainIntensityLevel {
     }
 
     @MainActor var selectedBackgroundColor: Color {
-        tintColor.opacity(0.15)
+        tintColor.opacity(SymiOpacity.painIntensitySelectedFill)
     }
 
     @MainActor var selectedBorderColor: Color {
-        tintColor.opacity(0.35)
+        tintColor.opacity(SymiOpacity.painIntensitySelectedStroke)
     }
 
     @MainActor var selectedIconColor: Color {
@@ -26,7 +26,7 @@ extension PainIntensityLevel {
     }
 
     @MainActor var unselectedIconColor: Color {
-        Color.gray.opacity(0.4)
+        Color.gray.opacity(SymiOpacity.painIntensityUnselectedIcon)
     }
 
     @MainActor var calendarDotColor: Color {
@@ -47,9 +47,9 @@ extension PainIntensityLevel {
         case .none:
             ColorToken.Surface.iconBackground
         case .low:
-            tintColor.opacity(0.18)
+            tintColor.opacity(SymiOpacity.painIntensityLowFaceFill)
         case .medium:
-            tintColor.opacity(0.20)
+            tintColor.opacity(SymiOpacity.painIntensityMediumFaceFill)
         case .high, .veryHigh:
             tintColor.opacity(SymiOpacity.clearAccent)
         }
@@ -62,20 +62,20 @@ struct PainIntensityImage: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(lineWidth: 1.8)
+                .stroke(lineWidth: SymiStroke.painIntensityFace)
 
-            HStack(spacing: 7) {
+            HStack(spacing: SymiSpacing.painIntensityFaceEyeSpacing) {
                 Circle()
-                    .frame(width: 3.2, height: 3.2)
+                    .frame(width: SymiSize.painIntensityFaceEye, height: SymiSize.painIntensityFaceEye)
                 Circle()
-                    .frame(width: 3.2, height: 3.2)
+                    .frame(width: SymiSize.painIntensityFaceEye, height: SymiSize.painIntensityFaceEye)
             }
-            .offset(y: -4)
+            .offset(y: SymiSpacing.painIntensityFaceEyeOffsetY)
 
             PainIntensityMouthShape(level: level)
-                .stroke(style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
-                .frame(width: 15, height: 8)
-                .offset(y: 5)
+                .stroke(style: StrokeStyle(lineWidth: SymiStroke.painIntensityFace, lineCap: .round))
+                .frame(width: SymiSize.painIntensityFaceMouthWidth, height: SymiSize.painIntensityFaceMouthHeight)
+                .offset(y: SymiSpacing.painIntensityFaceMouthOffsetY)
         }
     }
 }
@@ -95,7 +95,8 @@ private struct PainIntensityMouthShape: Shape {
         case .strained:
             return curvedPath(in: rect, curve: -4)
         case .intense:
-            return Path(ellipseIn: CGRect(x: rect.midX - 3, y: rect.minY, width: 6, height: rect.height))
+            let mouthWidth = SymiSize.painIntensityFaceOpenMouthWidth
+            return Path(ellipseIn: CGRect(x: rect.midX - mouthWidth / 2, y: rect.minY, width: mouthWidth, height: rect.height))
         }
     }
 
