@@ -124,17 +124,17 @@ struct CoreArchitectureTests {
 
     @Test
     func painIntensityLevelUsesCentralBoundaryBuckets() {
-        let expectations: [(Int, PainIntensityLevel, String, String?)] = [
-            (0, .none, "Nicht bewertet", nil),
-            (1, .low, "Leicht", "Leichter Verlauf"),
-            (3, .low, "Leicht", "Leichter Verlauf"),
-            (4, .medium, "Mittel", "Mittlerer Verlauf"),
-            (6, .medium, "Mittel", "Mittlerer Verlauf"),
-            (7, .high, "Stark", "Starker Verlauf"),
-            (8, .high, "Stark", "Starker Verlauf"),
-            (9, .veryHigh, "Sehr stark", "Sehr starker Verlauf"),
-            (10, .veryHigh, "Sehr stark", "Sehr starker Verlauf"),
-            (11, .none, "Nicht bewertet", nil)
+        let expectations: [(Int, PainIntensityLevel, String, String?, Int)] = [
+            (0, .none, "Nicht bewertet", nil, 0),
+            (1, .low, "Leicht", "Leichter Verlauf", 2),
+            (3, .low, "Leicht", "Leichter Verlauf", 2),
+            (4, .medium, "Mittel", "Mittlerer Verlauf", 5),
+            (6, .medium, "Mittel", "Mittlerer Verlauf", 5),
+            (7, .high, "Stark", "Starker Verlauf", 8),
+            (8, .high, "Stark", "Starker Verlauf", 8),
+            (9, .veryHigh, "Sehr stark", "Sehr starker Verlauf", 10),
+            (10, .veryHigh, "Sehr stark", "Sehr starker Verlauf", 10),
+            (11, .none, "Nicht bewertet", nil, 0)
         ]
 
         for expectation in expectations {
@@ -143,8 +143,43 @@ struct CoreArchitectureTests {
             #expect(level == expectation.1)
             #expect(level.displayLabel == expectation.2)
             #expect(level.contextText == expectation.3)
+            #expect(level.storedIntensity == expectation.4)
+            #expect(level.metadata.storedIntensity == expectation.4)
             #expect(level.contains(intensity: expectation.0))
         }
+    }
+
+    @Test
+    func painIntensityLevelParsesLegacyStorageValues() {
+        let expectations: [(String, PainIntensityLevel)] = [
+            ("leicht", .low),
+            ("Leicht", .low),
+            ("mittel", .medium),
+            ("Mittel", .medium),
+            ("stark", .high),
+            ("Stark", .high),
+            ("very_high", .veryHigh),
+            ("sehrStark", .veryHigh),
+            ("Sehr stark", .veryHigh),
+            ("Sehr Stark", .veryHigh),
+            ("unknown", .none)
+        ]
+
+        for expectation in expectations {
+            #expect(PainIntensityLevel(storageValue: expectation.0) == expectation.1)
+        }
+    }
+
+    @Test
+    func painIntensityMetadataProvidesDistinctSelectableVisualValues() {
+        let metadata = PainIntensityLevel.selectableCases.map(\.metadata)
+
+        #expect(Set(metadata.map(\.colorHex)).count == PainIntensityLevel.selectableCases.count)
+        #expect(Set(metadata.map(\.faceExpression)).count == PainIntensityLevel.selectableCases.count)
+        #expect(PainIntensityLevel.low.metadata.colorHex == 0xA4B1A0)
+        #expect(PainIntensityLevel.medium.metadata.colorHex == 0xF6B78D)
+        #expect(PainIntensityLevel.high.metadata.colorHex == 0xF29C7D)
+        #expect(PainIntensityLevel.veryHigh.metadata.colorHex == 0xE6867C)
     }
 
     @Test

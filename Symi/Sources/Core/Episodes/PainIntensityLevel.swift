@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 enum PainIntensityHealthSeverity: Sendable {
     case mild
@@ -11,6 +11,16 @@ enum PainIntensityFaceExpression: Sendable {
     case neutral
     case strained
     case intense
+}
+
+struct PainIntensityMetadata: Equatable, Sendable {
+    let storedIntensity: Int
+    let displayLabel: String
+    let contextText: String?
+    let detailDescription: String
+    let colorHex: Int
+    let faceExpression: PainIntensityFaceExpression
+    let healthSeverity: PainIntensityHealthSeverity
 }
 
 nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, Sendable {
@@ -54,142 +64,83 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
         [.low, .medium, .high, .veryHigh]
     }
 
-    nonisolated var storedIntensity: Int {
+    nonisolated var metadata: PainIntensityMetadata {
         switch self {
         case .none:
-            0
+            PainIntensityMetadata(
+                storedIntensity: 0,
+                displayLabel: "Nicht bewertet",
+                contextText: nil,
+                detailDescription: "Die Intensität wurde für diesen Eintrag nicht bewertet.",
+                colorHex: 0x6B6B6E,
+                faceExpression: .neutral,
+                healthSeverity: .mild
+            )
         case .low:
-            2
+            PainIntensityMetadata(
+                storedIntensity: 2,
+                displayLabel: "Leicht",
+                contextText: "Leichter Verlauf",
+                detailDescription: "Die Schmerzen waren leicht und gut im Alltag einzuordnen.",
+                colorHex: 0xA4B1A0,
+                faceExpression: .calm,
+                healthSeverity: .mild
+            )
         case .medium:
-            5
+            PainIntensityMetadata(
+                storedIntensity: 5,
+                displayLabel: "Mittel",
+                contextText: "Mittlerer Verlauf",
+                detailDescription: "Die Schmerzen waren spürbar, aber noch gut auszuhalten.",
+                colorHex: 0xF6B78D,
+                faceExpression: .neutral,
+                healthSeverity: .moderate
+            )
         case .high:
-            8
+            PainIntensityMetadata(
+                storedIntensity: 8,
+                displayLabel: "Stark",
+                contextText: "Starker Verlauf",
+                detailDescription: "Die Schmerzen waren deutlich und haben viel Aufmerksamkeit gebraucht.",
+                colorHex: 0xF29C7D,
+                faceExpression: .strained,
+                healthSeverity: .severe
+            )
         case .veryHigh:
-            10
+            PainIntensityMetadata(
+                storedIntensity: 10,
+                displayLabel: "Sehr stark",
+                contextText: "Sehr starker Verlauf",
+                detailDescription: "Die Schmerzen waren sehr stark und haben den Alltag deutlich eingeschränkt.",
+                colorHex: 0xE6867C,
+                faceExpression: .intense,
+                healthSeverity: .severe
+            )
         }
+    }
+
+    nonisolated var storedIntensity: Int {
+        metadata.storedIntensity
     }
 
     nonisolated var displayLabel: String {
-        switch self {
-        case .none:
-            "Nicht bewertet"
-        case .low:
-            "Leicht"
-        case .medium:
-            "Mittel"
-        case .high:
-            "Stark"
-        case .veryHigh:
-            "Sehr stark"
-        }
-    }
-
-    @MainActor var colorValue: SymiColorValue {
-        switch self {
-        case .none:
-            SymiColors.textSecondary
-        case .low:
-            SymiColorValue(hex: 0xA4B1A0)
-        case .medium:
-            SymiColorValue(hex: 0xF6B78D)
-        case .high:
-            SymiColorValue(hex: 0xF29C7D)
-        case .veryHigh:
-            SymiColorValue(hex: 0xE6867C)
-        }
-    }
-
-    @MainActor var tintColor: Color {
-        colorValue.color
-    }
-
-    @MainActor var selectedBackgroundColor: Color {
-        tintColor.opacity(0.15)
-    }
-
-    @MainActor var selectedBorderColor: Color {
-        tintColor.opacity(0.35)
-    }
-
-    @MainActor var selectedIconColor: Color {
-        tintColor
-    }
-
-    @MainActor var unselectedIconColor: Color {
-        Color.gray.opacity(0.4)
-    }
-
-    @MainActor var calendarDotColor: Color {
-        switch self {
-        case .none:
-            SymiColors.textSecondary.color.opacity(SymiOpacity.calendarLowIntensityDot)
-        case .low:
-            tintColor.opacity(SymiOpacity.calendarLowIntensityDot)
-        case .medium:
-            tintColor.opacity(SymiOpacity.calendarMediumIntensityDot)
-        case .high, .veryHigh:
-            tintColor.opacity(SymiOpacity.calendarHighIntensityDot)
-        }
+        metadata.displayLabel
     }
 
     nonisolated var isHighImpact: Bool {
         self == .high || self == .veryHigh
     }
 
-    @MainActor var faceBackgroundColor: Color {
-        switch self {
-        case .none:
-            ColorToken.Surface.iconBackground
-        case .low:
-            tintColor.opacity(0.18)
-        case .medium:
-            tintColor.opacity(0.20)
-        case .high, .veryHigh:
-            tintColor.opacity(SymiOpacity.clearAccent)
-        }
-    }
-
     nonisolated var faceExpression: PainIntensityFaceExpression {
-        switch self {
-        case .none, .medium:
-            .neutral
-        case .low:
-            .calm
-        case .high:
-            .strained
-        case .veryHigh:
-            .intense
-        }
+        metadata.faceExpression
     }
 
     nonisolated var contextText: String? {
-        switch self {
-        case .none:
-            nil
-        case .low:
-            "Leichter Verlauf"
-        case .medium:
-            "Mittlerer Verlauf"
-        case .high:
-            "Starker Verlauf"
-        case .veryHigh:
-            "Sehr starker Verlauf"
-        }
+        metadata.contextText
     }
 
     nonisolated var detailDescription: String {
-        switch self {
-        case .none:
-            "Die Intensität wurde für diesen Eintrag nicht bewertet."
-        case .low:
-            "Die Schmerzen waren leicht und gut im Alltag einzuordnen."
-        case .medium:
-            "Die Schmerzen waren spürbar, aber noch gut auszuhalten."
-        case .high:
-            "Die Schmerzen waren deutlich und haben viel Aufmerksamkeit gebraucht."
-        case .veryHigh:
-            "Die Schmerzen waren sehr stark und haben den Alltag deutlich eingeschränkt."
-        }
+        metadata.detailDescription
     }
 
     nonisolated var healthSeverityLabel: String {
@@ -204,14 +155,7 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
     }
 
     nonisolated var healthSeverity: PainIntensityHealthSeverity {
-        switch self {
-        case .none, .low:
-            .mild
-        case .medium:
-            .moderate
-        case .high, .veryHigh:
-            .severe
-        }
+        metadata.healthSeverity
     }
 
     nonisolated func contains(intensity: Int) -> Bool {
