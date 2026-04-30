@@ -393,13 +393,15 @@ private struct AppleHealthCardView: View {
             }
         }
         .padding(.horizontal, SymiSpacing.lg)
-        .padding(.vertical, SymiSpacing.xl)
+        .padding(.vertical, SymiSpacing.lg)
         .frame(minHeight: SymiSize.settingsAppleHealthCardMinHeight)
         .background(
             appleHealthBackground,
             in: RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous)
         )
-        .padding(.vertical, SymiSpacing.md)
+        .padding(.horizontal, SymiSpacing.xs)
+        .padding(.top, SymiSpacing.xs)
+        .padding(.bottom, SymiSpacing.sm)
         .contentShape(RoundedRectangle(cornerRadius: SymiRadius.flowBanner, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Apple Health. Lese- und Schreibzugriff. \(statusTitle)")
