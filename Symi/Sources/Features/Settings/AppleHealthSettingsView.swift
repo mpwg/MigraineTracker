@@ -12,13 +12,15 @@ struct AppleHealthSettingsView: View {
             VStack(alignment: .leading, spacing: SymiSpacing.xxl) {
                 HealthHeaderView()
 
-                if !isConnected(status) {
+                if let statusText = statusText(for: status) {
+                    HealthStatusText(text: statusText)
+                }
+
+                if shouldShowPrimaryCTA(for: status) {
                     Button {
-                        Task {
-                            await controller.requestHealthAuthorization()
-                        }
+                        handlePrimaryCTA(for: status)
                     } label: {
-                        Text("Apple Health aktivieren")
+                        Text(primaryCTATitle(for: status))
                     }
                     .buttonStyle(HealthPrimaryButtonStyle())
                     .disabled(!status.isAvailable)
@@ -31,11 +33,6 @@ struct AppleHealthSettingsView: View {
                 }
 
                 if isConnected(status) {
-                    HealthStatusBlock(
-                        text: statusText(for: status),
-                        showsCompletion: isFullyConfigured(status)
-                    )
-
                     if !enabledReadDefinitions(for: status).isEmpty {
                         HealthSettingsSection(title: "Freigegebene Daten") {
                             VStack(spacing: SymiSpacing.md) {
@@ -61,10 +58,15 @@ struct AppleHealthSettingsView: View {
                     if status.isWriteEnabled, !enabledWriteDefinitions(for: status).isEmpty {
                         HealthSettingsSection(title: "An Apple Health senden") {
                             VStack(alignment: .leading, spacing: SymiSpacing.lg) {
-                                Text("Deine Einträge können in Apple Health gespeichert werden - nur wenn du es erlaubst.")
-                                    .font(.subheadline)
-                                    .foregroundStyle(AppTheme.symiTextSecondary)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                VStack(alignment: .leading, spacing: SymiSpacing.xs) {
+                                    Text("Du kannst Einträge zusätzlich in Apple Health speichern.")
+                                        .font(.subheadline)
+                                        .foregroundStyle(AppTheme.symiTextSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text("Nur wenn aktiviert")
+                                        .font(.footnote)
+                                        .foregroundStyle(AppTheme.symiTextSecondary)
+                                }
 
                                 VStack(spacing: SymiSpacing.md) {
                                     ForEach(enabledWriteDefinitions(for: status)) { definition in
@@ -86,6 +88,7 @@ struct AppleHealthSettingsView: View {
                     HealthDangerZone {
                         showsDisconnectConfirmation = true
                     }
+                    .padding(.top, SymiSpacing.xxl)
                 }
             }
             .padding(.horizontal, AppTheme.groupedHorizontalInset)
@@ -100,7 +103,7 @@ struct AppleHealthSettingsView: View {
         }
         .animation(.default, value: controller.healthSettingsRevision)
         .confirmationDialog(
-            "Apple Health Integration beenden?",
+            "Integration beenden?",
             isPresented: $showsDisconnectConfirmation,
             titleVisibility: .visible
         ) {
@@ -111,7 +114,25 @@ struct AppleHealthSettingsView: View {
 
             Button("Abbrechen", role: .cancel) {}
         } message: {
-            Text("Symi trennt die lokale Verbindung. HealthKit-Berechtigungen werden von iOS verwaltet und können in den Einstellungen geprüft oder widerrufen werden.")
+            Text("Du kannst den Zugriff jederzeit wieder aktivieren.")
+        }
+    }
+
+    private func shouldShowPrimaryCTA(for status: HealthAuthorizationSnapshot) -> Bool {
+        status.isAvailable && !isFullyConfigured(status)
+    }
+
+    private func primaryCTATitle(for status: HealthAuthorizationSnapshot) -> String {
+        isConnected(status) ? "Weitere Daten aktivieren" : "Apple Health aktivieren"
+    }
+
+    private func handlePrimaryCTA(for status: HealthAuthorizationSnapshot) {
+        if isConnected(status) {
+            openAppSettings()
+        } else {
+            Task {
+                await controller.requestHealthAuthorization()
+            }
         }
     }
 
@@ -140,8 +161,12 @@ struct AppleHealthSettingsView: View {
         controller.healthWriteDefinitions.filter { status.enabledWriteTypes.contains($0.id) }
     }
 
-    private func statusText(for status: HealthAuthorizationSnapshot) -> String {
-        shouldShowMissingPermissions(for: status) ? "Einige Daten sind aktiviert" : "Alle verfügbaren Daten sind aktiviert"
+    private func statusText(for status: HealthAuthorizationSnapshot) -> String? {
+        guard isConnected(status) else {
+            return nil
+        }
+
+        return shouldShowMissingPermissions(for: status) ? "Einige Daten sind bereits aktiviert" : "Alle Daten sind eingerichtet"
     }
 
     private func explanation(for definition: HealthDataTypeDefinition) -> String {
@@ -206,7 +231,7 @@ private struct HealthHeaderView: View {
 
             VStack(alignment: .leading, spacing: SymiSpacing.sm) {
                 HealthTrustItem(icon: "checkmark.shield", title: "Nur mit deiner Erlaubnis")
-                HealthTrustItem(icon: "lock", title: "Verschlüsselt")
+                HealthTrustItem(icon: "lock", title: "Durch Apple Health geschützt")
                 HealthTrustItem(icon: "power", title: "Jederzeit deaktivierbar")
             }
         }
@@ -257,21 +282,6 @@ private struct HealthSettingsSection<Content: View>: View {
     }
 }
 
-private struct HealthStatusBlock: View {
-    let text: String
-    let showsCompletion: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SymiSpacing.xs) {
-            HealthStatusText(text: text)
-
-            if showsCompletion {
-                HealthSetupCompleteText()
-            }
-        }
-    }
-}
-
 private struct HealthStatusText: View {
     let text: String
 
@@ -281,15 +291,6 @@ private struct HealthStatusText: View {
             .foregroundStyle(AppTheme.symiTextSecondary)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel(text)
-    }
-}
-
-private struct HealthSetupCompleteText: View {
-    var body: some View {
-        Label("Alles ist eingerichtet", systemImage: "checkmark.circle.fill")
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(AppTheme.symiPetrol)
-            .accessibilityLabel("Alles ist eingerichtet")
     }
 }
 
@@ -305,22 +306,24 @@ private struct HealthCategoryRow: View {
     let state: HealthCategoryState
 
     var body: some View {
-        HStack(alignment: .top, spacing: SymiSpacing.md) {
-            IconContainerView(icon: Image(systemName: icon), color: AppTheme.symiPetrol)
+        VStack(alignment: .leading, spacing: SymiSpacing.sm) {
+            HStack(alignment: .top, spacing: SymiSpacing.md) {
+                IconContainerView(icon: Image(systemName: icon), color: AppTheme.symiPetrol)
 
-            VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text(title)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(AppTheme.symiTextPrimary)
-                Text(explanation)
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: SymiSpacing.md)
+
+                stateLabel
             }
 
-            Spacer(minLength: SymiSpacing.md)
-
-            stateLabel
+            Text(explanation)
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.symiTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
@@ -332,11 +335,16 @@ private struct HealthCategoryRow: View {
     private var stateLabel: some View {
         switch state {
         case .granted:
-            Label("Freigegeben", systemImage: "checkmark.circle.fill")
-                .font(.subheadline)
-                .foregroundStyle(Color.green)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: SymiSpacing.xs) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Color.green)
+                Text("Freigegeben")
+                    .foregroundStyle(AppTheme.symiTextSecondary)
+            }
+            .font(.subheadline)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .frame(alignment: .trailing)
         case .optional:
             Text("Optional")
                 .font(.subheadline)
@@ -394,9 +402,9 @@ private struct HealthPrivacySection: View {
     var body: some View {
         HealthSettingsSection(title: "Datenschutz") {
             VStack(alignment: .leading, spacing: SymiSpacing.md) {
-                PrivacyLine(icon: "iphone", text: "Alle Daten bleiben auf deinem Gerät")
+                PrivacyLine(icon: "iphone", text: "Daten bleiben auf deinem Gerät")
                 PrivacyLine(icon: "person.crop.circle.badge.xmark", text: "Keine Weitergabe an Dritte")
-                PrivacyLine(icon: "hand.raised", text: "Du kannst den Zugriff jederzeit widerrufen")
+                PrivacyLine(icon: "hand.raised", text: "Zugriff jederzeit widerrufbar")
             }
         }
     }

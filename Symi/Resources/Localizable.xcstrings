@@ -17,23 +17,6 @@
         }
       }
     },
-    "%@ · %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@"
-          }
-        }
-      }
-    },
     "%@ / 10" : {
       "localizations" : {
         "en" : {
@@ -423,9 +406,6 @@
         }
       }
     },
-    "Alles ist eingerichtet" : {
-
-    },
     "Änderungen speichern" : {
       "localizations" : {
         "en" : {
@@ -523,9 +503,6 @@
 
     },
     "Apple Health Integration beenden" : {
-
-    },
-    "Apple Health Integration beenden?" : {
 
     },
     "Apple Health optional" : {
@@ -921,9 +898,6 @@
         }
       }
     },
-    "Deine Einträge können in Apple Health gespeichert werden - nur wenn du es erlaubst." : {
-
-    },
     "Deine Insights" : {
       "localizations" : {
         "en" : {
@@ -1157,6 +1131,9 @@
         }
       }
     },
+    "Du kannst den Zugriff jederzeit wieder aktivieren." : {
+
+    },
     "Du kannst die Standortfreigabe in den Einstellungen dieser App unter \"Standort\" auf \"Beim Verwenden der App\" ändern." : {
       "localizations" : {
         "en" : {
@@ -1166,6 +1143,9 @@
           }
         }
       }
+    },
+    "Du kannst Einträge zusätzlich in Apple Health speichern." : {
+
     },
     "Du kannst entscheiden ob und in welchem Ausmaß du deine Gesundheitsdaten an diese App freigibst. Sie werden niemals an Dritte weitergegeben." : {
       "localizations" : {
@@ -1552,17 +1532,6 @@
         }
       }
     },
-    "Geschrieben werden nur ausreichend präzise, nutzererfasste Symptome. Zyklusangaben aus der App wie „aktuell“ oder „erwartet“ bleiben Kontext und werden nicht als exakte Health-Flow-Samples gespeichert." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only sufficiently precise, user-entered symptoms are written. Cycle entries from the app such as \"current\" or \"expected\" remain context and are not saved as exact Health flow samples."
-          }
-        }
-      }
-    },
     "Gesundheitsdaten" : {
       "localizations" : {
         "en" : {
@@ -1665,6 +1634,9 @@
     "Integration beenden" : {
 
     },
+    "Integration beenden?" : {
+
+    },
     "Intensität" : {
       "localizations" : {
         "en" : {
@@ -1681,17 +1653,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intensity over time"
-          }
-        }
-      }
-    },
-    "iOS verwaltet Health-Berechtigungen pro Datentyp. Verweigerte Leserechte erscheinen in der App wie fehlende Daten." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iOS manages Health permissions per data type. Denied read permissions appear in the app as missing data."
           }
         }
       }
@@ -1908,26 +1869,12 @@
         }
       }
     },
-    "Lese- und Schreibzugriff" : {
-
-    },
     "Lesen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read"
-          }
-        }
-      }
-    },
-    "Leserechte anfragen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Read Access"
           }
         }
       }
@@ -2320,6 +2267,9 @@
         }
       }
     },
+    "Nur wenn aktiviert" : {
+
+    },
     "Nutzungsdaten anonym teilen?" : {
       "localizations" : {
         "en" : {
@@ -2629,17 +2579,6 @@
         }
       }
     },
-    "Schreibrechte anfragen" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Write Access"
-          }
-        }
-      }
-    },
     "Schritt %lld von %lld" : {
       "localizations" : {
         "de" : {
@@ -2916,9 +2855,6 @@
         }
       }
     },
-    "Symi trennt die lokale Verbindung. HealthKit-Berechtigungen werden von iOS verwaltet und können in den Einstellungen geprüft oder widerrufen werden." : {
-
-    },
     "Symi-Bericht" : {
       "localizations" : {
         "en" : {
@@ -3114,17 +3050,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supports you when talking with your doctor"
-          }
-        }
-      }
-    },
-    "Verbindung" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection"
           }
         }
       }

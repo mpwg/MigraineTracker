@@ -98,23 +98,16 @@ struct AppleHealthCardView: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: SymiSpacing.md) {
-            Image("AppleHealthIcon")
-                .resizable()
-                .renderingMode(.original)
-                .scaledToFit()
-                .frame(width: SymiSize.settingsAppleHealthIcon, height: SymiSize.settingsAppleHealthIcon)
-                .accessibilityHidden(true)
-
+            Image(systemName: "heart.fill")
+                .foregroundStyle(.red)
+                .font(.headline)
+            
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
                 Text("Apple Health")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(AppTheme.symiTextPrimary)
                     .fixedSize(horizontal: true, vertical: false)
 
-                Text("Lese- und Schreibzugriff")
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.symiTextSecondary)
-                    .lineLimit(1)
             }
             .layoutPriority(1)
 
