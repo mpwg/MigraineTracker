@@ -6,7 +6,7 @@ extension PainIntensityLevel {
     }
 
     @MainActor var colorValue: SymiColorValue {
-        SymiColorValue(hex: metadata.colorHex)
+        ColorToken.Pain.colorValue(for: metadata.colorToken)
     }
 
     @MainActor var tintColor: Color {
@@ -14,7 +14,7 @@ extension PainIntensityLevel {
     }
 
     @MainActor var selectedBackgroundColor: Color {
-        tintColor.opacity(SymiOpacity.painIntensitySelectedFill)
+        tintColor.opacity(selectedBackgroundOpacity)
     }
 
     @MainActor var selectedBorderColor: Color {
@@ -31,6 +31,14 @@ extension PainIntensityLevel {
 
     @MainActor var unselectedBorderColor: Color {
         tintColor.opacity(SymiOpacity.painIntensityUnselectedStroke)
+    }
+
+    @MainActor var selectedBorderWidth: CGFloat {
+        self == .veryHigh ? SymiStroke.painIntensityVeryHighSelectedBorder : SymiStroke.selectedHairline
+    }
+
+    private var selectedBackgroundOpacity: Double {
+        self == .veryHigh ? SymiOpacity.painIntensityVeryHighSelectedFill : SymiOpacity.painIntensitySelectedFill
     }
 
     @MainActor var calendarDotColor: Color {

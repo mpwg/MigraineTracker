@@ -291,6 +291,7 @@ nonisolated enum SymiStroke {
     // Core
     static let hairline: CGFloat = 1
     static let selectedHairline: CGFloat = 1.5
+    static let painIntensityVeryHighSelectedBorder: CGFloat = 2
 
     // Charts and artwork
     static let trendLine: CGFloat = 3
@@ -334,6 +335,7 @@ nonisolated enum SymiOpacity {
     static let subtleButtonHighlight: Double = 0.11
     static let faintSurface: Double = 0.12
     static let painIntensitySelectedFill: Double = 0.15
+    static let painIntensityVeryHighSelectedFill: Double = 0.18
     static let softFill: Double = 0.16
     static let secondaryFill: Double = 0.18
     static let painIntensityLowFaceFill = secondaryFill
@@ -348,7 +350,7 @@ nonisolated enum SymiOpacity {
     static let outline: Double = 0.45
     static let painIntensityUnselectedStroke = outline
     static let disabledRow = outline
-    static let painIntensityUnselectedIcon = textMuted
+    static let painIntensityUnselectedIcon: Double = 0.60
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
 

@@ -18,7 +18,7 @@ struct PainIntensityMetadata: Equatable, Sendable {
     let displayLabel: String
     let contextText: String?
     let detailDescription: String
-    let colorHex: Int
+    let colorToken: PainIntensityColorToken
     let faceExpression: PainIntensityFaceExpression
     let healthSeverity: PainIntensityHealthSeverity
 }
@@ -72,7 +72,7 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
                 displayLabel: "Nicht bewertet",
                 contextText: nil,
                 detailDescription: "Die Intensität wurde für diesen Eintrag nicht bewertet.",
-                colorHex: 0x6B6B6E,
+                colorToken: .none,
                 faceExpression: .neutral,
                 healthSeverity: .mild
             )
@@ -82,7 +82,7 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
                 displayLabel: "Leicht",
                 contextText: "Leichter Verlauf",
                 detailDescription: "Die Schmerzen waren leicht und gut im Alltag einzuordnen.",
-                colorHex: 0xA4B1A0,
+                colorToken: .low,
                 faceExpression: .calm,
                 healthSeverity: .mild
             )
@@ -92,7 +92,7 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
                 displayLabel: "Mittel",
                 contextText: "Mittlerer Verlauf",
                 detailDescription: "Die Schmerzen waren spürbar, aber noch gut auszuhalten.",
-                colorHex: 0xF6B78D,
+                colorToken: .medium,
                 faceExpression: .neutral,
                 healthSeverity: .moderate
             )
@@ -102,7 +102,7 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
                 displayLabel: "Stark",
                 contextText: "Starker Verlauf",
                 detailDescription: "Die Schmerzen waren deutlich und haben viel Aufmerksamkeit gebraucht.",
-                colorHex: 0xF29C7D,
+                colorToken: .high,
                 faceExpression: .strained,
                 healthSeverity: .severe
             )
@@ -112,7 +112,7 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
                 displayLabel: "Sehr stark",
                 contextText: "Sehr starker Verlauf",
                 detailDescription: "Die Schmerzen waren sehr stark und haben den Alltag deutlich eingeschränkt.",
-                colorHex: 0xE6867C,
+                colorToken: .veryHigh,
                 faceExpression: .intense,
                 healthSeverity: .severe
             )

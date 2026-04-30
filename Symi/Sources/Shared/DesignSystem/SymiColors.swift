@@ -35,10 +35,18 @@ struct SymiColorValue: Equatable, Sendable {
         "#\(Self.hexByte(red))\(Self.hexByte(green))\(Self.hexByte(blue))"
     }
 
+    var hexValue: Int {
+        (Self.byte(red) << 16) + (Self.byte(green) << 8) + Self.byte(blue)
+    }
+
     private static func hexByte(_ component: Double) -> String {
-        let byte = min(max(Int((component * 255).rounded()), 0), 255)
+        let byte = byte(component)
         let digits = Array("0123456789ABCDEF")
         return String([digits[byte / 16], digits[byte % 16]])
+    }
+
+    private static func byte(_ component: Double) -> Int {
+        min(max(Int((component * 255).rounded()), 0), 255)
     }
 }
 
@@ -71,6 +79,13 @@ enum SymiColors {
     static let entryDetailFaceFill = SymiColorValue(hex: 0xF6EAD5)
     static let entryDetailProgressWarmMid = SymiColorValue(hex: 0xE6BA75)
     static let entryDetailProgressSageMid = SymiColorValue(hex: 0xC2D19E)
+
+    // Pain intensity
+    static let painIntensityNone = SymiColorValue(hex: 0x6B6B6E)
+    static let painIntensityLow = SymiColorValue(hex: 0xA7B8B2)
+    static let painIntensityMedium = SymiColorValue(hex: 0xE7C29D)
+    static let painIntensityHigh = SymiColorValue(hex: 0xF19A7A)
+    static let painIntensityVeryHigh = SymiColorValue(hex: 0xE3746A)
 
     // Dark mode accents
     static let petrolDark = sage
@@ -110,6 +125,14 @@ enum SymiColors {
 }
 
 // MARK: - Semantic Color Tokens
+
+enum PainIntensityColorToken: Sendable {
+    case none
+    case low
+    case medium
+    case high
+    case veryHigh
+}
 
 enum ColorToken {
     enum Text {
@@ -181,6 +204,25 @@ enum ColorToken {
         static func token(for level: PainIntensityLevel) -> PainToken {
             PainToken(level: level)
         }
+
+        static func colorValue(for token: PainIntensityColorToken) -> SymiColorValue {
+            switch token {
+            case .none:
+                SymiColors.painIntensityNone
+            case .low:
+                SymiColors.painIntensityLow
+            case .medium:
+                SymiColors.painIntensityMedium
+            case .high:
+                SymiColors.painIntensityHigh
+            case .veryHigh:
+                SymiColors.painIntensityVeryHigh
+            }
+        }
+
+        static func colorHex(for token: PainIntensityColorToken) -> Int {
+            colorValue(for: token).hexValue
+        }
     }
 }
 
@@ -191,6 +233,10 @@ struct PainToken {
 
     var foreground: Color {
         baseValue.color
+    }
+
+    var colorHex: Int {
+        ColorToken.Pain.colorHex(for: level.metadata.colorToken)
     }
 
     var icon: Color {
@@ -221,7 +267,7 @@ struct PainToken {
     }
 
     private var baseValue: SymiColorValue {
-        level.colorValue
+        ColorToken.Pain.colorValue(for: level.metadata.colorToken)
     }
 
     private var darkerValue: SymiColorValue {

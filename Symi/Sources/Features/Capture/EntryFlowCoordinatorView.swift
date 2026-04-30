@@ -416,7 +416,7 @@ private struct PainIntensitySelectionTile: View {
             .background(tileBackground, in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
-                    .stroke(borderColor, lineWidth: isSelected ? SymiStroke.selectedHairline : SymiStroke.hairline)
+                    .stroke(borderColor, lineWidth: isSelected ? level.selectedBorderWidth : SymiStroke.hairline)
             }
             .overlay(alignment: .topTrailing) {
                 selectedCheckmark
