@@ -13,7 +13,7 @@ struct EntryFlowCoordinatorTests {
     @Test
     func triggerCatalogContainsRequiredContextOptions() {
         let coordinator = makeCoordinator()
-        let requiredTriggers = ["Wetter", "Stress", "Erhöhte Arbeitsbelastung", "Regel", "Schlafdauer", "Sport"]
+        let requiredTriggers = EpisodeTriggerOption.allCases.map(\.displayLabel)
 
         for trigger in requiredTriggers {
             #expect(coordinator.triggerOptions.contains(trigger))
@@ -154,10 +154,10 @@ struct EntryFlowCoordinatorTests {
         let coordinator = makeCoordinator()
         let referenceDate = calendar.date(from: DateComponents(year: 2026, month: 4, day: 26, hour: 15, minute: 30))!
 
-        coordinator.selectDayPartPreset(.abends, referenceDate: referenceDate, calendar: calendar)
+        coordinator.selectDayPart(.abends, referenceDate: referenceDate, calendar: calendar)
         let selectedHour = calendar.component(.hour, from: coordinator.draft.startedAt)
 
-        #expect(EntryDayPartPreset.abends.dayPart == .abends)
+        #expect(EpisodeDayPart.abends.representativeHour == 19)
         #expect(selectedHour == 19)
         #expect(EntryStartedAtPreset.oneHourAgo.date(relativeTo: referenceDate, calendar: calendar) == referenceDate.addingTimeInterval(-3_600))
     }

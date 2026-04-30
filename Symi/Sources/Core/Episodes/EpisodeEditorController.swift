@@ -366,15 +366,8 @@ final class EpisodeMedicationSelectionController {
 @Observable
 final class EpisodeEditorController {
     let mode: EpisodeEditorMode
-    let symptomOptions = [
-        "Übelkeit",
-        "Lichtempfindlichkeit",
-        "Geräuschempfindlichkeit",
-        "Aura",
-        "Kiefer-/Aufbissschmerz",
-        "Pochen, Pulsieren"
-    ]
-    let triggerOptions = ["Wetter", "Stress", "Erhöhte Arbeitsbelastung", "Regel", "Schlafdauer", "Sport", "Ernährung", "Bildschirmzeit", "Bewegung", "Flüssigkeit"]
+    let symptomOptions = EpisodeSymptomOption.allCases.map(\.displayLabel)
+    let triggerOptions = EpisodeTriggerOption.allCases.map(\.displayLabel)
     let medicationController: EpisodeMedicationSelectionController
 
     var draft: EpisodeDraft

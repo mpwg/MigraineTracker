@@ -218,6 +218,39 @@ enum EpisodeDayPart: String, CaseIterable, Codable, Identifiable, Sendable {
 
     nonisolated var id: String { rawValue }
 
+    nonisolated var metadata: EpisodeDayPartMetadata {
+        switch self {
+        case .morgens:
+            EpisodeDayPartMetadata(
+                label: "Morgens",
+                contextualLabel: "Am Morgen",
+                symbolName: "sunrise.fill",
+                representativeHour: 8
+            )
+        case .mittags:
+            EpisodeDayPartMetadata(
+                label: "Mittags",
+                contextualLabel: "Am Nachmittag",
+                symbolName: "sun.max.fill",
+                representativeHour: 13
+            )
+        case .abends:
+            EpisodeDayPartMetadata(
+                label: "Abends",
+                contextualLabel: "Am Abend",
+                symbolName: "sunset.fill",
+                representativeHour: 19
+            )
+        case .nacht:
+            EpisodeDayPartMetadata(
+                label: "Nacht",
+                contextualLabel: "In der Nacht",
+                symbolName: "moon.stars.fill",
+                representativeHour: 23
+            )
+        }
+    }
+
     nonisolated init(date: Date, calendar: Calendar = .current) {
         let hour = calendar.component(.hour, from: date)
 
@@ -234,29 +267,23 @@ enum EpisodeDayPart: String, CaseIterable, Codable, Identifiable, Sendable {
     }
 
     nonisolated var label: String {
-        switch self {
-        case .morgens:
-            "Morgens"
-        case .mittags:
-            "Mittags"
-        case .abends:
-            "Abends"
-        case .nacht:
-            "Nacht"
-        }
+        metadata.label
     }
 
     nonisolated var contextualLabel: String {
-        switch self {
-        case .morgens:
-            "Am Morgen"
-        case .mittags:
-            "Am Nachmittag"
-        case .abends:
-            "Am Abend"
-        case .nacht:
-            "In der Nacht"
-        }
+        metadata.contextualLabel
+    }
+
+    nonisolated var symbolName: String {
+        metadata.symbolName
+    }
+
+    nonisolated var representativeHour: Int {
+        metadata.representativeHour
+    }
+
+    nonisolated func date(on referenceDate: Date = .now, calendar: Calendar = .current) -> Date {
+        calendar.date(bySettingHour: representativeHour, minute: 0, second: 0, of: referenceDate) ?? referenceDate
     }
 }
 

@@ -141,17 +141,10 @@ private struct EntryHeadacheStepView: View {
     let onBack: () -> Void
     let onCancel: () -> Void
 
-    @State private var selectedDayPartPreset: EntryDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: .now))
+    @State private var selectedDayPart = EpisodeDayPart(date: .now)
     @State private var selectedDate = Date()
     @State private var isDatePickerExpanded = false
     @State private var dateFeedbackTrigger = 0
-    private let visiblePainLocations: [EntryPainLocationOption] = [
-        .init(title: "Stirn", imageName: "PainLocationForehead"),
-        .init(title: "Schläfen", imageName: "PainLocationTemples"),
-        // .init(title: "Nacken", imageName: "PainLocationNeck"),
-        .init(title: "Einseitig", imageName: "PainLocationLeftTemple"),
-        .init(title: "Überall", imageName: "PainLocationCrown")
-    ]
 
     var body: some View {
         @Bindable var coordinator = coordinator
@@ -180,15 +173,15 @@ private struct EntryHeadacheStepView: View {
 
             InputFlowFieldGroup(title: "Wo spürst du den Schmerz?") {
                 InputFlowHeadacheOptionGrid {
-                    ForEach(visiblePainLocations) { location in
+                    ForEach(PainLocationOption.entryFlowCases) { location in
                         PainLocationSelectionTile(
                             option: location,
-                            isSelected: coordinator.draft.selectedPainLocations.contains(location.title),
+                            isSelected: coordinator.draft.selectedPainLocations.contains(location.displayLabel),
                             theme: .pain,
-                            accessibilityIdentifier: "entry-location-\(location.title)"
+                            accessibilityIdentifier: "entry-location-\(location.displayLabel)"
                         ) {
                             collapseDatePicker()
-                            coordinator.draft.selectedPainLocations.toggleMembership(location.title)
+                            coordinator.draft.selectedPainLocations.toggleMembership(location.displayLabel)
                         }
                     }
                 }
@@ -202,17 +195,17 @@ private struct EntryHeadacheStepView: View {
                 onDateSelect: selectEntryDate
             ) {
                 InputFlowHeadacheOptionGrid {
-                    ForEach(EntryDayPartPreset.allCases) { preset in
+                    ForEach(EpisodeDayPart.allCases) { dayPart in
                         InputFlowSelectionTile(
-                            title: preset.title,
-                            systemImage: preset.symbolName,
-                            isSelected: selectedDayPartPreset == preset,
+                            title: dayPart.label,
+                            systemImage: dayPart.symbolName,
+                            isSelected: selectedDayPart == dayPart,
                             theme: .pain,
-                            accessibilityIdentifier: "entry-daypart-\(preset.rawValue)"
+                            accessibilityIdentifier: "entry-daypart-\(dayPart.rawValue)"
                         ) {
                             collapseDatePicker()
-                            selectedDayPartPreset = preset
-                            coordinator.selectDayPartPreset(preset, referenceDate: coordinator.draft.startedAt)
+                            selectedDayPart = dayPart
+                            coordinator.selectDayPart(dayPart, referenceDate: coordinator.draft.startedAt)
                         }
                     }
                 }
@@ -236,7 +229,7 @@ private struct EntryHeadacheStepView: View {
             coordinator.draft.type = .headache
             coordinator.draft.intensity = coordinator.draft.normalizedIntensity
             selectedDate = coordinator.draft.startedAt
-            selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
+            selectedDayPart = EpisodeDayPart(date: coordinator.draft.startedAt)
             seedDefaultPainLocationIfNeeded(coordinator: coordinator)
         }
     }
@@ -244,7 +237,7 @@ private struct EntryHeadacheStepView: View {
     private func selectEntryDate(_ date: Date) {
         selectedDate = date
         coordinator.selectEntryDate(date)
-        selectedDayPartPreset = EntryDayPartPreset(dayPart: EpisodeDayPart(date: coordinator.draft.startedAt))
+        selectedDayPart = EpisodeDayPart(date: coordinator.draft.startedAt)
         collapseDatePicker()
     }
 
@@ -270,7 +263,7 @@ private struct EntryHeadacheStepView: View {
             return
         }
 
-        coordinator.draft.selectedPainLocations = ["Schläfen"]
+        coordinator.draft.selectedPainLocations = [PainLocationOption.temples.displayLabel]
     }
 }
 
@@ -352,21 +345,6 @@ private struct EntryDayPartFieldGroup<Content: View>: View {
             content
         }
         .zIndex(isDatePickerExpanded ? 10 : 0)
-    }
-}
-
-private extension EntryDayPartPreset {
-    init(dayPart: EpisodeDayPart) {
-        switch dayPart {
-        case .morgens:
-            self = .morgens
-        case .mittags:
-            self = .mittags
-        case .abends:
-            self = .abends
-        case .nacht:
-            self = .nacht
-        }
     }
 }
 
@@ -453,17 +431,10 @@ private struct PainIntensitySelectionTile: View {
 
 }
 
-private struct EntryPainLocationOption: Identifiable, Hashable {
-    let title: String
-    let imageName: String
-
-    var id: String { title }
-}
-
 private struct PainLocationSelectionTile: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    let option: EntryPainLocationOption
+    let option: PainLocationOption
     let isSelected: Bool
     let theme: InputFlowStepTheme
     let accessibilityIdentifier: String
@@ -478,7 +449,7 @@ private struct PainLocationSelectionTile: View {
                     .frame(height: SymiSize.headacheLocationImageHeight)
                     .accessibilityHidden(true)
 
-                Text(option.title)
+                Text(option.displayLabel)
                     .font(SymiTypography.flowTileLabel)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(AppTheme.symiTextPrimary)
@@ -508,7 +479,7 @@ private struct PainLocationSelectionTile: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(option.title)
+        .accessibilityLabel(option.displayLabel)
         .accessibilityValue(isSelected ? "Ausgewählt" : "Nicht ausgewählt")
         .accessibilityHint(isSelected ? "Entfernt die Auswahl." : "Wählt diese Option aus.")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -700,17 +671,6 @@ private struct EntryTriggersStepView: View {
     let onBack: () -> Void
     let onCancel: () -> Void
 
-    private let triggerOptions: [EntryTriggerOption] = [
-        EntryTriggerOption(title: "Stress", symbolName: "brain.head.profile"),
-        EntryTriggerOption(title: "Wetter", symbolName: "cloud.sun"),
-        EntryTriggerOption(title: "Schlaf", symbolName: "moon"),
-        EntryTriggerOption(title: "Ernährung", symbolName: "fork.knife.circle"),
-        EntryTriggerOption(title: "Bildschirmzeit", symbolName: "ipad.landscape.and.iphone"),
-        EntryTriggerOption(title: "Zyklus", symbolName: "drop"),
-        EntryTriggerOption(title: "Bewegung", symbolName: "figure.run"),
-        EntryTriggerOption(title: "Flüssigkeit", symbolName: "waterbottle")
-    ]
-
     var body: some View {
         @Bindable var coordinator = coordinator
 
@@ -722,15 +682,15 @@ private struct EntryTriggersStepView: View {
         ) {
             InputFlowFieldGroup(title: "Wähle alle passenden aus.") {
                 InputFlowTileGrid(minimumColumnWidth: SymiSize.flowTwoColumnTileGridMinWidth) {
-                    ForEach(triggerOptions) { option in
+                    ForEach(EpisodeTriggerOption.entryFlowCases) { option in
                         InputFlowSelectionTile(
-                            title: option.title,
+                            title: option.displayLabel,
                             systemImage: option.symbolName,
-                            isSelected: coordinator.draft.selectedTriggers.contains(option.title),
+                            isSelected: coordinator.draft.selectedTriggers.contains(option.displayLabel),
                             theme: .trigger,
-                            accessibilityIdentifier: "entry-trigger-\(option.title)"
+                            accessibilityIdentifier: "entry-trigger-\(option.displayLabel)"
                         ) {
-                            coordinator.draft.selectedTriggers.toggleMembership(option.title)
+                            coordinator.draft.selectedTriggers.toggleMembership(option.displayLabel)
                         }
                     }
                 }
@@ -1240,13 +1200,6 @@ private struct EntryMedicationOption: Identifiable {
     let symbolName: String
     let category: MedicationCategory
     let defaultDosage: String
-
-    var id: String { title }
-}
-
-private struct EntryTriggerOption: Identifiable {
-    let title: String
-    let symbolName: String
 
     var id: String { title }
 }
