@@ -187,6 +187,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
 
     nonisolated func fetchAll() throws -> [ContinuousMedicationRecord] {
         let descriptor = FetchDescriptor<ContinuousMedication>(
+            predicate: #Predicate<ContinuousMedication> { $0.deletedAt == nil },
             sortBy: [SortDescriptor(\ContinuousMedication.startDate, order: .reverse), SortDescriptor(\ContinuousMedication.name)]
         )
         return try readContext().fetch(descriptor).map(ContinuousMedicationRecord.init)
@@ -196,11 +197,15 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
         let dayStart = Calendar.current.startOfDay(for: date)
         let descriptor = FetchDescriptor<ContinuousMedication>(
             predicate: #Predicate<ContinuousMedication> { medication in
-                medication.startDate <= dayStart && (medication.endDate == nil || medication.endDate! >= dayStart)
+                medication.deletedAt == nil && medication.startDate <= dayStart
             },
             sortBy: [SortDescriptor(\ContinuousMedication.name)]
         )
-        return try readContext().fetch(descriptor).map(ContinuousMedicationRecord.init)
+        return try readContext().fetch(descriptor)
+            .filter { medication in
+                medication.endDate.map { $0 >= dayStart } ?? true
+            }
+            .map(ContinuousMedicationRecord.init)
     }
 
     @discardableResult
@@ -242,7 +247,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
             return
         }
 
-        context.delete(medication)
+        medication.markDeleted()
         try context.save()
         NotificationCenter.default.post(name: .symiLocalSyncDataDidChange, object: nil)
     }
@@ -516,7 +521,8 @@ private extension ContinuousMedicationRecord {
             startDate: medication.startDate,
             endDate: medication.endDate,
             createdAt: medication.createdAt,
-            updatedAt: medication.updatedAt
+            updatedAt: medication.updatedAt,
+            deletedAt: medication.deletedAt
         )
     }
 }

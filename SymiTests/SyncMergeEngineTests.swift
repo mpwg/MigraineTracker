@@ -338,6 +338,76 @@ struct SyncMergeEngineTests {
 
     @Test
     @MainActor
+    func localContinuousMedicationDeleteCreatesTombstoneEnvelope() throws {
+        let stack = try makeSyncTestStack()
+        let repository = SwiftDataContinuousMedicationRepository(modelContainer: stack.container)
+        let medicationID = try repository.save(
+            ContinuousMedicationDraft(
+                name: "Metoprolol",
+                dosage: "47,5 mg",
+                frequency: "morgens",
+                startDate: Date(timeIntervalSince1970: 500)
+            )
+        ).id
+
+        try repository.delete(id: medicationID)
+
+        let envelope = try requireEnvelope(
+            from: stack.repository,
+            documentID: "continuousMedication:\(medicationID.uuidString)"
+        )
+
+        #expect(envelope.deletedAt != nil)
+        #expect(envelope.payload.continuousMedicationPayload?.name == "Metoprolol")
+        #expect(try repository.fetchAll().isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func remoteContinuousMedicationTombstoneSoftDeletesLocalMedication() throws {
+        let stack = try makeSyncTestStack()
+        let repository = SwiftDataContinuousMedicationRepository(modelContainer: stack.container)
+        let medicationID = try repository.save(
+            ContinuousMedicationDraft(
+                name: "Magnesium",
+                dosage: "300 mg",
+                frequency: "abends",
+                startDate: Date(timeIntervalSince1970: 500)
+            )
+        ).id
+        let deletionDate = Date(timeIntervalSince1970: 2_000)
+        let remoteEnvelope = SyncDocumentEnvelope(
+            documentID: "continuousMedication:\(medicationID.uuidString)",
+            entityType: .continuousMedication,
+            modifiedAt: deletionDate,
+            authorDeviceID: "device-remote",
+            deletedAt: deletionDate,
+            payload: .continuousMedication(
+                SyncContinuousMedicationPayload(
+                    id: medicationID.uuidString,
+                    name: "Magnesium",
+                    dosage: "300 mg",
+                    frequency: "abends",
+                    startDate: Date(timeIntervalSince1970: 500),
+                    endDate: nil,
+                    createdAt: Date(timeIntervalSince1970: 400)
+                )
+            )
+        )
+
+        try stack.repository.apply(remote: remoteEnvelope)
+
+        let storedEnvelope = try requireEnvelope(
+            from: stack.repository,
+            documentID: "continuousMedication:\(medicationID.uuidString)"
+        )
+
+        #expect(storedEnvelope.deletedAt == deletionDate)
+        #expect(try repository.fetchActive(on: Date(timeIntervalSince1970: 2_500)).isEmpty)
+    }
+
+    @Test
+    @MainActor
     func remoteEpisodeSyncAppliesContinuousMedicationChecksAndHealthContext() throws {
         let stack = try makeSyncTestStack()
         let episodeID = UUID(uuidString: "22222222-3333-4444-5555-666666666666")!
@@ -838,7 +908,7 @@ private extension Array {
 
 @MainActor
 private func makeSyncTestStack(provider: FakeSyncProvider? = nil) throws -> SyncTestStack {
-    let schema = Schema(versionedSchema: SymiSchemaV7.self)
+    let schema = Schema(versionedSchema: SymiSchemaV8.self)
     let configuration = ModelConfiguration(
         "sync-tests-\(UUID().uuidString)",
         schema: schema,

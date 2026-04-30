@@ -10,7 +10,8 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
             SymiSchemaV4.self,
             SymiSchemaV5.self,
             SymiSchemaV6.self,
-            SymiSchemaV7.self
+            SymiSchemaV7.self,
+            SymiSchemaV8.self
         ]
     }
     static var stages: [MigrationStage] {
@@ -117,6 +118,10 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
                     try? FileManager.default.removeItem(at: v6IntensityLevelMigrationURL)
                     try context.save()
                 }
+            ),
+            .lightweight(
+                fromVersion: SymiSchemaV7.self,
+                toVersion: SymiSchemaV8.self
             )
         ]
     }

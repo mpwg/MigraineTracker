@@ -173,7 +173,7 @@ struct DomainValidatorTests {
 }
 
 private func makeInMemoryContainer() throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV7.self)
+    let schema = Schema(versionedSchema: SymiSchemaV8.self)
     let configuration = ModelConfiguration(
         "domain-validator-tests-\(UUID().uuidString)",
         schema: schema,

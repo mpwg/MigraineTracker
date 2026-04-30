@@ -262,7 +262,8 @@ struct LocalSyncRepository {
             startDate: payload.startDate,
             endDate: payload.endDate,
             createdAt: payload.createdAt,
-            updatedAt: envelope.modifiedAt
+            updatedAt: envelope.modifiedAt,
+            deletedAt: envelope.deletedAt
         )
 
         target.name = payload.name
@@ -272,6 +273,7 @@ struct LocalSyncRepository {
         target.endDate = payload.endDate
         target.createdAt = payload.createdAt
         target.updatedAt = envelope.modifiedAt
+        target.deletedAt = envelope.deletedAt
 
         if existing == nil {
             context.insert(target)
@@ -685,6 +687,7 @@ extension ContinuousMedication {
             entityType: .continuousMedication,
             modifiedAt: updatedAt,
             authorDeviceID: deviceID,
+            deletedAt: deletedAt,
             payload: .continuousMedication(
                 SyncContinuousMedicationPayload(
                     id: id.uuidString,
