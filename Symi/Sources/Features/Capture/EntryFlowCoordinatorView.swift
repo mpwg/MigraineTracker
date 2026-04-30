@@ -161,14 +161,7 @@ private struct EntryHeadacheStepView: View {
             onBack: onBack,
             onCancel: onCancel
         ) {
-            EntryInlineDatePicker(
-                date: coordinator.draft.startedAt,
-                selectedDate: $selectedDate,
-                isExpanded: $isDateExpanded,
-                onSelect: selectEntryDate
-            )
-
-            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark ist es?", en: "How strong is it?")) {
+            InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wie stark sind die Schmerzen?", en: "How strong is the pain?")) {
                 InputFlowHeadacheOptionGrid {
                     ForEach(PainIntensityLevel.selectableCases, id: \.self) { level in
                         PainIntensitySelectionTile(
@@ -183,6 +176,13 @@ private struct EntryHeadacheStepView: View {
                 }
                 .accessibilityIdentifier("entry-intensity-card")
             }
+
+            EntryInlineDatePicker(
+                date: coordinator.draft.startedAt,
+                selectedDate: $selectedDate,
+                isExpanded: $isDateExpanded,
+                onSelect: selectEntryDate
+            )
 
             InputFlowFieldGroup(title: EntryFlowLocalized.text(de: "Wo spürst du den Schmerz?", en: "Where do you feel the pain?")) {
                 InputFlowHeadacheOptionGrid {
@@ -282,11 +282,12 @@ private struct EntryInlineDatePicker: View {
     @Binding var isExpanded: Bool
     let onSelect: (Date) -> Void
     @State private var ignoresNextDateChange = false
+    @State private var feedbackTrigger = 0
 
     var body: some View {
-        VStack(spacing: SymiSpacing.sm) {
+        VStack(spacing: SymiSpacing.xs) {
             Button {
-                withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
+                withAnimation(.easeInOut(duration: 0.2)) {
                     isExpanded.toggle()
                 }
             } label: {
@@ -305,6 +306,7 @@ private struct EntryInlineDatePicker: View {
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.semibold))
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .animation(.easeInOut(duration: 0.15), value: isExpanded)
                         .accessibilityHidden(true)
                 }
                 .foregroundStyle(AppTheme.symiTextSecondary)
@@ -323,30 +325,29 @@ private struct EntryInlineDatePicker: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+        .sensoryFeedback(.selection, trigger: feedbackTrigger)
     }
 
     private var expandedContent: some View {
-        VStack(spacing: SymiSpacing.md) {
+        VStack(spacing: SymiSpacing.sm) {
             HStack(spacing: SymiSpacing.sm) {
                 Button {
                     selectQuickActionAndCollapse(.now)
                 } label: {
-                    Text("Heute")
-                        .frame(maxWidth: .infinity)
+                    quickActionLabel("Heute")
                 }
 
                 Button {
                     let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now
                     selectQuickActionAndCollapse(yesterday)
                 } label: {
-                    Text("Gestern")
-                        .frame(maxWidth: .infinity)
+                    quickActionLabel("Gestern")
                 }
             }
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
+            .buttonStyle(.plain)
 
             Divider()
+                .padding(.top, SymiSpacing.xs)
 
             DatePicker(
                 "Datum",
@@ -356,8 +357,10 @@ private struct EntryInlineDatePicker: View {
             )
             .datePickerStyle(.graphical)
             .labelsHidden()
-            .frame(maxHeight: 250)
-            .clipped()
+            .tint(AppTheme.symiPetrol.opacity(SymiOpacity.disabledContent))
+            .opacity(0.78)
+            .frame(height: 300)
+            .clipShape(RoundedRectangle(cornerRadius: SymiRadius.flowPill, style: .continuous))
             .onChange(of: selectedDate) { _, newValue in
                 if ignoresNextDateChange {
                     ignoresNextDateChange = false
@@ -367,17 +370,21 @@ private struct EntryInlineDatePicker: View {
                 applyDateAndCollapse(newValue)
             }
         }
-        .padding(SymiSpacing.md)
+        .padding(.top, SymiSpacing.xs)
+        .padding(.horizontal, SymiSpacing.sm)
         .frame(maxWidth: .infinity)
-        .frame(maxHeight: 320)
-        .background(
-            SymiColors.elevatedCard(for: colorScheme).opacity(SymiOpacity.strongSurface),
-            in: RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: SymiRadius.flowTile, style: .continuous)
-                .stroke(SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface), lineWidth: SymiStroke.hairline)
-        }
+    }
+
+    private func quickActionLabel(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(AppTheme.symiPetrol)
+            .frame(maxWidth: .infinity, minHeight: 46)
+            .background(
+                AppTheme.symiSage.opacity(colorScheme == .dark ? SymiOpacity.selectedStroke : SymiOpacity.secondaryFill),
+                in: Capsule()
+            )
+            .contentShape(Capsule())
     }
 
     private func selectQuickActionAndCollapse(_ date: Date) {
@@ -390,8 +397,9 @@ private struct EntryInlineDatePicker: View {
     }
 
     private func applyDateAndCollapse(_ date: Date) {
+        feedbackTrigger += 1
         onSelect(date)
-        withAnimation(.easeInOut(duration: SymiAnimation.quickDuration)) {
+        withAnimation(.easeInOut(duration: 0.2)) {
             isExpanded = false
         }
     }
