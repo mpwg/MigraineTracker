@@ -8,6 +8,7 @@
 
     },
     "/10" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -206,6 +207,7 @@
       }
     },
     "%lld von 10, %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -395,6 +397,12 @@
           }
         }
       }
+    },
+    "Anderes Datum" : {
+
+    },
+    "Anderes Datum wählen..." : {
+
     },
     "Änderungen speichern" : {
       "localizations" : {
@@ -833,6 +841,12 @@
           }
         }
       }
+    },
+    "Datum" : {
+
+    },
+    "Datum auswählen" : {
+
     },
     "Dauermedikation" : {
       "localizations" : {
@@ -1831,6 +1845,7 @@
       }
     },
     "Kopfschmerzstärke" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2284,6 +2299,9 @@
         }
       }
     },
+    "Öffnet die Datumsauswahl." : {
+
+    },
     "Öffnet die Detailansicht des Eintrags." : {
       "localizations" : {
         "en" : {
@@ -2504,6 +2522,7 @@
 
     },
     "ruhig" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2660,6 +2679,7 @@
       }
     },
     "Skala" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2728,6 +2748,9 @@
           }
         }
       }
+    },
+    "Stärke" : {
+
     },
     "Startdatum" : {
       "localizations" : {
@@ -3115,6 +3138,9 @@
           }
         }
       }
+    },
+    "Wählt diese Stärke aus." : {
+
     },
     "Wählt dieses Medikament aus." : {
       "localizations" : {
