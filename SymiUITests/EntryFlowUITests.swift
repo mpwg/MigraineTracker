@@ -36,7 +36,7 @@ final class EntryFlowUITests: XCTestCase {
         XCTAssertTrue(step("review", in: app).waitForExistence(timeout: 3))
         assertReviewStepMatchesReference(in: app)
         attachScreenshot(named: "entry-flow-05-review", app: app)
-        XCTAssertTrue(app.staticTexts["4/10 · Mittel"].exists)
+        XCTAssertTrue(app.staticTexts["1/10 · Leicht"].exists)
         XCTAssertTrue(app.staticTexts["Ort: Schläfen"].exists)
         XCTAssertTrue(staticText(containing: "Ibuprofen", in: app).exists)
         XCTAssertTrue(staticText(containing: "Stress, Wetter", in: app).exists)

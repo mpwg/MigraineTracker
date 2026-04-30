@@ -51,7 +51,7 @@ struct ReviewSummaryCard: View {
                 content
             }
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityHint(onEdit == nil ? "" : "Tippe doppelt, um diesen Schritt zu bearbeiten.")
         .accessibilityIdentifier(accessibilityIdentifier)
     }
