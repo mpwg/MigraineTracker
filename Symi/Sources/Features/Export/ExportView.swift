@@ -41,6 +41,25 @@ struct SettingsView: View {
                             }
                         )
                     )
+                    .confirmationDialog(
+                        "Synchronisation deaktivieren?",
+                        isPresented: $showsDisableSyncConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Daten behalten") {
+                            controller.disableSyncKeepingCloudData()
+                        }
+
+                        if controller.canOfferCloudDataDeletion {
+                            Button("Cloud-Daten löschen", role: .destructive) {
+                                showsDeleteCloudDataConfirmation = true
+                            }
+                        }
+
+                        Button("Abbrechen", role: .cancel) {}
+                    } message: {
+                        Text(disableSyncConfirmationMessage)
+                    }
 
                     SettingsDivider()
 
@@ -219,21 +238,6 @@ struct SettingsView: View {
         } message: {
             Text("Das endgültige Löschen aller Daten ist derzeit nicht direkt aus dieser Ansicht verfügbar.")
         }
-        .sheet(isPresented: $showsDisableSyncConfirmation) {
-            DisableSyncConfirmationSheet(
-                message: disableSyncConfirmationMessage,
-                offersCloudDataDeletion: controller.canOfferCloudDataDeletion,
-                keepData: {
-                    controller.disableSyncKeepingCloudData()
-                },
-                deleteCloudData: {
-                    showsDisableSyncConfirmation = false
-                    showsDeleteCloudDataConfirmation = true
-                }
-            )
-            .presentationDetents([.height(controller.canOfferCloudDataDeletion ? 330 : 270)])
-            .presentationDragIndicator(.visible)
-        }
         .alert("Cloud-Daten wirklich löschen?", isPresented: $showsDeleteCloudDataConfirmation) {
             Button("Jetzt löschen", role: .destructive) {
                 Task {
@@ -305,47 +309,6 @@ struct SettingsView: View {
         #else
         .topBarLeading
         #endif
-    }
-}
-
-private struct DisableSyncConfirmationSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let message: String
-    let offersCloudDataDeletion: Bool
-    let keepData: () -> Void
-    let deleteCloudData: () -> Void
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Text(message)
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Section {
-                    Button("Daten behalten") {
-                        dismiss()
-                        keepData()
-                    }
-
-                    if offersCloudDataDeletion {
-                        Button("Cloud-Daten löschen", role: .destructive) {
-                            dismiss()
-                            deleteCloudData()
-                        }
-                    }
-
-                    Button("Abbrechen", role: .cancel) {
-                        dismiss()
-                    }
-                }
-            }
-            .navigationTitle("Synchronisation deaktivieren?")
-            .navigationBarTitleDisplayMode(.inline)
-        }
     }
 }
 
@@ -452,7 +415,7 @@ private struct AppleHealthCardView: View {
                 .renderingMode(.original)
                 .scaledToFit()
                 .frame(width: SymiSize.settingsAppleHealthIcon, height: SymiSize.settingsAppleHealthIcon)
-                .blendMode(colorScheme == .dark ? .normal : .multiply)
+ //               .blendMode(colorScheme == .dark ? .normal : .multiply)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: SymiSpacing.xxs) {
