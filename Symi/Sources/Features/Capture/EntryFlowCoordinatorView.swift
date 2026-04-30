@@ -168,7 +168,6 @@ private struct EntryHeadacheStepView: View {
                         PainIntensitySelectionTile(
                             level: level,
                             isSelected: coordinator.draft.selectedIntensityLevel == level,
-                            theme: .pain,
                             accessibilityIdentifier: "entry-intensity-\(level.displayLabel)"
                         ) {
                             closeDatePicker()
@@ -398,7 +397,6 @@ private struct PainIntensitySelectionTile: View {
 
     let level: PainIntensityLevel
     let isSelected: Bool
-    let theme: InputFlowStepTheme
     let accessibilityIdentifier: String
     let action: () -> Void
 
@@ -430,7 +428,7 @@ private struct PainIntensitySelectionTile: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(intensityColor)
+                        .foregroundStyle(level.tintColor)
                         .background(SymiColors.elevatedCard(for: colorScheme), in: Circle())
                         .padding(.top, SymiSpacing.sm)
                         .padding(.trailing, SymiSpacing.sm)
@@ -448,33 +446,21 @@ private struct PainIntensitySelectionTile: View {
     }
 
     private var tileBackground: Color {
-        isSelected ? intensityColor.opacity(0.15) : Color.clear
+        isSelected ? level.selectedBackgroundColor : Color.clear
     }
 
     private var borderColor: Color {
         if isSelected {
-            return intensityColor.opacity(0.35)
+            return level.selectedBorderColor
         }
 
         return SymiColors.subtleSeparator(for: colorScheme).opacity(SymiOpacity.strongSurface)
     }
 
     private var iconColor: Color {
-        isSelected ? intensityColor : Color.gray.opacity(0.4)
+        isSelected ? level.selectedIconColor : level.unselectedIconColor
     }
 
-    private var intensityColor: Color {
-        switch level {
-        case .none, .low:
-            return SymiColorValue(hex: 0xA4B1A0).color
-        case .medium:
-            return SymiColorValue(hex: 0xF6B78D).color
-        case .high:
-            return SymiColorValue(hex: 0xF29C7D).color
-        case .veryHigh:
-            return SymiColorValue(hex: 0xE6867C).color
-        }
-    }
 }
 
 private struct PainIntensityFaceIcon: View {
@@ -505,17 +491,17 @@ private struct PainIntensityMouthShape: Shape {
     let level: PainIntensityLevel
 
     func path(in rect: CGRect) -> Path {
-        switch level {
-        case .low:
+        switch level.faceExpression {
+        case .calm:
             return curvedPath(in: rect, curve: 5)
-        case .medium, .none:
+        case .neutral:
             var path = Path()
             path.move(to: CGPoint(x: rect.minX, y: rect.midY))
             path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
             return path
-        case .high:
+        case .strained:
             return curvedPath(in: rect, curve: -4)
-        case .veryHigh:
+        case .intense:
             return Path(ellipseIn: CGRect(x: rect.midX - 3, y: rect.minY, width: 6, height: rect.height))
         }
     }

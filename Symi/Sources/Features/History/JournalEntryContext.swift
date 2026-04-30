@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 enum JournalEntryContext {
     static func title(for episode: EpisodeRecord) -> String {
@@ -20,19 +20,6 @@ enum JournalEntryContext {
 
     static func intensityLabel(for intensity: Int) -> String {
         PainIntensityLevel(intensity: intensity).displayLabel
-    }
-
-    static func intensityColor(for intensity: Int) -> Color {
-        switch PainIntensityLevel(intensity: intensity) {
-        case .low:
-            SymiColors.intensityLight.color
-        case .medium:
-            SymiColors.intensityMedium.color
-        case .high, .veryHigh:
-            SymiColors.intensityStrong.color
-        case .none:
-            SymiColors.textPrimary.color
-        }
     }
 
     static func timeOfDay(for date: Date, calendar: Calendar = .current) -> String {

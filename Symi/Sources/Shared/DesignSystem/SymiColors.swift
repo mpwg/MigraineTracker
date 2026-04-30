@@ -60,11 +60,6 @@ enum SymiColors {
     static let journalInk = SymiColorValue(hex: 0x143F3F)
     static let journalSelectedChipFill = SymiColorValue(hex: 0xDDEFE7)
 
-    // Health and intensity
-    static let intensityLight = SymiColorValue(hex: 0x4E9D7D)
-    static let intensityMedium = SymiColorValue(hex: 0xC1842F)
-    static let intensityStrong = SymiColorValue(hex: 0xD85C4A)
-
     // Input flow accents
     static let triggerBlue = SymiColorValue(hex: 0x4A78D9)
     static let noteAmber = SymiColorValue(hex: 0xD18A2B)
@@ -123,7 +118,7 @@ enum ColorToken {
         static let tertiary = SymiColors.textSecondary.color.opacity(SymiOpacity.entryDetailTertiaryText)
         static let label = SymiColors.textSecondary.color
         static let onSurface = SymiColors.textPrimary.color
-        static let destructive = SymiColors.intensityStrong.color.opacity(SymiOpacity.entryDetailDeleteText)
+        static let destructive = SymiColors.coral.color.opacity(SymiOpacity.entryDetailDeleteText)
     }
 
     enum Surface {
@@ -203,24 +198,15 @@ struct PainToken {
     }
 
     var emphasizedText: Color {
-        level == .high || level == .veryHigh ? foreground : ColorToken.Text.primary
+        level.isHighImpact ? foreground : ColorToken.Text.primary
     }
 
     var descriptionText: Color {
-        level == .high || level == .veryHigh ? foreground : ColorToken.Text.secondary
+        level.isHighImpact ? foreground : ColorToken.Text.secondary
     }
 
     var faceBackground: Color {
-        switch level {
-        case .none:
-            ColorToken.Surface.iconBackground
-        case .low:
-            SymiColors.entryDetailIconFill.color
-        case .medium:
-            SymiColors.entryDetailFaceFill.color
-        case .high, .veryHigh:
-            SymiColors.coral.color.opacity(SymiOpacity.clearAccent)
-        }
+        level.faceBackgroundColor
     }
 
     var progressGradient: LinearGradient {
@@ -235,16 +221,7 @@ struct PainToken {
     }
 
     private var baseValue: SymiColorValue {
-        switch level {
-        case .none:
-            SymiColors.textSecondary
-        case .low:
-            SymiColors.intensityLight
-        case .medium:
-            SymiColors.intensityMedium
-        case .high, .veryHigh:
-            SymiColors.intensityStrong
-        }
+        level.colorValue
     }
 
     private var darkerValue: SymiColorValue {

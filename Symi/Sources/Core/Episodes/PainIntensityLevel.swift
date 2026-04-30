@@ -1,4 +1,17 @@
-import Foundation
+import SwiftUI
+
+enum PainIntensityHealthSeverity: Sendable {
+    case mild
+    case moderate
+    case severe
+}
+
+enum PainIntensityFaceExpression: Sendable {
+    case calm
+    case neutral
+    case strained
+    case intense
+}
 
 nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, Sendable {
     case none
@@ -71,6 +84,84 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
         }
     }
 
+    @MainActor var colorValue: SymiColorValue {
+        switch self {
+        case .none:
+            SymiColors.textSecondary
+        case .low:
+            SymiColorValue(hex: 0xA4B1A0)
+        case .medium:
+            SymiColorValue(hex: 0xF6B78D)
+        case .high:
+            SymiColorValue(hex: 0xF29C7D)
+        case .veryHigh:
+            SymiColorValue(hex: 0xE6867C)
+        }
+    }
+
+    @MainActor var tintColor: Color {
+        colorValue.color
+    }
+
+    @MainActor var selectedBackgroundColor: Color {
+        tintColor.opacity(0.15)
+    }
+
+    @MainActor var selectedBorderColor: Color {
+        tintColor.opacity(0.35)
+    }
+
+    @MainActor var selectedIconColor: Color {
+        tintColor
+    }
+
+    @MainActor var unselectedIconColor: Color {
+        Color.gray.opacity(0.4)
+    }
+
+    @MainActor var calendarDotColor: Color {
+        switch self {
+        case .none:
+            SymiColors.textSecondary.color.opacity(SymiOpacity.calendarLowIntensityDot)
+        case .low:
+            tintColor.opacity(SymiOpacity.calendarLowIntensityDot)
+        case .medium:
+            tintColor.opacity(SymiOpacity.calendarMediumIntensityDot)
+        case .high, .veryHigh:
+            tintColor.opacity(SymiOpacity.calendarHighIntensityDot)
+        }
+    }
+
+    nonisolated var isHighImpact: Bool {
+        self == .high || self == .veryHigh
+    }
+
+    @MainActor var faceBackgroundColor: Color {
+        switch self {
+        case .none:
+            ColorToken.Surface.iconBackground
+        case .low:
+            tintColor.opacity(0.18)
+        case .medium:
+            tintColor.opacity(0.20)
+        case .high, .veryHigh:
+            tintColor.opacity(SymiOpacity.clearAccent)
+        }
+    }
+
+    nonisolated var faceExpression: PainIntensityFaceExpression {
+        switch self {
+        case .none, .medium:
+            .neutral
+        case .low:
+            .calm
+        case .high:
+            .strained
+        case .veryHigh:
+            .intense
+        }
+    }
+
     nonisolated var contextText: String? {
         switch self {
         case .none:
@@ -102,13 +193,24 @@ nonisolated enum PainIntensityLevel: String, CaseIterable, Codable, Equatable, S
     }
 
     nonisolated var healthSeverityLabel: String {
+        switch healthSeverity {
+        case .mild:
+            "Leicht"
+        case .moderate:
+            "Mittel"
+        case .severe:
+            "Stark"
+        }
+    }
+
+    nonisolated var healthSeverity: PainIntensityHealthSeverity {
         switch self {
         case .none, .low:
-            "Leicht"
+            .mild
         case .medium:
-            "Mittel"
+            .moderate
         case .high, .veryHigh:
-            "Stark"
+            .severe
         }
     }
 
