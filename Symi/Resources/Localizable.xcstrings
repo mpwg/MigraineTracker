@@ -398,9 +398,6 @@
         }
       }
     },
-    "Anderes Datum" : {
-
-    },
     "Änderungen speichern" : {
       "localizations" : {
         "en" : {
@@ -840,6 +837,9 @@
       }
     },
     "Datum" : {
+
+    },
+    "Datum wählen" : {
 
     },
     "Dauermedikation" : {
