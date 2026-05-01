@@ -261,6 +261,9 @@
         }
       }
     },
+    "✦ Für kurze Zeit kostenlos" : {
+
+    },
     "Ab" : {
       "localizations" : {
         "en" : {
@@ -320,6 +323,9 @@
           }
         }
       }
+    },
+    "Aktiviere Symi Plus jetzt kostenlos und sichere dir den Einführungsvorteil." : {
+
     },
     "Aktivieren" : {
 
@@ -962,6 +968,9 @@
       }
     },
     "Deine regelmäßige Medikation im Blick behalten" : {
+
+    },
+    "Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen." : {
 
     },
     "Der Bericht wird beim Öffnen automatisch erstellt" : {
@@ -1742,6 +1751,9 @@
         }
       }
     },
+    "Käufe wiederherstellen" : {
+
+    },
     "Kein Ersatz für eine ärztliche Diagnose" : {
       "localizations" : {
         "en" : {
@@ -2317,6 +2329,9 @@
     "Nur wenn aktiviert" : {
 
     },
+    "Nutzungsbedingungen" : {
+
+    },
     "Nutzungsdaten anonym teilen?" : {
       "localizations" : {
         "en" : {
@@ -2890,6 +2905,12 @@
           }
         }
       }
+    },
+    "Symi bleibt aktuell vollständig nutzbar — ohne Druck und ohne versteckte Einschränkungen." : {
+
+    },
+    "Symi Plus" : {
+
     },
     "Symi-Bericht" : {
       "localizations" : {
