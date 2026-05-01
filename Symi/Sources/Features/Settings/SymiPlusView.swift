@@ -47,6 +47,8 @@ struct SymiPlusView: View {
             ForEach(Self.featureRows) { row in
                 SymiPlusFeatureCard(row: row)
             }
+
+            SymiPlusFooterInfoView()
         }
     }
 
@@ -183,10 +185,6 @@ private struct SymiPlusFeatureCard: View {
             }
             .layoutPriority(1)
 
-            Image(systemName: "chevron.right")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(Color.secondary.opacity(SymiOpacity.symiPlusChevron))
-                .accessibilityHidden(true)
         }
         .padding(SymiSpacing.symiPlusCardPadding)
         .frame(maxWidth: .infinity, minHeight: SymiSize.symiPlusFeatureMinHeight, alignment: .leading)
@@ -201,6 +199,19 @@ private struct SymiPlusFeatureCard: View {
             y: SymiShadow.symiPlusCardYOffset
         )
         .accessibilityElement(children: .combine)
+    }
+}
+
+private struct SymiPlusFooterInfoView: View {
+    var body: some View {
+        Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .lineSpacing(SymiSpacing.symiPlusFooterLineSpacing)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
+            .padding(.horizontal, SymiSpacing.symiPlusFooterHorizontalPadding)
     }
 }
 
@@ -234,15 +245,6 @@ private struct SymiPlusBottomCTAView: View {
                     .frame(maxWidth: .infinity, minHeight: SymiSize.symiPlusButtonHeight)
             }
             .buttonStyle(SymiPlusSecondaryButtonStyle())
-
-            Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(SymiSpacing.symiPlusFooterLineSpacing)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
-                .padding(.horizontal, SymiSpacing.symiPlusFooterHorizontalPadding)
 
             HStack(spacing: SymiSpacing.symiPlusFooterLinkSpacing) {
                 Link(destination: privacyURL) {

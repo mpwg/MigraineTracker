@@ -39,7 +39,7 @@ struct SettingsView: View {
                 NavigationLink {
                     DataSecurityView(dependencies: dependencies.dataExport)
                 } label: {
-                    Label("Daten & Sicherheit", systemImage: "externaldrive.badge.shield.check")
+                    Label("Daten & Sicherheit", systemImage: "checkmark.shield")
                 }
             }
 
