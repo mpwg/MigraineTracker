@@ -394,6 +394,7 @@ nonisolated enum SymiOpacity {
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
     static let symiPlusCTAPassive: Double = 0.96
+    static let symiPlusCTABackground: Double = 0.94
     static let symiPlusCTAFadeMiddle: Double = 0.60
     static let symiPlusCTAFadeEnd: Double = 0.90
     static let symiPlusPrimaryShadow: Double = 0.08

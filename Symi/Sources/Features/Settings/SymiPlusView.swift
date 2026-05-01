@@ -268,7 +268,7 @@ private struct SymiPlusBottomCTAView: View {
         .padding(.top, SymiSpacing.symiPlusBottomSpacing)
         .padding(.bottom, SymiSpacing.symiPlusBottomPadding)
         .frame(minHeight: SymiSize.symiPlusCTAMinHeight)
-        .background(.ultraThinMaterial)
+        .background(AppTheme.warmBackground(for: colorScheme).opacity(SymiOpacity.symiPlusCTABackground))
         .background(alignment: .top) {
             LinearGradient(
                 colors: [
