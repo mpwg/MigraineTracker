@@ -614,7 +614,6 @@ private struct HomeInsightCardData: Identifiable, Equatable {
         }
     }
 
-#if DEBUG
     static let previewCards = [
         HomeInsightCardData(
             id: "weekday",
@@ -631,7 +630,6 @@ private struct HomeInsightCardData: Identifiable, Equatable {
             tint: .coral
         )
     ]
-#endif
 }
 
 private struct HomeMonthCalendarView: View {
