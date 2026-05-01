@@ -686,6 +686,31 @@ struct CoreArchitectureTests {
     }
 
     @Test
+    func homeStateUsesQualifiedPainEntriesForInsights() {
+        #expect(mapToHomeState(entryCount: 5, qualifiedEntryCount: 0) == .early)
+        #expect(mapToHomeState(entryCount: 5, qualifiedEntryCount: 4) == .early)
+        #expect(mapToHomeState(entryCount: 5, qualifiedEntryCount: 5) == .insights)
+    }
+
+    @Test
+    func homePatternPreviewDoesNotCreateArtificialCardsWithoutInsights() {
+        let result = InsightResult(
+            totalQualifiedEpisodeCount: InsightEngine.minimumQualifiedEpisodeCount,
+            emptyState: .noVisibleInsights(
+                qualifiedEpisodeCount: InsightEngine.minimumQualifiedEpisodeCount,
+                minimumCount: InsightEngine.minimumQualifiedEpisodeCount
+            ),
+            insights: []
+        )
+
+        let preview = HomePatternPreviewData(result: result)
+
+        #expect(preview.hasEnoughData)
+        #expect(preview.cards.isEmpty)
+        #expect(preview.emptyState?.reason == .noVisibleInsights)
+    }
+
+    @Test
     func loadSettingsUseCaseCountsActiveTrashAndConflicts() async throws {
         let episodeRepository = EpisodeRepositoryMock()
         let medicationRepository = MedicationCatalogRepositoryMock()

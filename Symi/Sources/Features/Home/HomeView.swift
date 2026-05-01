@@ -49,7 +49,8 @@ struct HomeView: View {
 
                 HomeHeroSection(
                     state: homeState,
-                    entryCount: entryCount,
+                    entryCount: patternPreviewData.totalPainEpisodeCount,
+                    emptyState: patternPreviewData.emptyState,
                     insightCards: homeInsightCards,
                     insightsDestination: {
                         InsightsView(dependencies: dependencies.insights)
@@ -96,7 +97,8 @@ struct HomeView: View {
 
                 HomeHeroSection(
                     state: homeState,
-                    entryCount: entryCount,
+                    entryCount: patternPreviewData.totalPainEpisodeCount,
+                    emptyState: patternPreviewData.emptyState,
                     insightCards: homeInsightCards,
                     insightsDestination: {
                         InsightsView(dependencies: dependencies.insights)
@@ -170,7 +172,7 @@ struct HomeView: View {
     }
 
     private var homeState: HomeState {
-        mapToHomeState(entryCount: entryCount)
+        mapToHomeState(entryCount: entryCount, qualifiedEntryCount: patternPreviewData.totalPainEpisodeCount)
     }
 
     private var entryCount: Int {
@@ -190,13 +192,15 @@ enum HomeState: Equatable {
 }
 
 func mapToHomeState(entryCount: Int) -> HomeState {
+    mapToHomeState(entryCount: entryCount, qualifiedEntryCount: entryCount)
+}
+
+func mapToHomeState(entryCount: Int, qualifiedEntryCount: Int) -> HomeState {
     switch entryCount {
     case 0:
         return .empty
-    case 1..<5:
-        return .early
     default:
-        return .insights
+        return qualifiedEntryCount >= HomePatternPreviewData.minimumEpisodeCount ? .insights : .early
     }
 }
 
@@ -216,6 +220,7 @@ private extension HomeState {
 private struct HomeHeroSection<InsightsDestination: View>: View {
     let state: HomeState
     let entryCount: Int
+    let emptyState: InsightEmptyState?
     let insightCards: [HomeInsightCardData]
     @ViewBuilder let insightsDestination: () -> InsightsDestination
     let onCreateEntry: () -> Void
@@ -229,7 +234,11 @@ private struct HomeHeroSection<InsightsDestination: View>: View {
             case .early:
                 EarlyGuidanceView(entryCount: entryCount, onCreateEntry: onCreateEntry)
             case .insights:
-                InsightsCard(cards: insightCards, destination: insightsDestination)
+                if insightCards.isEmpty {
+                    HomePatternEmptyState(recordedCount: entryCount, emptyState: emptyState)
+                } else {
+                    InsightsCard(cards: insightCards, destination: insightsDestination)
+                }
             }
         }
         .id(state.animationID)
@@ -491,7 +500,7 @@ private struct InsightsCard<Destination: View>: View {
     }
 
     private var visibleCards: [HomeInsightCardData] {
-        HomeInsightCardData.fallbackCards
+        cards
     }
 }
 
@@ -605,29 +614,24 @@ private struct HomeInsightCardData: Identifiable, Equatable {
         }
     }
 
-    static let fallbackCards = [
+#if DEBUG
+    static let previewCards = [
         HomeInsightCardData(
-            id: "evening",
-            title: "Bei dir treten Schmerzen abends häufiger auf",
-            subtitle: "Vor allem zwischen 18–22 Uhr",
-            systemImage: "moon.stars.fill",
+            id: "weekday",
+            title: "Muster erkannt: montags häufiger",
+            subtitle: "In deinen Preview-Einträgen ist Montag auffällig.",
+            systemImage: "calendar",
             tint: .petrol
         ),
         HomeInsightCardData(
-            id: "sleep",
-            title: "Weniger Schlaf erhöht deine Schmerzintensität",
-            subtitle: "Unter 6h -> +1.3 Punkte",
-            systemImage: "bed.double.fill",
-            tint: .sage
-        ),
-        HomeInsightCardData(
-            id: "medication",
-            title: "Medikation hilft in 72% der Fälle",
-            subtitle: nil,
-            systemImage: "pills.fill",
+            id: "trigger",
+            title: "Muster erkannt: Stress",
+            subtitle: "Stress kommt in der Preview häufiger zusammen mit Schmerzen vor.",
+            systemImage: "tag",
             tint: .coral
         )
     ]
+#endif
 }
 
 private struct HomeMonthCalendarView: View {
@@ -1698,6 +1702,7 @@ private extension View {
                 HomeHeroSection(
                     state: .empty,
                     entryCount: 0,
+                    emptyState: nil,
                     insightCards: [],
                     insightsDestination: {
                         Text("Insights")
@@ -1708,6 +1713,7 @@ private extension View {
                 HomeHeroSection(
                     state: .early,
                     entryCount: 2,
+                    emptyState: InsightEmptyState(qualifiedEpisodeCount: 2, minimumCount: HomePatternPreviewData.minimumEpisodeCount),
                     insightCards: [],
                     insightsDestination: {
                         Text("Insights")
@@ -1718,7 +1724,8 @@ private extension View {
                 HomeHeroSection(
                     state: .insights,
                     entryCount: 5,
-                    insightCards: HomeInsightCardData.fallbackCards,
+                    emptyState: nil,
+                    insightCards: HomeInsightCardData.previewCards,
                     insightsDestination: {
                         Text("Insights")
                     },
