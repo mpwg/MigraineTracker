@@ -12,30 +12,31 @@ struct SymiPlusView: View {
     private let termsURL = URL(string: "https://symiapp.com/terms")!
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: SymiSpacing.symiPlusContentSpacing) {
-                SymiPlusHeroCard()
+        VStack(spacing: SymiSpacing.zero) {
+            ScrollView {
+                VStack(spacing: SymiSpacing.symiPlusContentSpacing) {
+                    SymiPlusHeroCard()
 
-                featureList
-                    .padding(.top, SymiSpacing.symiPlusFeatureListTopPadding)
+                    featureList
+                        .padding(.top, SymiSpacing.symiPlusFeatureListTopPadding)
+
+                    SymiPlusFooterInfoView(privacyURL: privacyURL, termsURL: termsURL)
+                }
+                .padding(.horizontal, horizontalPadding)
+                .padding(.top, SymiSpacing.symiPlusContentTopPadding)
+                .padding(.bottom, SymiSpacing.symiPlusContentBottomPadding)
+                .frame(maxWidth: SymiSize.symiPlusContentMaxWidth)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, horizontalPadding)
-            .padding(.top, SymiSpacing.symiPlusContentTopPadding)
-            .padding(.bottom, SymiSpacing.symiPlusContentBottomPadding)
-            .frame(maxWidth: SymiSize.symiPlusContentMaxWidth)
-            .frame(maxWidth: .infinity)
-        }
-        .scrollIndicators(.hidden)
-        .background(screenBackground.ignoresSafeArea())
-        .safeAreaInset(edge: .bottom) {
+            .scrollIndicators(.hidden)
+
             SymiPlusBottomCTAView(
                 primaryButtonTitle: primaryButtonTitle,
-                privacyURL: privacyURL,
-                termsURL: termsURL,
                 activate: activate,
                 restorePurchases: restorePurchases
             )
         }
+        .background(screenBackground.ignoresSafeArea())
         .navigationTitle("Symi Plus")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -207,12 +208,9 @@ private struct SymiPlusFeatureCard: View {
 
 private struct SymiPlusBottomCTAView: View {
     let primaryButtonTitle: String
-    let privacyURL: URL
-    let termsURL: URL
     let activate: () -> Void
     let restorePurchases: () -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
@@ -235,14 +233,32 @@ private struct SymiPlusBottomCTAView: View {
                     .frame(maxWidth: .infinity, minHeight: SymiSize.symiPlusButtonHeight)
             }
             .buttonStyle(SymiPlusSecondaryButtonStyle())
+        }
+        .padding(.horizontal, horizontalPadding)
+        .padding(.top, SymiSpacing.symiPlusBottomSpacing)
+        .padding(.bottom, SymiSpacing.symiPlusBottomPadding)
+        .background(.ultraThinMaterial)
+    }
 
+    private var horizontalPadding: CGFloat {
+        horizontalSizeClass == .compact ? SymiSpacing.symiPlusCompactHorizontalPadding : SymiSpacing.symiPlusRegularHorizontalPadding
+    }
+}
+
+private struct SymiPlusFooterInfoView: View {
+    let privacyURL: URL
+    let termsURL: URL
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: SymiSpacing.symiPlusBottomSpacing) {
             Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
                 .font(.footnote)
                 .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
-                .padding(.top, SymiSpacing.symiPlusFooterTopPadding)
 
             HStack(spacing: SymiSpacing.symiPlusFooterLinkSpacing) {
                 Link(destination: privacyURL) {
@@ -262,18 +278,8 @@ private struct SymiPlusBottomCTAView: View {
             .foregroundStyle(AppTheme.petrol(for: colorScheme))
             .lineLimit(1)
             .minimumScaleFactor(SymiTypography.symiPlusFooterScaleFactor)
-            .padding(.top, SymiSpacing.symiPlusFooterTopPadding)
         }
-        .padding(.horizontal, horizontalPadding)
-        .padding(.top, SymiSpacing.symiPlusBottomSpacing)
-        .padding(.bottom, SymiSpacing.symiPlusBottomPadding)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: SymiRadius.heroCard, style: .continuous))
-        .padding(.horizontal, SymiSpacing.symiPlusFloatingCardHorizontalPadding)
-    }
-
-    private var horizontalPadding: CGFloat {
-        horizontalSizeClass == .compact ? SymiSpacing.symiPlusCompactHorizontalPadding : SymiSpacing.symiPlusRegularHorizontalPadding
+        .frame(maxWidth: .infinity)
     }
 }
 

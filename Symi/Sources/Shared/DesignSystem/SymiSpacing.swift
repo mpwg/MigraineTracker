@@ -90,7 +90,7 @@ nonisolated enum SymiSpacing {
     static let symiPlusCompactHorizontalPadding: CGFloat = 16
     static let symiPlusRegularHorizontalPadding: CGFloat = 24
     static let symiPlusContentTopPadding: CGFloat = 16
-    static let symiPlusContentBottomPadding: CGFloat = 120
+    static let symiPlusContentBottomPadding: CGFloat = 24
     static let symiPlusHeroSpacing: CGFloat = 20
     static let symiPlusHeroPadding: CGFloat = 20
     static let symiPlusBadgeHorizontalPadding: CGFloat = 14
@@ -101,7 +101,6 @@ nonisolated enum SymiSpacing {
     static let symiPlusBottomSpacing: CGFloat = 12
     static let symiPlusBottomTopPadding: CGFloat = 14
     static let symiPlusBottomPadding: CGFloat = 8
-    static let symiPlusFloatingCardHorizontalPadding: CGFloat = 8
     static let symiPlusFeatureListTopPadding: CGFloat = 8
     static let symiPlusFooterTopPadding: CGFloat = 2
     static let symiPlusFooterLinkSpacing: CGFloat = 18
