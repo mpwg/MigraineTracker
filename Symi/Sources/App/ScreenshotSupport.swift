@@ -16,11 +16,18 @@ struct AppLaunchConfiguration {
     }
 
     init(arguments: [String], environment: [String: String]) {
+        self.isRunningTests = environment["XCTestConfigurationFilePath"] != nil
+
+        #if DEBUG
         let isFastlaneSnapshot = Self.boolValue(for: "-FASTLANE_SNAPSHOT", in: arguments) ?? false
         self.isScreenshotMode = isFastlaneSnapshot || arguments.contains("-ui_testing")
-        self.isRunningTests = environment["XCTestConfigurationFilePath"] != nil
         self.screenshotRoute = Self.value(for: "-mt_screenshot_screen", in: arguments).flatMap(ScreenshotRoute.init(rawValue:))
         self.screenshotSeedName = Self.value(for: "-mt_screenshot_seed", in: arguments) ?? "default"
+        #else
+        self.isScreenshotMode = false
+        self.screenshotRoute = nil
+        self.screenshotSeedName = "default"
+        #endif
     }
 
     private static func value(for key: String, in arguments: [String]) -> String? {
@@ -62,6 +69,7 @@ struct ScreenshotSeed {
     let newEntryDate: Date
 }
 
+#if DEBUG
 struct ScreenshotEnvironment {
     let modelContainer: ModelContainer
     let appContainer: AppContainer
@@ -368,3 +376,4 @@ private final class ScreenshotLocationService: LocationService {
         CLLocation(latitude: 48.2082, longitude: 16.3738)
     }
 }
+#endif

@@ -614,6 +614,7 @@ private struct HomeInsightCardData: Identifiable, Equatable {
         }
     }
 
+    #if DEBUG
     static let previewCards = [
         HomeInsightCardData(
             id: "weekday",
@@ -630,6 +631,7 @@ private struct HomeInsightCardData: Identifiable, Equatable {
             tint: .coral
         )
     ]
+    #endif
 }
 
 private struct HomeMonthCalendarView: View {
@@ -708,26 +710,18 @@ private struct HomeMonthCalendarView: View {
 
     private var weekdaySymbols: [String] {
         let symbols = calendar.shortStandaloneWeekdaySymbols
-        guard symbols.count == 7 else {
-            return [
-                "MO",
-                "DI",
-                "MI",
-                "DO",
-                "FR",
-                "SA",
-                "SO"
-            ]
-        }
+        guard symbols.count == 7 else { return symbols.map { $0.uppercased(with: calendar.locale ?? .current) } }
 
-        return Array(symbols[1...6] + symbols[0...0]).map { $0.uppercased() }
+        let firstWeekdayIndex = max(0, min(6, calendar.firstWeekday - 1))
+        let orderedSymbols = symbols[firstWeekdayIndex...] + symbols[..<firstWeekdayIndex]
+        return orderedSymbols.map { $0.uppercased(with: calendar.locale ?? .current) }
     }
 
     private var dayCells: [HomeCalendarDay] {
         let startOfMonth = calendar.startOfMonth(for: month)
         let range = calendar.range(of: .day, in: .month, for: startOfMonth) ?? 1 ..< 1
         let weekday = calendar.component(.weekday, from: startOfMonth)
-        let leadingEmptyDays = (weekday + 5) % 7
+        let leadingEmptyDays = (weekday - calendar.firstWeekday + 7) % 7
 
         var cells = Array(repeating: HomeCalendarDay(date: nil), count: leadingEmptyDays)
         cells += range.compactMap { day -> HomeCalendarDay? in
@@ -1693,6 +1687,7 @@ private extension View {
     }
 }
 
+#if DEBUG
 #Preview("Home Hero States") {
     NavigationStack {
         ScrollView {
@@ -1735,3 +1730,4 @@ private extension View {
         .homeScreen()
     }
 }
+#endif

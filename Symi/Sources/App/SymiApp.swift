@@ -110,6 +110,7 @@ struct SymiApp: App {
     @MainActor
     static func makeInitialStartupState(launchConfiguration: AppLaunchConfiguration) -> AppStartupState {
         do {
+            #if DEBUG
             if launchConfiguration.isScreenshotMode {
                 let environment = try ScreenshotBootstrap.makeEnvironment(seedName: launchConfiguration.screenshotSeedName)
                 return .app(
@@ -122,6 +123,7 @@ struct SymiApp: App {
                     )
                 )
             }
+            #endif
 
             return .app(try makeAppRuntimeEnvironment(launchConfiguration: launchConfiguration))
         } catch PersistentStoreLoadError.recoveryRequired(let context) {
@@ -350,6 +352,7 @@ private struct AppRootView: View {
 
     @ViewBuilder
     private func appContent(environment: AppRuntimeEnvironment) -> some View {
+        #if DEBUG
         if launchConfiguration.isScreenshotMode, let screenshotSeed = environment.screenshotSeed {
             ScreenshotRootView(
                 appContainer: environment.appContainer,
@@ -359,6 +362,9 @@ private struct AppRootView: View {
         } else {
             AppShellView(appContainer: environment.appContainer)
         }
+        #else
+        AppShellView(appContainer: environment.appContainer)
+        #endif
     }
 
     private func presentUsageDataConsentPromptIfNeeded() {
