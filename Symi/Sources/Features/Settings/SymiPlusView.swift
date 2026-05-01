@@ -12,24 +12,22 @@ struct SymiPlusView: View {
     private let termsURL = URL(string: "https://symiapp.com/terms")!
 
     var body: some View {
-        VStack(spacing: SymiSpacing.zero) {
-            ScrollView {
-                VStack(spacing: SymiSpacing.symiPlusContentSpacing) {
-                    SymiPlusHeroCard()
+        ScrollView {
+            VStack(spacing: SymiSpacing.symiPlusContentSpacing) {
+                SymiPlusHeroCard()
 
-                    featureList
-                        .padding(.top, SymiSpacing.symiPlusFeatureListTopPadding)
-
-                    SymiPlusFooterInfoView()
-                }
-                .padding(.horizontal, horizontalPadding)
-                .padding(.top, SymiSpacing.symiPlusContentTopPadding)
-                .padding(.bottom, SymiSpacing.symiPlusContentBottomPadding)
-                .frame(maxWidth: SymiSize.symiPlusContentMaxWidth)
-                .frame(maxWidth: .infinity)
+                featureList
+                    .padding(.top, SymiSpacing.symiPlusFeatureListTopPadding)
             }
-            .scrollIndicators(.hidden)
-
+            .padding(.horizontal, horizontalPadding)
+            .padding(.top, SymiSpacing.symiPlusContentTopPadding)
+            .padding(.bottom, SymiSpacing.symiPlusContentBottomPadding)
+            .frame(maxWidth: SymiSize.symiPlusContentMaxWidth)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollIndicators(.hidden)
+        .background(screenBackground.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom) {
             SymiPlusBottomCTAView(
                 primaryButtonTitle: primaryButtonTitle,
                 privacyURL: privacyURL,
@@ -38,7 +36,6 @@ struct SymiPlusView: View {
                 restorePurchases: restorePurchases
             )
         }
-        .background(screenBackground.ignoresSafeArea())
         .navigationTitle("Symi Plus")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -239,6 +236,13 @@ private struct SymiPlusBottomCTAView: View {
             }
             .buttonStyle(SymiPlusSecondaryButtonStyle())
 
+            Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
+                .font(.footnote)
+                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
+
             HStack(spacing: SymiSpacing.symiPlusFooterLinkSpacing) {
                 Link(destination: privacyURL) {
                     Label("Datenschutz", systemImage: "shield")
@@ -263,24 +267,22 @@ private struct SymiPlusBottomCTAView: View {
         .padding(.top, SymiSpacing.symiPlusBottomSpacing)
         .padding(.bottom, SymiSpacing.symiPlusBottomPadding)
         .background(.ultraThinMaterial)
+        .background(alignment: .top) {
+            LinearGradient(
+                colors: [
+                    Color.clear,
+                    AppTheme.warmBackground(for: colorScheme).opacity(SymiOpacity.symiPlusCTAFadeEnd)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: SymiSize.symiPlusCTAFadeHeight)
+            .offset(y: -SymiSize.symiPlusCTAFadeHeight)
+        }
     }
 
     private var horizontalPadding: CGFloat {
         horizontalSizeClass == .compact ? SymiSpacing.symiPlusCompactHorizontalPadding : SymiSpacing.symiPlusRegularHorizontalPadding
-    }
-}
-
-private struct SymiPlusFooterInfoView: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
-            .font(.footnote)
-            .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
-        .frame(maxWidth: .infinity)
     }
 }
 
