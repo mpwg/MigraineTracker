@@ -133,7 +133,7 @@ private struct SymiPlusHeroCard: View {
             LinearGradient(
                 colors: [
                     SymiColors.warmBackground.color,
-                    SymiColors.symiPlusHeroEnd.color
+                    AppTheme.symiSage.opacity(SymiOpacity.symiPlusHeroSage)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -237,10 +237,12 @@ private struct SymiPlusBottomCTAView: View {
 
             Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
                 .font(.footnote)
-                .foregroundStyle(AppTheme.textSecondary(for: colorScheme))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .lineSpacing(SymiSpacing.symiPlusFooterLineSpacing)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
+                .padding(.horizontal, SymiSpacing.symiPlusFooterHorizontalPadding)
 
             HStack(spacing: SymiSpacing.symiPlusFooterLinkSpacing) {
                 Link(destination: privacyURL) {
@@ -271,6 +273,7 @@ private struct SymiPlusBottomCTAView: View {
             LinearGradient(
                 colors: [
                     Color.clear,
+                    AppTheme.warmBackground(for: colorScheme).opacity(SymiOpacity.symiPlusCTAFadeMiddle),
                     AppTheme.warmBackground(for: colorScheme).opacity(SymiOpacity.symiPlusCTAFadeEnd)
                 ],
                 startPoint: .top,
@@ -308,7 +311,7 @@ private struct SymiPlusPrimaryButtonStyle: ButtonStyle {
                 in: Capsule(style: .continuous)
             )
             .shadow(
-                color: AppTheme.symiPetrol.opacity(configuration.isPressed ? SymiOpacity.faintSurface : SymiOpacity.backgroundAccent),
+                color: Color.black.opacity(configuration.isPressed ? SymiOpacity.faintSurface : SymiOpacity.symiPlusPrimaryShadow),
                 radius: SymiShadow.symiPlusPrimaryButtonRadius,
                 x: SymiShadow.buttonXOffset,
                 y: SymiShadow.symiPlusPrimaryButtonYOffset

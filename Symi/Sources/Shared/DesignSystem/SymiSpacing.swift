@@ -104,6 +104,8 @@ nonisolated enum SymiSpacing {
     static let symiPlusFeatureListTopPadding: CGFloat = 8
     static let symiPlusFooterTopPadding: CGFloat = 2
     static let symiPlusFooterLinkSpacing: CGFloat = 18
+    static let symiPlusFooterHorizontalPadding: CGFloat = 32
+    static let symiPlusFooterLineSpacing: CGFloat = 2
     static let symiPlusHeroImageOffsetY: CGFloat = -4
 }
 
@@ -155,8 +157,8 @@ enum SymiShadow {
     static let buttonYOffset: CGFloat = 6
     static let symiPlusCardRadius: CGFloat = 8
     static let symiPlusCardYOffset: CGFloat = 3
-    static let symiPlusPrimaryButtonRadius: CGFloat = 10
-    static let symiPlusPrimaryButtonYOffset: CGFloat = 5
+    static let symiPlusPrimaryButtonRadius: CGFloat = 12
+    static let symiPlusPrimaryButtonYOffset: CGFloat = 4
     static let calendarButtonRadius: CGFloat = 7
     static let calendarButtonYOffset: CGFloat = 3
     static let sliderThumbRadius: CGFloat = 2
@@ -392,7 +394,9 @@ nonisolated enum SymiOpacity {
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
     static let symiPlusCTAPassive: Double = 0.96
-    static let symiPlusCTAFadeEnd: Double = 0.85
+    static let symiPlusCTAFadeMiddle: Double = 0.60
+    static let symiPlusCTAFadeEnd: Double = 0.90
+    static let symiPlusPrimaryShadow: Double = 0.08
 
     // Text and icons
     static let textMuted: Double = 0.50
@@ -433,6 +437,7 @@ nonisolated enum SymiOpacity {
     static let heroPrimaryWave: Double = 0.82
     static let journalChipFill: Double = 0.84
     static let heroAccentWave: Double = 0.92
+    static let symiPlusHeroSage: Double = 0.15
     static let glassBorderDarkMultiplier = backgroundAccent
     static let glassTintDark = secondaryFill
     static let homeActionShadowLight = shadow
