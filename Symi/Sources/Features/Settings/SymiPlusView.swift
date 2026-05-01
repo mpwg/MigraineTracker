@@ -15,6 +15,7 @@ struct SymiPlusView: View {
         ScrollView {
             VStack(spacing: SymiSpacing.symiPlusContentSpacing) {
                 SymiPlusHeroCard()
+                    .padding(.bottom, SymiSpacing.xs)
 
                 featureList
                     .padding(.top, SymiSpacing.symiPlusFeatureListTopPadding)
@@ -279,6 +280,7 @@ private struct SymiPlusBottomCTAView: View {
             .frame(height: SymiSize.symiPlusCTAFadeHeight)
             .offset(y: -SymiSize.symiPlusCTAFadeHeight)
         }
+        .opacity(SymiOpacity.symiPlusCTAPassive)
     }
 
     private var horizontalPadding: CGFloat {

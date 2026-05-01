@@ -390,6 +390,7 @@ nonisolated enum SymiOpacity {
     static let symiPlusFooterDot = painIntensityUnselectedIcon
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
+    static let symiPlusCTAPassive: Double = 0.95
     static let symiPlusCTAFadeEnd = heroAccentWave
 
     // Text and icons
