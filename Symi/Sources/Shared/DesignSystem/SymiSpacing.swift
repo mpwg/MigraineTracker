@@ -90,7 +90,7 @@ nonisolated enum SymiSpacing {
     static let symiPlusCompactHorizontalPadding: CGFloat = 16
     static let symiPlusRegularHorizontalPadding: CGFloat = 24
     static let symiPlusContentTopPadding: CGFloat = 16
-    static let symiPlusContentBottomPadding: CGFloat = 260
+    static let symiPlusContentBottomPadding: CGFloat = 240
     static let symiPlusHeroSpacing: CGFloat = 22
     static let symiPlusHeroPadding: CGFloat = 20
     static let symiPlusBadgeHorizontalPadding: CGFloat = 14
@@ -311,6 +311,7 @@ nonisolated enum SymiSize {
     static let symiPlusFeatureIcon: CGFloat = 48
     static let symiPlusFeatureMinHeight: CGFloat = 88
     static let symiPlusButtonHeight: CGFloat = 52
+    static let symiPlusCTAMinHeight: CGFloat = 188
     static let symiPlusFooterMaxWidth: CGFloat = 260
     static let symiPlusSeparatorDot: CGFloat = 5
     static let symiPlusCTAFadeHeight: CGFloat = 36
@@ -390,8 +391,8 @@ nonisolated enum SymiOpacity {
     static let symiPlusFooterDot = painIntensityUnselectedIcon
     static let strongSurface: Double = 0.96
     static let footerBackground = strongSurface
-    static let symiPlusCTAPassive: Double = 0.95
-    static let symiPlusCTAFadeEnd = heroAccentWave
+    static let symiPlusCTAPassive: Double = 0.96
+    static let symiPlusCTAFadeEnd: Double = 0.85
 
     // Text and icons
     static let textMuted: Double = 0.50
