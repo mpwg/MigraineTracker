@@ -773,6 +773,10 @@ struct ContinuousMedicationPayload: Codable, Sendable {
     let name: String
     let dosage: String
     let frequency: String
+    let kindRaw: String
+    let category: String
+    let statusRaw: String
+    let notes: String
     let startDate: Date
     let endDate: Date?
     let createdAt: Date
@@ -783,10 +787,30 @@ struct ContinuousMedicationPayload: Codable, Sendable {
         self.name = medication.name
         self.dosage = medication.dosage
         self.frequency = medication.frequency
+        self.kindRaw = medication.kindRaw
+        self.category = medication.category
+        self.statusRaw = medication.statusRaw
+        self.notes = medication.notes
         self.startDate = medication.startDate
         self.endDate = medication.endDate
         self.createdAt = medication.createdAt
         self.updatedAt = medication.updatedAt
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.dosage = try container.decode(String.self, forKey: .dosage)
+        self.frequency = try container.decode(String.self, forKey: .frequency)
+        self.kindRaw = try container.decodeIfPresent(String.self, forKey: .kindRaw) ?? TherapyMeasureKind.therapy.rawValue
+        self.category = try container.decodeIfPresent(String.self, forKey: .category) ?? TherapyMeasureKind.therapy.defaultCategory
+        self.statusRaw = try container.decodeIfPresent(String.self, forKey: .statusRaw) ?? TherapyMeasureStatus.active.rawValue
+        self.notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        self.startDate = try container.decode(Date.self, forKey: .startDate)
+        self.endDate = try container.decodeIfPresent(Date.self, forKey: .endDate)
+        self.createdAt = try container.decode(Date.self, forKey: .createdAt)
+        self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 
     nonisolated func makeModel() -> ContinuousMedication {
@@ -795,6 +819,10 @@ struct ContinuousMedicationPayload: Codable, Sendable {
             name: name,
             dosage: dosage,
             frequency: frequency,
+            kindRaw: kindRaw,
+            category: category,
+            statusRaw: statusRaw,
+            notes: notes,
             startDate: startDate,
             endDate: endDate,
             createdAt: createdAt,
@@ -806,6 +834,10 @@ struct ContinuousMedicationPayload: Codable, Sendable {
         medication.name = name
         medication.dosage = dosage
         medication.frequency = frequency
+        medication.kindRaw = kindRaw
+        medication.category = category
+        medication.statusRaw = statusRaw
+        medication.notes = notes
         medication.startDate = startDate
         medication.endDate = endDate
         medication.createdAt = createdAt

@@ -203,7 +203,7 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
         )
         return try readContext().fetch(descriptor)
             .filter { medication in
-                medication.endDate.map { $0 >= dayStart } ?? true
+                medication.kind == .therapy && medication.status == .active && (medication.endDate.map { $0 >= dayStart } ?? true)
             }
             .map(ContinuousMedicationRecord.init)
     }
@@ -214,6 +214,9 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
         let trimmedName = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDosage = draft.dosage.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedFrequency = draft.frequency.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedCategory = draft.category.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNotes = draft.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedCategory = trimmedCategory.isEmpty ? draft.kind.defaultCategory : trimmedCategory
 
         let medication: ContinuousMedication
         if let id = draft.id, let existing = try fetchMedication(id: id, in: context) {
@@ -221,6 +224,10 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
             medication.name = trimmedName
             medication.dosage = trimmedDosage
             medication.frequency = trimmedFrequency
+            medication.kind = draft.kind
+            medication.category = normalizedCategory
+            medication.status = draft.status
+            medication.notes = trimmedNotes
             medication.startDate = draft.startDate
             medication.endDate = draft.endDate
             medication.markUpdated()
@@ -229,6 +236,10 @@ final class SwiftDataContinuousMedicationRepository: ContinuousMedicationReposit
                 name: trimmedName,
                 dosage: trimmedDosage,
                 frequency: trimmedFrequency,
+                kindRaw: draft.kind.rawValue,
+                category: normalizedCategory,
+                statusRaw: draft.status.rawValue,
+                notes: trimmedNotes,
                 startDate: draft.startDate,
                 endDate: draft.endDate
             )
@@ -520,6 +531,10 @@ private extension ContinuousMedicationRecord {
             name: medication.name,
             dosage: medication.dosage,
             frequency: medication.frequency,
+            kind: medication.kind,
+            category: medication.category,
+            status: medication.status,
+            notes: medication.notes,
             startDate: medication.startDate,
             endDate: medication.endDate,
             createdAt: medication.createdAt,

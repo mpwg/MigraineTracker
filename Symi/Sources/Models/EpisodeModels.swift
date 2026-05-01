@@ -345,8 +345,35 @@ extension Episode {
 }
 
 extension ContinuousMedication {
+    var kind: TherapyMeasureKind {
+        get { TherapyMeasureKind(rawValue: kindRaw) ?? .therapy }
+        set { kindRaw = newValue.rawValue }
+    }
+
+    var status: TherapyMeasureStatus {
+        get { TherapyMeasureStatus(rawValue: statusRaw) ?? inferredStatus }
+        set { statusRaw = newValue.rawValue }
+    }
+
+    private var inferredStatus: TherapyMeasureStatus {
+        isCurrentOnDate(.now) ? .active : .ended
+    }
+
     var isActive: Bool {
-        deletedAt == nil && (endDate == nil || (endDate ?? .distantPast) >= Calendar.current.startOfDay(for: .now))
+        status == .active && isCurrentOnDate(.now)
+    }
+
+    func isCurrentOnDate(_ date: Date) -> Bool {
+        guard deletedAt == nil else {
+            return false
+        }
+
+        let dayStart = Calendar.current.startOfDay(for: date)
+        guard startDate <= dayStart else {
+            return false
+        }
+
+        return endDate.map { $0 >= dayStart } ?? true
     }
 
     var detailText: String {

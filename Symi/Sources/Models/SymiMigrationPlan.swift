@@ -11,7 +11,8 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
             SymiSchemaV5.self,
             SymiSchemaV6.self,
             SymiSchemaV7.self,
-            SymiSchemaV8.self
+            SymiSchemaV8.self,
+            SymiSchemaV9.self
         ]
     }
     static var stages: [MigrationStage] {
@@ -122,6 +123,10 @@ enum SymiMigrationPlan: SchemaMigrationPlan {
             .lightweight(
                 fromVersion: SymiSchemaV7.self,
                 toVersion: SymiSchemaV8.self
+            ),
+            .lightweight(
+                fromVersion: SymiSchemaV8.self,
+                toVersion: SymiSchemaV9.self
             )
         ]
     }

@@ -7,6 +7,16 @@
     "(empfohlen, wenn du mehrere Geräte nutzt)" : {
 
     },
+    "%@ · %@ · %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
     "%@ / 10" : {
       "localizations" : {
         "en" : {
@@ -311,6 +321,9 @@
         }
       }
     },
+    "Aktivieren" : {
+
+    },
     "Aktiviert" : {
 
     },
@@ -333,6 +346,9 @@
           }
         }
       }
+    },
+    "Aktuell laufend" : {
+
     },
     "Aktuelle App-Angabe ohne Stärke oder Health-Flow-Sample." : {
       "localizations" : {
@@ -513,6 +529,9 @@
       }
     },
     "Apple Health. Lese- und Schreibzugriff. %@" : {
+
+    },
+    "Art" : {
 
     },
     "Attribution" : {
@@ -723,6 +742,9 @@
           }
         }
       }
+    },
+    "Bezeichnung" : {
+
     },
     "Bitte wähle, welche Version du behalten möchtest." : {
 
@@ -972,6 +994,9 @@
         }
       }
     },
+    "Details" : {
+
+    },
     "Diagnose" : {
       "localizations" : {
         "en" : {
@@ -1102,7 +1127,11 @@
         }
       }
     },
+    "Dosierung oder Umfang, optional" : {
+
+    },
     "Dosierung, optional" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1211,9 +1240,6 @@
         }
       }
     },
-    "Einnahmen & Anpassungen" : {
-
-    },
     "Einschränkung: %@" : {
       "localizations" : {
         "en" : {
@@ -1243,6 +1269,9 @@
           }
         }
       }
+    },
+    "Eintrag" : {
+
     },
     "Eintrag bearbeiten" : {
       "localizations" : {
@@ -1503,7 +1532,7 @@
     "Freigegeben" : {
 
     },
-    "Frequenz oder Uhrzeit, optional" : {
+    "Frequenz oder Rhythmus, optional" : {
 
     },
     "Funktionelle Einschränkung" : {
@@ -1569,7 +1598,7 @@
     "Heute" : {
 
     },
-    "Hier siehst du den Verlauf deiner regelmäßigen Medikation. Dokumentierte Einnahmen aus Tagebucheinträgen bleiben weiterhin im Tagebuchkontext." : {
+    "Hier bleiben aktive, pausierte und beendete Therapien und Präventionsmaßnahmen historisch nachvollziehbar." : {
 
     },
     "Hilf uns, Symi besser zu machen." : {
@@ -1753,13 +1782,10 @@
         }
       }
     },
-    "Keine aktive regelmäßige Medikation." : {
+    "Keine aktiven Therapien oder Präventionsmaßnahmen." : {
 
     },
     "Keine Änderungen" : {
-
-    },
-    "Keine beendete regelmäßige Medikation." : {
 
     },
     "Keine Diagnose, keine Therapieempfehlung" : {
@@ -1961,6 +1987,15 @@
         }
       }
     },
+    "Maßnahme" : {
+
+    },
+    "Maßnahmen" : {
+
+    },
+    "Maßnahmenverlauf" : {
+
+    },
     "Medikament" : {
       "localizations" : {
         "en" : {
@@ -1991,9 +2026,6 @@
         }
       }
     },
-    "Medikament hinzufügen" : {
-
-    },
     "Medikament nach Namen filtern" : {
       "localizations" : {
         "en" : {
@@ -2023,9 +2055,6 @@
           }
         }
       }
-    },
-    "Medikationsplan" : {
-
     },
     "Medizinischer Hinweis" : {
       "localizations" : {
@@ -2209,6 +2238,9 @@
     "Noch keine Einträge im Therapieverlauf." : {
 
     },
+    "Noch keine Einträge." : {
+
+    },
     "Notiz" : {
       "localizations" : {
         "en" : {
@@ -2228,6 +2260,9 @@
           }
         }
       }
+    },
+    "Notizen, optional" : {
+
     },
     "NSAR" : {
       "localizations" : {
@@ -2398,6 +2433,9 @@
         }
       }
     },
+    "Pausieren" : {
+
+    },
     "PDF-Berichte helfen dir, deine Einträge übersichtlich mitzunehmen. Sie werden nur erstellt und geteilt, wenn du das aktiv auslöst." : {
       "localizations" : {
         "en" : {
@@ -2427,6 +2465,9 @@
           }
         }
       }
+    },
+    "Präventionsmaßnahme hinzufügen" : {
+
     },
     "Projekt auf GitHub öffnen" : {
       "localizations" : {
@@ -2507,9 +2548,6 @@
           }
         }
       }
-    },
-    "Regelmäßige Medikamente bleiben als eigener Therapiekontext von Akutmedikation in Tagebucheinträgen getrennt." : {
-
     },
     "Rollback-Backup teilen" : {
 
@@ -2970,6 +3008,12 @@
       }
     },
     "Therapie" : {
+
+    },
+    "Therapie hinzufügen" : {
+
+    },
+    "Therapien und Präventionsmaßnahmen bleiben als eigener Verlauf von Akutmedikation in Tagebucheinträgen getrennt." : {
 
     },
     "Tippe doppelt, um diesen Schritt zu bearbeiten." : {

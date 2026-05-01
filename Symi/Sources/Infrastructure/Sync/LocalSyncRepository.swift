@@ -259,6 +259,10 @@ struct LocalSyncRepository {
             name: payload.name,
             dosage: payload.dosage,
             frequency: payload.frequency,
+            kindRaw: payload.kindRaw,
+            category: payload.category,
+            statusRaw: payload.statusRaw,
+            notes: payload.notes,
             startDate: payload.startDate,
             endDate: payload.endDate,
             createdAt: payload.createdAt,
@@ -269,6 +273,10 @@ struct LocalSyncRepository {
         target.name = payload.name
         target.dosage = payload.dosage
         target.frequency = payload.frequency
+        target.kindRaw = payload.kindRaw
+        target.category = payload.category
+        target.statusRaw = payload.statusRaw
+        target.notes = payload.notes
         target.startDate = payload.startDate
         target.endDate = payload.endDate
         target.createdAt = payload.createdAt
@@ -526,6 +534,10 @@ enum RemoteSyncPayloadValidator {
             name: payload.name,
             dosage: payload.dosage,
             frequency: payload.frequency,
+            kindRaw: payload.kindRaw,
+            category: payload.category,
+            statusRaw: payload.statusRaw,
+            notes: payload.notes,
             startDate: payload.startDate,
             endDate: payload.endDate,
             createdAt: payload.createdAt
@@ -694,6 +706,10 @@ extension ContinuousMedication {
                     name: name,
                     dosage: dosage,
                     frequency: frequency,
+                    kindRaw: kindRaw,
+                    category: category,
+                    statusRaw: statusRaw,
+                    notes: notes,
                     startDate: startDate,
                     endDate: endDate,
                     createdAt: createdAt

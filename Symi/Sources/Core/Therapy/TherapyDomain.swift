@@ -61,16 +61,22 @@ final class TherapyViewModel {
 
     var todayMedications: [TherapyMedicationItem] {
         medications
-            .filter(\.isActive)
+            .filter { $0.kind == .therapy && $0.isActive }
             .map(TherapyMedicationItem.init(record:))
     }
 
-    var activeMedications: [ContinuousMedicationRecord] {
-        medications.filter(\.isActive)
+    var currentMeasures: [ContinuousMedicationRecord] {
+        medications.filter { $0.status == .active && $0.isCurrentOnDate(.now) }
     }
 
-    var endedMedications: [ContinuousMedicationRecord] {
-        medications.filter { !$0.isActive }
+    var historicalMeasures: [ContinuousMedicationRecord] {
+        medications.filter { $0.status != .active || !$0.isCurrentOnDate(.now) }
+    }
+
+    func measures(kind: TherapyMeasureKind, status: TherapyMeasureStatus? = nil) -> [ContinuousMedicationRecord] {
+        medications.filter { medication in
+            medication.kind == kind && (status.map { medication.status == $0 } ?? true)
+        }
     }
 
     func load() {
@@ -90,8 +96,8 @@ final class TherapyViewModel {
         }
     }
 
-    func presentMedicationEditor(for medication: ContinuousMedicationRecord?) {
-        medicationEditor = medication.map(ContinuousMedicationDraft.init(record:)) ?? ContinuousMedicationDraft()
+    func presentMedicationEditor(for medication: ContinuousMedicationRecord?, kind: TherapyMeasureKind = .therapy) {
+        medicationEditor = medication.map(ContinuousMedicationDraft.init(record:)) ?? ContinuousMedicationDraft(kind: kind)
         message = nil
     }
 
@@ -105,6 +111,9 @@ final class TherapyViewModel {
         let repository = repository
         var normalizedDraft = draft
         normalizedDraft.name = trimmedName
+        if normalizedDraft.category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            normalizedDraft.category = normalizedDraft.kind.defaultCategory
+        }
 
         do {
             _ = try await Task.detached(priority: .userInitiated) {
@@ -118,13 +127,16 @@ final class TherapyViewModel {
         }
     }
 
-    func endMedication(id: UUID) {
+    func updateStatus(id: UUID, status: TherapyMeasureStatus) {
         let repository = repository
         Task { [weak self] in
             guard let self else { return }
             guard let medication = medications.first(where: { $0.id == id }) else { return }
             var draft = ContinuousMedicationDraft(record: medication)
-            draft.endDate = .now
+            draft.status = status
+            if status == .ended, draft.endDate == nil {
+                draft.endDate = .now
+            }
 
             do {
                 _ = try await Task.detached(priority: .userInitiated) {
@@ -132,7 +144,23 @@ final class TherapyViewModel {
                 }.value
                 load()
             } catch {
-                message = "Medikament konnte nicht beendet werden."
+                message = "Eintrag konnte nicht aktualisiert werden."
+            }
+        }
+    }
+
+    func deleteMeasure(id: UUID) {
+        let repository = repository
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    try repository.delete(id: id)
+                }.value
+                load()
+            } catch {
+                message = "Eintrag konnte nicht gelöscht werden."
             }
         }
     }
