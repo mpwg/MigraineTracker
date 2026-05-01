@@ -435,7 +435,7 @@ private func makeFixtureContainer<SchemaType: VersionedSchema>(
 }
 
 private func makeFixtureCurrentContainer(storeURL: URL) throws -> ModelContainer {
-    let schema = Schema(versionedSchema: SymiSchemaV8.self)
+    let schema = Schema(versionedSchema: SymiSchemaV9.self)
     let configuration = ModelConfiguration("migration-fixture-test", schema: schema, url: storeURL, cloudKitDatabase: .none)
     return try ModelContainer(
         for: schema,

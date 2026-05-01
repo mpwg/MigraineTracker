@@ -69,7 +69,7 @@ struct SymiApp: App {
         storeURL overrideStoreURL: URL? = nil,
         applicationSupportDirectoryURL: URL? = nil
     ) throws -> AppRuntimeEnvironment {
-        let schema = Schema(versionedSchema: SymiSchemaV8.self)
+        let schema = Schema(versionedSchema: SymiSchemaV9.self)
         let storeURL = try resolvedStoreURL(
             overrideStoreURL: overrideStoreURL,
             launchConfiguration: launchConfiguration,
@@ -158,7 +158,7 @@ struct SymiApp: App {
 
     @MainActor
     private static func makeRecoveryContainer() throws -> ModelContainer {
-        let schema = Schema(versionedSchema: SymiSchemaV8.self)
+        let schema = Schema(versionedSchema: SymiSchemaV9.self)
         let configuration = ModelConfiguration(
             "recovery",
             schema: schema,

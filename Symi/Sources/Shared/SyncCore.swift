@@ -562,6 +562,10 @@ public struct SyncContinuousMedicationPayload: Codable, Equatable, Sendable {
     public nonisolated var name: String
     public nonisolated var dosage: String
     public nonisolated var frequency: String
+    public nonisolated var kindRaw: String
+    public nonisolated var category: String
+    public nonisolated var statusRaw: String
+    public nonisolated var notes: String
     public nonisolated var startDate: Date
     public nonisolated var endDate: Date?
     public nonisolated var createdAt: Date
@@ -571,6 +575,10 @@ public struct SyncContinuousMedicationPayload: Codable, Equatable, Sendable {
         name: String,
         dosage: String,
         frequency: String,
+        kindRaw: String = "therapy",
+        category: String = "Medikamentös",
+        statusRaw: String = "active",
+        notes: String = "",
         startDate: Date,
         endDate: Date?,
         createdAt: Date
@@ -579,9 +587,28 @@ public struct SyncContinuousMedicationPayload: Codable, Equatable, Sendable {
         self.name = name
         self.dosage = dosage
         self.frequency = frequency
+        self.kindRaw = kindRaw
+        self.category = category
+        self.statusRaw = statusRaw
+        self.notes = notes
         self.startDate = startDate
         self.endDate = endDate
         self.createdAt = createdAt
+    }
+
+    public nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.dosage = try container.decode(String.self, forKey: .dosage)
+        self.frequency = try container.decode(String.self, forKey: .frequency)
+        self.kindRaw = try container.decodeIfPresent(String.self, forKey: .kindRaw) ?? "therapy"
+        self.category = try container.decodeIfPresent(String.self, forKey: .category) ?? "Medikamentös"
+        self.statusRaw = try container.decodeIfPresent(String.self, forKey: .statusRaw) ?? "active"
+        self.notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        self.startDate = try container.decode(Date.self, forKey: .startDate)
+        self.endDate = try container.decodeIfPresent(Date.self, forKey: .endDate)
+        self.createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
 }
 
@@ -783,6 +810,10 @@ public enum SyncMergeEngine {
                 name: mergedValue(field: "name", base: base?.name, local: local.name, remote: remote.name, conflicts: &conflicts).value,
                 dosage: mergedValue(field: "dosage", base: base?.dosage, local: local.dosage, remote: remote.dosage, conflicts: &conflicts).value,
                 frequency: mergedValue(field: "frequency", base: base?.frequency, local: local.frequency, remote: remote.frequency, conflicts: &conflicts).value,
+                kindRaw: mergedValue(field: "kindRaw", base: base?.kindRaw, local: local.kindRaw, remote: remote.kindRaw, conflicts: &conflicts).value,
+                category: mergedValue(field: "category", base: base?.category, local: local.category, remote: remote.category, conflicts: &conflicts).value,
+                statusRaw: mergedValue(field: "statusRaw", base: base?.statusRaw, local: local.statusRaw, remote: remote.statusRaw, conflicts: &conflicts).value,
+                notes: mergedValue(field: "notes", base: base?.notes, local: local.notes, remote: remote.notes, conflicts: &conflicts).value,
                 startDate: mergedValue(field: "startDate", base: base?.startDate, local: local.startDate, remote: remote.startDate, conflicts: &conflicts).value,
                 endDate: mergedValue(field: "endDate", base: base?.endDate, local: local.endDate, remote: remote.endDate, conflicts: &conflicts).value,
                 createdAt: mergedValue(field: "createdAt", base: base?.createdAt, local: local.createdAt, remote: remote.createdAt, conflicts: &conflicts).value

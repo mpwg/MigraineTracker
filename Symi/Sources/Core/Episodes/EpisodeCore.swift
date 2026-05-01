@@ -71,26 +71,120 @@ struct ContinuousMedicationRecord: Identifiable, Equatable, Sendable {
     nonisolated let name: String
     nonisolated let dosage: String
     nonisolated let frequency: String
+    nonisolated let kind: TherapyMeasureKind
+    nonisolated let category: String
+    nonisolated let status: TherapyMeasureStatus
+    nonisolated let notes: String
     nonisolated let startDate: Date
     nonisolated let endDate: Date?
     nonisolated let createdAt: Date
     nonisolated let updatedAt: Date
     nonisolated let deletedAt: Date?
 
+    nonisolated init(
+        id: UUID,
+        name: String,
+        dosage: String,
+        frequency: String,
+        kind: TherapyMeasureKind = .therapy,
+        category: String = "",
+        status: TherapyMeasureStatus = .active,
+        notes: String = "",
+        startDate: Date,
+        endDate: Date?,
+        createdAt: Date,
+        updatedAt: Date,
+        deletedAt: Date?
+    ) {
+        self.id = id
+        self.name = name
+        self.dosage = dosage
+        self.frequency = frequency
+        self.kind = kind
+        self.category = category
+        self.status = status
+        self.notes = notes
+        self.startDate = startDate
+        self.endDate = endDate
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
+    }
+
     nonisolated var isActive: Bool {
-        guard deletedAt == nil else {
-            return false
-        }
-
-        guard let endDate else {
-            return true
-        }
-
-        return endDate >= Calendar.current.startOfDay(for: .now)
+        status == .active && deletedAt == nil && isCurrentOnDate(.now)
     }
 
     nonisolated var detailText: String {
         MedicationTextFormatter.detailText(dosage: dosage, frequency: frequency)
+    }
+
+    nonisolated var categoryText: String {
+        category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? kind.defaultCategory : category
+    }
+
+    nonisolated func isCurrentOnDate(_ date: Date) -> Bool {
+        guard deletedAt == nil else {
+            return false
+        }
+
+        let dayStart = Calendar.current.startOfDay(for: date)
+        guard startDate <= dayStart else {
+            return false
+        }
+
+        return endDate.map { $0 >= dayStart } ?? true
+    }
+}
+
+enum TherapyMeasureKind: String, CaseIterable, Identifiable, Sendable {
+    case therapy
+    case prevention
+
+    nonisolated var id: String { rawValue }
+
+    nonisolated var title: String {
+        switch self {
+        case .therapy: "Therapie"
+        case .prevention: "Prävention"
+        }
+    }
+
+    nonisolated var pluralTitle: String {
+        switch self {
+        case .therapy: "Therapien"
+        case .prevention: "Präventionsmaßnahmen"
+        }
+    }
+
+    nonisolated var defaultCategory: String {
+        switch self {
+        case .therapy: "Medikamentös"
+        case .prevention: "Alltag"
+        }
+    }
+
+    nonisolated var icon: String {
+        switch self {
+        case .therapy: "cross.case.fill"
+        case .prevention: "leaf.fill"
+        }
+    }
+}
+
+enum TherapyMeasureStatus: String, CaseIterable, Identifiable, Sendable {
+    case active
+    case paused
+    case ended
+
+    nonisolated var id: String { rawValue }
+
+    nonisolated var title: String {
+        switch self {
+        case .active: "Aktiv"
+        case .paused: "Pausiert"
+        case .ended: "Beendet"
+        }
     }
 }
 
@@ -141,6 +235,10 @@ struct ContinuousMedicationDraft: Identifiable, Equatable, Sendable {
     nonisolated var name: String
     nonisolated var dosage: String
     nonisolated var frequency: String
+    nonisolated var kind: TherapyMeasureKind
+    nonisolated var category: String
+    nonisolated var status: TherapyMeasureStatus
+    nonisolated var notes: String
     nonisolated var startDate: Date
     nonisolated var endDate: Date?
 
@@ -153,6 +251,10 @@ struct ContinuousMedicationDraft: Identifiable, Equatable, Sendable {
         name: String = "",
         dosage: String = "",
         frequency: String = "",
+        kind: TherapyMeasureKind = .therapy,
+        category: String = "",
+        status: TherapyMeasureStatus = .active,
+        notes: String = "",
         startDate: Date = .now,
         endDate: Date? = nil
     ) {
@@ -160,6 +262,10 @@ struct ContinuousMedicationDraft: Identifiable, Equatable, Sendable {
         self.name = name
         self.dosage = dosage
         self.frequency = frequency
+        self.kind = kind
+        self.category = category
+        self.status = status
+        self.notes = notes
         self.startDate = startDate
         self.endDate = endDate
     }
@@ -170,6 +276,10 @@ struct ContinuousMedicationDraft: Identifiable, Equatable, Sendable {
             name: record.name,
             dosage: record.dosage,
             frequency: record.frequency,
+            kind: record.kind,
+            category: record.category,
+            status: record.status,
+            notes: record.notes,
             startDate: record.startDate,
             endDate: record.endDate
         )
