@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 
+#if DEBUG
 enum AppStoreScreenshotMode {
     private static let enabledKeys = [
         "APP_STORE_SCREENSHOTS",
@@ -273,3 +274,22 @@ enum AppStoreScreenshotMode {
         }
     }
 }
+#else
+enum AppStoreScreenshotMode {
+    static var isEnabled: Bool {
+        false
+    }
+
+    static func resetStoreIfNeeded() throws {}
+
+    static func seed(into container: ModelContainer) {}
+
+    static func sampleDraft(initialStartedAt: Date?) -> EpisodeDraft {
+        preconditionFailure("Screenshot mode is unavailable in Release builds.")
+    }
+
+    static func sampleWeatherSnapshot(for startedAt: Date) -> WeatherSnapshotData {
+        preconditionFailure("Screenshot mode is unavailable in Release builds.")
+    }
+}
+#endif
