@@ -17,6 +17,7 @@ struct SymiPlusView: View {
                 SymiPlusHeroCard()
 
                 featureList
+                    .padding(.top, SymiSpacing.symiPlusFeatureListTopPadding)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.top, SymiSpacing.symiPlusContentTopPadding)
@@ -34,7 +35,6 @@ struct SymiPlusView: View {
                 activate: activate,
                 restorePurchases: restorePurchases
             )
-            .background(screenBackground)
         }
         .navigationTitle("Symi Plus")
         .navigationBarTitleDisplayMode(.inline)
@@ -86,6 +86,7 @@ struct SymiPlusView: View {
 
 private struct SymiPlusHeroCard: View {
     @Environment(\.colorScheme) private var colorScheme
+    @State private var heroVisible = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: SymiSpacing.symiPlusHeroSpacing) {
@@ -95,11 +96,13 @@ private struct SymiPlusHeroCard: View {
                 .frame(width: SymiSize.symiPlusHeroImage, height: SymiSize.symiPlusHeroImage)
                 .frame(maxWidth: .infinity)
                 .offset(y: SymiSpacing.symiPlusHeroImageOffsetY)
+                .scaleEffect(heroVisible ? SymiPlusMotion.heroImageScale : SymiPlusMotion.heroInitialScale)
                 .accessibilityHidden(true)
 
             Text("Symi Plus")
-                .font(.largeTitle.bold())
+                .font(.largeTitle.weight(.bold))
                 .foregroundStyle(AppTheme.petrol(for: colorScheme))
+                .lineSpacing(SymiSpacing.micro)
                 .lineLimit(1)
                 .minimumScaleFactor(SymiTypography.symiPlusTitleScaleFactor)
 
@@ -116,12 +119,15 @@ private struct SymiPlusHeroCard: View {
                 .font(.body)
                 .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, SymiSpacing.xxs)
 
             Text("Symi bleibt aktuell vollständig nutzbar — ohne Druck und ohne versteckte Einschränkungen.")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(AppTheme.petrol(for: colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, SymiSpacing.xxs)
         }
+        .opacity(heroVisible ? SymiOpacity.opaque : SymiOpacity.symiPlusHeroInitialOpacity)
         .padding(SymiSpacing.symiPlusHeroPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
@@ -135,6 +141,11 @@ private struct SymiPlusHeroCard: View {
             ),
             in: RoundedRectangle(cornerRadius: SymiRadius.heroCard, style: .continuous)
         )
+        .onAppear {
+            withAnimation(.easeOut(duration: SymiAnimation.symiPlusHeroRevealDuration)) {
+                heroVisible = true
+            }
+        }
     }
 }
 
@@ -207,8 +218,13 @@ private struct SymiPlusBottomCTAView: View {
     var body: some View {
         VStack(spacing: SymiSpacing.symiPlusBottomSpacing) {
             Button(action: activate) {
-                Label(primaryButtonTitle, systemImage: "sparkles")
-                    .font(.headline.weight(.semibold))
+                Label {
+                    Text(primaryButtonTitle)
+                } icon: {
+                    Image(systemName: "sparkles")
+                        .font(SymiTypography.symiPlusButtonIcon)
+                }
+                .font(.headline.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: SymiSize.symiPlusButtonHeight)
             }
             .buttonStyle(SymiPlusPrimaryButtonStyle())
@@ -249,13 +265,21 @@ private struct SymiPlusBottomCTAView: View {
             .padding(.top, SymiSpacing.symiPlusFooterTopPadding)
         }
         .padding(.horizontal, horizontalPadding)
-        .padding(.top, SymiSpacing.symiPlusBottomTopPadding)
+        .padding(.top, SymiSpacing.symiPlusBottomSpacing)
         .padding(.bottom, SymiSpacing.symiPlusBottomPadding)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: SymiRadius.heroCard, style: .continuous))
+        .padding(.horizontal, SymiSpacing.symiPlusFloatingCardHorizontalPadding)
     }
 
     private var horizontalPadding: CGFloat {
         horizontalSizeClass == .compact ? SymiSpacing.symiPlusCompactHorizontalPadding : SymiSpacing.symiPlusRegularHorizontalPadding
     }
+}
+
+private enum SymiPlusMotion {
+    static let heroImageScale: CGFloat = 1.1
+    static let heroInitialScale: CGFloat = 1
 }
 
 private struct SymiPlusPrimaryButtonStyle: ButtonStyle {

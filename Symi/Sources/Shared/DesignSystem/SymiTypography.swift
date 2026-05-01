@@ -16,6 +16,7 @@ enum SymiTypography {
     static let secondary = Font.subheadline
     static let button = Font.headline.weight(.semibold)
     static let caption = Font.caption
+    static let symiPlusButtonIcon = Font.system(size: 14, weight: .semibold)
 
     // Metrics and emphasis
     static let largeMetric = Font.system(size: 58, weight: .bold, design: .rounded)

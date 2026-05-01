@@ -85,25 +85,27 @@ nonisolated enum SymiSpacing {
     static let settingsDividerLeadingPadding: CGFloat = 62
 
     // Symi Plus
-    static let symiPlusContentSpacing: CGFloat = 20
-    static let symiPlusFeatureSpacing: CGFloat = 12
+    static let symiPlusContentSpacing: CGFloat = 24
+    static let symiPlusFeatureSpacing: CGFloat = 14
     static let symiPlusCompactHorizontalPadding: CGFloat = 16
     static let symiPlusRegularHorizontalPadding: CGFloat = 24
     static let symiPlusContentTopPadding: CGFloat = 16
     static let symiPlusContentBottomPadding: CGFloat = 120
-    static let symiPlusHeroSpacing: CGFloat = 16
+    static let symiPlusHeroSpacing: CGFloat = 20
     static let symiPlusHeroPadding: CGFloat = 20
-    static let symiPlusBadgeHorizontalPadding: CGFloat = 12
-    static let symiPlusBadgeVerticalPadding: CGFloat = 6
+    static let symiPlusBadgeHorizontalPadding: CGFloat = 14
+    static let symiPlusBadgeVerticalPadding: CGFloat = 7
     static let symiPlusFeatureRowSpacing: CGFloat = 16
     static let symiPlusFeatureTextSpacing: CGFloat = 6
     static let symiPlusCardPadding: CGFloat = 16
     static let symiPlusBottomSpacing: CGFloat = 12
     static let symiPlusBottomTopPadding: CGFloat = 14
     static let symiPlusBottomPadding: CGFloat = 8
+    static let symiPlusFloatingCardHorizontalPadding: CGFloat = 8
+    static let symiPlusFeatureListTopPadding: CGFloat = 8
     static let symiPlusFooterTopPadding: CGFloat = 2
     static let symiPlusFooterLinkSpacing: CGFloat = 18
-    static let symiPlusHeroImageOffsetY: CGFloat = 5
+    static let symiPlusHeroImageOffsetY: CGFloat = -4
 }
 
 // MARK: - Radius
@@ -306,8 +308,8 @@ nonisolated enum SymiSize {
 
     // Symi Plus
     static let symiPlusContentMaxWidth: CGFloat = 780
-    static let symiPlusHeroImage: CGFloat = 100
-    static let symiPlusFeatureIcon: CGFloat = 44
+    static let symiPlusHeroImage: CGFloat = 116
+    static let symiPlusFeatureIcon: CGFloat = 48
     static let symiPlusFeatureMinHeight: CGFloat = 88
     static let symiPlusButtonHeight: CGFloat = 52
     static let symiPlusFooterMaxWidth: CGFloat = 260
@@ -338,6 +340,7 @@ nonisolated enum SymiStroke {
 
 nonisolated enum SymiAnimation {
     static let quickDuration: TimeInterval = 0.18
+    static let symiPlusHeroRevealDuration: TimeInterval = 0.4
 }
 
 // MARK: - Opacity
@@ -345,13 +348,13 @@ nonisolated enum SymiAnimation {
 nonisolated enum SymiOpacity {
     // Absolute values
     static let entryDetailTopFadeEnd: Double = 0
-    static let hiddenDebugControl: Double = 0.01
+    static let symiPlusHeroInitialOpacity: Double = 0.01
     static let opaque: Double = 1
     static let elevatedShadow: Double = 1.2
 
     // General surfaces and strokes
     static let clearStroke: Double = 0.04
-    static let symiPlusLightShadow = clearStroke
+    static let symiPlusLightShadow: Double = 0.03
     static let glassRegularShadow: Double = 0.045
     static let clearAccent: Double = 0.06
     static let journalBorder = clearAccent
@@ -417,7 +420,7 @@ nonisolated enum SymiOpacity {
     static let stepSelectedFillDark: Double = 0.30
     static let symiPlusSecondaryStroke = stepSelectedFillDark
     static let secondaryPressedFill: Double = 0.32
-    static let symiPlusChevron: Double = 0.40
+    static let symiPlusChevron = stepSelectedFillDark
     static let stepBorderLight: Double = 0.36
     static let stepBorderDark: Double = 0.48
 
