@@ -4,6 +4,7 @@ import SwiftData
 @MainActor
 final class AppContainer {
     let featureDependencies: AppFeatureDependencies
+    let featureFlags: FeatureFlags
 
     private let startupMaintenanceService: StartupMaintenanceService
     private let syncCoordinator: SyncCoordinator
@@ -16,9 +17,11 @@ final class AppContainer {
         locationService: any LocationService = SystemLocationService(),
         healthService: any HealthService = AppleHealthKitService(),
         healthContextStore: HealthContextStore = HealthContextStore(),
-        usageDataConsentService: UsageDataConsentService = AppTelemetryService.shared
+        usageDataConsentService: UsageDataConsentService = AppTelemetryService.shared,
+        featureFlags: FeatureFlags = .defaults
     ) {
         self.syncCoordinator = syncCoordinator
+        self.featureFlags = featureFlags
         let episodeWeatherContextService = EpisodeWeatherContextService(
             weatherService: weatherService,
             locationService: locationService
@@ -107,6 +110,7 @@ final class AppContainer {
             }
         )
         self.featureDependencies = AppFeatureDependencies(
+            featureFlags: featureFlags,
             home: HomeFeatureDependencies(
                 loadCalendarMonth: { month in
                     try await LoadHistoryMonthUseCase(repository: episodeRepository).execute(month: month)
@@ -141,6 +145,7 @@ final class AppContainer {
 
 @MainActor
 struct AppFeatureDependencies {
+    let featureFlags: FeatureFlags
     let home: HomeFeatureDependencies
     let capture: CaptureFeatureDependencies
     let history: HistoryFeatureDependencies

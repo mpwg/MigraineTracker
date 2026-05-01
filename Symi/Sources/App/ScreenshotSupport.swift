@@ -2,9 +2,10 @@ import CoreLocation
 import SwiftData
 import SwiftUI
 
-struct AppLaunchConfiguration {
+nonisolated struct AppLaunchConfiguration {
     let isScreenshotMode: Bool
     let isRunningTests: Bool
+    let featureFlags: FeatureFlags
     let screenshotRoute: ScreenshotRoute?
     let screenshotSeedName: String
 
@@ -17,6 +18,7 @@ struct AppLaunchConfiguration {
 
     init(arguments: [String], environment: [String: String]) {
         self.isRunningTests = environment["XCTestConfigurationFilePath"] != nil
+        self.featureFlags = FeatureFlags.resolved(arguments: arguments, environment: environment)
 
         #if DEBUG
         let isFastlaneSnapshot = Self.boolValue(for: "-FASTLANE_SNAPSHOT", in: arguments) ?? false
@@ -54,7 +56,7 @@ struct AppLaunchConfiguration {
     }
 }
 
-enum ScreenshotRoute: String, CaseIterable {
+nonisolated enum ScreenshotRoute: String, CaseIterable {
     case home
     case newEntry = "new-entry"
     case insights
@@ -113,7 +115,8 @@ enum ScreenshotBootstrap {
             appLogStore: appLogStore,
             weatherService: ScreenshotWeatherService(),
             locationService: ScreenshotLocationService(),
-            healthContextStore: healthContextStore
+            healthContextStore: healthContextStore,
+            featureFlags: FeatureFlags.defaults
         )
 
         return ScreenshotEnvironment(

@@ -4,6 +4,7 @@ struct SettingsView: View {
     let dependencies: SettingsFeatureDependencies
     let showsCloseButton: Bool
     @State private var controller: SettingsController
+    @Environment(\.featureFlags) private var featureFlags
 
     init(dependencies: SettingsFeatureDependencies, showsCloseButton: Bool = true) {
         self.dependencies = dependencies
@@ -51,6 +52,14 @@ struct SettingsView: View {
             }
 
             Section("App") {
+                if featureFlags.isEnabled(.monetization) {
+                    NavigationLink {
+                        SymiPlusView()
+                    } label: {
+                        Label("Symi Plus", systemImage: "sparkles")
+                    }
+                }
+
                 NavigationLink {
                     AboutSymiView(dependencies: dependencies)
                 } label: {

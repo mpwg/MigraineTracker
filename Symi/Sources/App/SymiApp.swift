@@ -95,7 +95,8 @@ struct SymiApp: App {
             modelContainer: container,
             syncCoordinator: syncCoordinator,
             appLogStore: appLogStore,
-            healthContextStore: healthContextStore
+            healthContextStore: healthContextStore,
+            featureFlags: launchConfiguration.featureFlags
         )
 
         return AppRuntimeEnvironment(
@@ -302,6 +303,7 @@ private struct AppRootView: View {
         case .app(let environment):
             appContent(environment: environment)
                 .modelContainer(environment.modelContainer)
+                .environment(\.featureFlags, environment.appContainer.featureFlags)
         case .recovery(let environment):
             StoreRecoveryView(
                 context: environment.context,
