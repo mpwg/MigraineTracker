@@ -64,6 +64,12 @@ enum SymiColors {
     static let mist = SymiColorValue(hex: 0xECF7F4)
     static let onAccent = SymiColorValue(hex: 0xFFFFFF)
 
+    // Symi Plus
+    static let symiPlusHeroEnd = SymiColorValue(hex: 0xEAF3EF)
+    static let symiPlusBadgeFill = SymiColorValue(hex: 0xDCEFE8)
+    static let symiPlusIconFill = SymiColorValue(hex: 0xE8F3EF)
+    static let symiPlusPrimaryGradientEnd = SymiColorValue(hex: 0x055759)
+
     // Journal
     static let journalInk = SymiColorValue(hex: 0x143F3F)
     static let journalSelectedChipFill = SymiColorValue(hex: 0xDDEFE7)

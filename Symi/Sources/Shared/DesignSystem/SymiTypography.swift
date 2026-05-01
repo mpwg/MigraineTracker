@@ -6,6 +6,9 @@ enum SymiTypography {
     static let tightChipScaleFactor = 0.72
     static let buttonScaleFactor = 0.85
     static let gaugeScaleFactor = 0.75
+    static let symiPlusTitleScaleFactor = 0.8
+    static let symiPlusBadgeScaleFactor = compactScaleFactor
+    static let symiPlusFooterScaleFactor = tightChipScaleFactor
 
     // Core text styles
     static let headline = Font.headline
@@ -33,4 +36,7 @@ enum SymiTypography {
     static let flowSecondaryAction = Font.footnote.weight(.medium)
     static let flowSummaryTitle = Font.headline.weight(.semibold)
     static let flowSummaryLine = Font.subheadline
+
+    // Symi Plus
+    static let symiPlusFeatureIcon = Font.system(size: 25, weight: .semibold)
 }
