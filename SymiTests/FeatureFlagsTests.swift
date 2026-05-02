@@ -61,4 +61,22 @@ struct FeatureFlagsTests {
 
         #expect(configuration.featureFlags.isEnabled(.monetization))
     }
+
+    @Test
+    func symiPlusProductConfigurationParsesCommaSeparatedProductIDs() {
+        let productIDs = SymiPlusProductConfiguration.productIDs(
+            from: "eu.mpwg.MigraineTracker.symiPlus.monthly, eu.mpwg.MigraineTracker.symiPlus.yearly"
+        )
+
+        #expect(productIDs == [
+            "eu.mpwg.MigraineTracker.symiPlus.monthly",
+            "eu.mpwg.MigraineTracker.symiPlus.yearly"
+        ])
+    }
+
+    @Test
+    func symiPlusProductConfigurationFallsBackForMissingBuildSetting() {
+        #expect(SymiPlusProductConfiguration.productIDs(from: nil) == [SymiPlusProductConfiguration.defaultProductID])
+        #expect(SymiPlusProductConfiguration.productIDs(from: "$(SYMI_PLUS_PRODUCT_IDS)") == [SymiPlusProductConfiguration.defaultProductID])
+    }
 }
