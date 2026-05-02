@@ -5,4 +5,5 @@ APS_ENVIRONMENT = development
 APPLE_DEVELOPER_TEAM_ID =
 SENTRY_DSN =
 TELEMETRY_APP_ID =
+SYMI_PLUS_PRODUCT_IDS = eu.mpwg.MigraineTracker.symiPlus.yearly
 #include? "LocalSecrets.xcconfig"

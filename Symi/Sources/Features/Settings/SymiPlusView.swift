@@ -1,9 +1,7 @@
 import SwiftUI
 
 struct SymiPlusView: View {
-    var primaryButtonTitle = "Kostenlos aktivieren"
-    var activate: () -> Void = {}
-    var restorePurchases: () -> Void = {}
+    @State private var store: SymiPlusStore
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -11,12 +9,16 @@ struct SymiPlusView: View {
     private let privacyURL = URL(string: "https://symiapp.com/privacy")!
     private let termsURL = URL(string: "https://symiapp.com/terms")!
 
+    init(store: SymiPlusStore = SymiPlusStore()) {
+        _store = State(initialValue: store)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: SymiSpacing.symiPlusContentSpacing) {
-                SymiPlusHeroCard()
+                SymiPlusHeroCard(entitlementState: store.entitlementState)
 
-                featureList
+                featureList(footerText: store.footerText, statusMessage: store.statusMessage)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.top, SymiSpacing.symiPlusContentTopPadding)
@@ -28,11 +30,21 @@ struct SymiPlusView: View {
         .background(screenBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom) {
             SymiPlusBottomCTAView(
-                primaryButtonTitle: primaryButtonTitle,
+                primaryButtonTitle: store.primaryButtonTitle,
                 privacyURL: privacyURL,
                 termsURL: termsURL,
-                activate: activate,
-                restorePurchases: restorePurchases
+                canStartPurchase: store.canStartPurchase,
+                canRestorePurchases: store.canRestorePurchases,
+                activate: {
+                    Task {
+                        await store.purchaseSelectedProduct()
+                    }
+                },
+                restorePurchases: {
+                    Task {
+                        await store.restorePurchases()
+                    }
+                }
             )
         }
         .navigationTitle("Symi Plus")
@@ -40,15 +52,22 @@ struct SymiPlusView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .tint(AppTheme.petrol(for: colorScheme))
+        .task {
+            await store.loadProducts()
+        }
     }
 
-    private var featureList: some View {
+    private func featureList(footerText: String, statusMessage: String?) -> some View {
         VStack(spacing: SymiSpacing.symiPlusFeatureSpacing) {
             ForEach(Self.featureRows) { row in
                 SymiPlusFeatureCard(row: row)
             }
 
-            SymiPlusFooterInfoView()
+            if let statusMessage {
+                SymiPlusStatusView(message: statusMessage)
+            }
+
+            SymiPlusFooterInfoView(text: footerText)
         }
     }
 
@@ -86,6 +105,8 @@ struct SymiPlusView: View {
 }
 
 private struct SymiPlusHeroCard: View {
+    let entitlementState: SymiPlusEntitlementState
+
     @Environment(\.colorScheme) private var colorScheme
     @State private var heroVisible = false
 
@@ -107,7 +128,7 @@ private struct SymiPlusHeroCard: View {
                 .lineLimit(1)
                 .minimumScaleFactor(SymiTypography.symiPlusTitleScaleFactor)
 
-            Text("✦ Für kurze Zeit kostenlos")
+            Text(badgeText)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(AppTheme.petrol(for: colorScheme))
                 .lineLimit(1)
@@ -116,7 +137,7 @@ private struct SymiPlusHeroCard: View {
                 .padding(.vertical, SymiSpacing.symiPlusBadgeVerticalPadding)
                 .background(SymiColors.symiPlusBadgeFill.color, in: Capsule(style: .continuous))
 
-            Text("Aktiviere Symi Plus jetzt kostenlos und sichere dir den Einführungsvorteil.")
+            Text(descriptionText)
                 .font(.body)
                 .foregroundStyle(AppTheme.textPrimary(for: colorScheme))
                 .fixedSize(horizontal: false, vertical: true)
@@ -147,6 +168,16 @@ private struct SymiPlusHeroCard: View {
                 heroVisible = true
             }
         }
+    }
+
+    private var badgeText: String {
+        entitlementState == .active ? "✦ Aktiv" : "✦ Direkt über den App Store"
+    }
+
+    private var descriptionText: String {
+        entitlementState == .active
+            ? "Symi Plus ist für deinen Apple Account freigeschaltet."
+            : "Aktiviere Symi Plus sicher über den App Store und unterstütze die Weiterentwicklung."
     }
 }
 
@@ -203,8 +234,10 @@ private struct SymiPlusFeatureCard: View {
 }
 
 private struct SymiPlusFooterInfoView: View {
+    let text: String
+
     var body: some View {
-        Text("Der aktuelle Preis wird direkt aus dem App Store geladen.\nDu kannst Käufe jederzeit wiederherstellen.")
+        Text(text)
             .font(.footnote)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
@@ -215,10 +248,26 @@ private struct SymiPlusFooterInfoView: View {
     }
 }
 
+private struct SymiPlusStatusView: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(AppTheme.symiPetrol)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: SymiSize.symiPlusFooterMaxWidth)
+            .padding(.horizontal, SymiSpacing.symiPlusFooterHorizontalPadding)
+    }
+}
+
 private struct SymiPlusBottomCTAView: View {
     let primaryButtonTitle: String
     let privacyURL: URL
     let termsURL: URL
+    let canStartPurchase: Bool
+    let canRestorePurchases: Bool
     let activate: () -> Void
     let restorePurchases: () -> Void
 
@@ -238,6 +287,7 @@ private struct SymiPlusBottomCTAView: View {
                     .frame(maxWidth: .infinity, minHeight: SymiSize.symiPlusButtonHeight)
             }
             .buttonStyle(SymiPlusPrimaryButtonStyle())
+            .disabled(!canStartPurchase)
 
             Button(action: restorePurchases) {
                 Text("Käufe wiederherstellen")
@@ -245,6 +295,7 @@ private struct SymiPlusBottomCTAView: View {
                     .frame(maxWidth: .infinity, minHeight: SymiSize.symiPlusButtonHeight)
             }
             .buttonStyle(SymiPlusSecondaryButtonStyle())
+            .disabled(!canRestorePurchases)
 
             HStack(spacing: SymiSpacing.symiPlusFooterLinkSpacing) {
                 Link(destination: privacyURL) {

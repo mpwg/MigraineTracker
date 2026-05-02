@@ -102,6 +102,9 @@ final class AppContainer {
                     usageDataConsentService: usageDataConsentService
                 )
             },
+            makeSymiPlusStore: {
+                SymiPlusStore()
+            },
             dataExport: dataExport
         )
         let therapy = TherapyFeatureDependencies(
@@ -191,6 +194,7 @@ struct TherapyFeatureDependencies {
 @MainActor
 struct SettingsFeatureDependencies {
     let makeSettingsController: () -> SettingsController
+    let makeSymiPlusStore: () -> SymiPlusStore
     let dataExport: DataExportFeatureDependencies
 }
 

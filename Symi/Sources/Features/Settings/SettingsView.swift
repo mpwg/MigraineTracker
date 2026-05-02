@@ -54,7 +54,7 @@ struct SettingsView: View {
             Section("App") {
                 if featureFlags.isEnabled(.monetization) {
                     NavigationLink {
-                        SymiPlusView()
+                        SymiPlusView(store: dependencies.makeSymiPlusStore())
                     } label: {
                         Label("Symi Plus", systemImage: "sparkles")
                     }
